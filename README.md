@@ -5,37 +5,38 @@ Um sistema moderno de informação sobre plantas - florística, ecologia e monit
 
 ### Entidades focais
 
-Object:
-- Location
-- Taxon
-- Plant
-- Voucher
-- Sample
-Identification (rel Plant x Taxon)
-Trait (+ Category, Measurement)
+- Object:
+  - Location
+  - Taxon
+  - Plant
+  - Voucher
+  - Sample
+- Identification (rel Plant x Taxon)
+- Trait (+ Category, Measurement)
 
 ### Entidades secundárias
-Person
-Reference
-Herbarium
-Image
-Census
-Project
+- Person
+- Reference
+- Herbarium
+- Image
+- Census
+- Project
 
 ### Interface / acesso
-User (conecta com Person)
-Role (a principio, "normal" ou "admin")
-Language
-Translation
-DataTranslation (TALVEZ, para traduzir dados de variável de usuário?)
-Plugin
-Access (Relação Role x privilégio)
-DataAccess (Para guardar autorização do tipo "cadastre seu e-mail")
-BUSCA E INSERÇÂO
-Form
-Filter
-Report
-Job (para realizar tarefas em background)
+- User (conecta com Person)
+- Role (a principio, "normal" ou "admin")
+- Language
+- Translation
+- DataTranslation (TALVEZ, para traduzir dados de variável de usuário?)
+- Plugin
+- Access (Relação Role x privilégio)
+- DataAccess (Para guardar autorização do tipo "cadastre seu e-mail")
+
+### Busca e inserção
+- Form
+- Filter
+- Report
+- Job (para realizar tarefas em background)
 
 ### AUDITORIA
 
