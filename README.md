@@ -31,6 +31,7 @@ Um sistema moderno de informação sobre plantas - florística, ecologia e monit
 - Plugin
 - Access (Relação Role x privilégio)
 - DataAccess (Para guardar autorização do tipo "cadastre seu e-mail")
+- Config (configurações de site - titulo, tag, proxy, etc)
 
 ### Busca e inserção
 - Form
