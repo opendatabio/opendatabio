@@ -1,11 +1,14 @@
 # opendatabio
 A modern system for storing and retrieving plant data - floristics, ecology and monitoring.
 
-This project improves and reimplements code from the Duckewiki project - a tribute to Adolpho Ducke,
+This project improves and reimplements code from the Duckewiki project. Duckewiki is a tribute to Adolpho Ducke,
 one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
 
 ## Overview
 TODO: detail modules (data import, data export, forms, audit, query API, ???)
+
+The data import should accept csv and Excel spreadsheets, and must handle different field and numeric separators,
+date formats, encodings and line endings.
 
 A companion R package is also being developed to improve the data import and export routines.
 
@@ -85,7 +88,9 @@ username admin and password @dm!n. Edit the file before importing, or change the
 ## Upgrade
 A tool for upgrading duckewiki databases to opendatabio is currently being developed.
 
-## Programing directives
+## Programing directives and naming conventions
+This software should adhere to Semantic Versioning, starting from version 0.1.0-alpha1.
+
 In order to simplify the development cycle and install procedure, CI, Propel and their dependencies are being commited
 to this repository instead of being managed only by Composer. In order for this to work, it is imperative that only
 tagged releases are specified in composer.json - otherwise, this will lead to problems with git mistaking the dependencies
@@ -124,6 +129,10 @@ https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html
 All focal objects are of the base class "Object". This allows for a single foreign key to handle the different 
 types of relations (such as: a trait can be associated with a location, a taxon, a plant, a voucher or a sample).
 
+Each Object may have an associated note, regarding sampling procedure, location details, etc.
+
+---
+
 The general idea behind the taxon model is that is should present tools for easily incorporating valid taxonomic names,
 with spell checking and added metadata, but allowing for the inclusion of names that are not considered valid 
 (because they are still unpublished, are rare and thsus not found in online databases, or because the user
@@ -157,10 +166,66 @@ The authorship of the taxon is usually given in the text field "author", when it
 case the taxon is a morphotype, the author is instead the person responsible for the identification, and the "author_id" 
 column should be used instead. Either author or author_id may be null, but not both.
 
+There are two distinct columns to help identify the publication (usually a research article) in which the taxon was
+described. It may be a bibliographic reference (in which case, use "bibreference_id") or a descriptive text (use the
+"bibreference" column). Both fields may be null, and both fields may be present for the same taxon.
+
 The database seeds should include a basic classification of plants.
+
+TODO: level should be a FK to a detailed table?
+
+--- 
+
+The Location table stores Objects representing real world locations. They may be countries, cities, conservation units,
+or points in the surface of Earth. These objects are optionally hierarquical, but most units should have a parent. 
+The main exception to this rule are conservation units, which may span several cities or states, and have a different
+column for pertaining. Thus, one plot (Location) may have as parent a city, and as uc_id the conservation unit where it
+belongs. The "level" column should indicate the administrative level of the location, if applicable.
+
+The database seeding should have a list of countries, administrative regions, Brazilian municipalities and conservation units;
+this will probably be downloaded from www.diva-gis.org.
+
+The Location table also allows the input of the GPS datum and resolution, if known.
+
+Some marked plants have a GPS point associated, but otherwise no location registered. These points should be stored as
+a Location.
+
+Locations are stored in the database as a Polygon, or a series of lat/long points. The first of these points to be
+stored is privileged, as it may be used as a reference for relative markings.
+
+TODO: plots have x, y dimension? Sub-plots have start-x, start-y?
+
+TODO: plugin for point-quadrant method
+
+---
+
+The Plant table represents a marked plant. Each plant is identified by a unique combination of location and tag.
+One Voucher represents a voucher stored in a herbarium. It may have been taken from a marked plant, in which case the
+"parent_id" of the voucher should point to this plant object, but this is not mandatory. Each voucher is identified
+by a unique combination of collector and number.
+One Sample represents a sample taken from either a marked plant, a voucher or a location (eg, soil sample). The "parent_id"
+from the sample should point to the apropriate parent.
+
+The Plant table must specify a Location object in which it was collected. This Location may be a GPS point (with revelant
+metadata). It also may specify either a GPS position (which is suposed to be inside the given location) or a relative position
+with a local coordinate, which is relative to the Location first point. (ATTENTION)
+
+The Collector table represents collectors for a plant or sample, or additional collectors for a given voucher. 
+The primary collector should be specified as 
+"collector_id" in the Voucher table, instead of in the Voucher_Person table. In the case of plants or samples, there is 
+no such distinction as the primary collector, so only the Collector table is used (TODO: verify!) (TODO: normalize?)
+
+Each Voucher may be stored in several Herbariums. Each of these storages may generate an identification number,
+which should be stored in the Herbarium_Voucher table ("número de tombo").
+
+The date field in the Plant, Voucher and Sample tables represents the collection date. This date may be incomplete,
+eg, only the year is recorded. In this case, mark zero for the unknown fields.
+
+Vouchers and plants should have an Identification object. 
 
 ### Entidades secundárias
 - Person
+The Person_Taxon table represents taxonomic groups for which a person is a specialist.
 - Reference
 - Herbarium
 - Image
@@ -189,7 +254,8 @@ installation. It can have as keys "title", "tag" (for the main page), "proxy url
 - Job (para realizar tarefas em background)
 
 ### AUDIT
-An audit module should be developed and will be detailed at a later date
+An audit module should be developed and will be detailed at a later date. It is fundamental that the Identification
+table has full audit history, easily accessed.
 
 ### TABELAS AUXILIARES (importação de dados; relatórios)
 
