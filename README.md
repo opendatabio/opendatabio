@@ -5,12 +5,42 @@ This project improves and reimplements code from the Duckewiki project. Duckewik
 one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
 
 ## Overview
-TODO: detail modules (data import, data export, forms, audit, query API, ???)
+This project aims to provide a flexible but robust framework for storing, analysing and exporting biological data.
+It is specially focused on plant biology, but it can also be used for other taxons as well. The main features of this
+database include the ability to define arbitrary Traits that can be measured on individual marked plants. These
+traits may then be used to analyse these plants and generate reports.
+
+The project should have a main module for querying the database directly, including new data and editing or deleting
+existing data. The data entry on this module will consist on predetermined pages for the base objects and
+on flexible Forms to enter used defined variables. It should also allow for flexible searches
+on all database objects, using the defined fields or user supplied Traits. These searches may be saved as 
+user defined data filters.  These should be detailed later (TODO). 
+
+There will also be modules for the bulk import and export of data.
 
 The data import should accept csv and Excel spreadsheets, and must handle different field and numeric separators,
 date formats, encodings and line endings.
 
-A companion R package is also being developed to improve the data import and export routines.
+The data export module should allow for taxonomic filters, as well as filters by censuses, date, location and
+should have a helper to include all the traits contained in a Form. The data export should de-normalize measurements
+for categorical traits with multiple select. There should be a tool for exporting all types of objects, including
+taxonomic reports, plant data and voucher data.
+
+The data access API should be documented and allow for recovery and insertion of data. This is specially relevant
+for the companion R package, and for importing data via Open Data Kit forms (see below).
+
+There should be a provision for including spectral data (one value of reflection or absorption for each wavelength) 
+and molecular data (one id (genebank?), one marked and the sequence) in the database.
+
+Other than the core facilities of the system, more functionality may be provided as plugins. An extensive documentation
+will be provided on how to specify a plugin.
+
+A companion R package is also being developed to improve the data import and export routines. The data validation 
+for importing should consider: ignoring whitespace difference; ignoring accents; ignoring case; stemming of words and
+fuzzy matching, with the later being suggested as edits. It should be allowed to save the import job in any step and
+returning later with no data loss.
+
+Finally, an audit module should be developed to keep the history of editing of each relevant database object.
 
 ## Install
 ### Prerequisites and versions
@@ -89,7 +119,8 @@ username admin and password @dm!n. Edit the file before importing, or change the
 A tool for upgrading duckewiki databases to opendatabio is currently being developed.
 
 ## Programing directives and naming conventions
-This software should adhere to Semantic Versioning, starting from version 0.1.0-alpha1.
+This software should adhere to Semantic Versioning, starting from version 0.1.0-alpha1. The companion R package 
+should follow a similar versioning scheme.
 
 In order to simplify the development cycle and install procedure, CI, Propel and their dependencies are being commited
 to this repository instead of being managed only by Composer. In order for this to work, it is imperative that only
@@ -99,20 +130,12 @@ for submodules.
 All variables and functions should be named in English, with entities and fields related to the database being 
 named in the singular form. All tables (where apropriate) should have an "id" column, and foreign keys should reference
 the base table with "_id" suffix, except in cases of self-joins (such as "taxon.parent_id") or foreign keys that
-reference a subclass of the Object class.
+reference a subclass of the Object class. The id of each table has type INT, except the Language table in which the id
+is the IETF language tag (such as en-US or pt-BR).
 
 ## License
 Opendatabio is licensed for use under a GPLv3 license. The installation packages include the files for CodeIgniter and Propel,
 which are licensed under an MIT license.
-
-## TODO
-TODO: Verify CodeIgniter / Propel integration, as:
-https://github.com/bcit-ci/CodeIgniter/wiki/Using-Propel-as-Model
-Data models
-https://dev.mysql.com/doc/workbench/en/wb-getting-started-tutorial-creating-a-model.html
-
-Incomplete dates may be given:
-https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html
 
 ## Data model
 ### Focal objects
@@ -131,11 +154,13 @@ types of relations (such as: a trait can be associated with a location, a taxon,
 
 Each Object may have an associated note, regarding sampling procedure, location details, etc.
 
+TODO: study whether we should use the Nested Set Model for hierarquical data: http://mikehillyer.com/articles/managing-hierarchical-data-in-mysql/ OR storage procedures to emulate CONNECT BY
+
 ---
 
 The general idea behind the taxon model is that is should present tools for easily incorporating valid taxonomic names,
 with spell checking and added metadata, but allowing for the inclusion of names that are not considered valid 
-(because they are still unpublished, are rare and thsus not found in online databases, or because the user
+(because they are still unpublished, are rare and thus not found in online databases, or because the user
 disagrees with the validity status of the databases).
 
 In the taxon table, the column "level" represents the taxonomic level (such as order, genera, etc). 
@@ -143,15 +168,16 @@ It should be standardized. The column "parent_id" indicates the parent of this t
 above it. Check: the parent level should be strictly higher. One special node is the "root" of the taxonomic tree.
 
 The only exception is the "clade" level, which is not taxonomic. It may represent subspecies, 
-infraspecies, categories, varieties, or morphospecies (which is selected in column "category_id"). 
+infraspecies, categories, varieties, or morphospecies (which is selected in column "category_id"), or it may represent
+any larger clade. 
 The parent level checking must be done to 
 ensure that the parent of each valid child of a clade has a strictly higher level.
 
 In the case that an intermediate level is registered, the system should check and allow the user to register the relevant
 children. (TODO: clarify)
 
-The name of the taxon should be only the specific part of name (in case of species, the epithet). There should be a helper
-to "assemble" the full name from the epithet and its parents name.
+The name of the taxon should contain only the specific part of name (in case of species, the epithet). 
+There should be a helper to "assemble" the full name from the epithet and its generum name.
 
 When introducing a new taxon, there should be options to check its validity, spelling, and authorship in
 open databases (IPNI, ITIS, MOBOT, etc). It should be possible to enter an invalid name, or a name not checked in the bank,
@@ -173,7 +199,7 @@ described. It may be a bibliographic reference (in which case, use "bibreference
 The database seeds should include a basic classification of plants.
 
 TODO: level should be a FK to a detailed table? Maybe taxonomic_category?? Should that table be Translatable?
-TODO: is it necessary to specify the "type" of clade (infrasp, subsp, etc)? Should all children of a clade be of the same level?
+TODO: is it necessary to specify the "type" of clade (infrasp, subsp, etc)? Should all children of a clade be of the same level? (ATTENTION)
 
 --- 
 
@@ -205,11 +231,12 @@ One Voucher represents a voucher stored in a herbarium. It may have been taken f
 "parent_id" of the voucher should point to this plant object, but this is not mandatory. Each voucher is identified
 by a unique combination of collector and number.
 One Sample represents a sample taken from either a marked plant, a voucher or a location (eg, soil sample). The "parent_id"
-from the sample should point to the apropriate parent.
+from the sample should point to the apropriate parent. ATTENTION: should samples have unique identifiers?
 
 The Plant table must specify a Location object in which it was collected. This Location may be a GPS point (with revelant
-metadata). It also may specify either a GPS position (which is suposed to be inside the given location) or a relative position
-with a local coordinate, which is relative to the Location first point. (ATTENTION)
+metadata). In addition to this location, it also may specify either a GPS position 
+(which is suposed to be inside the given location) or a relative position
+with a local coordinate, which is relative to the Location first point. (ATTENTION: this absolute coordinate has no datum/res??)
 
 The Collector table represents collectors for a plant or sample, or additional collectors for a given voucher. 
 The primary collector should be specified as 
@@ -220,9 +247,12 @@ Each Voucher may be stored in several Herbariums. Each of these storages may gen
 which should be stored in the Herbarium_Voucher table ("número de tombo").
 
 The date field in the Plant, Voucher and Sample tables represents the collection date. This date may be incomplete,
-eg, only the year is recorded. In this case, mark zero for the unknown fields.
+eg, only the year is recorded. In this case, mark zero for the unknown fields
+(https://dev.mysql.com/doc/refman/5.7/en/date-and-time-functions.html). The helper forms for these entities must allow this.
 
 All registered plants should have an Identification object. Vouchers should be linked to either a Plant or an Identification.
+
+Samples must have a "type", which can be "seeds", "leaves", "soil". The database seed should have some sample types of sample.
 
 ---
 
@@ -251,7 +281,7 @@ Taxon and a number.
 The Trait definition should include a "export_name" to register the name for which this trait will be converted on exported
 tables.
 
-OBS: the type column should be ENUM!
+OBS: the type column should be ENUM! TODO: the type column should be a foreign key, to allow plugins for spectral/molecular?
 
 The database seed should include common traits definitions, such as habit, habitat, height and Diameter at Breast Height
 (DBH).
@@ -277,11 +307,12 @@ the field "multiple" should be set to true.
 The Measurement table represents a Trait measurement for a given object. Thus, it needs a trait_id and object_id
 of the correct type (as specified by the allowed object types in the Trait definition). If the object type is a Taxon,
 the BibReference is mandatory; for Plants, the date and person_id are mandatory. In all cases, Bibreference, date and
-person_id may be supplied.
+person_id may be supplied. For quantitative traits, fill in the "value" field; for text and color, the "value_a"; for
+qualitative and ordinal measures, fill the Measurement_Category table. This proccess should validate that categorical Traits
+that only accept a single selected category should have no more than one category selected per measurement.
 
-TODO: normalize measurement_category!!! Create ER diagram for Trait/Measurement/Translation.
 
-### Entidades secundárias
+### Other entities
 - Person
 A Person entry represents one person which may or may not be directly involved with the database. It is used to store
 information about plant and voucher collectors, specialists, and database users. When registering a new person,
@@ -292,7 +323,8 @@ The Person_Taxon table represents taxonomic groups for which a person is a speci
 to list to which herbarium a person is associated.
 
 - BibReference
-Todo: document!
+The BibReference should contain only the bibtex reference. The BibKey, authors and other relevant fields should be extracted 
+from it and may be used in index-based functions for searching. The Bibkey should be unique in the database.
 
 - Herbarium
 
@@ -300,18 +332,26 @@ The Herbarium object stores basic information about a herbarium, plus the identi
 in the Index Herbariorum (http://sweetgum.nybg.org/science/ih/).
 
 - Image
-TODO: decide what to do here!
+Images are similar to Trait measurements in that they might be associated with all types of objects. It is possible to
+organize them in tags, such as "leaves" or "seeds" to indicate what are depicted in the image. It is still an open question
+whether the images will be stored as binary data inside the database, or in the server storage. Some sample tags should
+be provided on the database seed.
 
 - Census
-TODO: page 5
-
 - Project
+- DataAccess 
+The Census and Project tables refer to grouping of objects or measurements. Each of them has a Person who is the 
+project/census "owner", and may have one or more related Persons. The data pertaining to a Project or Census may have a
+privacy directive: public access; restricted access (only allowed Users may access it); free access after registering;
+free access after admin approval. These objects need to be documented; it is currently unclear how clashing directives should
+be applied. A census or project may have an associated BibReference for citation. An object or measurement may be part
+of zero, one or more than one projects/censuses. (TODO: data models)
 
-### Interface / acesso
-- User (conecta com Person)
-- Role (a principio, "normal" ou "admin")
+### Interface 
+- User (connects with Person)
+- Role ("normal" ou "admin")
 The User table stores information about the database users and administrators. It is connected with the Role table,
-which is in turn used to specify which operations are allowed in the Access table.
+which is in turn used to specify which operations are allowed in the Access table. (TODO: data models)
 
 - Language
 - Translation
@@ -321,23 +361,34 @@ The Translation table stores information to translate the interface to other lan
 user data, such as Trait names and categories, to other languages.
 
 - Plugin
-- Access (Relação Role x privilégio)
-- DataAccess (Para guardar autorização do tipo "cadastre seu e-mail")
-- SiteConfig
+There should be a structure to store which plugins are installed on a given database and which are the compatible
+system versions?
 
+- Access (Role x privileges for ACL)
+- SiteConfig
 
 The Site_Config table is a key/value relation, with configurations pertaining to this 
 installation. It can have as keys "title", "tag" (for the main page), "proxy url", "proxy port", "proxy user" and "proxy password".
 
-### Busca e inserção
+### Query and insertion
 - Form
+A Form is an organized group of variables, defined by a User in order to create a custom form that can be 
+filled in in the system. A Form consists of a group of ordered Traits, which can be marked as "mandatory".
+
 - Filter
+To be detailed later
+
 - Report
-- Job (para realizar tarefas em background)
+To be detailed later
+
+- Job
+A Job system may be put in place to deal with background tasks. An user should be allowed to create a job; cancel a job;
+list all past and active jobs; see the details of a finished job (including possibly the data imported by it or the 
+data selected by it, in case the job is a query or data import).
 
 ### AUDIT
 An audit module should be developed and will be detailed at a later date. It is fundamental that the Identification
 table has full audit history, easily accessed.
 
-### TABELAS AUXILIARES (importação de dados; relatórios)
+### AUXILIARY TABLES for data import and reports
 
