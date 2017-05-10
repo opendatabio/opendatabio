@@ -81,6 +81,12 @@ And you're good to go! If you have moved your installation files to the /var/www
 be able to access it as http://localhost/opendatabio. The database seeds come with an administrator account, with
 username admin and password @dm!n. Edit the file before importing, or change the password after installing.
 
+TODO: php artisan key:generate after install??  See https://laravel.com/docs/5.4/
+
+App config: locale and timezone!!!
+
+TODO: mail settings; defaults to SMTP??
+
 ## Upgrade
 A tool for upgrading duckewiki databases to opendatabio is currently being developed.
 
