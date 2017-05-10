@@ -64,7 +64,7 @@ CREATE USER `opendatabio`@`localhost` IDENTIFIED BY 'somestrongpassword';
 GRANT ALL ON `opendatabio`.* TO `opendatabio`@`localhost`;
 ```
 
-Migrate the database: `php artisan migrate`;
+Migrate the database: `php artisan migrate; php artisan db:seed`;
 
 You may choose another name for your database and user, and you must choose another password. Write them all down.
 
