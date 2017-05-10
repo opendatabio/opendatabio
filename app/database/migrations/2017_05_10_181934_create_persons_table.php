@@ -18,8 +18,8 @@ class CreatePersonsTable extends Migration
             $table->timestamps();
 	    $table->string('full_name');
 	    $table->string('abbreviation');
-	    $table->string('e-mail');
-	    $table->string('institution');
+	    $table->string('email')->nullable();
+	    $table->string('institution')->nullable();
         });
     }
 
