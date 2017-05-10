@@ -28,6 +28,9 @@ contact our team using the Github repository.
 ### Installation instructions
 First, install the prerequisite software: Apache, MySQL, PHP and ImageMagick.
 
+Then, install Composer. See [here](https://getcomposer.org/download/) for instructions. After that, use
+composer to install the Laravel framework and other dependencies (`composer install`).
+
 This software requires the following PHP extensions:
 - intl (TODO: verify)
 - mysql (TODO: verify!)
@@ -72,7 +75,7 @@ mysql -u opendatabio -psomestrongpassword opendatabio < seeds.sql
 ```
 
 Edit the configuration file for the opendatabio, indicating the username, password and database chosen (and the hostname,
-in case it is not localhost). 
+in case it is not localhost).  TODO: redo this instructions with migrations instead of schema.sql!!!
 
 And you're good to go! If you have moved your installation files to the /var/www/opendatabio folder, you will probably
 be able to access it as http://localhost/opendatabio. The database seeds come with an administrator account, with
