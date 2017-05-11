@@ -14,7 +14,7 @@ class PersonController extends Controller
      */
     public function index()
     {
-	    $persons = Person::orderBy('abbreviation')->get();
+	    $persons = Person::orderBy('abbreviation')->paginate(20);
 	    return view('persons', [
         'persons' => $persons
     ]);

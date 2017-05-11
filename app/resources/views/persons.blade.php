@@ -95,6 +95,7 @@
                                 @endforeach
                             </tbody>
                         </table>
+			 {{ $persons->links() }} 
                     </div>
                 </div>
             @endif
