@@ -8,4 +8,6 @@ class Person extends Model
 {
 	// Gramatically incorrect, but helps development
 	protected $table = 'persons';
+	protected $fillable = ['full_name', 'abbreviation', 'email', 'institution'];
+
 }

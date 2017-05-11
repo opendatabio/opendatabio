@@ -45,12 +45,7 @@ class PersonController extends Controller
 		'abbreviation' => ['required','max:191','regex:/^[A-Z,\. -]+$/', 'unique:persons'],
 		'email' => 'nullable|max:191|email|unique:persons'
 	]);
-	$person = new Person;
-	$person->full_name = $request->full_name;
-	$person->email = $request->email;
-	$person->institution = $request->institution;
-	$person->abbreviation = $request->abbreviation;
-	$person->save();
+	$person = Person::create($request->all());
 
 	return redirect('persons');
     }
