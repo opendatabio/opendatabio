@@ -89,6 +89,12 @@ App config: locale and timezone!!!
 
 TODO: mail settings; defaults to SMTP??
 
+## Development
+
+This system uses Laravel Mix to compile the SASS and JavaScript code used. 
+If you would like to contribute to the app development,
+remember to run `npm run dev` after making any change to these files.
+
 ## Upgrade
 A tool for upgrading duckewiki databases to opendatabio is currently being developed.
 
