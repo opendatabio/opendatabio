@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+
+use Illuminate\Support\Facades\Log;
 use App\Person;
 
 class PersonController extends Controller
@@ -15,8 +17,9 @@ class PersonController extends Controller
     public function index()
     {
 	    $persons = Person::orderBy('abbreviation')->paginate(20);
-	    return view('persons', [
-        'persons' => $persons
+	    return view('persons.index', [
+        'persons' => $persons,
+	'edit' => null
     ]);
         //
     }
@@ -29,6 +32,7 @@ class PersonController extends Controller
     public function create()
     {
         //
+	return redirect('persons');
     }
 
     /**
@@ -40,14 +44,17 @@ class PersonController extends Controller
     public function store(Request $request)
     {
         //
+	$this->checkValid($request);
+	$person = Person::create($request->all());
+	return redirect('persons');
+    }
+
+    protected function checkValid(Request $request, $id = null) {
 	$this->validate($request, [
 		'full_name' => 'required|max:191',
-		'abbreviation' => ['required','max:191','regex:/^[A-Z,\. -]+$/', 'unique:persons'],
-		'email' => 'nullable|max:191|email|unique:persons'
+		'abbreviation' => ['required','max:191','regex:/^[A-Z,\. -]+$/', 'unique:persons,abbreviation,'. $id],
+		'email' => ['nullable', 'max:191', 'email', 'unique:persons,email,'.$id]
 	]);
-	$person = Person::create($request->all());
-
-	return redirect('persons');
     }
 
     /**
@@ -59,6 +66,10 @@ class PersonController extends Controller
     public function show($id)
     {
         //
+	    $person = Person::find($id);
+	    return view('persons.show', [
+		    'person' => $person
+	    ]);
     }
 
     /**
@@ -70,6 +81,7 @@ class PersonController extends Controller
     public function edit($id)
     {
         //
+	 return redirect('persons/'.$id);
     }
 
     /**
@@ -82,6 +94,10 @@ class PersonController extends Controller
     public function update(Request $request, $id)
     {
         //
+	    $person = Person::find($id);
+	    $this->checkValid($request, $id);
+	    $person->update($request->all());
+	return redirect('persons/'.$id);
     }
 
     /**
@@ -93,5 +109,7 @@ class PersonController extends Controller
     public function destroy($id)
     {
         //
+	    Person::find($id)->delete();
+	return redirect('persons');
     }
 }
