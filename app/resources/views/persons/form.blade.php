@@ -6,9 +6,20 @@
 </div>
 <div class="form-group">
     <label for="abbreviation" class="col-sm-3 control-label">Abbreviation</label>
+        <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<input type="text" name="abbreviation" id="abbreviation" class="form-control" value="{{ old('abbreviation', isset($person) ? $person->abbreviation : null) }}">
+            </div>
+  <div class="col-sm-12">
+    <div id="hint1" class="panel-collapse collapse">
+	The abbreviation field is the abbreviated name which the person uses in publications and other 
+	catalogs. It must contain only uppercase letters, hyphens, periods, commas or spaces. A valid abbreviation for
+	the name "Charles Robert Darwin" would be "DARWIN, C. R.".
+	When registering a new person, the system suggests the name abbreviation, but the user is free to change 
+	it to better adapt it to the usual abbreviation used by each person. 
+	The abbreviation should be unique for each person.
     </div>
+  </div>
 </div>
 <div class="form-group">
     <label for="email" class="col-sm-3 control-label">E-mail</label>

@@ -16,7 +16,7 @@ class PersonController extends Controller
      */
     public function index()
     {
-	    $persons = Person::orderBy('abbreviation')->paginate(20);
+	    $persons = Person::orderBy('abbreviation')->paginate(10);
 	    return view('persons.index', [
         'persons' => $persons,
 	'edit' => null
@@ -97,7 +97,7 @@ class PersonController extends Controller
 	    $person = Person::find($id);
 	    $this->checkValid($request, $id);
 	    $person->update($request->all());
-	return redirect('persons/'.$id);
+	return redirect('persons');
     }
 
     /**

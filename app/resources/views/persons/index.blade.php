@@ -3,6 +3,22 @@
 @section('content')
     <div class="container">
         <div class="col-sm-offset-2 col-sm-8">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" href="#help" class="btn btn-default">Help</a>
+      </h4>
+    </div>
+    <div id="help" class="panel-collapse collapse">
+      <div class="panel-body">
+	This table represent people which may or may not be directly involved with the database. 
+	It is used to store information about plant and voucher collectors, specialists, and database users. 
+	When registering a new person, the system suggests the name abbreviation, but the user is free to change 
+	it to better adapt it to the usual abbreviation used by each person. 
+	The abbreviation should be unique for each person.
+      </div>
+    </div>
+  </div>
             <div class="panel panel-default">
                 <div class="panel-heading">
                     New Person
