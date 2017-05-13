@@ -85,10 +85,14 @@
                     Open Data Bio
                 </div>
                 <div class="subtitle m-b-md">
+		    Version {{ config('app.version') }}
+                </div>
+                <div class="subtitle m-b-md">
                     A modern system for storing and retrieving plant data - floristics, ecology and monitoring 
                 </div>
 
                 <div class="links">
+                    <a href="{{ route('home') }}">Home</a>
                     <a href="https://github.com/opendatabio/opendatabio/wiki">Documentation</a>
                     <a href="https://github.com/opendatabio/opendatabio">GitHub</a>
                 </div>

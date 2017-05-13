@@ -16,6 +16,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Version
+    |--------------------------------------------------------------------------
+    |
+    | This value is the version of your application. This should be incremented
+    | according to Semantic Versioning. Git tags should be generated every time
+    | this number is incremented. Non-production releases should be marked as 
+    | "alpha", such as 0.1.0-alpha1.
+    */
+
+    'version' => '0.1.0-alpha1',
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |
