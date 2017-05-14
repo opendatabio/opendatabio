@@ -44,6 +44,7 @@
                     <!-- Left Side Of Navbar -->
                     <ul class="nav navbar-nav">
 			<li><a href="{{ route('persons.index') }}">Persons</a></li>
+			<li><a href="{{ route('users.index') }}">Users</a></li>
                         &nbsp;
                     </ul>
 
@@ -60,6 +61,7 @@
                                 </a>
 
                                 <ul class="dropdown-menu" role="menu">
+			    <li><a href="{{ route('selfedit') }}">Edit profile</a></li>
                                     <li>
                                         <a href="{{ route('logout') }}"
                                             onclick="event.preventDefault();

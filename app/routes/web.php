@@ -11,11 +11,21 @@
 |
 */
 
+# Landing page
 Route::get('/', function () {
     return view('welcome');
 });
 
+# Default auth routes
 Auth::routes();
+# Users can update their own data
+Route::get('/selfedit', 'Auth\SelfEditController@selfedit')->name('selfedit');
+Route::put('/selfupdate', 'UserController@selfupdate')->name('selfupdate');
 
+# Home controller (for logged in users?)
 Route::get('/home', 'HomeController@index')->name('home');
+# Persons resource
 Route::resource('persons', 'PersonController');
+# Users can be resources for the admin
+Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
+
