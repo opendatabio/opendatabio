@@ -52,7 +52,7 @@ class PersonController extends Controller
     protected function checkValid(Request $request, $id = null) {
 	$this->validate($request, [
 		'full_name' => 'required|max:191',
-		'abbreviation' => ['required','max:191','regex:/^[A-Z,\. -]+$/', 'unique:persons,abbreviation,'. $id],
+		'abbreviation' => ['required','max:191','regex:'.config('app.valid_abbreviation'), 'unique:persons,abbreviation,'. $id],
 		'email' => ['nullable', 'max:191', 'email', 'unique:persons,email,'.$id]
 	]);
     }

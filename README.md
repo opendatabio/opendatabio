@@ -88,7 +88,9 @@ installing.
 ### Post-install configurations
 TODO: is php artisan key:generate needed after install??
 
-Include instructions for app config: language, locale and timezone!!!
+Include instructions for app config: language, locale and timezone!!! 
+
+TODO: abbreviation format in config/app
 
 TODO: mail settings; defaults to SMTP??
 

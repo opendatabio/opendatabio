@@ -79,6 +79,15 @@ return [
 
     'timezone' => 'UTC',
 
+
+    /* 
+     * This string represents a regular expression describing what is a valid
+     * value for the Abbreviation field in the Person entity. It may be overriden
+     * in the .env file.
+     */
+
+    'valid_abbreviation' => '/^[A-Z,\. -]+$/',
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
