@@ -28,12 +28,6 @@ class UserController extends Controller
     public function show($id) {
 	    return redirect ('users/'.$id.'/edit');
     }
-    public function selfedit() {
-	    return view('users.selfedit');
-    }
-    public function selfupdate() {
-	    return view('users.selfedit');
-    }
     public function update(Request $request, $id)
     {
 	    // This method is called when a system administrator edits another user:

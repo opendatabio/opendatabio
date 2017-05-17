@@ -18,8 +18,7 @@ class PersonController extends Controller
     {
 	    $persons = Person::orderBy('abbreviation')->paginate(10);
 	    return view('persons.index', [
-        'persons' => $persons,
-	'edit' => null
+        'persons' => $persons
     ]);
         //
     }
@@ -31,7 +30,6 @@ class PersonController extends Controller
      */
     public function create()
     {
-        //
 	return redirect('persons');
     }
 
@@ -43,7 +41,6 @@ class PersonController extends Controller
      */
     public function store(Request $request)
     {
-        //
 	$this->checkValid($request);
 	$person = Person::create($request->all());
 	return redirect('persons');
@@ -65,7 +62,6 @@ class PersonController extends Controller
      */
     public function show($id)
     {
-        //
 	    $person = Person::find($id);
 	    return view('persons.show', [
 		    'person' => $person
@@ -80,7 +76,6 @@ class PersonController extends Controller
      */
     public function edit($id)
     {
-        //
 	 return redirect('persons/'.$id);
     }
 
@@ -93,7 +88,6 @@ class PersonController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
 	    $person = Person::find($id);
 	    $this->checkValid($request, $id);
 	    $person->update($request->all());
@@ -108,7 +102,6 @@ class PersonController extends Controller
      */
     public function destroy($id)
     {
-        //
 	    Person::find($id)->delete();
 	return redirect('persons');
     }

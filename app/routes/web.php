@@ -20,7 +20,7 @@ Route::get('/', function () {
 Auth::routes();
 # Users can update their own data
 Route::get('/selfedit', 'Auth\SelfEditController@selfedit')->name('selfedit');
-Route::put('/selfupdate', 'UserController@selfupdate')->name('selfupdate');
+Route::put('/selfupdate', 'Auth\SelfEditController@selfupdate')->name('selfupdate');
 
 # Home controller (for logged in users?)
 Route::get('/home', 'HomeController@index')->name('home');
