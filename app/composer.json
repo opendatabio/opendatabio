@@ -2,12 +2,13 @@
     "name": "laravel/laravel",
     "description": "The Laravel Framework.",
     "keywords": ["framework", "laravel"],
-    "license": "MIT",
+    "license": "GPLv3",
     "type": "project",
     "require": {
         "php": ">=5.6.4",
         "laravel/framework": "5.4.*",
-        "laravel/tinker": "~1.0"
+        "laravel/tinker": "~1.0",
+        "renanbr/bibtex-parser": "0.3.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

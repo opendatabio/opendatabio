@@ -24,8 +24,9 @@ Route::put('/selfupdate', 'Auth\SelfEditController@selfupdate')->name('selfupdat
 
 # Home controller (for logged in users?)
 Route::get('/home', 'HomeController@index')->name('home');
-# Persons resource
+# Resources:
 Route::resource('persons', 'PersonController');
+Route::resource('references', 'BibReferenceController');
 # Users can be resources for the admin
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 
