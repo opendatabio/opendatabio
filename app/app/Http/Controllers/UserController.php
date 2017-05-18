@@ -44,7 +44,12 @@ class UserController extends Controller
     }
     public function destroy($id)
     {
-	    User::find($id)->delete();
+	    try {
+		    User::find($id)->delete();
+	    } catch (\Illuminate\Database\QueryException $e) {
+		    return redirect()->back()
+			    ->withErrors(['This user is associated with other objects and cannot be removed'])->withInput();
+	    }
 	return redirect('users');
     }
 }

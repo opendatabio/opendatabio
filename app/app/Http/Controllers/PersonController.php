@@ -102,7 +102,13 @@ class PersonController extends Controller
      */
     public function destroy($id)
     {
-	    Person::find($id)->delete();
+	    try {
+		    Person::find($id)->delete();
+	    } catch (\Illuminate\Database\QueryException $e) {
+		    return redirect()->back()
+			    ->withErrors(['This person is associated with other objects and cannot be removed'])->withInput();
+	    }
+
 	return redirect('persons');
     }
 }

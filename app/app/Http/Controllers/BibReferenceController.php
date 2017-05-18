@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\BibReference;
 use Validator;
+use RenanBr\BibTexParser\ParseException as ParseException;
+use Illuminate\Support\Facades\Log;
 
 class BibReferenceController extends Controller
 {
@@ -40,9 +42,16 @@ class BibReferenceController extends Controller
      */
     public function store(Request $request)
     {
-	$this->checkValid($request);
-	$person = Person::create($request->all());
-	return redirect('persons');
+	    $contents = file_get_contents($request->rfile->getRealPath());
+
+	    try {
+		$person = BibReference::createFromFile($contents);
+	    } catch (ParseException $e) {
+		    Log::error ("ERROR parsing bibtex input file");
+
+		return redirect('references')->withErrors(['The file could not be parsed as valid BibTex!']);
+	    }
+	return redirect('references');
     }
 
     /**
@@ -109,7 +118,12 @@ class BibReferenceController extends Controller
      */
     public function destroy($id)
     {
-	    BibReference::find($id)->delete();
+	    try {
+		    BibReference::find($id)->delete();
+	    } catch (\Illuminate\Database\QueryException $e) {
+		    return redirect()->back()
+			    ->withErrors(['This reference is associated with other objects and cannot be removed'])->withInput();
+	    }
 	return redirect('references');
     }
 }

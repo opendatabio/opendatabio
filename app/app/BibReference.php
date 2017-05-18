@@ -15,6 +15,7 @@ class BibReference extends Model
 	// "cached" entries, so we don't need to parse the bibtex for every call
 	protected $entries = null;
 	protected $appends = ['author', 'title', 'year', 'bibkey'];
+	protected $fillable = ['bibtex'];
 
 	public function validBibtex($string) {
 		$listener = new Listener;
@@ -27,6 +28,19 @@ class BibReference extends Model
 		}
 		return true;
 	}
+
+	public static function createFromFile($contents) {
+		$listener = new Listener;
+		$parser = new Parser;
+		$parser->addListener($listener);
+		$parser->parseString($contents);
+		$newentries = $listener->export();
+		foreach($newentries as $entry) {
+			BibReference::create(['bibtex' => $entry['_original']]);
+		}
+	}
+
+
 	private function parseBibtex() {
 		$listener = new Listener;
 		$parser = new Parser;
