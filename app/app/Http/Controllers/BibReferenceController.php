@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\BibReference;
+use Validator;
 
 class BibReferenceController extends Controller
 {
@@ -28,7 +29,7 @@ class BibReferenceController extends Controller
      */
     public function create()
     {
-	return redirect('persons');
+	return redirect('references');
     }
 
     /**
@@ -44,14 +45,6 @@ class BibReferenceController extends Controller
 	return redirect('persons');
     }
 
-    protected function checkValid(Request $request, $id = null) {
-	$this->validate($request, [
-		'full_name' => 'required|max:191',
-		'abbreviation' => ['required','max:191','regex:'.config('app.valid_abbreviation'), 'unique:persons,abbreviation,'. $id],
-		'email' => ['nullable', 'max:191', 'email', 'unique:persons,email,'.$id]
-	]);
-    }
-
     /**
      * Display the specified resource.
      *
@@ -60,9 +53,9 @@ class BibReferenceController extends Controller
      */
     public function show($id)
     {
-	    $person = Person::find($id);
-	    return view('persons.show', [
-		    'person' => $person
+	    $reference = BibReference::find($id);
+	    return view('references.show', [
+		    'reference' => $reference
 	    ]);
     }
 
@@ -74,7 +67,7 @@ class BibReferenceController extends Controller
      */
     public function edit($id)
     {
-	 return redirect('persons/'.$id);
+	 return redirect('references/'.$id);
     }
 
     /**
@@ -86,10 +79,26 @@ class BibReferenceController extends Controller
      */
     public function update(Request $request, $id)
     {
-	    $person = Person::find($id);
-	    $this->checkValid($request, $id);
-	    $person->update($request->all());
-	return redirect('persons');
+	    $reference = BibReference::find($id);
+//	    $this->checkValid($request, $id);
+	    $validator = Validator::make($request->all(), [
+		    'bibtex' => 'required|string',
+	    ]);
+
+	    $validator->after(function ($validator) use ($reference, $request) {
+		    if (! $reference->validBibtex($request->bibtex)) 
+			    $validator->errors()->add('bibtex', 'The BibTex format is incorrect!');
+	    });
+
+	    if ($validator->fails()) {
+		    return redirect()->back()
+			    ->withErrors($validator)
+			    ->withInput();
+	    }
+
+	    $reference->bibtex = $request->bibtex;
+	    $reference->save();
+	    return redirect('references');
     }
 
     /**
@@ -100,8 +109,7 @@ class BibReferenceController extends Controller
      */
     public function destroy($id)
     {
-	    Person::find($id)->delete();
-	return redirect('persons');
+	    BibReference::find($id)->delete();
+	return redirect('references');
     }
-    //
 }

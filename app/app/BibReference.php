@@ -15,13 +15,29 @@ class BibReference extends Model
 	protected $entries = null;
 	protected $appends = ['author', 'title', 'year', 'bibkey'];
 
+	public function validBibtex($string) {
+		$listener = new Listener;
+		$parser = new Parser;
+		$parser->addListener($listener);
+		try {
+			$parser->parseString($string);
+		} catch (\Exception $e) {
+			return false;
+		}
+		return true;
+	}
 	private function parseBibtex() {
 		$listener = new Listener;
 		$parser = new Parser;
 		$parser->addListener($listener);
-		$parser->parseString($this->bibtex);
+		try {
+			$parser->parseString($this->bibtex);
+		} catch (\Exception $e) {
+			Log::error("Error handling bibtex:". $e->getMessage());
+			$this->entries[0] = ['author' => null, 'title' => null, 'year' => null, 'citation-key' => 'Invalid'];
+			return;
+		}
 		$this->entries = $listener->export();
-			Log::error ("BLAH");
 	}
 
 	public function getAuthorAttribute() {
