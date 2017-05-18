@@ -20,7 +20,7 @@ class UserController extends Controller
     ]);
     }
     public function edit($id) {
-	    $user = User::find($id);
+	    $user = User::findOrFail($id);
 	    return view('users.edit', [
 	    	'user' => $user
 	]);
@@ -31,7 +31,7 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
 	    // This method is called when a system administrator edits another user:
-	    $user = User::find($id);
+	    $user = User::findOrFail($id);
 	    // ATTENTION, the system admin may set any password for a user, regardless of other restrictions elsewhere
 	    $this->validate($request, [
 		'email' => ['max:191', 'email', 'unique:users,email,'.$id]
@@ -45,7 +45,7 @@ class UserController extends Controller
     public function destroy($id)
     {
 	    try {
-		    User::find($id)->delete();
+		    User::findOrFail($id)->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
 			    ->withErrors(['This user is associated with other objects and cannot be removed'])->withInput();

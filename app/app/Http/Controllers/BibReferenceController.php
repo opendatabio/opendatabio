@@ -62,7 +62,7 @@ class BibReferenceController extends Controller
      */
     public function show($id)
     {
-	    $reference = BibReference::find($id);
+	    $reference = BibReference::findOrFail($id);
 	    return view('references.show', [
 		    'reference' => $reference
 	    ]);
@@ -88,7 +88,7 @@ class BibReferenceController extends Controller
      */
     public function update(Request $request, $id)
     {
-	    $reference = BibReference::find($id);
+	    $reference = BibReference::findOrFail($id);
 //	    $this->checkValid($request, $id);
 	    $validator = Validator::make($request->all(), [
 		    'bibtex' => 'required|string',
@@ -119,7 +119,7 @@ class BibReferenceController extends Controller
     public function destroy($id)
     {
 	    try {
-		    BibReference::find($id)->delete();
+		    BibReference::findOrFail($id)->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
 			    ->withErrors(['This reference is associated with other objects and cannot be removed'])->withInput();

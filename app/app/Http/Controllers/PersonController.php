@@ -62,7 +62,7 @@ class PersonController extends Controller
      */
     public function show($id)
     {
-	    $person = Person::find($id);
+	    $person = Person::findOrFail($id);
 	    return view('persons.show', [
 		    'person' => $person
 	    ]);
@@ -88,7 +88,7 @@ class PersonController extends Controller
      */
     public function update(Request $request, $id)
     {
-	    $person = Person::find($id);
+	    $person = Person::findOrFail($id);
 	    $this->checkValid($request, $id);
 	    $person->update($request->all());
 	return redirect('persons');
@@ -103,7 +103,7 @@ class PersonController extends Controller
     public function destroy($id)
     {
 	    try {
-		    Person::find($id)->delete();
+		    Person::findOrFail($id)->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
 			    ->withErrors(['This person is associated with other objects and cannot be removed'])->withInput();
