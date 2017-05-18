@@ -18,7 +18,7 @@
                          {{ method_field('PUT') }}
 <div class="form-group">
     <label for="bibtex" class="col-sm-3 control-label">BibTeX entry</label>
-    <div class="col-sm-6">
+    <div class="col-sm-9">
 	<textarea name="bibtex" id="bibtex" class="form-control" rows=10 cols=80>{{ old('bibtex', isset($reference) ? $reference->bibtex : null) }}</textarea>
     </div>
 </div>

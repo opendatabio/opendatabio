@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use RenanBr\BibTexParser\Listener as Listener;
 use RenanBr\BibTexParser\Parser as Parser;
+use RenanBr\BibTexParser\ParseException as ParseException;
 
 
 use Illuminate\Support\Facades\Log;
@@ -21,7 +22,7 @@ class BibReference extends Model
 		$parser->addListener($listener);
 		try {
 			$parser->parseString($string);
-		} catch (\Exception $e) {
+		} catch (ParseException $e) {
 			return false;
 		}
 		return true;
@@ -32,7 +33,7 @@ class BibReference extends Model
 		$parser->addListener($listener);
 		try {
 			$parser->parseString($this->bibtex);
-		} catch (\Exception $e) {
+		} catch (ParseException $e) {
 			Log::error("Error handling bibtex:". $e->getMessage());
 			$this->entries[0] = ['author' => null, 'title' => null, 'year' => null, 'citation-key' => 'Invalid'];
 			return;

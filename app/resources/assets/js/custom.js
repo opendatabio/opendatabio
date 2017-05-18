@@ -18,4 +18,14 @@ $(document).ready(function(){
 			}
 		}
 	});
+
+	/** The following functions allow a "fake" submit button to replace a file input control */
+	$("#fakerfile").click(function(e) {
+		e.preventDefault();
+		$("#rfile").trigger("click");
+	});
+	$("#rfile").change(function (){
+		$("#submit").trigger("click");
+	});
+
 });
