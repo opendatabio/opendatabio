@@ -13,6 +13,9 @@
       <div class="panel-body">
 	This table contains the bibliographic references used when incorporating published data to the database.
 	All references should be in Bibtex format - all major citation softwares are able to export to Bibtex format.
+	
+	Check the "standardize" box if you want to generate standard BibTeX keys for the imported entries. These will
+	be used instead of the keys that are present in the files.
       </div>
     </div>
   </div>
@@ -29,6 +32,14 @@
 		    <form action="{{ url('references')}}" method="POST" class="form-horizontal" enctype="multipart/form-data">
 		     {{ csrf_field() }}
 
+<div class="form-group">
+<div class="col-sm-6">
+    <label for="standardize" class="control-label">
+	<input type="checkbox" name="standardize" id="standardize" class="" checked >
+		Standardize Keys
+	</label>
+</div>
+</div>
 		        <div class="form-group">
 			    <div class="col-sm-6">
   <span class="btn btn-success fileinput-button" id="fakerfile">

@@ -7,6 +7,7 @@ use App\BibReference;
 use Validator;
 use RenanBr\BibTexParser\ParseException as ParseException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class BibReferenceController extends Controller
 {
@@ -17,7 +18,7 @@ class BibReferenceController extends Controller
      */
     public function index()
     {
-	    $references = BibReference::paginate(10);
+	    $references = BibReference::orderBy(DB::raw('odb_bibkey(bibtex)'))->paginate(10);
 	    return view('references.index', [
         'references' => $references
     ]);
@@ -45,10 +46,8 @@ class BibReferenceController extends Controller
 	    $contents = file_get_contents($request->rfile->getRealPath());
 
 	    try {
-		$person = BibReference::createFromFile($contents);
+		$person = BibReference::createFromFile($contents, $request->standardize);
 	    } catch (ParseException $e) {
-		    Log::error ("ERROR parsing bibtex input file");
-
 		return redirect('references')->withErrors(['The file could not be parsed as valid BibTex!']);
 	    }
 	return redirect('references');

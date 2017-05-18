@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use RenanBr\BibTexParser\Listener as Listener;
 use RenanBr\BibTexParser\Parser as Parser;
 use RenanBr\BibTexParser\ParseException as ParseException;
+use App\Structures_BibTex;
 
 
 use Illuminate\Support\Facades\Log;
@@ -29,14 +30,31 @@ class BibReference extends Model
 		return true;
 	}
 
-	public static function createFromFile($contents) {
+	public static function createFromFile($contents, $standardize) {
 		$listener = new Listener;
 		$parser = new Parser;
 		$parser->addListener($listener);
 		$parser->parseString($contents);
 		$newentries = $listener->export();
 		foreach($newentries as $entry) {
-			BibReference::create(['bibtex' => $entry['_original']]);
+			if ($standardize) {
+				$bibtex = new Structures_BibTex;
+				$bibtex->parse_string($entry['_original']);
+				$fword = trim(strtolower(strtok($bibtex->data[0]['title'], ' ')));
+				while (in_array($fword, ['a', 'an', 'the', 'on', 'of', 'in', 'as', 'at', 'for', 'from', 'where', 'i', 'are', 'is', 'it', 'that', 'this']))
+					$fword = strtok(' ');
+				$slug = strtolower(
+					$bibtex->data[0]['author'][0]['von'] .
+					$bibtex->data[0]['author'][0]['last'] .
+					$bibtex->data[0]['year'] .
+					$fword
+				);
+				$bibtex->data[0]['cite'] = $slug;
+			BibReference::create(['bibtex' => $bibtex->bibTex()]);
+			} else {
+
+				BibReference::create(['bibtex' => $entry['_original']]);
+			}
 		}
 	}
 
