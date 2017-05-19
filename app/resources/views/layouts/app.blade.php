@@ -45,6 +45,7 @@
                     <ul class="nav navbar-nav">
 			<li><a href="{{ route('persons.index') }}">Persons</a></li>
 			<li><a href="{{ route('references.index') }}">References</a></li>
+			<li><a href="{{ route('herbaria.index') }}">Herbaria</a></li>
 			<li><a href="{{ route('users.index') }}">Users</a></li>
                         &nbsp;
                     </ul>
