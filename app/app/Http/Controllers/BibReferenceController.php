@@ -50,7 +50,7 @@ class BibReferenceController extends Controller
 	    } catch (ParseException $e) {
 		return redirect('references')->withErrors(['The file could not be parsed as valid BibTex!']);
 	    }
-	return redirect('references');
+	return redirect('references')->withStatus('References created!');
     }
 
     /**
@@ -106,7 +106,7 @@ class BibReferenceController extends Controller
 
 	    $reference->bibtex = $request->bibtex;
 	    $reference->save();
-	    return redirect('references');
+	    return redirect('references')->withStatus('Reference saved!');
     }
 
     /**
@@ -123,6 +123,6 @@ class BibReferenceController extends Controller
 		    return redirect()->back()
 			    ->withErrors(['This reference is associated with other objects and cannot be removed'])->withInput();
 	    }
-	return redirect('references');
+	return redirect('references')->withStatus('Reference removed!');
     }
 }

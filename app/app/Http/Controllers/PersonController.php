@@ -43,7 +43,7 @@ class PersonController extends Controller
     {
 	$this->checkValid($request);
 	$person = Person::create($request->all());
-	return redirect('persons');
+	return redirect('persons')->withStatus('Person stored!');
     }
 
     protected function checkValid(Request $request, $id = null) {
@@ -91,7 +91,7 @@ class PersonController extends Controller
 	    $person = Person::findOrFail($id);
 	    $this->checkValid($request, $id);
 	    $person->update($request->all());
-	return redirect('persons');
+	return redirect('persons')->withStatus('Person updated!');
     }
 
     /**
@@ -109,6 +109,6 @@ class PersonController extends Controller
 			    ->withErrors(['This person is associated with other objects and cannot be removed'])->withInput();
 	    }
 
-	return redirect('persons');
+	return redirect('persons')->withStatus('Person removed!');
     }
 }

@@ -52,6 +52,6 @@ class SelfEditController extends Controller
 			Auth::user()->person_id = null;
 		Auth::user()->save();
 
-	    return redirect()->route('home');
+	    return redirect()->route('home')->withStatus('Profile updated!');
     }
 }

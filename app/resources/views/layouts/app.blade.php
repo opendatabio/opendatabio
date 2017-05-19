@@ -81,7 +81,11 @@
                 </div>
             </div>
         </nav>
-
+@if (session('status'))
+    <div class="col-sm-5 col-sm-offset-3 alert alert-success"><!-- TODO: positioning! -->
+        {{ session('status') }}
+    </div>
+@endif
         @yield('content')
     </div>
 

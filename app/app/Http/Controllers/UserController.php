@@ -40,7 +40,7 @@ class UserController extends Controller
 	    if (! is_null($request->password))
 	    	$user->password = bcrypt($request->password);
 	    $user->save();
-	return redirect('users');
+	return redirect('users')->withStatus('User updated!');
     }
     public function destroy($id)
     {
@@ -50,6 +50,6 @@ class UserController extends Controller
 		    return redirect()->back()
 			    ->withErrors(['This user is associated with other objects and cannot be removed'])->withInput();
 	    }
-	return redirect('users');
+	return redirect('users')->withStatus('User removed!');
     }
 }
