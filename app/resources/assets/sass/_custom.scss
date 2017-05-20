@@ -1,0 +1,14 @@
+#spinner {
+ border-top: 3px solid $brand-primary;
+ border-bottom: 3px solid $brand-primary;
+  border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 2s ease-in-out infinite;
+    display: none;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

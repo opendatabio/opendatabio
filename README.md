@@ -46,6 +46,8 @@ The following PHP extensions are recommended:
 - apcu (caching)
 - OPcache (caching)
 
+The "allow\_url\_fopen" directive must be set to On on php.ini (for Guzzle).
+
 Create a database and user for opendatabio. Using the MySQL command line, (e.g., `mysql -uroot -p`):
 
 ```

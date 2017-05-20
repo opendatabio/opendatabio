@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 use App\Herbarium;
+use App\ExternalAPIs;
 
 class HerbariumController extends Controller
 {
@@ -20,6 +22,17 @@ class HerbariumController extends Controller
 	]);
     }
 
+    public function checkih(Request $request)
+    {
+	    if(is_null($request['acronym']))
+		    return Response::json(['error' => 'You must provide an acronym!']);
+	    $apis = new ExternalAPIs;
+	    $ihdata = $apis->getIndexHerbariorum($request->acronym);
+	    if(is_null($ihdata))
+		    return Response::json(['error' => 'Acronym not found or error accessing IH site!']);
+	    return Response::json(['ihdata' => $ihdata]);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -27,6 +40,7 @@ class HerbariumController extends Controller
      */
     public function create()
     {
+	    return redirect('herbaria');
         //
     }
 
@@ -38,6 +52,9 @@ class HerbariumController extends Controller
      */
     public function store(Request $request)
     {
+		print_r($request->toArray());
+	    if ($request->submit == 'checkih') return $this->checkih();
+	    return "OH NO"; 
         //
     }
 

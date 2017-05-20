@@ -19,7 +19,8 @@ $(document).ready(function(){
 		}
 	});
 
-	/** The following functions allow a "fake" submit button to replace a file input control */
+	/** The following functions allow a "fake" submit button to replace a file input control.
+	 *  Used on every view that accepts a file input */
 	$("#fakerfile").click(function(e) {
 		e.preventDefault();
 		$("#rfile").trigger("click");
@@ -28,4 +29,33 @@ $(document).ready(function(){
 		$("#submit").trigger("click");
 	});
 
+	/** Ajax handling for registering herbaria */
+	$("#checkih").click(function(e) {
+		$( "#spinner" ).css('display', 'inline-block');
+		$.ajaxSetup({ // sends the cross-forgery token!
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			}
+		})
+		e.preventDefault(); // does not allow the form to submit
+		$.ajax({
+			type: "POST",
+			url: $('input[name="route-url"]').val(),
+			dataType: 'json',
+			data: {'acronym': $('input[name="acronym"]').val()},
+			success: function (data) {
+				$( "#spinner" ).hide();
+				if ("error" in data) {
+					alert(data.error);
+				} else {
+					$("#irn").val(data.ihdata[0]);
+					$("#name").val(data.ihdata[1]);
+				}
+			},
+			error: function(e){ 
+				$( "#spinner" ).hide();
+				alert('Error sending AJAX request');
+			}
+		})
+	});
 });

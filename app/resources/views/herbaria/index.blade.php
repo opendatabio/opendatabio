@@ -29,18 +29,20 @@
 		    @include('common.errors')
 
 		    <form action="{{ url('herbaria')}}" method="POST" class="form-horizontal">
+		    <input type="hidden" name="route-url" value="{{ route('checkih') }}">
 		     {{ csrf_field() }}
 		    @include('herbaria.form')
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-primary">
+				<button type="submit" class="btn btn-primary" id="checkih">
 				    <i class="fa fa-btn fa-plus"></i>Check Index Herbariorum
 				</button>
+				<div class="spinner" id="spinner"> </div>
 			    </div>
 			</div>
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success">
+				<button type="submit" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>Add Herbarium
 				</button>
 			    </div>
