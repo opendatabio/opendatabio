@@ -52,10 +52,13 @@ class HerbariumController extends Controller
      */
     public function store(Request $request)
     {
-		print_r($request->toArray());
-	    if ($request->submit == 'checkih') return $this->checkih();
-	    return "OH NO"; 
-        //
+	$this->validate($request, [
+		'name' => 'required|max:191',
+		'acronym' => 'required|max:20|unique:herbaria',
+		'irn' => 'required',
+	]);
+	Herbarium::create($request->all());
+	return redirect('herbaria')->withStatus('Herbarium stored!');
     }
 
     /**
@@ -66,30 +69,10 @@ class HerbariumController extends Controller
      */
     public function show($id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
+	    $herbarium = Herbarium::findOrFail($id);
+	    return view('herbaria.show', [
+		    'herbarium' => $herbarium
+	    ]);
     }
 
     /**
@@ -100,6 +83,14 @@ class HerbariumController extends Controller
      */
     public function destroy($id)
     {
+	    try {
+		    Herbarium::findOrFail($id)->delete();
+	    } catch (\Illuminate\Database\QueryException $e) {
+		    return redirect()->back()
+			    ->withErrors(['This herbarium is associated with other objects and cannot be removed'])->withInput();
+	    }
+
+	return redirect('herbaria')->withStatus('Herbarium removed!');
         //
     }
 }
