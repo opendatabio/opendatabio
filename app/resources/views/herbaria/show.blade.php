@@ -9,6 +9,8 @@
                 </div>
 
 		<div class="panel-body">
+                    <!-- Display Validation Errors -->
+		    @include('common.errors')
 		    <p><strong>Acronym: </strong> {{ $herbarium->acronym }} </p>
 		    <p><strong>Institution name: </strong> {{ $herbarium->name }} </p>
 		    <p><a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn={{$herbarium->irn}}">Details</a></p>
@@ -26,6 +28,32 @@
                 </div>
             </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Specialists
+                </div>
+
+		<div class="panel-body">
+                        <table class="table table-striped person-table">
+                            <thead>
+                                <th>Abbreviation</th>
+                                <th>Name</th>
+                                <th>E-mail</th>
+                            </thead>
+                            <tbody>
+                                @foreach ($herbarium->persons as $person)
+                                    <tr>
+					<td class="table-text"><div>
+					<a href="{{ url('persons/'.$person->id) }}">{{ $person->abbreviation }}</a>
+					</div></td>
+                                        <td class="table-text">{{ $person->full_name }}</td>
+                                        <td class="table-text">{{ $person->email }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                </div>
+            </div>
         </div>
     </div>
 @endsection

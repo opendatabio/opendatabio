@@ -33,3 +33,22 @@
 	<input type="text" name="institution" id="institution" class="form-control" value="{{ old('institution', isset($person) ? $person->institution : null) }}">
     </div>
 </div>
+<div class="form-group">
+    <label for="herbarium_id" class="col-sm-3 control-label">Herbarium</label>
+        <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+	<?php $selected = old('herbarium_id', isset($person) ? $person->herbarium_id : null); ?>
+
+	<select name="herbarium_id" id="herbarium_id" class="form-control" >
+		<option value=0>&nbsp;</option>
+	@foreach ($herbaria as $herbarium)
+		<option value="{{$herbarium->id}}" {{ $herbarium->id == $selected ? 'selected' : '' }}>{{$herbarium->acronym}}</option>
+	@endforeach
+	</select>
+            </div>
+  <div class="col-sm-12">
+    <div id="hint2" class="panel-collapse collapse">
+	Is this person associated with an Herbarium? This is useful to register specialists.
+    </div>
+  </div>
+</div>

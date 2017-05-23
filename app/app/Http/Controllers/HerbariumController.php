@@ -87,7 +87,7 @@ class HerbariumController extends Controller
 		    Herbarium::findOrFail($id)->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
-			    ->withErrors(['This herbarium is associated with other objects and cannot be removed'])->withInput();
+			    ->withErrors(['This herbarium is associated with other objects and cannot be removed']);
 	    }
 
 	return redirect('herbaria')->withStatus('Herbarium removed!');

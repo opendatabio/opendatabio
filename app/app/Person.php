@@ -8,6 +8,11 @@ class Person extends Model
 {
 	// Gramatically incorrect, but helps development
 	protected $table = 'persons';
-	protected $fillable = ['full_name', 'abbreviation', 'email', 'institution'];
+	protected $fillable = ['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id'];
 
+
+    public function herbarium()
+    {
+        return $this->hasOne('App\Herbarium');
+    }
 }

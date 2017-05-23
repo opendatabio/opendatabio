@@ -21,11 +21,15 @@ class CreateHerbariaTable extends Migration
             $table->timestamps();
 	});
 
-	DB::table('herbaria')->insert([
+	DB::table('herbaria')->insert([[
 		'acronym' => 'INPA',
 		'name' => 'Instituto Nacional de Pesquisas da Amazônia',
 		'irn' => 124921
-	]);
+	], [
+		'acronym' => 'SPB',
+		'name' => 'Universidade de São Paulo',
+		'irn' => 126324
+	]]);
     }
 
     /**

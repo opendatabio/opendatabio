@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Log;
 use App\Person;
+use App\Herbarium;
 
 class PersonController extends Controller
 {
@@ -17,8 +18,10 @@ class PersonController extends Controller
     public function index()
     {
 	    $persons = Person::orderBy('abbreviation')->paginate(10);
+	    $herbaria = Herbarium::all();
 	    return view('persons.index', [
-        'persons' => $persons
+		    'persons' => $persons,
+		    'herbaria' => $herbaria,
     ]);
         //
     }
@@ -63,8 +66,10 @@ class PersonController extends Controller
     public function show($id)
     {
 	    $person = Person::findOrFail($id);
+	    $herbaria = Herbarium::all();
 	    return view('persons.show', [
-		    'person' => $person
+		    'person' => $person,
+		    'herbaria' => $herbaria,
 	    ]);
     }
 
