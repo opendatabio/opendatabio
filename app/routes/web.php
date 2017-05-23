@@ -28,7 +28,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::resource('persons', 'PersonController');
 Route::resource('references', 'BibReferenceController');
 Route::post('herbaria/checkih', 'HerbariumController@checkih')->name('checkih');
-Route::resource('herbaria', 'HerbariumController', ['only' => ['index', 'show', 'create', 'destroy']]);
+Route::resource('herbaria', 'HerbariumController', ['only' => ['index', 'show', 'store', 'destroy']]);
 # Users can be resources for the admin
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 
