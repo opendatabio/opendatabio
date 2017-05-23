@@ -27,6 +27,18 @@ return [
 
     'version' => '0.1.0-alpha1',
 
+    /* 
+     * Proxy settings
+     *
+     * These settings are used to specify a proxy for outward connection,
+     * such as when accessing Index Herbariorum, APNI, Mobot, etc
+    */
+
+    'proxy_user' => env('PROXY_USER', ''),
+    'proxy_passwd' => env('PROXY_PASSWD', ''),
+    'proxy_url' => env('PROXY_URL', ''),
+    'proxy_port' => env('PROXY_PORT', '1080'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
