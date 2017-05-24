@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Seeder;
+use App\Herbarium;
 
 class PersonsTableSeeder extends Seeder
 {
@@ -13,10 +14,7 @@ class PersonsTableSeeder extends Seeder
     {
 	    $faker = Faker\Factory::create();
 
-	    $limit = 33;
-
-	    for ($i = 0; $i < 20; $i++) {
-
+	    for ($i = 0; $i < 40; $i++) {
 		    $name = $faker->name;
 		    $abb = explode(" ", trim(strtoupper($name)));
 		    $lname = array_pop($abb);
@@ -24,10 +22,14 @@ class PersonsTableSeeder extends Seeder
 				$abb[$j] = substr($abb[$j], 0, 1) . ".";
 		    }
 		    $abb = $lname . ", " . join(" ", $abb);
+		    $herbarium = null;
+		    if($faker->numberBetween(1,4) == 1) 
+			    $herbarium = Herbarium::all()->random()->id;
             DB::table('persons')->insert([ //,
                 'full_name' => $name,
                 'abbreviation' => $abb,
-                'email' => $faker->email
+		'email' => $faker->email,
+		'herbarium_id' => $herbarium,
             ]);
 	    }
     }
