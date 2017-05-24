@@ -46,15 +46,19 @@ $(document).ready(function(){
 			success: function (data) {
 				$( "#spinner" ).hide();
 				if ("error" in data) {
-					alert(data.error);
+					$( "#ajax-error" ).collapse("show");
+					$( "#ajax-error" ).text(data.error);
 				} else {
+					// ONLY removes the error if request is success
+					$( "#ajax-error" ).collapse("hide");
 					$("#irn").val(data.ihdata[0]);
 					$("#name").val(data.ihdata[1]);
 				}
 			},
 			error: function(e){ 
 				$( "#spinner" ).hide();
-				alert('Error sending AJAX request');
+				$( "#ajax-error" ).collapse("show");
+				$( "#ajax-error" ).text('Error sending AJAX request');
 			}
 		})
 	});

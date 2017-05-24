@@ -28,6 +28,7 @@
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
 
+<div id="ajax-error" class="collapse alert alert-danger">Error!</div>
 		    <form action="{{ url('herbaria')}}" method="POST" class="form-horizontal">
 		    <input type="hidden" name="route-url" value="{{ route('checkih') }}">
 		     {{ csrf_field() }}
