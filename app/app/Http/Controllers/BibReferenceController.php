@@ -8,6 +8,7 @@ use Validator;
 use RenanBr\BibTexParser\ParseException as ParseException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Lang;
 
 class BibReferenceController extends Controller
 {
@@ -48,9 +49,9 @@ class BibReferenceController extends Controller
 	    try {
 		$person = BibReference::createFromFile($contents, $request->standardize);
 	    } catch (ParseException $e) {
-		return redirect('references')->withErrors(['The file could not be parsed as valid BibTex!']);
+		return redirect('references')->withErrors([Lang::get('messages.bibtex_error')]);
 	    }
-	return redirect('references')->withStatus('References created!');
+	return redirect('references')->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -95,7 +96,7 @@ class BibReferenceController extends Controller
 
 	    $validator->after(function ($validator) use ($reference, $request) {
 		    if (! $reference->validBibtex($request->bibtex)) 
-			    $validator->errors()->add('bibtex', 'The BibTex format is incorrect!');
+			    $validator->errors()->add('bibtex', Lang::get('messages.bibtex_error'));
 	    });
 
 	    if ($validator->fails()) {
@@ -106,7 +107,7 @@ class BibReferenceController extends Controller
 
 	    $reference->bibtex = $request->bibtex;
 	    $reference->save();
-	    return redirect('references')->withStatus('Reference saved!');
+	    return redirect('references')->withStatus(Lang::get('messages.saved'));
     }
 
     /**
@@ -121,8 +122,8 @@ class BibReferenceController extends Controller
 		    BibReference::findOrFail($id)->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
-			    ->withErrors(['This reference is associated with other objects and cannot be removed'])->withInput();
+			    ->withErrors([Lang::get('messages.fk_error')])->withInput();
 	    }
-	return redirect('references')->withStatus('Reference removed!');
+	return redirect('references')->withStatus(Lang::get('messages.removed'));
     }
 }

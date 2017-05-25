@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Log;
 use App\Herbarium;
 use App\ExternalAPIs;
+use Illuminate\Support\Facades\Lang;
 
 class HerbariumController extends Controller
 {
@@ -26,11 +27,11 @@ class HerbariumController extends Controller
     public function checkih(Request $request)
     {
 	    if(is_null($request['acronym']))
-		    return Response::json(['error' => 'You must provide an acronym!']);
+		    return Response::json(['error' => Lang::get('messages.acronym_error')]);
 	    $apis = new ExternalAPIs;
 	    $ihdata = $apis->getIndexHerbariorum($request->acronym);
 	    if(is_null($ihdata))
-		    return Response::json(['error' => 'Acronym not found or error accessing IH site!']);
+		    return Response::json(['error' => Lang::get('messages.acronym_not_found')]);
 	    return Response::json(['ihdata' => $ihdata]);
     }
 
@@ -59,7 +60,7 @@ class HerbariumController extends Controller
 		'irn' => 'required',
 	]);
 	Herbarium::create($request->all());
-	return redirect('herbaria')->withStatus('Herbarium stored!');
+	return redirect('herbaria')->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -88,10 +89,10 @@ class HerbariumController extends Controller
 		    Herbarium::findOrFail($id)->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
-			    ->withErrors(['This herbarium is associated with other objects and cannot be removed']);
+			    ->withErrors([Lang::get('messages.fk_error')]);
 	    }
 
-	return redirect('herbaria')->withStatus('Herbarium removed!');
+	return redirect('herbaria')->withStatus(Lang::get('messages.removed'));
         //
     }
 }

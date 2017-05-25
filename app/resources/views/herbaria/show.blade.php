@@ -5,22 +5,22 @@
         <div class="col-sm-offset-2 col-sm-8">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Herbarium
+                    @lang('messages.herbarium')
                 </div>
 
 		<div class="panel-body">
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
-		    <p><strong>Acronym: </strong> {{ $herbarium->acronym }} </p>
-		    <p><strong>Institution name: </strong> {{ $herbarium->name }} </p>
-		    <p><a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn={{$herbarium->irn}}">Details</a></p>
+		    <p><strong>@lang('messages.acronym'): </strong> {{ $herbarium->acronym }} </p>
+		    <p><strong>@lang('messages.institution'): </strong> {{ $herbarium->name }} </p>
+		    <p><a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn={{$herbarium->irn}}">@lang('messages.details')</a></p>
 		    <form action="{{ url('herbaria/'.$herbarium->id) }}" method="POST" class="form-horizontal">
 			 {{ csrf_field() }}
                          {{ method_field('DELETE') }}
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-danger">
-				    <i class="fa fa-btn fa-plus"></i>Delete Herbarium
+				    <i class="fa fa-btn fa-plus"></i>@lang('messages.remove_herbarium')
 				</button>
 			    </div>
 			</div>
@@ -30,15 +30,15 @@
 <!-- Other details (specialist, herbarium, collects, etc?) -->
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Specialists
+                    @lang('messages.specialists')
                 </div>
 
 		<div class="panel-body">
                         <table class="table table-striped person-table">
                             <thead>
-                                <th>Abbreviation</th>
-                                <th>Name</th>
-                                <th>E-mail</th>
+                                <th>@lang('messages.abbreviation')</th>
+                                <th>@lang('messages.name')</th>
+                                <th>@lang('messages.email')</th>
                             </thead>
                             <tbody>
                                 @foreach ($herbarium->persons as $person)

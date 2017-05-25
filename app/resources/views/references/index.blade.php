@@ -6,23 +6,20 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">Help</a>
+        <a data-toggle="collapse" href="#help" class="btn btn-default">@lang('messages.help')</a>
       </h4>
     </div>
     <div id="help" class="panel-collapse collapse">
       <div class="panel-body">
-	This table contains the bibliographic references used when incorporating published data to the database.
-	All references should be in Bibtex format - all major citation softwares are able to export to Bibtex format.
-	
-	Check the "standardize" box if you want to generate standard BibTeX keys for the imported entries. These will
-	be used instead of the keys that are present in the files.
+@lang('messages.references_hint')
       </div>
     </div>
   </div>
 
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Import References
+
+                    @lang('messages.import_references')
                 </div>
 
                 <div class="panel-body">
@@ -36,7 +33,7 @@
 <div class="col-sm-6">
     <label for="standardize" class="control-label">
 	<input type="checkbox" name="standardize" id="standardize" class="" checked >
-		Standardize Keys
+		@lang('messages.standardize_keys')
 	</label>
 </div>
 </div>
@@ -44,11 +41,11 @@
 			    <div class="col-sm-6">
   <span class="btn btn-success fileinput-button" id="fakerfile">
         <i class="glyphicon glyphicon-file"></i>
-        <span>Import file</span>
+        <span>@lang('messages.import_file')</span>
   </span>
 <input type="file" name="rfile" id="rfile" accept=".bib" style="display:none;">
 <input type="hidden" name="MAX_FILE_SIZE" value="30000">
-<button id="submit" type="submit" value="Submit" style="display: none;">Submeter!</button>
+<button id="submit" type="submit" value="Submit" style="display: none;">Submit</button>
 			    </div>
 			</div>
 		    </form>
@@ -58,16 +55,16 @@
             <!-- Registered References -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        Bibliographic References
+                        @lang('messages.bibliographic_references')
                     </div>
 
                     <div class="panel-body">
                         <table class="table table-striped">
                             <thead>
-                                <th>Bibtex Key</th>
-                                <th>Authors</th>
-                                <th>Year</th>
-                                <th>Title</th>
+                                <th>@lang('messages.bibtex_key')</th>
+                                <th>@lang('messages.authors')</th>
+                                <th>@lang('messages.year')</th>
+                                <th>@lang('messages.title')</th>
                             </thead>
                             <tbody>
                                 @foreach ($references as $reference)

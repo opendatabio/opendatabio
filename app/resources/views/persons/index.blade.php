@@ -6,22 +6,18 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">Help</a>
+        <a data-toggle="collapse" href="#help" class="btn btn-default">@lang('messages.help')</a>
       </h4>
     </div>
     <div id="help" class="panel-collapse collapse">
       <div class="panel-body">
-	This table represent people which may or may not be directly involved with the database. 
-	It is used to store information about plant and voucher collectors, specialists, and database users. 
-	When registering a new person, the system suggests the name abbreviation, but the user is free to change 
-	it to better adapt it to the usual abbreviation used by each person. 
-	The abbreviation should be unique for each person.
+	@lang('messages.person_hint')
       </div>
     </div>
   </div>
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    New Person
+      @lang('messages.new_person')
                 </div>
 
                 <div class="panel-body">
@@ -34,7 +30,7 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success">
-				    <i class="fa fa-btn fa-plus"></i>Add Person
+				    <i class="fa fa-btn fa-plus"></i>@lang('messages.add')
 				</button>
 			    </div>
 			</div>
@@ -45,15 +41,15 @@
             <!-- Registered Persons -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        Registered Persons
+@lang('messages.registered_persons')
                     </div>
 
                     <div class="panel-body">
                         <table class="table table-striped person-table">
                             <thead>
-                                <th>Abbreviation</th>
-                                <th>Name</th>
-                                <th>E-mail</th>
+                                <th>@lang('messages.abbreviation')</th>
+                                <th>@lang('messages.name')</th>
+                                <th>@lang('messages.email')</th>
                             </thead>
                             <tbody>
                                 @foreach ($persons as $person)

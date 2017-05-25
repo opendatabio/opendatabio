@@ -5,7 +5,7 @@
         <div class="col-sm-offset-2 col-sm-8">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Edit Person
+                    @lang('messages.edit_person')
                 </div>
 
                 <div class="panel-body">
@@ -21,7 +21,7 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success">
-				    <i class="fa fa-btn fa-plus"></i>Edit Person
+				    <i class="fa fa-btn fa-plus"></i>@lang('messages.edit_person')
 				</button>
 			    </div>
 			</div>
@@ -32,7 +32,7 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-danger">
-				    <i class="fa fa-btn fa-plus"></i>Delete Person
+				    <i class="fa fa-btn fa-plus"></i>@lang('messages.remove_person')
 				</button>
 			    </div>
 			</div>

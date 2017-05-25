@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Lang;
 use App\User;
 
 class UserController extends Controller
@@ -40,7 +41,7 @@ class UserController extends Controller
 	    if (! is_null($request->password))
 	    	$user->password = bcrypt($request->password);
 	    $user->save();
-	return redirect('users')->withStatus('User updated!');
+	return redirect('users')->withStatus(Lang::get('messages.saved'));
     }
     public function destroy($id)
     {
@@ -48,8 +49,8 @@ class UserController extends Controller
 		    User::findOrFail($id)->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
-			    ->withErrors(['This user is associated with other objects and cannot be removed'])->withInput();
+			    ->withErrors([Lang::get('messages.fk_error')])->withInput();
 	    }
-	return redirect('users')->withStatus('User removed!');
+	return redirect('users')->withStatus(Lang::get('messages.removed'));
     }
 }

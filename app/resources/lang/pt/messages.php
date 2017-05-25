@@ -13,4 +13,5 @@ return array (
   'edit_profile' => 'Alterar perfil',
   'save' => 'Salvar alterações',
   'email' => 'E-mail',
+  'default_person' => 'Pessoa Padrão',
 );

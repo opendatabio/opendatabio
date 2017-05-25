@@ -6,11 +6,11 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        Not found!
+        @lang('messages.whoops')
       </h4>
     </div>
       <div class="panel-body">
-	The item you are trying to see was not found in the database. Maybe you followed an outdated link?
+	{{ _('messages.notfound') }}
     </div>
   </div>
 

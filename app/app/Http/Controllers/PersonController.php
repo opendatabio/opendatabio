@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Person;
 use App\Herbarium;
+use Illuminate\Support\Facades\Lang;
 
 class PersonController extends Controller
 {
@@ -46,7 +47,7 @@ class PersonController extends Controller
     {
 	$this->checkValid($request);
 	$person = Person::create($request->all());
-	return redirect('persons')->withStatus('Person stored!');
+	return redirect('persons')->withStatus(Lang::get('messages.stored'));
     }
 
     protected function checkValid(Request $request, $id = null) {
@@ -96,7 +97,7 @@ class PersonController extends Controller
 	    $person = Person::findOrFail($id);
 	    $this->checkValid($request, $id);
 	    $person->update($request->all());
-	return redirect('persons')->withStatus('Person updated!');
+	return redirect('persons')->withStatus(Lang::get('messages.saved'));
     }
 
     /**
@@ -111,9 +112,9 @@ class PersonController extends Controller
 		    Person::findOrFail($id)->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
-			    ->withErrors(['This person is associated with other objects and cannot be removed'])->withInput();
+			    ->withErrors([Lang::get('messages.fk_error')])->withInput();
 	    }
 
-	return redirect('persons')->withStatus('Person removed!');
+	return redirect('persons')->withStatus(Lang::get('messages.removed'));
     }
 }

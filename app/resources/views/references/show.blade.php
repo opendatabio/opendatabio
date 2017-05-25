@@ -5,7 +5,7 @@
         <div class="col-sm-offset-2 col-sm-8">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    Edit Reference
+                    @lang('messages.edit_reference')
                 </div>
 
                 <div class="panel-body">
@@ -17,7 +17,7 @@
 			 {{ csrf_field() }}
                          {{ method_field('PUT') }}
 <div class="form-group">
-    <label for="bibtex" class="col-sm-3 control-label">BibTeX entry</label>
+    <label for="bibtex" class="col-sm-3 control-label">@lang('messages.bibtex_entry')</label>
     <div class="col-sm-9">
 	<textarea name="bibtex" id="bibtex" class="form-control" rows=10 cols=80>{{ old('bibtex', isset($reference) ? $reference->bibtex : null) }}</textarea>
     </div>
@@ -25,7 +25,7 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success">
-				    <i class="fa fa-btn fa-plus"></i>Update
+				    <i class="fa fa-btn fa-plus"></i>@lang('messages.save')
 				</button>
 			    </div>
 			</div>
@@ -36,8 +36,7 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-danger">
-				    <i class="fa fa-btn fa-plus"></i>Delete Reference
-				</button>
+				    <i class="fa fa-btn fa-plus"></i>@lang('messages.remove_reference')</button>
 			    </div>
 			</div>
 		    </form>

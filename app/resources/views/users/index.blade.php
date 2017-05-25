@@ -6,14 +6,12 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">Help</a>
+        <a data-toggle="collapse" href="#help" class="btn btn-default">@lang('messages.help')</a>
       </h4>
     </div>
     <div id="help" class="panel-collapse collapse">
       <div class="panel-body">
-	This table represent the system users. Each user has a valid e-mail and password, and an access level, which
-	determines the actions he or she may take on the system. This table does not store information about 
-	plant or voucher collectors or specialists. Use the "Persons" tab for that.
+@lang('messages.users_hint')
       </div>
     </div>
   </div>
@@ -21,13 +19,13 @@
             <!-- Registered Persons -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        Registered Persons
+			@lang('messages.registered_users')
                     </div>
 
                     <div class="panel-body">
                         <table class="table table-striped user-table">
                             <thead>
-                                <th>E-mail</th>
+                                <th>@lang('messages.email')</th>
                                 <th>Access level</th>
                             </thead>
                             <tbody>
