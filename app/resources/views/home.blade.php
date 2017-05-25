@@ -9,6 +9,7 @@
 
                 <div class="panel-body">
                     You are logged in!
+			<!-- TODO: translate interface? -->
                 </div>
             </div>
         </div>

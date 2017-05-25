@@ -72,10 +72,10 @@
             @if (Route::has('login'))
                 <div class="top-right links">
                     @if (Auth::check())
-                        <a href="{{ url('/home') }}">Home</a>
+                        <a href="{{ url('/home') }}">@lang('messages.home')</a>
                     @else
-                        <a href="{{ url('/login') }}">Login</a>
-                        <a href="{{ url('/register') }}">Register</a>
+                        <a href="{{ url('/login') }}">@lang('messages.login')</a>
+                        <a href="{{ url('/register') }}">@lang('messages.register')</a>
                     @endif
                 </div>
             @endif
@@ -85,15 +85,15 @@
                     Open Data Bio
                 </div>
                 <div class="subtitle m-b-md">
-		    Version {{ config('app.version') }}
+		    @lang ('messages.version', ['version' => config('app.version')])
                 </div>
                 <div class="subtitle m-b-md">
-                    A modern system for storing and retrieving plant data - floristics, ecology and monitoring 
+		@lang ('messages.tag')
                 </div>
 
                 <div class="links">
-                    <a href="{{ route('home') }}">Home</a>
-                    <a href="https://github.com/opendatabio/opendatabio/wiki">Documentation</a>
+                    <a href="{{ route('home') }}">@lang ('messages.home')</a>
+                    <a href="https://github.com/opendatabio/opendatabio/wiki"> @lang('messages.docs')</a>
                     <a href="https://github.com/opendatabio/opendatabio">GitHub</a>
                 </div>
             </div>
