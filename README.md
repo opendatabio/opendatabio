@@ -63,17 +63,23 @@ Download the OpenDataBio install files from our [releases page](../../releases).
 Extract the installation zip or tarball and move it to the public folder on your webserver (in Debian/Ubuntu,
 it is probably /var/www/html), and rename the directory to "opendatabio". Change directory to your opendatabio/app folder.
 
+TODO: better instructions for a per-user directory??
+https://httpd.apache.org/docs/2.4/howto/public\_html.html
+
 Copy the hidden file ".env.example" to a new file called .env. This is the 
 main configuration file for your installation. Edit it to set the right username, database and
 password. This file also includes some other configuration variables that may be very important,
 such as proxy configuration.
 
-Then, install Composer. See [here](https://getcomposer.org/download/) for instructions. After that, use
+For easier deploy, we have included Composer in the installation files. You are of course free to use another
+Composer installation if you want. See [here](https://getcomposer.org/download/) for instructions. 
+
+After that, use
 composer to install the Laravel framework and other dependencies and artisan to build the database structure.
-Execute (TODO: should we include a composer in the source code to make this part easier?)
+Execute 
 
 ```
-php composer.phar install
+php composer install
 php artisan migrate
 php artisan key:generate
 ```
@@ -81,6 +87,7 @@ php artisan key:generate
 For increased performance, it is recommended to also run
 ```
 php artisan config:cache
+php artisan route:cache ## TODO: Need to remove closure routes!
 ```
 
 The "migrate" command will also generate some suggested entries for the database, such as providing
@@ -113,6 +120,15 @@ TODO: mail settings; defaults to SMTP??
 
 ## Development
 
+When running this app in development mode, it is not necessary to follow all the installation above. You can start a 
+development webserver simply with 
+
+```
+php composer install
+php artisan migrate
+php artisan serve
+```
+
 This system uses Laravel Mix to compile the SASS and JavaScript code used. 
 If you would like to contribute to the app development,
 remember to run `npm run prod` after making any change to these files.
@@ -121,4 +137,6 @@ remember to run `npm run prod` after making any change to these files.
 A tool for upgrading duckewiki databases to opendatabio is currently being developed.
 
 ## License
-Opendatabio is licensed for use under a GPLv3 license.
+Opendatabio is licensed for use under a GPLv3 license. 
+
+PHP is licensed under the PHP license. Composer and Laravel framework are licensed under the MIT license.
