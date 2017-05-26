@@ -16,6 +16,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+# Setting the locale:
+Route::get('welcome/{locale}', function ($locale) {
+	if (array_key_exists($locale, Config::get('languages'))) {
+            Session::put('applocale', $locale);
+        }
+    return redirect('/');
+});
+
 # Default auth routes
 Auth::routes();
 # Users can update their own data

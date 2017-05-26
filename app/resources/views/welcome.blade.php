@@ -96,6 +96,12 @@
                     <a href="https://github.com/opendatabio/opendatabio/wiki"> @lang('messages.docs')</a>
                     <a href="https://github.com/opendatabio/opendatabio">GitHub</a>
                 </div>
+		<div class="links" style="margin-top:20px;">
+    <div class="links">
+        @foreach (Config::get('languages') as $lang => $language)
+                    <a href="{{ url('welcome/'.$lang) }}">{{$language}}</a>&nbsp;
+        @endforeach
+    </div>
             </div>
         </div>
     </body>
