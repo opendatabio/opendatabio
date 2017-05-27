@@ -32,6 +32,15 @@ function c($text, $status) {
 		return "\033[33m" . $text . "\033[0m";
 	}
 }
+function testDB() {
+exec("mysql -u".getenv('DB_USERNAME').
+	  " -h".getenv('DB_HOST').
+	  " -p".getenv('DB_PASSWORD').
+	  " ".getenv('DB_DATABASE') ."<<EOF
+SELECT 1;
+EOF", $result, $status);
+	return ($status);
+}
 function checkVersion($name, $command, $min, $recommended, $unsupported = null) {
 	exec($command, $result, $status);
 	if ($status != 0) {
@@ -61,6 +70,13 @@ function checkContinue() {
 	$line = trim(fgets(STDIN));
 	if ($line != "yes" and $line != "y")
 		exit(c("Exiting...\n", "danger"));
+}
+function writeDotEnv($key, $value) { // edited from Laravel Framework @ KeyGenerateCommand.php
+	file_put_contents(".env", preg_replace(
+		"/^{$key}=.+/m",
+		"{$key}=".$value,
+		file_get_contents(".env")
+	));
 }
 
 echo c("Starting OpenDataBio installation! :)\n", "success");
@@ -94,19 +110,8 @@ if (! ini_get("allow_url_fopen"))
 	exit(c("The PHP initialization directive allow_url_fopen must be set to true!\n", "danger"));
 
 checkContinue();
-
-#### TODO: move this after composer install
-require "./vendor/autoload.php";
-
-$dotenv = new Dotenv\Dotenv(__DIR__);
-$dotenv->load();
-print_r(getenv());
-
-# Check if .env file exists and is compatible
-
-
-exit();
-## Do we have a system-wide composer, system-wise composer.phar or local composer.phar?
+# Determine which composer to use and run 'composer install'
+# Do we have a system-wide composer, system-wise composer.phar or local composer.phar?
 exec("composer", $result, $status);
 if ($status == 0) {
 	$composer = "composer";
@@ -124,8 +129,6 @@ if ($status == 0) {
 		echo "Using local composer.phar...\n";
 	}
 }
-
-checkContinue();
 exec($composer . " install", $result, $status);
 if ($status == 0) {
 	echo c("PHP dependencies installed dependencies successfully!\n", "success");
@@ -133,3 +136,117 @@ if ($status == 0) {
 	foreach ($result as $line) echo $line. "\n";
 	exit (c("Running 'composer install' failed!\n", "danger"));
 }
+
+# Process DotEnv file
+if(file_exists(".env")) {
+	echo c("Using .env environment file\n", "success");
+} else {
+	echo c("Creating new .env environment file\n", "success");
+	$ret = copy('.env.example', '.env');
+	if ($ret === false) 
+		exit(c("Error creating .env file! Check that you have write permission on current directory!\n", "danger"));
+	system("php artisan key:generate");
+}
+
+require "./vendor/autoload.php";
+$dotenv = new Dotenv\Dotenv(__DIR__);
+$dotenv->load();
+
+echo "Do you wish to review the configuration for your app? [yes]/no ";
+$line = trim(fgets(STDIN));
+if ($line == "" or $line == "y" or $line == "yes") {
+
+	echo c("Setting the environment variables... for more options, edit the .env file later!\n", "success");
+	echo "Is this installation for development or production? [production]/development ";
+	$line = trim(fgets(STDIN));
+	if ($line == "" or $line == "production") {
+		echo "Using production settings!\n";
+		writeDotEnv('APP_ENV', 'production');
+		writeDotEnv('APP_DEBUG', 'false');
+	} else {
+		echo "Using development settings!\n";
+		writeDotEnv('APP_ENV', 'local');
+		writeDotEnv('APP_DEBUG', 'true');
+	}
+	echo "What should the base URL for your app be? [".getenv('APP_URL')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('APP_URL', $line);
+	echo "Database username? [".getenv('DB_USERNAME')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('DB_USERNAME', $line);
+	echo "Database password? [".getenv('DB_PASSWORD')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('DB_PASSWORD', $line);
+	echo "Database name? [".getenv('DB_DATABASE')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('DB_DATABASE', $line);
+	echo "Proxy host (leave blank for no proxy)? [".getenv('PROXY_URL')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('PROXY_URL', $line);
+	echo "Proxy port? [".getenv('PROXY_PORT')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('PROXY_PORT', $line);
+	echo "Proxy username (leave blank if not required)? [".getenv('PROXY_USER')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('PROXY_USER', $line);
+	echo "Proxy password? [".getenv('PROXY_PASSWD')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('PROXY_PASSWD', $line);
+	# Reloads the environment file
+	$dotenv->load();
+}
+
+# Database user and connection
+echo "Testing database connection...\n";
+require "./vendor/autoload.php";
+$dotenv = new Dotenv\Dotenv(__DIR__);
+$dotenv->load();
+if (testDB() != 0) {
+	echo c("Database connection failed!\n", "warning");
+	echo c("Do you want to create the database user and schema? [yes]/no ", "warning");
+	$line = trim(fgets(STDIN));
+	if ($line != "" and $line != "y" and $line != "yes") {
+		exit(c("Unable to complete installation\n", "danger"));
+	} else {
+		echo c("You will be prompted now for the MySQL root password:\n", "warning");
+		exec('mysql -uroot -p <<EOF
+CREATE DATABASE \`' . getenv('DB_DATABASE') . '\`;
+CREATE USER \`' . getenv('DB_USERNAME') . '\`@\`localhost\` IDENTIFIED BY \''. getenv('DB_PASSWORD'). '\';
+GRANT ALL ON \`' . getenv('DB_DATABASE') . '\`.* TO \`' . getenv('DB_USERNAME') . '\`@\`localhost\`;
+EOF', $result, $status);
+		if ($status != 0 or testDB() != 0) 
+			exit(c("Unable to create database! Try to create the user and database manually...\n", "danger"));
+	}
+}
+echo c("Database connection successfull!\n", "success");
+
+echo "Running database migrations... This may take a while...\n";
+system("php artisan migrate", $status);
+if ($status != 0) {
+	exit (c("running 'php artisan migrate' failed!\n", "danger"));
+}
+
+echo "Do you wish to seed the database with randomly generated test data? [yes]/no ";
+$line = trim(fgets(STDIN));
+if ($line == "" or $line == "y" or $line == "yes") {
+	system("php artisan db:seed", $status);
+	if ($status != 0) {
+		exit (c("running 'php artisan migrate' failed!\n", "danger"));
+	}
+}
+
+if (getenv('APP_ENV') == 'production') {
+	echo c("Running code optimizations for production environment...\n", "success");
+	system("php artisan config:cache");
+	system("php artisan route:cache");
+}
+
+# TODO: test proxy settings

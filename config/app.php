@@ -37,7 +37,7 @@ return [
     'proxy_user' => env('PROXY_USER', ''),
     'proxy_passwd' => env('PROXY_PASSWD', ''),
     'proxy_url' => env('PROXY_URL', ''),
-    'proxy_port' => env('PROXY_PORT', '1080'),
+    'proxy_port' => env('PROXY_PORT', ''),
 
     /*
     |--------------------------------------------------------------------------

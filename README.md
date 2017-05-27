@@ -31,74 +31,23 @@ On a Debian system, use
 apt-get install apache2 mysql-server php5 imagemagick php5-mysql
 ```
 
-Laravel installation requires the following PHP extensions:
-- OpenSSL
-- PDO
-- Mbstring
-- Tokenizer
-- XML
-
-The following PHP extensions are recommended:
-- apcu (caching)
-- OPcache (caching)
-
-The "allow\_url\_fopen" directive must be set to On on php.ini (for Guzzle).
-
-TODO: create a installer to speed all this up??
-
-Create a database and user for opendatabio. Using the MySQL command line, (e.g., `mysql -uroot -p`):
-
-```
-CREATE DATABASE `opendatabio`;
-CREATE USER `opendatabio`@`localhost` IDENTIFIED BY 'somestrongpassword';
-GRANT ALL ON `opendatabio`.* TO `opendatabio`@`localhost`;
-```
-
-You may choose another name for your database and user, and you must choose another password. Write them all down.
-
 Download the OpenDataBio install files from our [releases page](../../releases).
 **NOTE**: code from the Github master branch should be considered unstable! Always install from a release zip!
 Extract the installation zip or tarball and move it to the public folder on your webserver (in Debian/Ubuntu,
-it is probably /var/www/html), and rename the directory to "opendatabio". Change directory to your opendatabio/app folder.
+it is probably /var/www/html), and rename the directory to "opendatabio". Change directory to your opendatabio folder.
 
 TODO: better instructions for a per-user directory??
 https://httpd.apache.org/docs/2.4/howto/public\_html.html
-
-Copy the hidden file ".env.example" to a new file called .env. This is the 
-main configuration file for your installation. Edit it to set the right username, database and
-password. This file also includes some other configuration variables that may be very important,
-such as proxy configuration.
-
-For easier deploy, we have included Composer in the installation files. You are of course free to use another
-Composer installation if you want. See [here](https://getcomposer.org/download/) for instructions. 
-
-After that, use
-composer to install the Laravel framework and other dependencies and artisan to build the database structure.
-Execute 
-
-```
-php composer install
-php artisan migrate
-php artisan key:generate
-```
-
-For increased performance, it is recommended to also run
-```
-php artisan config:cache
-php artisan route:cache ## TODO: Need to remove closure routes!
-```
-
-The "migrate" command will also generate some suggested entries for the database, such as providing
-initial taxonomic trees and general location files. If you want to include randomly generated test data, run
-
-```
-php artisan db:seed
-```
 
 Make sure that the installation directory is owned by the user running apache (probably www-data).
 
 It is also recommended that you use the webserver rewriting rules to create friendlier URLs.
 Run `a2enmod rewrite` and edit the apache configuration file (TODO: give detailed instructions!)
+
+Change directory to your opendatabio directory and run 
+```
+php install
+```
 
 And you're good to go! If you have moved your installation files to the /var/www/opendatabio folder, you will probably
 be able to access it as http://localhost/opendatabio. The database migrations come with an administrator account, with
@@ -106,10 +55,6 @@ login 'admin@example.org' and and password 'password1'. Edit the file before imp
 installing.
 
 ### Post-install configurations
-TODO: is php artisan key:generate needed after install??
-
-TODO: php artisan config:cache and other commands to speed up
-
 Include instructions for app config: language, locale and timezone!!! 
 
 TODO: abbreviation format in config/app
@@ -118,12 +63,9 @@ TODO: mail settings; defaults to SMTP??
 
 ## Development
 
-When running this app in development mode, it is not necessary to follow all the installation above. You can start a 
-development webserver simply with 
+When running this app in development mode, you may access the app at http://localhost:8000 by running
 
 ```
-php composer install
-php artisan migrate
 php artisan serve
 ```
 
