@@ -214,7 +214,7 @@ if (testDB() != 0) {
 	echo c("Do you want to create the database user and schema? [yes]/no ", "warning");
 	$line = trim(fgets(STDIN));
 	if ($line != "" and $line != "y" and $line != "yes") {
-		exit(c("Unable to complete installation\n", "danger"));
+		exit(c("Unable to complete installation. Please create the database and database user.\n", "danger"));
 	} else {
 		echo c("You will be prompted now for the MySQL root password:\n", "warning");
 		exec('mysql -uroot -p <<EOF
@@ -250,3 +250,9 @@ if (getenv('APP_ENV') == 'production') {
 }
 
 # TODO: test proxy settings
+# TODO: apache configuration, per-user dir, mod_rewrite
+# httpd -M shows modules
+# TODO: auto-guess app url?
+# TODO: switch httpd / apache2ctl?
+# BUG? app env being set to production when asked for dev?
+# TODO: enhancement: echo the command to screen?
