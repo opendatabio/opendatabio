@@ -11,12 +11,10 @@ See our [Wiki page](../../wiki) for details.
 ## Install
 ### Prerequisites and versions
 Opendatabio is written in PHP and developed over the Laravel framework. 
-The minimum supported PHP version is 5.6.4, but PHP 7 is 
-strongly recommended. 
+The minimum supported PHP version is 5.6.4, but PHP 7 is strongly recommended. 
 
 It also requires a working web server and a database. It should be possible to install using Nginx 
-as webserver, or Postgres as database, but our installation instructions will focus on a Apache/MySQL
-setup.
+as webserver, or Postgres as database, but our installation script focuses on a Apache/MySQL setup.
 
 The image manipulation (thumbnails, etc) is done with Imagemagick version 6. Version 7 is not available on 
 most Linux distributions official repositories, and is therefore not supported at the moment.
