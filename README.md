@@ -31,35 +31,55 @@ On a Debian system, use
 apt-get install apache2 mysql-server php5 imagemagick php5-mysql
 ```
 
+The recommended way to install OpenDataBio is using a dedicated
+system user. Create a user called, for example, "odbserver".
+
 Download the OpenDataBio install files from our [releases page](../../releases).
 **NOTE**: code from the Github master branch should be considered unstable! Always install from a release zip!
-Extract the installation zip or tarball and move it to the public folder on your webserver (in Debian/Ubuntu,
-it is probably /var/www/html), and rename the directory to "opendatabio". Change directory to your opendatabio folder.
+Extract the installation zip to the user's home, so that the 
+installation files will reside on directory "/home/odbserver/opendatabio".
 
-TODO: better instructions for a per-user directory??
-https://httpd.apache.org/docs/2.4/howto/public\_html.html
+You will then need to enable the Apache modules 'mod_rewrite' and 'mod_alias', and add the following to your Apache configuration file:
+```
+<IfModule alias_module>
+        Alias /opendatabio /home/odbserver/opendatabio/public
+        <Directory "/home/odbserver/opendatabio/public">
+                Require all granted
+                AllowOverride All
+        </Directory>
+</IfModule>
+```
 
-Make sure that the installation directory is owned by the user running apache (probably www-data).
+This will cause Apache to redirect all requests for /opendatabio to the correct folder, and also allow the provided .htaccess file to handle the rewrite rules, so that the URLs will be pretty. If you would like to access the file when pointing the browser to the server root, add the following directive as well:
+```
+RedirectMatch ^/$ /opendatabio/
+```
 
-It is also recommended that you use the webserver rewriting rules to create friendlier URLs.
-Run `a2enmod rewrite` and edit the apache configuration file (TODO: give detailed instructions!)
+Remember to restart the Apache server after editing the files.
 
-Change directory to your opendatabio directory and run 
+Finally, change directory to your opendatabio directory and run 
 ```
 php install
 ```
 
-And you're good to go! If you have moved your installation files to the /var/www/opendatabio folder, you will probably
-be able to access it as http://localhost/opendatabio. The database migrations come with an administrator account, with
+If the install script finishes with success, you're good to 
+go! Point your browser to 
+http://localhost/opendatabio. The database migrations come with an administrator account, with
 login 'admin@example.org' and and password 'password1'. Edit the file before importing, or change the password after 
 installing.
 
+If you have any problems such as a blank page, error 500 or error 403, check the error logs at /var/log/apache and /home/odbserver/opendatabio/storage/logs.
+
+There are other countless possible ways to install the application, but they may involve more steps and configurations.
+
 ### Post-install configurations
-Include instructions for app config: language, locale and timezone!!! 
-
-TODO: abbreviation format in config/app
-
-TODO: mail settings; defaults to SMTP??
+You can change several configuration variables for the 
+application. The most important of those are probably set
+by the installer, and include database configuration and
+proxy settings, but many more exist in the ".env" and 
+"config/app.php" files. In particular, you may want to change
+the language, timezone and e-mail settings. 
+Run `php artisan config:cache` after updating the config files.
 
 ## Development
 

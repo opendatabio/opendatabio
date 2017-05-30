@@ -83,13 +83,22 @@ echo c("Starting OpenDataBio installation! :)\n", "success");
 
 echo "Checking versions...\n";
 $trouble = 0;
-$trouble = $trouble + checkVersion("Apache Web Server", "httpd -v", "2.2", "2.4");
+# Determining cmdline for apache2ctl / httpd
+exec("which apachectl", $result, $status);
+if ($status == 0) {
+	$apachecmd = "apachectl";
+} else {
+	# CentOS, Fedora, Red Hat use:
+	$apachecmd = "httpd";
+}
+$trouble = $trouble + checkVersion("Apache Web Server", $apachecmd . " -v", "2.2", "2.4");
 $trouble = $trouble + checkVersion("PHP", "php -v", "5.6", "7.0");
 $trouble = $trouble + checkVersion("MySQL database", "mysql --version", "5.5", "5.7");
 $trouble = $trouble + checkVersion("ImageMagick", "convert --version", "6.7.7", "6.8.9", "7.0");
 if($trouble == 0)
 	echo c("All versions compatible!\n", "success");
 echo "Checking configuration...\n";
+### PHP extensions
 if (! extension_loaded("openssl"))
 	exit(c("OpenSSL PHP extension is required!\n", "danger"));
 if (! extension_loaded("pdo"))
@@ -108,6 +117,19 @@ if (! extension_loaded("opcache"))
 	echo c("Opcache PHP extension is recommended for better performance...\n", "warning");
 if (! ini_get("allow_url_fopen"))
 	exit(c("The PHP initialization directive allow_url_fopen must be set to true!\n", "danger"));
+### Apache config
+exec($apachecmd . " -M", $result, $status);
+$rewrite = false; $userdir = false;
+foreach ($result as $str) {
+  if (preg_match ('/rewrite/i', $str, $m))
+	  $rewrite = true;
+  if (preg_match ('/userdir/i', $str, $m))
+	  $userdir = true;
+}
+if (! $userdir)
+	echo c("The 'mod_userdir' Apache module is recommended, but it's not loaded...\n", "warning");
+if (! $rewrite)
+	echo c("The 'mod_rewrite' Apache module is recommended, but it's not loaded...\n", "warning");
 
 checkContinue();
 # Determine which composer to use and run 'composer install'
@@ -234,12 +256,12 @@ if ($status != 0) {
 	exit (c("running 'php artisan migrate' failed!\n", "danger"));
 }
 
-echo "Do you wish to seed the database with randomly generated test data? [yes]/no ";
+echo "Do you wish to seed the database with randomly generated test data? yes/[no] ";
 $line = trim(fgets(STDIN));
-if ($line == "" or $line == "y" or $line == "yes") {
+if ($line == "y" or $line == "yes") {
 	system("php artisan db:seed", $status);
 	if ($status != 0) {
-		exit (c("running 'php artisan migrate' failed!\n", "danger"));
+		exit (c("running 'php artisan db:seed' failed!\n", "danger"));
 	}
 }
 
@@ -248,6 +270,10 @@ if (getenv('APP_ENV') == 'production') {
 	system("php artisan config:cache");
 	system("php artisan route:cache");
 }
+
+echo "Changing storage area permissions...\n";
+system("chmod -R 777 storage");
+system("chmod -R 777 bootstrap/cache");
 
 # TODO: test proxy settings
 # TODO: apache configuration, per-user dir, mod_rewrite
