@@ -43,6 +43,7 @@ You will then need to enable the Apache modules 'mod_rewrite' and 'mod_alias', a
 ```
 <IfModule alias_module>
         Alias /opendatabio /home/odbserver/opendatabio/public
+	Alias /fonts /home/odbserver/opendatabio/public/fonts
         <Directory "/home/odbserver/opendatabio/public">
                 Require all granted
                 AllowOverride All

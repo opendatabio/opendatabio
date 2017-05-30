@@ -127,7 +127,7 @@ foreach ($result as $str) {
 	  $userdir = true;
 }
 if (! $userdir)
-	echo c("The 'mod_userdir' Apache module is recommended, but it's not loaded...\n", "warning");
+	echo c("The 'mod_alias' Apache module is recommended, but it's not loaded...\n", "warning");
 if (! $rewrite)
 	echo c("The 'mod_rewrite' Apache module is recommended, but it's not loaded...\n", "warning");
 
@@ -272,13 +272,7 @@ if (getenv('APP_ENV') == 'production') {
 }
 
 echo "Changing storage area permissions...\n";
-system("chmod -R 777 storage");
-system("chmod -R 777 bootstrap/cache");
+exec("chmod -R 777 storage");
+exec("chmod -R 777 bootstrap/cache");
 
 # TODO: test proxy settings
-# TODO: apache configuration, per-user dir, mod_rewrite
-# httpd -M shows modules
-# TODO: auto-guess app url?
-# TODO: switch httpd / apache2ctl?
-# BUG? app env being set to production when asked for dev?
-# TODO: enhancement: echo the command to screen?
