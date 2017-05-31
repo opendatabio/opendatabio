@@ -12,17 +12,9 @@
 */
 
 # Landing page
-Route::get('/', function () {
-    return view('welcome');
-});
-
+Route::get('/', 'WelcomeController@index');
 # Setting the locale:
-Route::get('welcome/{locale}', function ($locale) {
-	if (array_key_exists($locale, Config::get('languages'))) {
-            Session::put('applocale', $locale);
-        }
-    return redirect('/');
-});
+Route::get('welcome/{locale}', 'WelcomeController@setAppLocale');
 
 # Default auth routes
 Auth::routes();
