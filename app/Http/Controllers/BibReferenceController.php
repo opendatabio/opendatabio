@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\BibReference;
+use App\UserJobs;
 use Validator;
 use RenanBr\BibTexParser\ParseException as ParseException;
 use Illuminate\Support\Facades\Log;
@@ -45,13 +46,8 @@ class BibReferenceController extends Controller
     public function store(Request $request)
     {
 	    $contents = file_get_contents($request->rfile->getRealPath());
-
-	    try {
-		$person = BibReference::createFromFile($contents, $request->standardize);
-	    } catch (ParseException $e) {
-		return redirect('references')->withErrors([Lang::get('messages.bibtex_error')]);
-	    }
-	return redirect('references')->withStatus(Lang::get('messages.stored'));
+	    UserJobs::dispatch ("importbibreferences", ['contents' => $contents, 'standardize' => $request->standardize]);
+	return redirect('references')->withStatus(Lang::get('messages.dispatched'));
     }
 
     /**
@@ -89,7 +85,6 @@ class BibReferenceController extends Controller
     public function update(Request $request, $id)
     {
 	    $reference = BibReference::findOrFail($id);
-//	    $this->checkValid($request, $id);
 	    $validator = Validator::make($request->all(), [
 		    'bibtex' => 'required|string',
 	    ]);

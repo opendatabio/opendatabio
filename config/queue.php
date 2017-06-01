@@ -11,7 +11,12 @@ return [
     | API, giving you convenient access to each back-end using the same
     | syntax for each one. Here you may set the default queue driver.
     |
-    | Supported: "sync", "database", "beanstalkd", "sqs", "redis", "null"
+    | Supported: "sync", "database", "null"
+    | 
+    | NOTICE: the 'sync' driver can be used on development environment,
+    | but the recommended driver for production environment is 'database'.
+    | Other back-ends such as beanstalkd are supported by Laravel, but have
+    | not been tested under OpenDataBio development.
     |
     */
 
@@ -29,41 +34,15 @@ return [
     */
 
     'connections' => [
-
         'sync' => [
             'driver' => 'sync',
         ],
-
         'database' => [
             'driver' => 'database',
             'table' => 'jobs',
             'queue' => 'default',
             'retry_after' => 90,
         ],
-
-        'beanstalkd' => [
-            'driver' => 'beanstalkd',
-            'host' => 'localhost',
-            'queue' => 'default',
-            'retry_after' => 90,
-        ],
-
-        'sqs' => [
-            'driver' => 'sqs',
-            'key' => 'your-public-key',
-            'secret' => 'your-secret-key',
-            'prefix' => 'https://sqs.us-east-1.amazonaws.com/your-account-id',
-            'queue' => 'your-queue-name',
-            'region' => 'us-east-1',
-        ],
-
-        'redis' => [
-            'driver' => 'redis',
-            'connection' => 'default',
-            'queue' => 'default',
-            'retry_after' => 90,
-        ],
-
     ],
 
     /*
