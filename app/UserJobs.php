@@ -4,6 +4,8 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Auth;
+use DB;
+use Log;
 
 class UserJobs extends Model
 {
@@ -11,18 +13,27 @@ class UserJobs extends Model
 
 	// event fired from job on success
 	public function setSuccess() {
+		DB::transaction(function () {
 		$this->status = 'Success';
 		$this->save();
+		});
 	}
 	// event fired from job on failure
 	public function setFailed() {
+		DB::transaction(function () {
+			Log::info ("SETTNIG FAILED");
 		$this->status = 'Failed';
 		$this->save();
+		});
+		Log::info ( $this->status);
 	}
 	// event fired from job when it starts processing
-	public function setProcessing() {
+	public function setProcessing($howmuch = 0) {
+		DB::transaction(function () use ($howmuch){
 		$this->status = 'Processing';
+		$this->complete = $howmuch;
 		$this->save();
+		});
 	}
 	// user sent a "cancel" from the interface. attempt to remove job from queue
 	public function cancel() {
@@ -31,7 +42,6 @@ class UserJobs extends Model
 	static public function dispatch($dispatcher, $rawdata) {
 		// create Job entry
 		$job = new UserJobs;
-		$job->status = 'Submitted';
 		$job->dispatcher = $dispatcher;
 		$job->rawdata = serialize($rawdata);
 		$job->user_id = Auth::user()->id;
@@ -47,6 +57,11 @@ class UserJobs extends Model
 
 	}
 	// event fired from job when something needs to be logged.
-	public function sendLog() {
+	public function sendLog($text) {
+		DB::transaction(function () use ($text) {
+		$this->log .= $text . "\n";
+		$this->save();
+		});
+
 	}
 }

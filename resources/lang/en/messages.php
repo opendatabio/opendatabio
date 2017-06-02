@@ -94,4 +94,22 @@ return array (
   'acronym_error' => 'You must provide an acronym!',
   'acronym_not_found' => 'Acronym not found or error accessing IH site!',
   'stored' => 'Resources stored!',
+  'userjobs' => 'Jobs',
+  'dispatched' => 'Job dispatched! See details on the Jobs tab.',
+  'registered_userjobs' => 'Your Registered Jobs',
+  'id' => 'ID',
+  'status' => 'Status',
+  'created_at' => 'Created',
+  'updated_at' => 'Last updated',
+  'actions' => 'Actions',
+  'cancel' => 'Cancel',
+  'retry' => 'Retry',
+  'remove' => 'Remove',
+  'userjobs_hint' => 'Jobs are requests that are processed on the background by the server. They are
+	mostly used for importing and exporting data. Any user only has access to his/her own jobs.
+	The status column indicates: "Submitted" if the job has been submitted, but it\'s still not being processed;
+"Processing" if it\'s being processed by the database; "Success" if the execution ended without errors; 
+"Failed" if the execution results in error and "Cancelled" if the user has asked the job to be cancelled. You may use
+the buttons on the left of the table to attempt to cancel a job that has not finished, retry a job that has failed, or
+remove the job information from the database.',
 );

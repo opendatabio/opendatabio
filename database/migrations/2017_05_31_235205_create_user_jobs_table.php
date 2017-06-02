@@ -18,7 +18,8 @@ class CreateUserJobsTable extends Migration
             $table->timestamps();
 	    $table->string('dispatcher'); // to keep track of which type of job this is
 	    $table->longText('log')->nullable();
-	    $table->string('status'); // submitted / processing / success / failed / canceled
+	    $table->integer('complete')->default(0);
+	    $table->string('status')->default('Submitted'); // submitted / processing / success / failed / canceled
 	    $table->longText('rawdata'); // ?????
 	    $table->integer('user_id')->unsigned(); // job owner
 	    $table->foreign('user_id')->references('id')->on('users');

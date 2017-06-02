@@ -12,3 +12,15 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+button.unstyle {
+    background:none!important;
+    border:none;
+    padding:0!important;
+    color: $brand-primary;
+    /*border is optional*/
+}
+
+button.unstyle:hover {
+	color: darken($brand-primary, 10%);
+}

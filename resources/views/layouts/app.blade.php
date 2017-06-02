@@ -47,6 +47,7 @@
 			<li><a href="{{ route('references.index') }}">@lang('messages.references')</a></li>
 			<li><a href="{{ route('herbaria.index') }}">@lang('messages.herbaria')</a></li>
 			<li><a href="{{ route('users.index') }}">@lang('messages.users')</a></li>
+			<li><a href="{{ route('userjobs.index') }}">@lang('messages.userjobs')</a></li>
                         &nbsp;
                     </ul>
 

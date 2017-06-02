@@ -26,6 +26,9 @@ Route::put('/selfupdate', 'Auth\SelfEditController@selfupdate')->name('selfupdat
 Route::get('/home', 'HomeController@index')->name('home');
 # Resources:
 Route::resource('persons', 'PersonController');
+Route::resource('userjobs', 'UserJobsController', ['only' => ['index', 'show', 'destroy']]);
+Route::post('userjobs/{userjob}/retry', 'UserJobsController@retry');
+Route::post('userjobs/{userjob}/cancel', 'UserJobsController@cancel');
 Route::resource('references', 'BibReferenceController');
 Route::post('herbaria/checkih', 'HerbariumController@checkih')->name('checkih');
 Route::resource('herbaria', 'HerbariumController', ['only' => ['index', 'show', 'store', 'destroy']]);
