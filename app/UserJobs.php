@@ -35,9 +35,19 @@ class UserJobs extends Model
 		$this->save();
 		});
 	}
-	// user sent a "cancel" from the interface. attempt to remove job from queue
-	public function cancel() {
+	// user sent a "retry" from the interface
+	public function retry() {
+		$this->status = 'Submitted';
+		$rawdata = unserialize($this->rawdata);
+		$this->save();
+		switch ($this->dispatcher) {
+		case 'importbibreferences':
+			dispatch (new \App\Jobs\ImportBibReferences($rawdata['contents'], $rawdata['standardize'], $this));
+			break;
+		default:
+		}
 	}
+
 	// entry point for jobs. place the job on queue
 	static public function dispatch($dispatcher, $rawdata) {
 		// create Job entry
@@ -62,6 +72,5 @@ class UserJobs extends Model
 		$this->log .= $text . "\n";
 		$this->save();
 		});
-
 	}
 }

@@ -10,7 +10,7 @@
       </h4>
     </div>
       <div class="panel-body">
-	{{ _('messages.notfound') }}
+	@lang('messages.notfound')
     </div>
   </div>
 
