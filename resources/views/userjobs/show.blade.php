@@ -9,11 +9,10 @@
                 </div>
 
                 <div class="panel-body">
-			<p><strong>Job id: {{ $job->id }} </strong></p>
-			<p><strong>Type: </strong> {{ $job->dispatcher }} </p>
-			<p><strong>Status: </strong> {{ $job->status }} </p>
-			<p><strong>Completion: </strong> {{ $job->complete }} </p>
-			<p><strong>Log: </strong><br>
+			<p><strong>@lang('messages.jobid'): {{ $job->id }} </strong></p>
+			<p><strong>@lang('messages.type'): </strong> {{ $job->dispatcher }} </p>
+			<p><strong>@lang('messages.status'): </strong> {{ $job->status }} </p>
+			<p><strong>@lang('messages.log'): </strong><br>
 				@if (empty($job->log))
 					-null-
 				@else

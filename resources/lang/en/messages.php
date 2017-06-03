@@ -112,4 +112,8 @@ return array (
 "Failed" if the execution results in error and "Cancelled" if the user has asked the job to be cancelled. You may use
 the buttons on the left of the table to attempt to cancel a job that has not finished, retry a job that has failed, or
 remove the job information from the database.',
+  'monitor_userjob' => 'Monitor Job',
+  'jobid' => 'Job ID',
+  'type' => 'Type',
+  'log' => 'Log',
 );
