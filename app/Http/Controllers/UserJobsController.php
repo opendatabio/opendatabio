@@ -42,6 +42,10 @@ class UserJobsController extends Controller
 		$job->retry();
 		return redirect('userjobs')->withStatus(Lang::get('messages.saved'));
 	}
-
-    // TODO
+	public function show($id) {
+		$job = UserJobs::findOrFail($id);
+		return view('userjobs.show',[
+			'job' => $job,
+		]);
+	}
 }

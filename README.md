@@ -23,6 +23,8 @@ The software is being developed and extensively tested using PHP 7.1.5, Apache 2
 MySQL 10.1.22-MariaDB and ImageMagick 6.9.8. If you have trouble or questions about other softwares or versions, please
 contact our team using the Github repository.
 
+TODO: Install supervisor, configure queue workers + TIMEOUT
+
 ### Installation instructions
 First, install the prerequisite software: Apache, MySQL, PHP and ImageMagick.
 On a Debian system, use
