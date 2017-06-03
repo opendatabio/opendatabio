@@ -34,7 +34,7 @@ class UserJobsController extends Controller
 	    }
 	return redirect('userjobs')->withStatus(Lang::get('messages.removed'));
     }
-	public function cancel($id) {
+	public function cancel($id) { // TODO: only allow cancel of Submitted jobs
 		$job = UserJobs::findOrFail($id);
 		$job->status = 'Cancelled';
 		$job_id = $job->job_id;

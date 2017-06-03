@@ -52,7 +52,7 @@ class AppJob implements ShouldQueue
     }
     public function handle()
     {
-	    $this->userjob->setProcessing(0);
+	    $this->userjob->setProcessing();
 	    DB::beginTransaction();
 	    try {
 		    $this->inner_handle();

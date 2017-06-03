@@ -10,6 +10,7 @@ use App\Structures_BibTex;
 use App\BibReference;
 use App\Jobs\AppJob;
 use App\UserJobs;
+use Log;
 
 class ImportBibReferences extends AppJob
 {
@@ -42,9 +43,6 @@ class ImportBibReferences extends AppJob
 	    $count = 0;
 	    $errors = 0;
 		    foreach($newentries as $entry) {
-//			    $count++;
-//			    $this->userjob->setProcessing( 100 * $count / $esize);
-//			    sleep(20);
 			    if ($this->standardize) {
 				    $bibtex = new Structures_BibTex;
 				    $bibtex->parse_string($entry['_original']);

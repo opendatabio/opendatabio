@@ -23,7 +23,8 @@ class CreateUserJobsTable extends Migration
 	    $table->integer('user_id')->unsigned(); // job owner
 	    $table->foreign('user_id')->references('id')->on('users');
 	    $table->integer('job_id')->unsigned()->nullable(); // Laravel queue job id
-	    $table->foreign('job_id')->references('id')->on('jobs');
+	    $table->foreign('job_id')->references('id')->on('jobs')
+		    ->onDelete('set null');
         });
     }
 

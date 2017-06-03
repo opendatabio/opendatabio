@@ -5,7 +5,6 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Auth;
 use DB;
-use Log;
 
 class UserJobs extends Model
 {
@@ -52,6 +51,7 @@ class UserJobs extends Model
 		$userjob->dispatcher = $dispatcher;
 		$userjob->rawdata = serialize($rawdata);
 		$userjob->user_id = Auth::user()->id;
+		$userjob->save(); /// NEEDS to be 'saved' to generate an id for use in new \App\Jobs\etc
 		// actually dispatch the job
 		switch ($dispatcher) {
 		case 'importbibreferences':
