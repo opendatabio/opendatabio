@@ -3,6 +3,10 @@ A modern system for storing and retrieving plant data - floristics, ecology and 
 
 This project improves and reimplements code from the Duckewiki project. Duckewiki is a tribute to Adolpho Ducke,
 one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
+## Authors
+ person("Alberto", "Vicentini", , "vicentini.beto@gmail.com" ,role = c("aut", "cre")),
+	   person("Andr\'e", "Chalom", , "andrechalom@gmail.com", role = c("aut")),
+person("Alexandre", "Oliveira", , "adalardo@usp.br", role = c("aut"))
 
 ## Overview
 This project aims to provide a flexible but robust framework for storing, analysing and exporting biological data.
