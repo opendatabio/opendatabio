@@ -10,7 +10,9 @@
         "guzzlehttp/guzzle": "~6.0",
         "laravel/framework": "5.4.*",
         "laravel/tinker": "~1.0",
-        "renanbr/bibtex-parser": "0.3.0"
+        "renanbr/bibtex-parser": "0.3.0",
+        "yajra/laravel-datatables-buttons": "^1.3",
+        "yajra/laravel-datatables-oracle": "^7.0"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

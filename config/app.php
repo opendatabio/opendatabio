@@ -212,6 +212,7 @@ return [
         App\Providers\RouteServiceProvider::class,
 
 	Barryvdh\TranslationManager\ManagerServiceProvider::class,
+	Yajra\Datatables\DatatablesServiceProvider::class,
 
     ],
 
