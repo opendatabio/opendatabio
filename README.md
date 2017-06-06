@@ -90,11 +90,8 @@ Run `php artisan config:cache` after updating the config files.
 
 ## Development
 
-When running this app in development mode, you may access the app at http://localhost:8000 by running
-
-```
-php artisan serve
-```
+The Laravel-Datatables library is incompatible with `php artisan serve`, so this command should not be used.
+The recommended way of runing this app in development is by installing it and choosing "development" in the installer.
 
 This system uses Laravel Mix to compile the SASS and JavaScript code used. 
 If you would like to contribute to the app development,

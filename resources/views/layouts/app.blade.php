@@ -93,5 +93,9 @@
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
+    <!-- Datatable: TODO -->
+    <script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+    <!-- page-specific scripts -->
+    @stack('scripts')
 </body>
 </html>

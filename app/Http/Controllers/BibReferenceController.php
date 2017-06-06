@@ -10,6 +10,7 @@ use RenanBr\BibTexParser\ParseException as ParseException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
+use Yajra\Datatables\Datatables;
 
 class BibReferenceController extends Controller
 {
@@ -20,11 +21,10 @@ class BibReferenceController extends Controller
      */
     public function index()
     {
-	    $references = BibReference::orderBy(DB::raw('odb_bibkey(bibtex)'))->paginate(10);
-	    return view('references.index', [
-        'references' => $references
-    ]);
-        //
+	    return view('references.index');
+    }
+    public function getdata() {
+	    return Datatables::of(BibReference::query())->make(true);
     }
 
     /**
