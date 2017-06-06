@@ -44,15 +44,8 @@
 @lang('messages.registered_persons')
                     </div>
 
-                    <div class="panel-body">
-                        <table class="table table-striped person-table" id="persons-table">
-                            <thead>
-                                <th>@lang('messages.abbreviation')</th>
-                                <th>@lang('messages.name')</th>
-                                <th>@lang('messages.email')</th>
-                            </thead>
-                        </table>
-                    </div>
+
+{!! $dataTable->table() !!}
                 </div>
         </div>
     </div>
@@ -60,18 +53,5 @@
 
 
 @push('scripts')
-<script>
-$(function() {
-    $('#persons-table').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: '{!! url('persons/getdata') !!}',
-        columns: [
-            { data: 'abbreviation', name: 'abbreviation' },
-            { data: 'full_name', name: 'full_name' },
-            { data: 'email', name: 'email' },
-        ]
-    });
-});
-</script>
+{!! $dataTable->scripts() !!}
 @endpush

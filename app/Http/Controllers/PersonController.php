@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use App\Person;
 use App\Herbarium;
 use Illuminate\Support\Facades\Lang;
-use Datatables;
+use App\DataTables\PersonsDataTable;
 
 class PersonController extends Controller
 {
@@ -17,27 +17,14 @@ class PersonController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(PersonsDataTable $dataTable)
     {
-//	    $persons = Person::orderBy('abbreviation')->paginate(10);
 	    $herbaria = Herbarium::all();
-	    return view('persons.index', [
-//		    'persons' => $persons,
+	    return $dataTable->render('persons.index', [
 		    'herbaria' => $herbaria,
     ]);
         //
     }
-    public function getdata() {
-	    return Datatables::of(Person::query())
-		    ->editColumn('abbreviation', function ($person) {
-			    return '<a href="' . url('persons/' . $person->id) . '">' . 
-				    // Needs to escape special chars, as this will be passed RAW
-				    htmlspecialchars($person->abbreviation) . '</a>';
-		    }) 
-		    ->rawColumns(['abbreviation'])
-		    ->make(true);
-    }
-
     /**
      * Show the form for creating a new resource.
      *
