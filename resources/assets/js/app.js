@@ -6,6 +6,8 @@
  */
 
 require('./bootstrap');
+require('datatables');
+require('datatables.net-buttons');
 
 window.Vue = require('vue');
 
