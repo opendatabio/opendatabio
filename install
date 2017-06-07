@@ -165,6 +165,13 @@ if ($status == 0) {
 	exit (c("Running 'composer install' failed!\n", "danger"));
 }
 
+echo c("Clearing caches...\n", "success");
+system("php artisan config:clear");
+system("php artisan route:clear");
+system("php artisan view:clear");
+system("php artisan cache:clear");
+system("composer dump-autoload");
+
 # Process DotEnv file
 if(file_exists(".env")) {
 	echo c("Using .env environment file\n", "success");
@@ -271,10 +278,12 @@ if ($line == "y" or $line == "yes") {
 	}
 }
 
+
 if (getenv('APP_ENV') == 'production') {
 	echo c("Running code optimizations for production environment...\n", "success");
 	system("php artisan config:cache");
 	system("php artisan route:cache");
+	system("php artisan optimize");
 }
 
 echo "Changing storage area permissions...\n";
