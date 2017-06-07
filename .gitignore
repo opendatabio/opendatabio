@@ -10,6 +10,3 @@ Homestead.yaml
 npm-debug.log
 composer.phar
 .env
-config/translation-manager.php
-database/migrations/2014_04_02_193005_create_translations_table.php
-resources/views/vendor/

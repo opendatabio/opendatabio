@@ -44,28 +44,14 @@
 @lang('messages.registered_persons')
                     </div>
 
-                    <div class="panel-body">
-                        <table class="table table-striped person-table">
-                            <thead>
-                                <th>@lang('messages.abbreviation')</th>
-                                <th>@lang('messages.name')</th>
-                                <th>@lang('messages.email')</th>
-                            </thead>
-                            <tbody>
-                                @foreach ($persons as $person)
-                                    <tr>
-					<td class="table-text"><div>
-					<a href="{{ url('persons/'.$person->id) }}">{{ $person->abbreviation }}</a>
-					</div></td>
-                                        <td class="table-text">{{ $person->full_name }}</td>
-                                        <td class="table-text">{{ $person->email }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-			 {{ $persons->links() }} 
-                    </div>
+
+{!! $dataTable->table() !!}
                 </div>
         </div>
     </div>
 @endsection
+
+
+@push('scripts')
+{!! $dataTable->scripts() !!}
+@endpush
