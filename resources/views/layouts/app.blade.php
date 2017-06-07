@@ -93,11 +93,8 @@
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}"></script>
-    <!-- Datatable: TODO -->
-    <!-- script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.3.1/css/buttons.dataTables.min.css">
-    <!--script src="https://cdn.datatables.net/buttons/1.0.3/js/dataTables.buttons.min.js"></script-->
-    <script src="{{ url('/vendor/datatables/buttons.server-side.js') }}"></script>
+    <!-- Datatable: TODO! Remove this external cdn call -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.3.1/css/buttons.dataTables.min.css"> 
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css">
     <!-- page-specific scripts -->
     @stack('scripts')

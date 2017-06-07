@@ -14,5 +14,7 @@ const { mix } = require('laravel-mix');
 mix.js([
 	'resources/assets/js/app.js',
 	'resources/assets/js/custom.js',
+	'vendor/yajra/laravel-datatables-buttons/src/resources/assets/buttons.server-side.js',
 	], 'public/js')
+   // app css
    .sass('resources/assets/sass/app.scss', 'public/css');
