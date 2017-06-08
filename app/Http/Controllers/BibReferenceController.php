@@ -21,12 +21,11 @@ class BibReferenceController extends Controller
      */
     public function index()
     {
-	    return view('references.index');
+	    $references = BibReference::orderBy(DB::raw('odb_bibkey(bibtex)'))->paginate(10);
+	    return view('references.index', [
+		    'references' => $references
+	    ]);
     }
-    public function getdata() {
-	    return Datatables::of(BibReference::query())->make(true);
-    }
-
     /**
      * Show the form for creating a new resource.
      *

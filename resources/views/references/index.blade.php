@@ -77,30 +77,23 @@
                                 <th>
 @lang('messages.title')
 </th>
-                            </thead>
+			    </thead>
+<tbody>
+                                @foreach ($references as $reference)
+                                    <tr>
+					<td class="table-text">
+					<a href="{{ url('references/'.$reference->id) }}">{{ $reference->bibkey }}</a>
+					</td>
+                                        <td class="table-text">{{ $reference->author }}</td>
+                                        <td class="table-text">{{ $reference->year }}</td>
+                                        <td class="table-text">{{ $reference->title }}</td>
+                                    </tr>
+				    @endforeach
+				    </tbody>
                         </table>
+ {{ $references->links() }}
                     </div>
                 </div>
         </div>
     </div>
 @endsection
-
-
-@push ('scripts')
-<script>
-$(function() {
-    $('#references-table').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: '{!! url('references/getdata') !!}',
-        columns: [
-//            { data: 'id', name: 'id' },
-            { data: 'bibkey', name: 'bibkey' },
-            { data: 'author', name: 'author' },
-            { data: 'year', name: 'year' },
-            { data: 'title', name: 'title' }
-        ]
-    });
-});
-</script>
-@endpush
