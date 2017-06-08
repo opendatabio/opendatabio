@@ -32,6 +32,7 @@ class UserJobs extends Model
 	// user sent a "retry" from the interface
 	public function retry() {
 		$this->status = 'Submitted';
+		$this->log = '';
 		$rawdata = unserialize($this->rawdata);
 		$this->save();
 		switch ($this->dispatcher) { // TODO: avoid code duplication
