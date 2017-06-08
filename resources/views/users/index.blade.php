@@ -6,7 +6,9 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">@lang('messages.help')</a>
+        <a data-toggle="collapse" href="#help" class="btn btn-default">
+@lang('messages.help')
+</a>
       </h4>
     </div>
     <div id="help" class="panel-collapse collapse">
@@ -25,7 +27,9 @@
                     <div class="panel-body">
                         <table class="table table-striped user-table">
                             <thead>
-                                <th>@lang('messages.email')</th>
+                                <th>
+@lang('messages.email')
+</th>
                                 <th>Access level</th>
                             </thead>
                             <tbody>

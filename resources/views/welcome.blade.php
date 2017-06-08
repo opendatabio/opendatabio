@@ -72,10 +72,16 @@
             @if (Route::has('login'))
                 <div class="top-right links">
                     @if (Auth::check())
-                        <a href="{{ url('/home') }}">@lang('messages.home')</a>
+                        <a href="{{ url('/home') }}">
+@lang('messages.home')
+</a>
                     @else
-                        <a href="{{ url('/login') }}">@lang('messages.login')</a>
-                        <a href="{{ url('/register') }}">@lang('messages.register')</a>
+                        <a href="{{ url('/login') }}">
+@lang('messages.login')
+</a>
+                        <a href="{{ url('/register') }}">
+@lang('messages.register')
+</a>
                     @endif
                 </div>
             @endif
@@ -92,8 +98,12 @@
                 </div>
 
                 <div class="links">
-                    <a href="{{ route('home') }}">@lang ('messages.home')</a>
-                    <a href="https://github.com/opendatabio/opendatabio/wiki"> @lang('messages.docs')</a>
+                    <a href="{{ route('home') }}">
+@lang ('messages.home')
+</a>
+                    <a href="https://github.com/opendatabio/opendatabio/wiki">
+@lang('messages.docs')
+</a>
                     <a href="https://github.com/opendatabio/opendatabio">GitHub</a>
                 </div>
 		<div class="links" style="margin-top:20px;">

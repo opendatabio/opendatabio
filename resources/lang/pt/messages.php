@@ -14,4 +14,7 @@ return array (
   'save' => 'Salvar alterações',
   'email' => 'E-mail',
   'default_person' => 'Pessoa Padrão',
+  'users' => 'Usuários',
+  'persons' => 'Pessoas',
+  'abbreviation' => 'Abreviação',
 );

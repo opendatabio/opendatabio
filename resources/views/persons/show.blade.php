@@ -21,7 +21,9 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success">
-				    <i class="fa fa-btn fa-plus"></i>@lang('messages.edit_person')
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.edit_person')
+
 				</button>
 			    </div>
 			</div>
@@ -32,7 +34,9 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-danger">
-				    <i class="fa fa-btn fa-plus"></i>@lang('messages.remove_person')
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.remove_person')
+
 				</button>
 			    </div>
 			</div>

@@ -6,7 +6,9 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">@lang('messages.help')</a>
+        <a data-toggle="collapse" href="#help" class="btn btn-default">
+@lang('messages.help')
+</a>
       </h4>
     </div>
     <div id="help" class="panel-collapse collapse">
@@ -25,7 +27,9 @@
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
 
-<div id="ajax-error" class="collapse alert alert-danger">@lang('messages.whoops')</div>
+<div id="ajax-error" class="collapse alert alert-danger">
+@lang('messages.whoops')
+</div>
 		    <form action="{{ url('herbaria')}}" method="POST" class="form-horizontal">
 		    <input type="hidden" name="route-url" value="{{ route('checkih') }}">
 		     {{ csrf_field() }}
@@ -33,7 +37,9 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-primary" id="checkih">
-				    <i class="fa fa-btn fa-plus"></i>@lang('messages.checkih')
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.checkih')
+
 				</button>
 				<div class="spinner" id="spinner"> </div>
 			    </div>
@@ -41,7 +47,9 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>@lang('messages.add')
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.add')
+
 				</button>
 			    </div>
 			</div>
@@ -57,9 +65,15 @@
                     <div class="panel-body">
                         <table class="table table-striped person-table">
                             <thead>
-                                <th>@lang('messages.acronym')</th>
-                                <th>@lang('messages.institution')</th>
-                                <th>@lang('messages.details')</th>
+                                <th>
+@lang('messages.acronym')
+</th>
+                                <th>
+@lang('messages.institution')
+</th>
+                                <th>
+@lang('messages.details')
+</th>
                             </thead>
                             <tbody>
                                 @foreach ($herbaria as $herbarium)

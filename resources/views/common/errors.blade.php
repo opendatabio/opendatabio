@@ -1,7 +1,9 @@
 @if (count($errors) > 0)
     <!-- Form Error List -->
     <div class="alert alert-danger">
-	<strong>@lang ('messages.whoops') </strong>
+	<strong>
+@lang ('messages.whoops')
+ </strong>
 
         <br>
 

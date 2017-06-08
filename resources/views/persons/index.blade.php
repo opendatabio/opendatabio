@@ -6,7 +6,9 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">@lang('messages.help')</a>
+        <a data-toggle="collapse" href="#help" class="btn btn-default">
+@lang('messages.help')
+</a>
       </h4>
     </div>
     <div id="help" class="panel-collapse collapse">
@@ -30,7 +32,9 @@
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success">
-				    <i class="fa fa-btn fa-plus"></i>@lang('messages.add')
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.add')
+
 				</button>
 			    </div>
 			</div>

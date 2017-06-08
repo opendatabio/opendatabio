@@ -43,11 +43,21 @@
                 <div class="collapse navbar-collapse" id="app-navbar-collapse">
                     <!-- Left Side Of Navbar -->
                     <ul class="nav navbar-nav">
-			<li><a href="{{ route('persons.index') }}">@lang('messages.persons')</a></li>
-			<li><a href="{{ route('references.index') }}">@lang('messages.references')</a></li>
-			<li><a href="{{ route('herbaria.index') }}">@lang('messages.herbaria')</a></li>
-			<li><a href="{{ route('users.index') }}">@lang('messages.users')</a></li>
-			<li><a href="{{ route('userjobs.index') }}">@lang('messages.userjobs')</a></li>
+			<li><a href="{{ route('persons.index') }}">
+@lang('messages.persons')
+</a></li>
+			<li><a href="{{ route('references.index') }}">
+@lang('messages.references')
+</a></li>
+			<li><a href="{{ route('herbaria.index') }}">
+@lang('messages.herbaria')
+</a></li>
+			<li><a href="{{ route('users.index') }}">
+@lang('messages.users')
+</a></li>
+			<li><a href="{{ route('userjobs.index') }}">
+@lang('messages.userjobs')
+</a></li>
                         &nbsp;
                     </ul>
 
@@ -55,8 +65,12 @@
                     <ul class="nav navbar-nav navbar-right">
                         <!-- Authentication Links -->
                         @if (Auth::guest())
-                            <li><a href="{{ route('login') }}">@lang('messages.login')</a></li>
-                            <li><a href="{{ route('register') }}">@lang('messages.register')</a></li>
+                            <li><a href="{{ route('login') }}">
+@lang('messages.login')
+</a></li>
+                            <li><a href="{{ route('register') }}">
+@lang('messages.register')
+</a></li>
                         @else
                             <li class="dropdown">
                                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
@@ -64,7 +78,9 @@
                                 </a>
 
                                 <ul class="dropdown-menu" role="menu">
-			    <li><a href="{{ route('selfedit') }}">@lang('messages.edit_profile')</a></li>
+			    <li><a href="{{ route('selfedit') }}">
+@lang('messages.edit_profile')
+</a></li>
                                     <li>
                                         <a href="{{ route('logout') }}"
                                             onclick="event.preventDefault();
