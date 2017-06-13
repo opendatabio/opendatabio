@@ -5,8 +5,8 @@ namespace App\Jobs;
 use Illuminate\Database\Eloquent\Model;
 use RenanBr\BibTexParser\Listener as Listener;
 use RenanBr\BibTexParser\Parser as Parser;
+use RenanBr\BibTexParser\Processor\AuthorProcessor;
 use RenanBr\BibTexParser\ParseException as ParseException;
-use App\Structures_BibTex;
 use App\BibReference;
 use App\Jobs\AppJob;
 use App\UserJobs;
@@ -35,6 +35,8 @@ class ImportBibReferences extends AppJob
     public function inner_handle()
     {
 	    $listener = new Listener;
+	    $listener->setTagNameCase(CASE_LOWER);
+	    $listener->addTagValueProcessor(new AuthorProcessor());
 	    $parser = new Parser;
 	    $parser->addListener($listener);
 	    $parser->parseString($this->contents);
@@ -44,23 +46,21 @@ class ImportBibReferences extends AppJob
 	    $errors = 0;
 		    foreach($newentries as $entry) {
 			    if ($this->standardize) {
-				    $bibtex = new Structures_BibTex;
-				    $bibtex->parse_string($entry['_original']);
-				    $fword = trim(strtolower(strtok($bibtex->data[0]['title'], ' ')));
+				    $fword = trim(strtolower(strtok($entry['title'], ' ')));
 				    while (in_array($fword, ['a', 'an', 'the', 'on', 'of', 'in', 'as', 'at', 'for', 'from', 'where', 'i', 'are', 'is', 'it', 'that', 'this']) or strlen($fword) == 1)
 					    $fword = strtok(' ');
 				    // removes all characters that are not strict alpha:
 				    $fword = preg_replace('/[^a-zA-Z]/', '', $fword);
-				    $author = $bibtex->data[0]['author'][0]['von'] .
-					      $bibtex->data[0]['author'][0]['last'];
+				    $author = $entry['author'][0]['von'] .
+					      $entry['author'][0]['last'];
 				    $author = preg_replace('/[^a-zA-Z]/', '', $author);
 				    $slug = strtolower(
 					    $author . 
-					    $bibtex->data[0]['year'] .
+					    $entry['year'] .
 					    $fword
 				    );
-				    $bibtex->data[0]['cite'] = $slug;
-				    $text = $bibtex->bibTex();
+				    // replaces the citation key with the new slug
+				    $text = preg_replace('/{(.*?),/','{'.$slug.',', $entry['_original'], 1);
 			    } else {
 				    $slug = $entry['citation-key'];
 				    $text = $entry['_original'];

@@ -27,7 +27,8 @@ class UserJobsController extends Controller
 		    $userjob = UserJobs::findOrFail($id);
 		    $job_id = $userjob->job_id;
 		    $userjob->delete();
-		    Queue::deleteReserved(config('queue.default'), $job_id);
+		    if (!empty($job_id))
+			    Queue::deleteReserved(config('queue.default'), $job_id);
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
 			    ->withErrors([Lang::get('messages.fk_error')])->withInput();
@@ -40,7 +41,8 @@ class UserJobsController extends Controller
 		$job_id = $job->job_id;
 		$job->job_id = null;
 		$job->save();
-		Queue::deleteReserved(config('queue.default'), $job_id);
+		if (!empty($job_id))
+			Queue::deleteReserved(config('queue.default'), $job_id);
 		return redirect('userjobs')->withStatus(Lang::get('messages.saved'));
 	}
 	public function retry($id) {

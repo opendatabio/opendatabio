@@ -41,7 +41,9 @@ class UserJobs extends Model
 			break;
 		default:
 		}
-		$this->job_id = dispatch($job); // saves the dispatched id
+		$jobid = dispatch($job); // saves the dispatched id
+		if ($jobid != 0)
+			$userjob->job_id = $jobid;
 		$this->save();
 	}
 
@@ -61,7 +63,9 @@ class UserJobs extends Model
 		default: // what to do here?
 			throw (new \Exception ("Wrong dispatcher specified at UserJob"));
 		}
-		$userjob->job_id = dispatch($job); // saves the dispatched id
+		$jobid = dispatch($job); // saves the dispatched id
+		if ($jobid != 0)
+			$userjob->job_id = $jobid;
 		$userjob->save();
 	}
 }

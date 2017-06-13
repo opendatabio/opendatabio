@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\BibReference;
 use App\UserJobs;
 use Validator;
-use RenanBr\BibTexParser\ParseException as ParseException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;

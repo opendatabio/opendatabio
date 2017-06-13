@@ -9,11 +9,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use Illuminate\Database\Eloquent\Model;
-use RenanBr\BibTexParser\Listener as Listener;
-use RenanBr\BibTexParser\Parser as Parser;
-use RenanBr\BibTexParser\ParseException as ParseException;
-use App\Structures_BibTex;
-use App\BibReference;
 use App\UserJobs;
 use DB;
 use Log;
