@@ -7,7 +7,8 @@ one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
 ## Authors
 **Coordinator:** 
 - Alberto Vicentini (vicentini.beto@gmail.com)
-**Colaborators:**
+
+**Collaborators:**
 - Andre Chalom (andrechalom@gmail.com)
 - Alexandre Adalardo de Oliveira (adalardo@usp.br)
 
