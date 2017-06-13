@@ -50,7 +50,7 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-	    $location = Location::with('ancestors')->findOrFail($id);
+	    $location = Location::with(['ancestors', 'descendants'])->findOrFail($id);
 	    return view('locations.show', [
 		    'location' => $location,
 	    ]);
