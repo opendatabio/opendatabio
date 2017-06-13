@@ -43,6 +43,9 @@
                 <div class="collapse navbar-collapse" id="app-navbar-collapse">
                     <!-- Left Side Of Navbar -->
                     <ul class="nav navbar-nav">
+			<li><a href="{{ route('locations.index') }}">
+@lang('messages.locations')
+</a></li>
 			<li><a href="{{ route('persons.index') }}">
 @lang('messages.persons')
 </a></li>

@@ -35,6 +35,7 @@ Route::get('references/getdata', 'BibReferenceController@getdata');
 Route::resource('references', 'BibReferenceController');
 Route::post('herbaria/checkih', 'HerbariumController@checkih')->name('checkih');
 Route::resource('herbaria', 'HerbariumController', ['only' => ['index', 'show', 'store', 'destroy']]);
+Route::resource('locations', 'LocationController');
 # Users can be resources for the admin
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 
