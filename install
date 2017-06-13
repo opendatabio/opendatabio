@@ -100,6 +100,7 @@ if ($status == 0) {
 $trouble = $trouble + checkVersion("Apache Web Server", $apachecmd . " -v", "2.2", "2.4");
 $trouble = $trouble + checkVersion("PHP", "php -v", "5.6", "7.0");
 $trouble = $trouble + checkVersion("MySQL database", "mysql --version", "5.5", "5.7");
+$trouble = $trouble + checkVersion("Pandoc", "pandoc --version", "1.10", "1.10");
 $trouble = $trouble + checkVersion("ImageMagick", "convert --version", "6.7.7", "6.8.9", "7.0");
 if($trouble == 0)
 	echo c("All versions compatible!\n", "success");

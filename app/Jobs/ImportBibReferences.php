@@ -45,7 +45,14 @@ class ImportBibReferences extends AppJob
 	    $count = 0;
 	    $errors = 0;
 		    foreach($newentries as $entry) {
-			    if ($this->standardize) {
+			    if (! array_key_exists('citation-key', $entry)) {
+				    $this->setError();
+				    $this->appendLog ("ERROR: entry needs a valid citation key: " . $entry['_original']);
+				    continue;
+			    } elseif ($this->standardize and array_key_exists('title', $entry)
+			   	 			   and array_key_exists('author', $entry)
+							   and array_key_exists('year', $entry)
+			    ) {
 				    $fword = trim(strtolower(strtok($entry['title'], ' ')));
 				    while (in_array($fword, ['a', 'an', 'the', 'on', 'of', 'in', 'as', 'at', 'for', 'from', 'where', 'i', 'are', 'is', 'it', 'that', 'this']) or strlen($fword) == 1)
 					    $fword = strtok(' ');

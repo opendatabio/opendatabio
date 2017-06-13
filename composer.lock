@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "f7eb8b0a844021d4e57faed763940494",
+    "content-hash": "0156076ea1b3e38f47b0bc5f3c09a9dd",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -1489,6 +1489,32 @@
                 "parser"
             ],
             "time": "2017-06-12T21:39:44+00:00"
+        },
+        {
+            "name": "ryakad/pandoc-php",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ryakad/pandoc-php.git",
+                "reference": "0cfdf959408e4c481db942b26785d94b9fe46672"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ryakad/pandoc-php/zipball/0cfdf959408e4c481db942b26785d94b9fe46672",
+                "reference": "0cfdf959408e4c481db942b26785d94b9fe46672",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Pandoc": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "time": "2015-01-07T05:07:16+00:00"
         },
         {
             "name": "swiftmailer/swiftmailer",

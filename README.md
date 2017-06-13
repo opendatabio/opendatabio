@@ -3,10 +3,13 @@ A modern system for storing and retrieving plant data - floristics, ecology and 
 
 This project improves and reimplements code from the Duckewiki project. Duckewiki is a tribute to Adolpho Ducke,
 one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
+
 ## Authors
-coordinator: Alberto Vicentini (vicentini.beto@gmail.com)
-colaborators: Andre Chalom (andrechalom@gmail.com)
-               Alexandre Adalardo de Oliveira (adalardo@usp.br)
+**Coordinator:** 
+- Alberto Vicentini (vicentini.beto@gmail.com)
+**Colaborators:**
+- Andre Chalom (andrechalom@gmail.com)
+- Alexandre Adalardo de Oliveira (adalardo@usp.br)
 
 ## Overview
 This project aims to provide a flexible but robust framework for storing, analysing and exporting biological data.
@@ -23,6 +26,9 @@ as webserver, or Postgres as database, but our installation script focuses on a 
 The image manipulation (thumbnails, etc) is done with Imagemagick version 6. Version 7 is not available on 
 most Linux distributions official repositories, and is therefore not supported at the moment.
 
+Pandoc is used to translate LaTeX code used in the bibliographic references. It is not necessary for the installation,
+but it is suggested for a better user experience. The minimum Pandoc version supported is 1.10.
+
 The software is being developed and extensively tested using PHP 7.1.5, Apache 2.4.25, 
 MySQL 10.1.22-MariaDB and ImageMagick 6.9.8. If you have trouble or questions about other softwares or versions, please
 contact our team using the Github repository.
@@ -30,11 +36,11 @@ contact our team using the Github repository.
 TODO: Install supervisor, configure queue workers + TIMEOUT, RETRIES
 
 ### Installation instructions
-First, install the prerequisite software: Apache, MySQL, PHP and ImageMagick.
+First, install the prerequisite software: Apache, MySQL, PHP, pandoc and ImageMagick.
 On a Debian system, use
 
 ```
-apt-get install apache2 mysql-server php5 imagemagick php5-mysql
+apt-get install apache2 mysql-server php5 imagemagick php5-mysql pandoc
 ```
 
 The recommended way to install OpenDataBio is using a dedicated
