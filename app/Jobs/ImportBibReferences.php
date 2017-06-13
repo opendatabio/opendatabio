@@ -54,18 +54,18 @@ class ImportBibReferences extends AppJob
 							   and array_key_exists('year', $entry)
 			    ) {
 				    $fword = trim(strtolower(strtok($entry['title'], ' ')));
+				    $fword = preg_replace('/[^a-zA-Z]/', '', $fword);
 				    while (in_array($fword, ['a', 'an', 'the', 'on', 'of', 'in', 'as', 'at', 'for', 'from', 'where', 'i', 'are', 'is', 'it', 'that', 'this']) or strlen($fword) == 1)
 					    $fword = strtok(' ');
 				    // removes all characters that are not strict alpha:
-				    $fword = preg_replace('/[^a-zA-Z]/', '', $fword);
 				    $author = $entry['author'][0]['von'] .
 					      $entry['author'][0]['last'];
-				    $author = preg_replace('/[^a-zA-Z]/', '', $author);
 				    $slug = strtolower(
 					    $author . 
 					    $entry['year'] .
 					    $fword
 				    );
+				    $slug = preg_replace('/[^a-zA-Z0-9]/', '', $slug);
 				    // replaces the citation key with the new slug
 				    $text = preg_replace('/{(.*?),/','{'.$slug.',', $entry['_original'], 1);
 			    } else {
