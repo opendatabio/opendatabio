@@ -21,6 +21,7 @@ class LocationsDataTable extends DataTable
 			    // Needs to escape special chars, as this will be passed RAW
 			    htmlspecialchars($location->name) . '</a>';
 	    }) 
+	    ->addColumn('full_name', function($location) {return $location->full_name;})
 	    ->rawColumns(['name']);
     }
 
@@ -31,7 +32,7 @@ class LocationsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Location::query()->select($this->getColumns());
+        $query = Location::with('ancestors')->select($this->getColumns());
 
         return $this->applyScopes($query);
     }
@@ -46,6 +47,8 @@ class LocationsDataTable extends DataTable
         return $this->builder()
                     ->columns($this->getColumns())
 		    ->removeColumn('id') // need to remove it from showing HERE
+		    ->removeColumn('_rgt') // need to remove it from showing HERE
+		    ->addColumn(['data' => 'full_name', 'title' => 'Full name', 'searchable' => true])
                     ->parameters([
                         'dom'     => 'Bfrtip',
                         'order'   => [[0, 'desc']],
@@ -65,9 +68,11 @@ class LocationsDataTable extends DataTable
      */
     protected function getColumns()
     {
+	    // we need to ask for all of the columns that might be needed for other methods
         return [
             'id',
             'name',
+	    '_rgt',
         ];
     }
 
