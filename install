@@ -291,6 +291,9 @@ echo "Changing storage area permissions...\n";
 exec("chmod -R 777 storage");
 exec("chmod -R 777 bootstrap/cache");
 
+echo c("********************************************\n", "success");
+echo c("OpenDataBio has been successfully installed!\n", "success");
+
 # TODO: change default queue settings for dev / prod
 # TODO: check supervisor availability for prod
 # TODO: test proxy settings
