@@ -87,7 +87,31 @@ function checkCurrentUser() {
 		checkContinue();
 	}
 }
-
+function checkMysqlLogBin() {
+exec("mysql -u".getenv('DB_USERNAME').
+	  " -h".getenv('DB_HOST').
+	  " -p".getenv('DB_PASSWORD').
+	  " ".getenv('DB_DATABASE') ."<<EOF
+SHOW VARIABLES LIKE 'log_bin';
+SHOW VARIABLES LIKE 'log_bin_trust_function_creators';
+EOF", $result, $status);
+	$logbin = false;
+	$logbin_trust = false;
+	foreach($result as $line) {
+		if (preg_match('/log_bin\s+(\w*)/', $line, $matches) and $matches[1] == "ON")
+			$logbin = true;
+	}
+	foreach($result as $line) {
+		if (preg_match('/log_bin_trust_function_creators\s+(\w*)/', $line, $matches) and $matches[1] == "ON")
+			$logbin_trust = true;
+	}
+	if ($logbin === true and $logbin_trust === false) {
+		echo c("Your current MySQL settings have binary logging activated, but not log_bin_trust_function_creators.\n", "danger");
+		echo c("OpenDataBio needs the parameter log_bin_trust_function_creators set to 1 in your my.cnf file.\n", "danger");
+		echo c("Remember to restart mysql afterwards", "danger");
+		exit();
+	}
+}
 
 echo c("Starting OpenDataBio installation! :)\n", "success");
 checkCurrentUser();
@@ -274,6 +298,8 @@ EOF', $result, $status);
 	}
 }
 echo c("Database connection successfull!\n", "success");
+
+checkMysqlLogBin();
 
 echo "Running database migrations... This may take a while...\n";
 system("php artisan migrate", $status);
