@@ -78,8 +78,19 @@ function writeDotEnv($key, $value) { // edited from Laravel Framework @ KeyGener
 		file_get_contents(".env")
 	));
 }
+function checkCurrentUser() {
+	$uid = posix_geteuid();
+	if ($uid < 1000) {
+		echo c("The current user is: " . posix_getpwuid($uid)['name'] . "\n", "danger");
+		echo c("This user seems to be a system or a privileged user!\n", "danger");
+		echo c("The installation script should be executed as a non-privileged user!\n", "danger");
+		checkContinue();
+	}
+}
+
 
 echo c("Starting OpenDataBio installation! :)\n", "success");
+checkCurrentUser();
 
 echo "Checking versions...\n";
 $trouble = 0;
