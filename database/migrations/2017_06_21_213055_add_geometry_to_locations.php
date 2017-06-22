@@ -20,6 +20,7 @@ class AddGeometryToLocations extends Migration
 		$table->string('datum')->nullable();
 		$table->integer('uc_id')->unsigned()->nullable();
 		$table->foreign('uc_id')->references('id')->on('locations');
+		$table->unique(['name', 'adm_level']);
         });
 	DB::statement('ALTER TABLE locations ADD geom GEOMETRYCOLLECTION' );
 

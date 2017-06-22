@@ -66,18 +66,25 @@
 
 <script>
       function initMap() {
-        var uluru = {lat: -23.363, lng: -40.044};
+        var uluru = {lat: {{$location->geomArray[0]['y']}}, lng: {{$location->geomArray[0]['x']}}  };
         var map = new google.maps.Map(document.getElementById('map'), {
           zoom: 4,
           center: uluru
 	});
+	var polygon = new google.maps.Polygon({
+	paths: [
 <?php $i = 0; ?>
 	@foreach ($location->geomArray as $point)
-        var marker{{$i++}} = new google.maps.Marker({
-	position: {lat: {{$point['y']}}, lng: {{$point['x']}}},
-          map: map
+	 {lat: {{$point['y']}}, lng: {{$point['x']}}},
+	 @endforeach
+	 ],
+	 map: map,
+	 strokeColor:'#00FF00',
+          strokeOpacity: 0.7,
+          strokeWeight: 2,
+          fillColor: '#00FF00',
+          fillOpacity: 0.3
         });
-	@endforeach
       }
 </script>
 
