@@ -9,15 +9,22 @@ use \ShapeFile\ShapeFileException;
 
 try {
     // Open shapefile
-    $ShapeFile = new ShapeFile('/home/chalom/Downloads/diva/dALA/ALA_adm0.shp');
+    $ShapeFile = new ShapeFile('/home/chalom/Downloads/AFG_adm.gpkg');
     
     // Read all the records
-    while ($record = $ShapeFile->getRecord(ShapeFile::GEOMETRY_BOTH)) {
+    while ($record = $ShapeFile->getRecord(ShapeFile::GEOMETRY_WKT)) {
+	    if( $ShapeFile->getCurrentRecord() != 400) continue;
         if ($record['dbf']['_deleted']) continue;
         // Geometry
+#	print_r(array_keys($record['shp']));
+#	echo (($record['shp']['numparts']));
+#	foreach($record['shp']['parts'] as $part)
+#		if($part['numrings'] > 1) echo $part['numrings'];
+#	print_r(($record['shp']['parts'][0]));
+#	print_r(($record['shp']['parts'][1]));
         print_r($record['shp']);
         // DBF Data
-        print_r($record['dbf']);
+       print_r($record['dbf']);
     }
     
 } catch (ShapeFileException $e) {

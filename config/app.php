@@ -214,6 +214,7 @@ return [
 	Barryvdh\TranslationManager\ManagerServiceProvider::class,
 	Yajra\Datatables\DatatablesServiceProvider::class,
 	Yajra\Datatables\ButtonsServiceProvider::class,
+	Grimzy\LaravelMysqlSpatial\SpatialServiceProvider::class,
 
     ],
 
