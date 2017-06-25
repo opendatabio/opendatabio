@@ -153,10 +153,10 @@ if (! extension_loaded("tokenizer"))
 	echo(c("Tokenizer PHP extension is required! Check your phpinfo()\n", "danger"));
 if (! extension_loaded("xml"))
 	echo(c("XML PHP extension is required! Check your phpinfo()\n", "danger"));
-if (! extension_loaded("apcu"))
-	echo c("Apcu PHP extension is recommended for better performance...\n", "warning");
-if (! extension_loaded("opcache"))
-	echo c("Opcache PHP extension is recommended for better performance...\n", "warning");
+#if (! extension_loaded("apcu"))
+#	echo c("Apcu PHP extension is recommended for better performance...\n", "warning");
+#if (! extension_loaded("opcache"))
+#	echo c("Opcache PHP extension is recommended for better performance...\n", "warning");
 if (! ini_get("allow_url_fopen"))
 	echo(c("The PHP initialization directive allow_url_fopen must be set to true!\n", "danger"));
 ### Apache config
