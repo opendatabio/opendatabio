@@ -15,6 +15,7 @@
         "yajra/laravel-datatables-oracle": "^7.0"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^2.4",
         "barryvdh/laravel-translation-manager": "^0.2.8",
         "fzaninotto/faker": "~1.4",
         "mockery/mockery": "0.9.*",

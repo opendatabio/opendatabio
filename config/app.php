@@ -212,6 +212,7 @@ return [
         App\Providers\RouteServiceProvider::class,
 
 	Barryvdh\TranslationManager\ManagerServiceProvider::class,
+	Barryvdh\Debugbar\ServiceProvider::class,
 	Yajra\Datatables\DatatablesServiceProvider::class,
 	Yajra\Datatables\ButtonsServiceProvider::class,
 
@@ -264,6 +265,7 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 	'Datatables' => Yajra\Datatables\Facades\Datatables::class,
+	'Debugbar' => Barryvdh\Debugbar\Facade::class,
 
     ],
 
