@@ -23,22 +23,13 @@
                 </div>
 
                 <div class="panel-body">
-                    <!-- Display Validation Errors -->
-		    @include('common.errors')
-
-		    <!--form action="{{ url('persons')}}" method="POST" class="form-horizontal">
-                     {{ csrf_field() }}
-			include('persons.form')
-		        <div class="form-group">
-			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success">
+			    <div class="col-sm-6">
+				<a href="{{url ('locations/create')}}" class="btn btn-success">
 				    <i class="fa fa-btn fa-plus"></i>
-lang('messages.add')
+@lang('messages.create')
 
-				</button>
-			    </div>
+				</a>
 			</div>
-		    </form-->
                 </div>
             </div>
 

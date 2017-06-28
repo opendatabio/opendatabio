@@ -10,7 +10,12 @@ class Location extends Model
 {
 	use NodeTrait;
 
-	protected $fillable = ['name', 'altitude', 'datum', 'adm_level'];
+	protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes'];
+
+	// query scope for conservation units
+	public function scopeUcs($query) {
+		return $query->where('adm_level', 99);
+	}
 
 	// Proposal! Needs to be tested and aproved
 	function getFullNameAttribute() {
@@ -36,7 +41,8 @@ class Location extends Model
 
 	public function newQuery($excludeDeleted = true)
 	{
-        return parent::newQuery($excludeDeleted)->addSelect('*',DB::raw('AsText(geom) as geom, Area(geom) as area'));
+		// this "area" is used as an example, needs to be removed in the final product
+	return parent::newQuery($excludeDeleted)->addSelect('*',DB::raw('AsText(geom) as geom, Area(geom) as area'));
 	}
 
 }
