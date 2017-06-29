@@ -12,13 +12,51 @@
 @lang('messages.location_name')
 :</strong> {{ $location->name }}
 <br>
+		    <strong>
+@lang('messages.adm_level')
+:</strong> {{ $adm_level }}
+<br>
+@if ($location->altitude)
+<strong>
+@lang('messages.altitude')
+:</strong> {{ $location->altitude }}
+<br>
+@endif
+@if ($location->datum)
+<strong>
+@lang('messages.datum')
+:</strong> {{ $location->datum }}
+<br>
+@endif
+@if ($location->uc_id)
+<strong>
+@lang('messages.uc')
+:</strong> <a href="{{url('locations/'. $location->uc->id)}}">{{ $location->uc->name }}</a>
+<br>
+@endif
 <strong> 
 @lang('messages.total_descendants')
 :</strong> {{ $location->descendants->count() }}
 <br>
 <strong>
 @lang('messages.total_area')
-:</strong> {{ $location->geom }}
+:</strong> {{ $location->area }}
+@if ($location->notes)
+<br>
+<strong>
+@lang('messages.notes')
+:</strong> {{ $location->notes }}
+<br>
+@endif
+<br>
+			    <div class="col-sm-6">
+				<a href="{{ url('locations/'. $location->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.edit')
+
+				</a>
+			    </div>
+
                 </div>
             </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->

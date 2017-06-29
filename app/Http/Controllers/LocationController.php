@@ -102,8 +102,10 @@ class LocationController extends Controller
     public function show($id)
     {
 	    $location = Location::with(['ancestors', 'descendants'])->findOrFail($id);
+	    $adm_level = config('adm_levels')[$location->adm_level];
 	    return view('locations.show', [
 		    'location' => $location,
+		    'adm_level' => $adm_level
 	    ]);
         //
     }
@@ -116,7 +118,15 @@ class LocationController extends Controller
      */
     public function edit($id)
     {
-        //
+	    $locations = Location::all();
+	    $uc_list = Location::ucs()->get();
+	    $location = Location::findOrFail($id);
+	    // TODO: change this view name?
+	    return view('locations.create', [
+		    'locations' => $locations,
+		    'location' => $location,
+		    'uc_list' => $uc_list
+	    ]);
     }
 
     /**
@@ -128,6 +138,24 @@ class LocationController extends Controller
      */
     public function update(Request $request, $id)
     {
+	    $location = Location::findOrFail($id);
+	    $validator = $this->customValidate($request);
+	    if ($validator->fails()) {
+		    return redirect()->back()
+			    ->withErrors($validator)
+			    ->withInput();
+	    }
+	    $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
+	    $parent = $request['parent_id'];
+	    if ($parent !== 0) {
+		    $location->parent_id = $parent;
+	    }
+	    if ($request->uc_id !== 0) {
+		    $location->uc_id = $request->uc_id;
+	    }
+	    $location->geom = $request->geom;
+	    $location->save();
+	return redirect('locations')->withStatus(Lang::get('messages.stored'));
         //
     }
 

@@ -38,6 +38,10 @@ class Location extends Model
 		}
 		return $array;
 	}
+    public function uc()
+    {
+        return $this->belongsTo('App\Location', 'uc_id');
+    }
 
 	public function newQuery($excludeDeleted = true)
 	{

@@ -26,7 +26,14 @@
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
 
+@if (isset($location))
+		    <form action="{{ url('locations/' . $location->id)}}" method="POST" class="form-horizontal">
+{{ method_field('PUT') }}
+
+@else
 		    <form action="{{ url('locations')}}" method="POST" class="form-horizontal">
+@endif
+
                      {{ csrf_field() }}
 <div class="form-group">
     <label for="name" class="col-sm-3 control-label">
