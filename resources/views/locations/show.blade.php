@@ -96,6 +96,9 @@
         height: 400px;
         width: 100%;
 ">
+	@if (empty ($location->geomArray))
+	@lang ('messages.location_map_error')
+	@endif
 
                 </div>
             </div>
@@ -109,6 +112,7 @@
           zoom: 4,
           center: uluru
 	});
+@if (count($location->geomArray) > 1) 
 	var polygon = new google.maps.Polygon({
 	paths: [
 <?php $i = 0; ?>
@@ -123,6 +127,14 @@
           fillColor: '#00FF00',
           fillOpacity: 0.3
         });
+@else
+<?php $point = $location->geomArray[0]; ?>
+  var marker = new google.maps.Marker({
+  position: {lat: {{$point['y']}}, lng: {{$point['x']}} },
+    map: map,
+    title: 'Plot'
+  });
+@endif
       }
 </script>
 

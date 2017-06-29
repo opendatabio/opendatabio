@@ -1,3 +1,4 @@
+// used in AJAX asynchronous requests
 #spinner {
  border-top: 3px solid $brand-primary;
  border-bottom: 3px solid $brand-primary;
@@ -13,6 +14,7 @@
     100% { transform: rotate(360deg); }
 }
 
+// used for displaying buttons as links in UserJobs
 button.unstyle {
     background:none!important;
     border:none;
@@ -24,3 +26,6 @@ button.unstyle {
 button.unstyle:hover {
 	color: darken($brand-primary, 10%);
 }
+
+// used in Location screens
+.form-control.latlongpicker { display:inline; width: 20%; }

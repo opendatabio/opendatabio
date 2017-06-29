@@ -64,6 +64,7 @@
     </div>
   </div>
 </div>
+<div id="super-geometry">
 <div class="form-group">
     <label for="geom" class="col-sm-3 control-label">
 @lang('messages.geometry')
@@ -78,6 +79,31 @@
     </div>
   </div>
 </div>
+</div>
+<div id="super-points">
+<div class="form-group">
+    <label for="lat" class="col-sm-3 control-label">
+@lang('messages.latitude')
+</label>
+        <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+	<input type="text" name="lat1" id="lat1" class="form-control latlongpicker" value="{{ old('lat1', isset($location) ? $location->lat1 : null) }}">&#176;
+	<input type="text" name="lat2" id="lat2" class="form-control latlongpicker" value="{{ old('lat2', isset($location) ? $location->lat2 : null) }}">'
+	<input type="text" name="lat3" id="lat3" class="form-control latlongpicker" value="{{ old('lat3', isset($location) ? $location->lat3 : null) }}">''
+	<input type="radio" name="latO" value="1" @if (old('latO', isset($location) ? $location->latO : 1)) checked @endif > N
+&nbsp;
+
+	<input type="radio" name="latO" value="0" @if (!old('latO', isset($location) ? $location->latO : 1)) checked @endif > S
+
+            </div>
+  <div class="col-sm-12">
+    <div id="hint1" class="panel-collapse collapse">
+	@lang('messages.geom_hint')
+    </div>
+  </div>
+</div>
+</div>
+
 <div class="form-group">
     <label for="altitude" class="col-sm-3 control-label">
 @lang('messages.altitude')

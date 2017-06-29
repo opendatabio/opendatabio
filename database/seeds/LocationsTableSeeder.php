@@ -21,6 +21,16 @@ class LocationsTableSeeder extends Seeder
 	    $sp->geom = "POLYGON((-46.3 -24, -47.4 -20, -50.6 -19.8, -52.9 -22.5, -48 -25.3, -46.3 -24))";
 	    $sp->save();
 
+	    $jq = new Location(['name' => 'Parque Estadual do Juquery', 'adm_level' => 99, 'parent_id' => $sp->id, 
+		    		'datum' => 'WGS84']);
+	    $jq->geom = "POLYGON((-46.66 -23.33,-46.71 -23.33,-46.72 -23.365,-46.67 -23.366,-46.66 -23.33))";
+	    $jq->save();
+
+	    $p1 = new Location(['name' => 'Plot de coleta 1', 'adm_level' => 100, 'parent_id' => $sp->id,
+	    			'uc_id' => $jq->id, 'x' => 1000, 'y' => 500]);
+	    $p1->geom = "POINT(-46.9 -22.5)";
+	    $p1->save();
+
 	    $am = new Location(['name' => 'Amazonas', 'adm_level' => 1, 'parent_id' => $br->id]);
 	    $am->geom = "POLYGON((-69.7 0.2, -71.8 -9.8, -58.5 -9.4, -56.4 -2.2, -69.7 0.2))";
 	    $am->save();

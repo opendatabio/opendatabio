@@ -30,6 +30,11 @@ class Location extends Model
 	        $this->attributes['geom'] = DB::raw("GeomFromText('$value')");
 	}
 	public function getGeomArrayAttribute() {
+		if (substr($this->geom, 0, 5) == "POINT") {
+			$point = substr($this->geom, 6, -1);
+			$pos = strpos($point, ' ');
+			return [['x' => substr($point,0, $pos), 'y' => substr($point, $pos+1)]];
+		}
 		if (substr($this->geom, 0, 7) != "POLYGON") return; // not working with other things
 		$array = explode(',', substr($this->geom, 9, -2));
 		foreach($array as &$element) {

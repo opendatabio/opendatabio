@@ -291,6 +291,11 @@ echo "Changing storage area permissions...\n";
 exec("chmod -R 777 storage");
 exec("chmod -R 777 bootstrap/cache");
 
+echo "Running checks with present data...\n";
+system("php artisan tinker <<EOF
+	App\Location::fixTree();
+EOF");
+
 # TODO: change default queue settings for dev / prod
 # TODO: check supervisor availability for prod
 # TODO: test proxy settings
