@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "d62f1af0db4abf60158952be9731e864",
+    "content-hash": "ce51b74946818e904bfafc086d0769ab",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -1058,16 +1058,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v3.0.5",
+            "version": "v3.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "2b9e2f71b722f7c53918ab0c25f7646c2013f17d"
+                "reference": "0808939f81c1347a3c8a82a5925385a08074b0f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/2b9e2f71b722f7c53918ab0c25f7646c2013f17d",
-                "reference": "2b9e2f71b722f7c53918ab0c25f7646c2013f17d",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/0808939f81c1347a3c8a82a5925385a08074b0f1",
+                "reference": "0808939f81c1347a3c8a82a5925385a08074b0f1",
                 "shasum": ""
             },
             "require": {
@@ -1105,7 +1105,7 @@
                 "parser",
                 "php"
             ],
-            "time": "2017-03-05T18:23:57+00:00"
+            "time": "2017-06-28T20:53:48+00:00"
         },
         {
             "name": "paragonie/random_compat",
@@ -1466,17 +1466,23 @@
         },
         {
             "name": "renanbr/bibtex-parser",
-            "version": "dev-master",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/renanbr/bibtex-parser.git",
-                "reference": "6f796d199f8888a2c8092f12fc0688de79719b9c"
+                "reference": "27173b5f5ad575c6530c97c3e79d099ae3c29e1c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/renanbr/bibtex-parser/zipball/6f796d199f8888a2c8092f12fc0688de79719b9c",
-                "reference": "6f796d199f8888a2c8092f12fc0688de79719b9c",
+                "url": "https://api.github.com/repos/renanbr/bibtex-parser/zipball/27173b5f5ad575c6530c97c3e79d099ae3c29e1c",
+                "reference": "27173b5f5ad575c6530c97c3e79d099ae3c29e1c",
                 "shasum": ""
+            },
+            "require-dev": {
+                "ryakad/pandoc-php": "^1.0"
+            },
+            "suggest": {
+                "ryakad/pandoc-php": "Needed to support LaTeX decoder in class RenanBr\\BibTexParser\\Processor\\LatexToUnicodeProcessor"
             },
             "type": "library",
             "autoload": {
@@ -1501,7 +1507,7 @@
                 "latex",
                 "parser"
             ],
-            "time": "2017-06-20T20:33:53+00:00"
+            "time": "2017-06-29T16:48:37+00:00"
         },
         {
             "name": "ryakad/pandoc-php",
@@ -2651,16 +2657,16 @@
         },
         {
             "name": "yajra/laravel-datatables-oracle",
-            "version": "v7.8.0",
+            "version": "v7.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yajra/laravel-datatables.git",
-                "reference": "2f6e17a63eec8a329fb034e45157aea1f6681c5b"
+                "reference": "a013adf038e94a0f0ba81db82f889941c95184d9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yajra/laravel-datatables/zipball/2f6e17a63eec8a329fb034e45157aea1f6681c5b",
-                "reference": "2f6e17a63eec8a329fb034e45157aea1f6681c5b",
+                "url": "https://api.github.com/repos/yajra/laravel-datatables/zipball/a013adf038e94a0f0ba81db82f889941c95184d9",
+                "reference": "a013adf038e94a0f0ba81db82f889941c95184d9",
                 "shasum": ""
             },
             "require": {
@@ -2708,22 +2714,22 @@
                 "jquery",
                 "laravel"
             ],
-            "time": "2017-06-23T08:18:29+00:00"
+            "time": "2017-06-29T07:31:31+00:00"
         }
     ],
     "packages-dev": [
         {
             "name": "barryvdh/laravel-debugbar",
-            "version": "v2.4.0",
+            "version": "v2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/barryvdh/laravel-debugbar.git",
-                "reference": "de15d00a74696db62e1b4782474c27ed0c4fc763"
+                "reference": "af98b3a4ccac9364f2145fae974ff3392ec402b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/barryvdh/laravel-debugbar/zipball/de15d00a74696db62e1b4782474c27ed0c4fc763",
-                "reference": "de15d00a74696db62e1b4782474c27ed0c4fc763",
+                "url": "https://api.github.com/repos/barryvdh/laravel-debugbar/zipball/af98b3a4ccac9364f2145fae974ff3392ec402b1",
+                "reference": "af98b3a4ccac9364f2145fae974ff3392ec402b1",
                 "shasum": ""
             },
             "require": {
@@ -2772,7 +2778,7 @@
                 "profiler",
                 "webprofiler"
             ],
-            "time": "2017-06-01T17:46:08+00:00"
+            "time": "2017-06-14T07:44:44+00:00"
         },
         {
             "name": "barryvdh/laravel-translation-manager",
@@ -4363,9 +4369,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "renanbr/bibtex-parser": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
