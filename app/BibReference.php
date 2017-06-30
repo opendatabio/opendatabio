@@ -8,6 +8,7 @@ use RenanBr\BibTexParser\Parser as Parser;
 use RenanBr\BibTexParser\ParseException as ParseException;
 use Pandoc\Pandoc;
 use Pandoc\PandocException;
+use Debugbar;
 
 use Illuminate\Support\Facades\Log;
 
@@ -36,6 +37,7 @@ class BibReference extends Model
 		try {
 		$pandoc = new Pandoc();
 		$listener->setTagValueProcessor(function (&$value, $tag) use ($pandoc) {
+			if ($tag != "author" and $tag != "title") return;
 			$value = $pandoc->runWith($value, [
 				"from" => "latex",
 				"to" => "plain" // or "html"
@@ -45,13 +47,18 @@ class BibReference extends Model
 		$parser = new Parser;
 		$parser->addListener($listener);
 		try {
-			$parser->parseString($this->bibtex);
+			Debugbar::measure('Parsing', function() use ($parser) {
+				$parser->parseString($this->bibtex);
+			});
 		} catch (ParseException $e) {
 			Log::error("Error handling bibtex:". $e->getMessage());
 			$this->entries[0] = ['author' => null, 'title' => null, 'year' => null, 'citation-key' => 'Invalid'];
 			return;
 		}
+			Debugbar::measure('Exporting', function() use ($listener) {
 		$this->entries = $listener->export();
+			});
+
 	}
 
 	public function getAuthorAttribute() {

@@ -78,8 +78,43 @@ function writeDotEnv($key, $value) { // edited from Laravel Framework @ KeyGener
 		file_get_contents(".env")
 	));
 }
+function checkCurrentUser() {
+	$uid = posix_geteuid();
+	if ($uid < 1000) {
+		echo c("The current user is: " . posix_getpwuid($uid)['name'] . "\n", "danger");
+		echo c("This user seems to be a system or a privileged user!\n", "danger");
+		echo c("The installation script should be executed as a non-privileged user!\n", "danger");
+		checkContinue();
+	}
+}
+function checkMysqlLogBin() {
+exec("mysql -u".getenv('DB_USERNAME').
+	  " -h".getenv('DB_HOST').
+	  " -p".getenv('DB_PASSWORD').
+	  " ".getenv('DB_DATABASE') ."<<EOF
+SHOW VARIABLES LIKE 'log_bin';
+SHOW VARIABLES LIKE 'log_bin_trust_function_creators';
+EOF", $result, $status);
+	$logbin = false;
+	$logbin_trust = false;
+	foreach($result as $line) {
+		if (preg_match('/log_bin\s+(\w*)/', $line, $matches) and $matches[1] == "ON")
+			$logbin = true;
+	}
+	foreach($result as $line) {
+		if (preg_match('/log_bin_trust_function_creators\s+(\w*)/', $line, $matches) and $matches[1] == "ON")
+			$logbin_trust = true;
+	}
+	if ($logbin === true and $logbin_trust === false) {
+		echo c("Your current MySQL settings have binary logging activated, but not log_bin_trust_function_creators.\n", "danger");
+		echo c("OpenDataBio needs the parameter log_bin_trust_function_creators set to 1 in your my.cnf file.\n", "danger");
+		echo c("Remember to restart mysql afterwards", "danger");
+		exit();
+	}
+}
 
 echo c("Starting OpenDataBio installation! :)\n", "success");
+checkCurrentUser();
 
 echo "Checking versions...\n";
 $trouble = 0;
@@ -107,23 +142,23 @@ if($trouble == 0)
 echo "Checking configuration...\n";
 ### PHP extensions
 if (! extension_loaded("openssl"))
-	exit(c("OpenSSL PHP extension is required!\n", "danger"));
+	echo(c("OpenSSL PHP extension is required! Check your phpinfo()\n", "danger"));
 if (! extension_loaded("pdo"))
-	exit(c("PDO PHP extension is required!\n", "danger"));
+	echo(c("PDO PHP extension is required! Check your phpinfo()\n", "danger"));
 if (! extension_loaded("pdo_mysql"))
-	exit(c("PDO MySQL PHP extension is required! Try running 'apt-get install php5-mysql'\n", "danger"));
+	echo(c("PDO MySQL PHP extension is required! Check your phpinfo() and try running 'apt-get install php5-mysql'\n", "danger"));
 if (! extension_loaded("mbstring"))
-	exit(c("MBstring PHP extension is required!\n", "danger"));
+	echo(c("MBstring PHP extension is required! Check your phpinfo()\n", "danger"));
 if (! extension_loaded("tokenizer"))
-	exit(c("Tokenizer PHP extension is required!\n", "danger"));
+	echo(c("Tokenizer PHP extension is required! Check your phpinfo()\n", "danger"));
 if (! extension_loaded("xml"))
-	exit(c("XML PHP extension is required!\n", "danger"));
-if (! extension_loaded("apcu"))
-	echo c("Apcu PHP extension is recommended for better performance...\n", "warning");
-if (! extension_loaded("opcache"))
-	echo c("Opcache PHP extension is recommended for better performance...\n", "warning");
+	echo(c("XML PHP extension is required! Check your phpinfo()\n", "danger"));
+#if (! extension_loaded("apcu"))
+#	echo c("Apcu PHP extension is recommended for better performance...\n", "warning");
+#if (! extension_loaded("opcache"))
+#	echo c("Opcache PHP extension is recommended for better performance...\n", "warning");
 if (! ini_get("allow_url_fopen"))
-	exit(c("The PHP initialization directive allow_url_fopen must be set to true!\n", "danger"));
+	echo(c("The PHP initialization directive allow_url_fopen must be set to true!\n", "danger"));
 ### Apache config
 exec($apachecmd . " -M", $result, $status);
 $rewrite = false; $userdir = false;
@@ -264,6 +299,8 @@ EOF', $result, $status);
 }
 echo c("Database connection successfull!\n", "success");
 
+checkMysqlLogBin();
+
 echo "Running database migrations... This may take a while...\n";
 system("php artisan migrate", $status);
 if ($status != 0) {
@@ -295,6 +332,9 @@ echo "Running checks with present data...\n";
 system("php artisan tinker <<EOF
 	App\Location::fixTree();
 EOF");
+
+echo c("********************************************\n", "success");
+echo c("OpenDataBio has been successfully installed!\n", "success");
 
 # TODO: change default queue settings for dev / prod
 # TODO: check supervisor availability for prod
