@@ -22,6 +22,20 @@
 :</strong> {{ $location->altitude }}
 <br>
 @endif
+<!-- X, Y, etc) -->
+@if ($location->x or $location->y)
+<strong>
+@lang('messages.dimensions')
+:</strong> X: {{ $location->x }}m, Y: {{$location->y}}m</a>
+<br>
+@endif
+@if ($location->startx or $location->starty)
+<strong>
+@lang('messages.position')
+:</strong> X: {{ $location->startx }}m, Y: {{$location->starty}}m</a>
+<br>
+@endif
+
 @if ($location->datum)
 <strong>
 @lang('messages.datum')

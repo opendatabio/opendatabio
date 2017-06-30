@@ -19,7 +19,6 @@ class LocationController extends Controller
     public function index(LocationsDataTable $dataTable)
     {
 	    return $dataTable->render('locations.index', [
-//		    'herbaria' => $herbaria,
     ]);
         //
     }
@@ -40,15 +39,37 @@ class LocationController extends Controller
         //
     }
 
+    // Validates the user input for CREATE or UPDATE requests
+    // Notice that the fields that will be used are different based on the
+    // adm_level declared
     public function customValidate (Request $request) {
-	    $validator = Validator::make($request->all(), [
+	    $rules = [
 		    'name' => 'required|string|max:191',
-		    'geom' => 'required|string',
 		    'adm_level' => 'required|integer',
 		    'altitude' => 'integer|nullable',
-	    ]);
+	    ];
+	    // TODO: shouldn't hardcode the code for PLOTs
+	    if ($request->adm_level == 100) {
+		    $rules = array_merge($rules, [
+			    'lat1' => 'required|number',
+			    'long1' => 'required|number',
+			    'x' => 'required|number',
+			    'y' => 'required|number',
+		    ]);
+	    } elseif ($request->adm_level == 999) {
+		    $rules = array_merge($rules, [
+			    'lat1' => 'required|number',
+			    'long1' => 'required|number',
+		    ]);
+	    } else {
+		    $rules = array_merge($rules, [
+			    'geom' => 'required|string',
+		    ]);
+	    }
+	    $validator = Validator::make($request->all(), $rules);
 	    // MySQL 5.7 has a new IsValid for checking validity, but we must keep compatibility with 5.5
 	    $validator->after(function ($validator) use ($request) {
+		    if ($request->adm_level == 100 or $request->adm_level == 999) return;
 		    $valid = DB::select('SELECT Dimension(GeomFromText(?)) as valid', [$request->geom]);
 
 		    if (is_null ($valid[0]->valid)) 
@@ -72,7 +93,12 @@ class LocationController extends Controller
 			    ->withErrors($validator)
 			    ->withInput();
 	    }
-	    $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
+	    if ($request->adm_level == 100) {
+		    $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
+	    } else {
+		    // discard x, y data from locations that are not PLOTs
+		    $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
+	    }
 
 	    $parent = $request['parent_id'];
 	    // AUTODETECT PARENT & UC
@@ -145,7 +171,12 @@ class LocationController extends Controller
 			    ->withErrors($validator)
 			    ->withInput();
 	    }
-	    $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
+	    if ($request->adm_level == 100) {
+		    $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
+	    } else {
+		    // discard x, y data from locations that are not PLOTs
+		    $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
+	    }
 	    $parent = $request['parent_id'];
 	    if ($parent !== 0) {
 		    $location->parent_id = $parent;

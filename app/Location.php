@@ -10,7 +10,15 @@ class Location extends Model
 {
 	use NodeTrait;
 
-	protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes'];
+	protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty'];
+	protected $lat, $long;
+
+	public function getlatlong() {
+		$point = substr($this->geom, 6, -1);
+		$pos = strpos($point, ' ');
+		$this->long = substr($point,0, $pos);
+		$this->lat = substr($point, $pos+1);
+	}
 
 	// query scope for conservation units
 	public function scopeUcs($query) {
@@ -47,6 +55,42 @@ class Location extends Model
     {
         return $this->belongsTo('App\Location', 'uc_id');
     }
+
+	// getter method for parts of latitude/longitude
+	// TODO: BROKEN??
+	// TODO: add setter from all these attributes
+	public function getLat1Attribute() { 
+		$this->getLatLong();
+		return floor(abs($this->lat));
+	}
+	public function getLat2Attribute() { 
+		$this->getLatLong();
+		return floor(60 * (abs( $this->lat) - $this->lat1  ));
+	}
+	public function getLat3Attribute() { 
+		$this->getLatLong();
+		return floor(60*60 * (60 * abs( $this->lat) - 60 * $this->lat1 - $this->lat2  ));
+	}
+	public function getLatOAttribute() { 
+		$this->getLatLong();
+		return ($this->lat > 0);
+	}
+	public function getLong1Attribute() { 
+		$this->getLatLong();
+		return floor(abs($this->long));
+	}
+	public function getLong2Attribute() { 
+		$this->getLatLong();
+		return floor(60 * (abs( $this->long) - $this->long1  ));
+	}
+	public function getLong3Attribute() { 
+		$this->getLatLong();
+		return floor(60*60 * (60 * abs( $this->long) - 60 * $this->long1 - $this->long2  ));
+	}
+	public function getLongOAttribute() { 
+		$this->getLatLong();
+		return ($this->long > 0);
+	}
 
 	public function newQuery($excludeDeleted = true)
 	{

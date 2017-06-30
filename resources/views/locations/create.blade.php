@@ -54,13 +54,13 @@
 	<select name="adm_level" id="adm_level" class="form-control" >
 		<option value='' {{ is_null($selected) ? 'selected' : '' }} >&nbsp;</option>
 	@foreach (config('adm_levels') as $key => $uc)
-		<option value="{{$key}}" {{ $key === $selected ? 'selected' : '' }}>{{ $uc }}</option>
+		<option value="{{$key}}" {{ $key == $selected ? 'selected' : '' }}>{{ $uc }}</option>
 	@endforeach
 	</select>
             </div>
   <div class="col-sm-12">
-    <div id="hint2" class="panel-collapse collapse">
-	@lang('messages.location_parent_hint')
+    <div id="hint5" class="panel-collapse collapse">
+	@lang('messages.location_adm_level_hint')
     </div>
   </div>
 </div>
@@ -82,12 +82,12 @@
 </div>
 <div id="super-points">
 <div class="form-group">
-    <label for="lat" class="col-sm-3 control-label">
+    <label for="lat1" class="col-sm-3 control-label">
 @lang('messages.latitude')
 </label>
-        <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
+        <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="lat1" id="lat1" class="form-control latlongpicker" value="{{ old('lat1', isset($location) ? $location->lat1 : null) }}">&#176;
+	<input type="text" name="lat1" id="lat1" class="form-control latlongpicker" value="{{ old('lat1', isset($location) ? $location->lat1 : null) }}"><span style="font-size: 140%">&#176;</span>
 	<input type="text" name="lat2" id="lat2" class="form-control latlongpicker" value="{{ old('lat2', isset($location) ? $location->lat2 : null) }}">'
 	<input type="text" name="lat3" id="lat3" class="form-control latlongpicker" value="{{ old('lat3', isset($location) ? $location->lat3 : null) }}">''
 	<input type="radio" name="latO" value="1" @if (old('latO', isset($location) ? $location->latO : 1)) checked @endif > N
@@ -96,9 +96,49 @@
 	<input type="radio" name="latO" value="0" @if (!old('latO', isset($location) ? $location->latO : 1)) checked @endif > S
 
             </div>
+<br>
+    <label for="lat1" class="col-sm-3 control-label">
+@lang('messages.longitude')
+</label>
+	    <div class="col-sm-6">
+	<input type="text" name="long1" id="long1" class="form-control latlongpicker" value="{{ old('long1', isset($location) ? $location->long1 : null) }}"><span style="font-size: 140%">&#176;</span> 
+	<input type="text" name="long2" id="long2" class="form-control latlongpicker" value="{{ old('long2', isset($location) ? $location->long2 : null) }}">'
+	<input type="text" name="long3" id="long3" class="form-control latlongpicker" value="{{ old('long3', isset($location) ? $location->long3 : null) }}">''
+	<input type="radio" name="longO" value="1" @if (old('longO', isset($location) ? $location->longO : 1)) checked @endif > E
+&nbsp;
+
+	<input type="radio" name="longO" value="0" @if (!old('longO', isset($location) ? $location->longO : 1)) checked @endif > W
+
+            </div>
   <div class="col-sm-12">
-    <div id="hint1" class="panel-collapse collapse">
-	@lang('messages.geom_hint')
+    <div id="hint6" class="panel-collapse collapse">
+	@lang('messages.latlong_hint')
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="super-x">
+<div class="form-group">
+    <label for="x" class="col-sm-3 control-label">
+@lang('messages.dimensions')
+</label>
+        <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+	X: <input type="text" name="x" id="x" class="form-control latlongpicker" value="{{ old('x', isset($location) ? $location->x : null) }}">(m)&nbsp;
+	Y: <input type="text" name="y" id="y" class="form-control latlongpicker" value="{{ old('y', isset($location) ? $location->y : null) }}">(m)
+            </div>
+    <label for="lat1" class="col-sm-3 control-label">
+@lang('messages.start')
+</label>
+	    <div class="col-sm-6">
+	Start-X: <input type="text" name="startx" id="startx" class="form-control latlongpicker" value="{{ old('startx', isset($location) ? $location->startx : null) }}">(m)&nbsp;
+	Start-Y: <input type="text" name="starty" id="starty" class="form-control latlongpicker" value="{{ old('starty', isset($location) ? $location->starty : null) }}">(m)
+
+            </div>
+  <div class="col-sm-12">
+    <div id="hint7" class="panel-collapse collapse">
+	@lang('messages.dimensions_hint')
     </div>
   </div>
 </div>
@@ -165,8 +205,8 @@
 	</select>
             </div>
   <div class="col-sm-12">
-    <div id="hint2" class="panel-collapse collapse">
-	@lang('messages.location_parent_hint')
+    <div id="hint4" class="panel-collapse collapse">
+	@lang('messages.location_uc_hint')
     </div>
   </div>
 </div>
