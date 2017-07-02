@@ -62,4 +62,34 @@ $(document).ready(function(){
 			}
 		})
 	});
+
+	/** For Location create and edit pages. The available fields change with changes on adm_level.
+	 * The "vel" parameter determines the velocity in which the animation is made. **/
+	function setLocationFields(vel) {
+		var adm = $('#adm_level option:selected').val();
+		if ("undefined" === typeof adm) {
+			return; // nothing to do here...
+		}
+		switch (adm) {
+			case "999": // point
+				$("#super-geometry").hide(vel);
+				$("#super-points").show(vel);
+				$("#super-x").hide(vel);
+				break;
+			case "100": // plot
+				$("#super-geometry").hide(vel);
+				$("#super-points").show(vel);
+				$("#super-x").show(vel);
+				break;
+			default: // other
+				$("#super-geometry").show(vel);
+				$("#super-points").hide(vel);
+				$("#super-x").hide(vel);
+		}
+	}
+	$("#adm_level").change(function() {
+		setLocationFields(400);
+	});
+	setLocationFields(0);
+		
 });

@@ -49,19 +49,27 @@ class LocationController extends Controller
 		    'altitude' => 'integer|nullable',
 	    ];
 	    // TODO: shouldn't hardcode the code for PLOTs
-	    if ($request->adm_level == 100) {
+	    if ($request->adm_level == 100) { // PLOT
 		    $rules = array_merge($rules, [
-			    'lat1' => 'required|number',
-			    'long1' => 'required|number',
-			    'x' => 'required|number',
-			    'y' => 'required|number',
+			    'lat1' => 'required|numeric|min:0',
+			    'long1' => 'required|numeric|min:0',
+			    'lat2' => 'numeric|nullable|min:0',
+			    'long2' => 'numeric|nullable|min:0',
+			    'lat3' => 'numeric|nullable|min:0',
+			    'long3' => 'numeric|nullable|min:0',
+			    'x' => 'required|numeric',
+			    'y' => 'required|numeric',
 		    ]);
-	    } elseif ($request->adm_level == 999) {
+	    } elseif ($request->adm_level == 999) { //POINT
 		    $rules = array_merge($rules, [
-			    'lat1' => 'required|number',
-			    'long1' => 'required|number',
+			    'lat1' => 'required|numeric|min:0',
+			    'long1' => 'required|numeric|min:0',
+			    'lat2' => 'numeric|nullable|min:0',
+			    'long2' => 'numeric|nullable|min:0',
+			    'lat3' => 'numeric|nullable|min:0',
+			    'long3' => 'numeric|nullable|min:0',
 		    ]);
-	    } else {
+	    } else { // All other
 		    $rules = array_merge($rules, [
 			    'geom' => 'required|string',
 		    ]);
@@ -93,11 +101,24 @@ class LocationController extends Controller
 			    ->withErrors($validator)
 			    ->withInput();
 	    }
-	    if ($request->adm_level == 100) {
+	    if ($request->adm_level == 100) { // plot
 		    $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
+		    $newloc->setGeomFromParts($request->only([
+			    'lat1','lat2','lat3','latO',
+			    'long1','long2','long3','longO',
+		    ]));
 	    } else {
 		    // discard x, y data from locations that are not PLOTs
 		    $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
+		    if ($request->adm_level == 999) { // point
+			    $newloc->setGeomFromParts($request->only([
+				    'lat1','lat2','lat3','latO',
+				    'long1','long2','long3','longO',
+			    ]));
+		    } else { // others
+			    $newloc->geom = $request->geom;
+		    }
+
 	    }
 
 	    $parent = $request['parent_id'];
@@ -114,7 +135,6 @@ class LocationController extends Controller
 	    if ($request->uc_id !== 0) {
 		    $newloc->uc_id = $request->uc_id;
 	    }
-	    $newloc->geom = $request->geom;
 	    $newloc->save();
 	return redirect('locations')->withStatus(Lang::get('messages.stored'));
     }
@@ -173,9 +193,21 @@ class LocationController extends Controller
 	    }
 	    if ($request->adm_level == 100) {
 		    $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
+		    $location->setGeomFromParts($request->only([
+			    'lat1','lat2','lat3','latO',
+			    'long1','long2','long3','longO',
+		    ]));
 	    } else {
 		    // discard x, y data from locations that are not PLOTs
 		    $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
+		    if ($request->adm_level == 999) { // point
+			    $location->setGeomFromParts($request->only([
+				    'lat1','lat2','lat3','latO',
+				    'long1','long2','long3','longO',
+			    ]));
+		    } else { // others
+			    $location->geom = $request->geom;
+		    }
 	    }
 	    $parent = $request['parent_id'];
 	    if ($parent !== 0) {
@@ -184,7 +216,6 @@ class LocationController extends Controller
 	    if ($request->uc_id !== 0) {
 		    $location->uc_id = $request->uc_id;
 	    }
-	    $location->geom = $request->geom;
 	    $location->save();
 	return redirect('locations')->withStatus(Lang::get('messages.stored'));
         //

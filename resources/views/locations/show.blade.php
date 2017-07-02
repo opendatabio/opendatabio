@@ -52,9 +52,9 @@
 @lang('messages.total_descendants')
 :</strong> {{ $location->descendants->count() }}
 <br>
-<strong>
+<!--strong>
 @lang('messages.total_area')
-:</strong> {{ $location->area }}
+:</strong> {{ $location->area }} <br -->
 @if ($location->notes)
 <br>
 <strong>

@@ -51,6 +51,15 @@ class Location extends Model
 		}
 		return $array;
 	}
+
+	public function setGeomFromParts($values) {
+		$lat = $values['lat1'] + $values['lat2'] / 60 + $values['lat3'] / 3600;
+		$long = $values['long1'] + $values['long2'] / 60 + $values['long3'] / 3600;
+		if ( $values['longO'] == 0) $long *= -1;
+		if ( $values['latO'] == 0) $lat *= -1;
+		$geom = "POINT(" . $long . " " . $lat . ")";
+	        $this->attributes['geom'] = DB::raw("GeomFromText('$geom')");
+	}
     public function uc()
     {
         return $this->belongsTo('App\Location', 'uc_id');
@@ -69,7 +78,7 @@ class Location extends Model
 	}
 	public function getLat3Attribute() { 
 		$this->getLatLong();
-		return floor(60*60 * (60 * abs( $this->lat) - 60 * $this->lat1 - $this->lat2  ));
+		return floor(60 * (60 * abs( $this->lat) - 60 * $this->lat1 - $this->lat2  ));
 	}
 	public function getLatOAttribute() { 
 		$this->getLatLong();
@@ -85,7 +94,7 @@ class Location extends Model
 	}
 	public function getLong3Attribute() { 
 		$this->getLatLong();
-		return floor(60*60 * (60 * abs( $this->long) - 60 * $this->long1 - $this->long2  ));
+		return floor(60 * (60 * abs( $this->long) - 60 * $this->long1 - $this->long2  ));
 	}
 	public function getLongOAttribute() { 
 		$this->getLatLong();

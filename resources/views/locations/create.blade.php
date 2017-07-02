@@ -3,7 +3,7 @@
 @section('content')
     <div class="container">
         <div class="col-sm-offset-2 col-sm-8">
-  <div class="panel panel-default">
+  <!--div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
         <a data-toggle="collapse" href="#help" class="btn btn-default">
@@ -16,7 +16,7 @@
 	@lang('messages.location_create_hint')
       </div>
     </div>
-  </div>
+  </div-->
             <div class="panel panel-default">
                 <div class="panel-heading">
       @lang('messages.new_location')
