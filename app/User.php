@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Lang;
 
 class User extends Authenticatable
 {
@@ -29,5 +30,8 @@ class User extends Authenticatable
     public function userjobs()
     {
         return $this->hasMany('App\UserJobs');
+    }
+    public function getTextAccessAttribute() {
+	    return Lang::get('levels.access.' . $this->access_level);
     }
 }

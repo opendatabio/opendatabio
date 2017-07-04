@@ -42,7 +42,14 @@
 <div class="form-group">
     <label for="access" class="col-sm-3 control-label">Access Level</label>
     <div class="col-sm-6">
-		To be implemented...
+	<?php $selected = old('access_level', $user->access_level); ?>
+	<select name="access_level" id="access_level" class="form-control" >
+	@foreach ([0,1,2] as $al) 
+		<option value="{{$al}}" {{ $al == $selected ? 'selected' : '' }}>
+			 @lang ('levels.access.' . $al)
+		</option>
+	@endforeach
+	</select>
     </div>
 </div>
 		        <div class="form-group">

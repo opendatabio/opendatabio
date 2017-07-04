@@ -40,6 +40,7 @@ class UserController extends Controller
 	    $user->email = $request->email;
 	    if (! is_null($request->password))
 	    	$user->password = bcrypt($request->password);
+	    $user->access_level = $request->access_level;
 	    $user->save();
 	return redirect('users')->withStatus(Lang::get('messages.saved'));
     }

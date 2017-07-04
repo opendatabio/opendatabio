@@ -39,7 +39,7 @@
 					<a href="{{ url('users/'.$user->id) }}">{{ $user->email }}</a>
 					</div></td>
                                         <!--td class="table-text">{{ $user->full_name }}</td-->
-                                        <td class="table-text">To be implemented...</td>
+                                        <td class="table-text">{{ $user->textAccess }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

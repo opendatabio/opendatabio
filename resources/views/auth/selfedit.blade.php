@@ -79,7 +79,7 @@
 <div class="form-group">
     <label for="access" class="col-sm-3 control-label">Access Level</label>
     <div class="col-sm-6">
-		To be implemented... (READ ONLY)
+		{{ Auth::user()->textAccess }}
     </div>
 </div>
 		        <div class="form-group">
