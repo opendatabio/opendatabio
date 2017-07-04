@@ -43,7 +43,6 @@ class HerbariumController extends Controller
     public function create()
     {
 	    return redirect('herbaria');
-        //
     }
 
     /**
@@ -54,6 +53,7 @@ class HerbariumController extends Controller
      */
     public function store(Request $request)
     {
+	$this->authorize('create', Herbarium::class);
 	$this->validate($request, [
 		'name' => 'required|max:191',
 		'acronym' => 'required|max:20|unique:herbaria',
@@ -85,14 +85,15 @@ class HerbariumController extends Controller
      */
     public function destroy($id)
     {
+	    $herbarium = Herbarium::findOrFail($id);
+	    $this->authorize('delete', $herbarium);
 	    try {
-		    Herbarium::findOrFail($id)->delete();
+		    $herbarium->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
 			    ->withErrors([Lang::get('messages.fk_error')]);
 	    }
 
 	return redirect('herbaria')->withStatus(Lang::get('messages.removed'));
-        //
     }
 }

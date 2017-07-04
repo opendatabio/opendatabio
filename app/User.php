@@ -10,6 +10,12 @@ class User extends Authenticatable
 {
     use Notifiable;
 
+    // Access levels
+    const REGISTERED = 0;
+    const USER = 1;
+    const ADMIN = 2;
+    const LEVELS = [User::REGISTERED, User::USER, User::ADMIN];
+
     /**
      * The attributes that are mass assignable.
      *

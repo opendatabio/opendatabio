@@ -12,7 +12,7 @@ class LocationsTableSeeder extends Seeder
      */
     public function run()
     {
-	    Location::getQuery()->delete();
+	    try{
 	    $br = new Location(['name' => 'Brasil', 'adm_level' => 0]);
 	    $br->geom = "POLYGON((-34.9 -6, -51.8 3.7, -69.7 0.2, -71.8 -9.8, -53.9 -26.3, -57.4 -30.6, -52.3 -33.1, -34.9 -6))";
 	    $br->save();
@@ -38,5 +38,6 @@ class LocationsTableSeeder extends Seeder
 	    $ma = new Location(['name' => 'Manaus', 'adm_level' => 2, 'parent_id' => $am->id]);
 	    $ma->geom = "POLYGON(( -59.978786  -3.163954, -59.820858 -3.041910, -60.038524 -2.929453, -60.112682 -3.056309, -59.978786  -3.163954 ))";
 	    $ma->save();
+	    } catch (Illuminate\Database\QueryException $e) {}
     }
 }

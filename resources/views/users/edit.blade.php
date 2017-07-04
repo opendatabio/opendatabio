@@ -44,7 +44,7 @@
     <div class="col-sm-6">
 	<?php $selected = old('access_level', $user->access_level); ?>
 	<select name="access_level" id="access_level" class="form-control" >
-	@foreach ([0,1,2] as $al) 
+	@foreach (App\User::LEVELS as $al) 
 		<option value="{{$al}}" {{ $al == $selected ? 'selected' : '' }}>
 			 @lang ('levels.access.' . $al)
 		</option>

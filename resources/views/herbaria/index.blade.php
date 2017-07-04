@@ -17,7 +17,7 @@
       </div>
     </div>
   </div>
-
+@can ('create',App\Herbarium::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
 		@lang('messages.new_herbarium')
@@ -56,7 +56,7 @@
 		    </form>
                 </div>
             </div>
-
+@endcan
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         @lang('messages.registered_herbaria')

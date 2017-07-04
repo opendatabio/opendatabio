@@ -20,6 +20,7 @@
 		    <p><a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn={{$herbarium->irn}}">
 @lang('messages.details')
 </a></p>
+@can ('delete', $herbarium)
 		    <form action="{{ url('herbaria/'.$herbarium->id) }}" method="POST" class="form-horizontal">
 			 {{ csrf_field() }}
                          {{ method_field('DELETE') }}
@@ -33,6 +34,7 @@
 			    </div>
 			</div>
 		    </form>
+@endcan
                 </div>
             </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->
