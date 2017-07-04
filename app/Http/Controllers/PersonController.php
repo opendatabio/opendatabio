@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use Illuminate\Support\Facades\Log;
 use App\Person;
 use App\Herbarium;
 use Illuminate\Support\Facades\Lang;
@@ -43,6 +42,7 @@ class PersonController extends Controller
      */
     public function store(Request $request)
     {
+	    $this->authorize('create', Person::class);
 	$this->checkValid($request);
 	$person = Person::create($request->all());
 	return redirect('persons')->withStatus(Lang::get('messages.stored'));
@@ -93,6 +93,7 @@ class PersonController extends Controller
     public function update(Request $request, $id)
     {
 	    $person = Person::findOrFail($id);
+	    $this->authorize('update', $person);
 	    $this->checkValid($request, $id);
 	    $person->update($request->all());
 	return redirect('persons')->withStatus(Lang::get('messages.saved'));
@@ -106,8 +107,10 @@ class PersonController extends Controller
      */
     public function destroy($id)
     {
+	    $person = Person::findOrFail($id);
+	    $this->authorize('delete', $person);
 	    try {
-		    Person::findOrFail($id)->delete();
+		    $person->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
 			    ->withErrors([Lang::get('messages.fk_error')])->withInput();

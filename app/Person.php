@@ -13,6 +13,6 @@ class Person extends Model
 
     public function herbarium()
     {
-        return $this->hasOne('App\Herbarium');
+        return $this->belongsTo('App\Herbarium');
     }
 }

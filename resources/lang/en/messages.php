@@ -149,4 +149,5 @@ remove the job information from the database.',
   'location_map' => 'Location map',
   'geom_error' => 'The geometry informed is invalid. Check for missing parentheses, extra commas, and verify that the last position in a polygon is equal to the first.',
   'unauthorized' => 'The current user is not authorized to perform this action!',
+  'person_details' => 'Person details',
 );

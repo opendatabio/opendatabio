@@ -17,6 +17,7 @@
       </div>
     </div>
   </div>
+@can ('create', App\Person::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
       @lang('messages.new_person')
@@ -40,7 +41,8 @@
 			</div>
 		    </form>
                 </div>
-            </div>
+	    </div>
+@endcan
 
             <!-- Registered Persons -->
                 <div class="panel panel-default">
