@@ -36,6 +36,7 @@ class AddGeometryToLocations extends Migration
         Schema::table('locations', function (Blueprint $table) {
 		$table->dropForeign(['uc_id']);
 		$table->dropColumn(['geom', 'altitude', 'adm_level', 'datum', 'uc_id']);
+		$table->dropUnique(['name', 'adm_level']);
             //
         });
     }

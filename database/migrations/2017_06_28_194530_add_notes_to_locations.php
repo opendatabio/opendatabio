@@ -27,6 +27,7 @@ class AddNotesToLocations extends Migration
     public function down()
     {
         Schema::table('locations', function (Blueprint $table) {
+		$table->dropColumn(['notes']);
             //
         });
     }

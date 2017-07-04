@@ -29,6 +29,7 @@ class AddXToLocation extends Migration
     public function down()
     {
         Schema::table('locations', function (Blueprint $table) {
+		$table->dropColumn(['x', 'y', 'startx', 'starty']);
             //
         });
     }
