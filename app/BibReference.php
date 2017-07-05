@@ -36,7 +36,7 @@ class BibReference extends Model
 		$listener->setTagNameCase(CASE_LOWER);
 		try {
 		$pandoc = new Pandoc();
-		$listener->setTagValueProcessor(function (&$value, $tag) use ($pandoc) {
+		$listener->addTagValueProcessor(function (&$value, $tag) use ($pandoc) {
 			if ($tag != "author" and $tag != "title") return;
 			$value = $pandoc->runWith($value, [
 				"from" => "latex",

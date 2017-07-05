@@ -15,6 +15,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         \App\Herbarium::class => \App\Policies\HerbariumPolicy::class,
         \App\Person::class    => \App\Policies\PersonPolicy::class,
+        \App\BibReference::class    => \App\Policies\BibReferencePolicy::class,
     ];
 
     /**

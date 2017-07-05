@@ -18,6 +18,7 @@
     </div>
   </div>
 
+@can ('create', App\BibReference::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
 
@@ -55,7 +56,7 @@
 		    </form>
                 </div>
             </div>
-
+@endcan
             <!-- Registered References -->
                 <div class="panel panel-default">
                     <div class="panel-heading">

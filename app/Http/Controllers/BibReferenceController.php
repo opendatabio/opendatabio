@@ -43,6 +43,7 @@ class BibReferenceController extends Controller
      */
     public function store(Request $request)
     {
+	    $this->authorize('create', BibReference::class);
 	    $contents = file_get_contents($request->rfile->getRealPath());
 	    UserJobs::dispatch ("importbibreferences", ['contents' => $contents, 'standardize' => $request->standardize]);
 	return redirect('references')->withStatus(Lang::get('messages.dispatched'));
@@ -70,7 +71,10 @@ class BibReferenceController extends Controller
      */
     public function edit($id)
     {
-	 return redirect('references/'.$id);
+	    $reference = BibReference::findOrFail($id);
+	    return view('references.edit', [
+		    'reference' => $reference
+	    ]);
     }
 
     /**
@@ -83,11 +87,14 @@ class BibReferenceController extends Controller
     public function update(Request $request, $id)
     {
 	    $reference = BibReference::findOrFail($id);
+	    $this->authorize('update', $reference);
 	    $validator = Validator::make($request->all(), [
 		    'bibtex' => 'required|string',
 	    ]);
 
 	    $validator->after(function ($validator) use ($reference, $request) {
+		    if ( substr(trim($request->bibtex),0,1) != '@')
+			    $validator->errors()->add('bibtex', Lang::get('messages.bibtex_at_error'));
 		    if (! $reference->validBibtex($request->bibtex)) 
 			    $validator->errors()->add('bibtex', Lang::get('messages.bibtex_error'));
 	    });
