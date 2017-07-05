@@ -228,6 +228,23 @@
 			    </div>
 			</div>
 		    </form>
+			@if (isset($location))
+			@can ('delete', $location)
+		    <form action="{{ url('locations/'.$location->id) }}" method="POST" class="form-horizontal">
+			 {{ csrf_field() }}
+                         {{ method_field('DELETE') }}
+		        <div class="form-group">
+			    <div class="col-sm-offset-3 col-sm-6">
+				<button type="submit" class="btn btn-danger">
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.remove_location')
+
+				</button>
+			    </div>
+			</div>
+		    </form>
+		    @endcan <!-- end can delete -->
+		    @endif
                 </div>
             </div>
 

@@ -95,6 +95,7 @@ class LocationController extends Controller
      */
     public function store(Request $request)
     {
+	    $this->authorize('create', Location::class);
 	    $validator = $this->customValidate($request);
 	    if ($validator->fails()) {
 		    return redirect()->back()
@@ -185,6 +186,7 @@ class LocationController extends Controller
     public function update(Request $request, $id)
     {
 	    $location = Location::findOrFail($id);
+	    $this->authorize('update', $location);
 	    $validator = $this->customValidate($request);
 	    if ($validator->fails()) {
 		    return redirect()->back()
@@ -229,6 +231,14 @@ class LocationController extends Controller
      */
     public function destroy($id)
     {
-        //
+	    $location = Location::findOrFail($id);
+	    $this->authorize('delete', $location);
+	    try {
+		    $location->delete();
+	    } catch (\Illuminate\Database\QueryException $e) {
+		    return redirect()->back()
+			    ->withErrors([Lang::get('messages.fk_error')])->withInput();
+	    }
+	return redirect('locations')->withStatus(Lang::get('messages.removed'));
     }
 }

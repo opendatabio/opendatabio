@@ -16,6 +16,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Herbarium::class => \App\Policies\HerbariumPolicy::class,
         \App\Person::class    => \App\Policies\PersonPolicy::class,
         \App\BibReference::class    => \App\Policies\BibReferencePolicy::class,
+        \App\Location::class    => \App\Policies\LocationPolicy::class,
     ];
 
     /**

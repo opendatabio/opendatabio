@@ -12,6 +12,9 @@ class Location extends Model
 
 	protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty'];
 	protected $lat, $long;
+	const LEVEL_UC = 99;
+	const LEVEL_PLOT = 100;
+	const LEVEL_POINT = 999;
 
 	public function getlatlong() {
 		$point = substr($this->geom, 6, -1);
@@ -66,8 +69,6 @@ class Location extends Model
     }
 
 	// getter method for parts of latitude/longitude
-	// TODO: BROKEN??
-	// TODO: add setter from all these attributes
 	public function getLat1Attribute() { 
 		$this->getLatLong();
 		return floor(abs($this->lat));

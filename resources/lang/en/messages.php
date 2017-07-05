@@ -152,4 +152,5 @@ remove the job information from the database.',
   'person_details' => 'Person details',
   'bibreference' => 'Bibliographic reference',
   'bibtex_at_error' => 'The BibTex entry must start with an @ sign!',
+  'remove_location' => 'Remove Location', 
 );

@@ -63,6 +63,7 @@
 <br>
 @endif
 <br>
+@can ('update', $location)
 			    <div class="col-sm-6">
 				<a href="{{ url('locations/'. $location->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>
@@ -70,7 +71,7 @@
 
 				</a>
 			    </div>
-
+@endcan
                 </div>
             </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->

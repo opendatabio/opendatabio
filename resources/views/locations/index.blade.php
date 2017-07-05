@@ -17,6 +17,7 @@
       </div>
     </div>
   </div>
+@can ('create', App\Location::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
       @lang('messages.new_location')
@@ -31,7 +32,8 @@
 				</a>
 			</div>
                 </div>
-            </div>
+	    </div>
+@endcan
 
             <!-- Registered Locations -->
                 <div class="panel panel-default">
