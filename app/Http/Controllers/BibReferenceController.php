@@ -44,6 +44,7 @@ class BibReferenceController extends Controller
     public function store(Request $request)
     {
 	    $this->authorize('create', BibReference::class);
+	    $this->authorize('create', UserJobs::class);
 	    $contents = file_get_contents($request->rfile->getRealPath());
 	    UserJobs::dispatch ("importbibreferences", ['contents' => $contents, 'standardize' => $request->standardize]);
 	return redirect('references')->withStatus(Lang::get('messages.dispatched'));

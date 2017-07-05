@@ -12,6 +12,7 @@ class UserJobsController extends Controller
 {
 	public function __construct()
 	{
+		// needs this for Auth::user
 		$this->middleware('auth');
 	}
 	public function index() {
@@ -23,8 +24,9 @@ class UserJobsController extends Controller
 	}
     public function destroy($id)
     {
-	    try {// TODO: gate this
-		    $userjob = UserJobs::findOrFail($id);
+	    $userjob = UserJobs::findOrFail($id);
+	    $this->authorize('delete', $userjob);
+	    try {
 		    $job_id = $userjob->job_id;
 		    $userjob->delete();
 		    if (!empty($job_id))
@@ -35,8 +37,9 @@ class UserJobsController extends Controller
 	    }
 	return redirect('userjobs')->withStatus(Lang::get('messages.removed'));
     }
-	public function cancel($id) { // TODO: only allow cancel of Submitted jobs
+	public function cancel($id) { // TODO: only allow cancel of Submitted jobs?
 		$job = UserJobs::findOrFail($id);
+		$this->authorize('update', $job);
 		$job->status = 'Cancelled';
 		$job_id = $job->job_id;
 		$job->job_id = null;
@@ -47,11 +50,13 @@ class UserJobsController extends Controller
 	}
 	public function retry($id) {
 		$job = UserJobs::findOrFail($id);
+		$this->authorize('update', $job);
 		$job->retry();
 		return redirect('userjobs')->withStatus(Lang::get('messages.saved'));
 	}
 	public function show($id) {
 		$job = UserJobs::findOrFail($id);
+		$this->authorize('view', $job);
 		return view('userjobs.show',[
 			'job' => $job,
 		]);

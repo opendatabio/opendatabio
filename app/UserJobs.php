@@ -9,6 +9,9 @@ use DB;
 class UserJobs extends Model
 {
 	protected $fillable = ['dispatcher', 'log', 'status', 'rawdata', 'user_id'];
+	public function user() {
+		return $this->belongsTo('App\User');
+	}
 
 	// event fired from job on success
 	public function setSuccess($log = null) {
