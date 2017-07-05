@@ -118,8 +118,10 @@ class BibReferenceController extends Controller
      */
     public function destroy($id)
     {
+	    $reference = BibReference::findOrFail($id);
+	    $this->authorize('delete', $reference);
 	    try {
-		    BibReference::findOrFail($id)->delete();
+		    $reference->delete();
 	    } catch (\Illuminate\Database\QueryException $e) {
 		    return redirect()->back()
 			    ->withErrors([Lang::get('messages.fk_error')])->withInput();
