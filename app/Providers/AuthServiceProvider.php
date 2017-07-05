@@ -17,6 +17,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Person::class    => \App\Policies\PersonPolicy::class,
         \App\BibReference::class    => \App\Policies\BibReferencePolicy::class,
         \App\Location::class    => \App\Policies\LocationPolicy::class,
+        \App\User::class    => \App\Policies\UserPolicy::class,
     ];
 
     /**
