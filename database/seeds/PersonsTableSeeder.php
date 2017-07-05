@@ -25,12 +25,14 @@ class PersonsTableSeeder extends Seeder
 		    $herbarium = null;
 		    if($faker->numberBetween(1,4) == 1) 
 			    $herbarium = Herbarium::all()->random()->id;
+		    try {
             DB::table('persons')->insert([ //,
                 'full_name' => $name,
                 'abbreviation' => $abb,
 		'email' => $faker->email,
 		'herbarium_id' => $herbarium,
-            ]);
+	]);
+		    } catch (Illuminate\Database\QueryException $e) {} // duplicate abbrev?
 	    }
     }
 }

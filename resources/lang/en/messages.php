@@ -153,4 +153,7 @@ remove the job information from the database.',
   'bibreference' => 'Bibliographic reference',
   'bibtex_at_error' => 'The BibTex entry must start with an @ sign!',
   'remove_location' => 'Remove Location', 
+  'confirm_person' => 'Confirm Person insertion',
+  'possible_dupes' => 'Possible duplicates',
+  'confirm_person_message' => 'Please check that the new Person you are attempting to insert is not a duplicate of the following stored persons. If you are certain that this record is of a new person, not a duplicate, press the button below to finish the insertion.',
 );

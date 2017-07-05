@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Person;
 use App\Herbarium;
 use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Facades\Input;
 use App\DataTables\PersonsDataTable;
 
 class PersonController extends Controller
@@ -43,7 +44,17 @@ class PersonController extends Controller
     public function store(Request $request)
     {
 	    $this->authorize('create', Person::class);
-	$this->checkValid($request);
+	    $this->checkValid($request);
+	    // checks for duplicates, except if the request is already confirmed
+	    if (! $request->confirm) {
+		    $dupes = Person::duplicates($request->full_name, $request->abbreviation);
+		    if (sizeof($dupes)) {
+			    Input::flash();
+			    return view('persons.confirm',[
+				    'dupes' => $dupes,
+			    ]);
+		    }
+	    }
 	$person = Person::create($request->all());
 	return redirect('persons')->withStatus(Lang::get('messages.stored'));
     }

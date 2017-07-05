@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "e3020dafad8ac6b5e3d3b62e746a6680",
+    "content-hash": "f63a3b9837fea57dfa6f83c56a39c003",
     "packages": [
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -1311,6 +1311,44 @@
                 "xlsx"
             ],
             "time": "2015-05-01T07:00:55+00:00"
+        },
+        {
+            "name": "phpspec/php-diff",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpspec/php-diff.git",
+                "reference": "0464787bfa7cd13576c5a1e318709768798bec6a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpspec/php-diff/zipball/0464787bfa7cd13576c5a1e318709768798bec6a",
+                "reference": "0464787bfa7cd13576c5a1e318709768798bec6a",
+                "shasum": ""
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-0": {
+                    "Diff": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Chris Boulton",
+                    "homepage": "http://github.com/chrisboulton"
+                }
+            ],
+            "description": "A comprehensive library for generating differences between two hashable objects (strings or arrays).",
+            "time": "2016-04-07T12:29:16+00:00"
         },
         {
             "name": "psr/http-message",
@@ -2641,6 +2679,46 @@
                 "environment"
             ],
             "time": "2016-09-01T10:05:43+00:00"
+        },
+        {
+            "name": "wyndow/fuzzywuzzy",
+            "version": "v0.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wyndow/fuzzywuzzy.git",
+                "reference": "6249a966a97ffc231d743ea5c4ccb4e6797582f5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wyndow/fuzzywuzzy/zipball/6249a966a97ffc231d743ea5c4ccb4e6797582f5",
+                "reference": "6249a966a97ffc231d743ea5c4ccb4e6797582f5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4",
+                "phpspec/php-diff": "^1.0"
+            },
+            "require-dev": {
+                "phpspec/phpspec": "^2.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FuzzyWuzzy\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Michael Crumm",
+                    "email": "mike@crumm.net"
+                }
+            ],
+            "description": "Fuzzy string matching based on FuzzyWuzzy from Seatgeek",
+            "time": "2017-04-25T21:20:44+00:00"
         },
         {
             "name": "yajra/laravel-datatables-buttons",
