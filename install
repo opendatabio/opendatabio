@@ -153,6 +153,8 @@ if (! extension_loaded("tokenizer"))
 	echo(c("Tokenizer PHP extension is required! Check your phpinfo()\n", "danger"));
 if (! extension_loaded("xml"))
 	echo(c("XML PHP extension is required! Check your phpinfo()\n", "danger"));
+if (! extension_loaded("dom"))
+	echo(c("DOM PHP extension is required! Check your phpinfo()\n", "danger"));
 #if (! extension_loaded("apcu"))
 #	echo c("Apcu PHP extension is recommended for better performance...\n", "warning");
 #if (! extension_loaded("opcache"))
@@ -206,7 +208,7 @@ system("php artisan config:clear");
 system("php artisan route:clear");
 system("php artisan view:clear");
 system("php artisan cache:clear");
-system("composer dump-autoload");
+system("$composer dump-autoload");
 
 # Process DotEnv file
 if(file_exists(".env")) {
