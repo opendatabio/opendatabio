@@ -43,7 +43,7 @@ First, install the prerequisite software: Apache, MySQL, PHP, pandoc and ImageMa
 On a Debian 9 system, you need to install some PHP extensions as well. Use:
 
 ```
-apt-get install apache2 mysql-server php7.0 php7.0-mysql php7.0-cli imagemagick pandoc php7.0-mbstring php7.0-xml
+apt-get install apache2 mysql-server php7.0 libapache2-mod-php7.0 php7.0-mysql php7.0-cli imagemagick pandoc php7.0-mbstring php7.0-xml
 phpenmod mbstring
 phpenmod xml
 phpenmod dom
