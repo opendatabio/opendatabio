@@ -21,7 +21,9 @@ See our [Wiki page](../../wiki) for details.
 Opendatabio is written in PHP and developed over the Laravel framework. 
 The minimum supported PHP version is 5.6.4, but PHP 7 is strongly recommended. 
 
-It also requires a working web server and a database. It should be possible to install using Nginx 
+It also requires a working web server and a database. The minimum required version for MySQL is 5.5 
+(equivalent to MariaDB 5.5 or 10.0), but it recommended to run MySQL 5.7 (or MariaDB 10.1). **TODO: install script should check this!**
+It should be possible to install using Nginx 
 as webserver, or Postgres as database, but our installation script focuses on a Apache/MySQL setup.
 
 The image manipulation (thumbnails, etc) is done with Imagemagick version 6. Version 7 is not available on 
@@ -38,10 +40,13 @@ TODO: Install supervisor, configure queue workers + TIMEOUT, RETRIES
 
 ### Installation instructions
 First, install the prerequisite software: Apache, MySQL, PHP, pandoc and ImageMagick.
-On a Debian system, use
+On a Debian 9 system, you need to install some PHP extensions as well. Use:
 
 ```
-apt-get install apache2 mysql-server php5 imagemagick php5-mysql pandoc
+apt-get install apache2 mysql-server php7.0 php7.0-mysql php7.0-cli imagemagick pandoc php7.0-mbstring php7.0-xml
+phpenmod mbstring
+phpenmod xml
+phpenmod dom
 ```
 
 The recommended way to install OpenDataBio is using a dedicated
@@ -75,6 +80,8 @@ Finally, change directory to your opendatabio directory and run
 ```
 php install
 ```
+
+If the installer complains about missing PHP extensions, remember to activate them in both the cli and the web ini files for PHP!
 
 If the install script finishes with success, you're good to 
 go! Point your browser to 
