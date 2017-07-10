@@ -40,10 +40,19 @@ TODO: Install supervisor, configure queue workers + TIMEOUT, RETRIES
 
 ### Installation instructions
 First, install the prerequisite software: Apache, MySQL, PHP, pandoc and ImageMagick.
-On a Debian 9 system, you need to install some PHP extensions as well. Use:
 
+On a Debian 8 system, use:
 ```
-apt-get install apache2 mysql-server php7.0 libapache2-mod-php7.0 php7.0-mysql php7.0-cli imagemagick pandoc php7.0-mbstring php7.0-xml
+apt-get install apache2 mysql-server php5 libapache2-mod-php5 php5-mysql \ 
+		imagemagick pandoc
+a2enmod php
+```
+
+On a Debian 9 system, you need to install some PHP extensions as well. Use:
+```
+apt-get install apache2 mysql-server php7.0 libapache2-mod-php7.0 php7.0-mysql \ 
+		php7.0-cli imagemagick pandoc php7.0-mbstring php7.0-xml
+a2enmod php7.0
 phpenmod mbstring
 phpenmod xml
 phpenmod dom
