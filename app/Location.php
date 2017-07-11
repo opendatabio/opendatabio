@@ -12,9 +12,20 @@ class Location extends Model
 
 	protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty'];
 	protected $lat, $long;
+
+	// The "special" adm levels
 	const LEVEL_UC = 99;
 	const LEVEL_PLOT = 100;
+	const LEVEL_TRANSECT = 101;
 	const LEVEL_POINT = 999;
+	static public function AdmLevels() {
+		return array_merge(config('app.adm_levels'), [
+			Location::LEVEL_UC, 
+			Location::LEVEL_PLOT, 
+			Location::LEVEL_TRANSECT, 
+			Location::LEVEL_POINT,
+		]);
+	}
 
 	public function getlatlong() {
 		$point = substr($this->geom, 6, -1);
@@ -25,7 +36,7 @@ class Location extends Model
 
 	// query scope for conservation units
 	public function scopeUcs($query) {
-		return $query->where('adm_level', 99);
+		return $query->where('adm_level', Location::LEVEL_UC);
 	}
 
 	// Proposal! Needs to be tested and aproved

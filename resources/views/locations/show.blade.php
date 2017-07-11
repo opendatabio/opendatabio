@@ -14,7 +14,7 @@
 <br>
 		    <strong>
 @lang('messages.adm_level')
-:</strong> {{ $adm_level }}
+:</strong> @lang ('levels.adm.' . $location->adm_level) 
 <br>
 @if ($location->altitude)
 <strong>

@@ -4,6 +4,7 @@ namespace App\DataTables;
 
 use App\Location;
 use Yajra\Datatables\Services\DataTable;
+use Lang;
 
 class LocationsDataTable extends DataTable
 {
@@ -21,6 +22,7 @@ class LocationsDataTable extends DataTable
 			    // Needs to escape special chars, as this will be passed RAW
 			    htmlspecialchars($location->name) . '</a>';
 	    }) 
+	    ->editColumn('adm_level', function($location) { return Lang::get('levels.adm.' . $location->adm_level); })
 	    ->addColumn('full_name', function($location) {return $location->full_name;})
 	    ->rawColumns(['name']);
     }
@@ -73,6 +75,7 @@ class LocationsDataTable extends DataTable
             'id',
             'name',
 	    '_rgt',
+	    'adm_level',
         ];
     }
 

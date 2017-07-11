@@ -48,8 +48,7 @@ class LocationController extends Controller
 		    'adm_level' => 'required|integer',
 		    'altitude' => 'integer|nullable',
 	    ];
-	    // TODO: shouldn't hardcode the code for PLOTs
-	    if ($request->adm_level == 100) { // PLOT
+	    if ($request->adm_level == Location::LEVEL_PLOT) { // PLOT
 		    $rules = array_merge($rules, [
 			    'lat1' => 'required|numeric|min:0',
 			    'long1' => 'required|numeric|min:0',
@@ -60,7 +59,7 @@ class LocationController extends Controller
 			    'x' => 'required|numeric',
 			    'y' => 'required|numeric',
 		    ]);
-	    } elseif ($request->adm_level == 999) { //POINT
+	    } elseif ($request->adm_level == Location::LEVEL_POINT) { //POINT
 		    $rules = array_merge($rules, [
 			    'lat1' => 'required|numeric|min:0',
 			    'long1' => 'required|numeric|min:0',
@@ -77,7 +76,7 @@ class LocationController extends Controller
 	    $validator = Validator::make($request->all(), $rules);
 	    // MySQL 5.7 has a new IsValid for checking validity, but we must keep compatibility with 5.5
 	    $validator->after(function ($validator) use ($request) {
-		    if ($request->adm_level == 100 or $request->adm_level == 999) return;
+		    if ($request->adm_level == Location::LEVEL_PLOT or $request->adm_level == Location::LEVEL_POINT) return;
 		    $valid = DB::select('SELECT Dimension(GeomFromText(?)) as valid', [$request->geom]);
 
 		    if (is_null ($valid[0]->valid)) 
@@ -102,7 +101,7 @@ class LocationController extends Controller
 			    ->withErrors($validator)
 			    ->withInput();
 	    }
-	    if ($request->adm_level == 100) { // plot
+	    if ($request->adm_level == Location::LEVEL_PLOT) { // plot
 		    $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
 		    $newloc->setGeomFromParts($request->only([
 			    'lat1','lat2','lat3','latO',
@@ -111,7 +110,7 @@ class LocationController extends Controller
 	    } else {
 		    // discard x, y data from locations that are not PLOTs
 		    $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
-		    if ($request->adm_level == 999) { // point
+		    if ($request->adm_level == Location::LEVEL_POINT) { // point
 			    $newloc->setGeomFromParts($request->only([
 				    'lat1','lat2','lat3','latO',
 				    'long1','long2','long3','longO',
@@ -149,10 +148,8 @@ class LocationController extends Controller
     public function show($id)
     {
 	    $location = Location::with(['ancestors', 'descendants'])->findOrFail($id);
-	    $adm_level = config('adm_levels')[$location->adm_level];
 	    return view('locations.show', [
 		    'location' => $location,
-		    'adm_level' => $adm_level
 	    ]);
         //
     }
@@ -193,7 +190,7 @@ class LocationController extends Controller
 			    ->withErrors($validator)
 			    ->withInput();
 	    }
-	    if ($request->adm_level == 100) {
+	    if ($request->adm_level == Location::LEVEL_PLOT) {
 		    $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
 		    $location->setGeomFromParts($request->only([
 			    'lat1','lat2','lat3','latO',
@@ -202,7 +199,7 @@ class LocationController extends Controller
 	    } else {
 		    // discard x, y data from locations that are not PLOTs
 		    $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
-		    if ($request->adm_level == 999) { // point
+		    if ($request->adm_level == Location::LEVEL_POINT) { // point
 			    $location->setGeomFromParts($request->only([
 				    'lat1','lat2','lat3','latO',
 				    'long1','long2','long3','longO',

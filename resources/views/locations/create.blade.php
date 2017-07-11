@@ -53,8 +53,10 @@
 
 	<select name="adm_level" id="adm_level" class="form-control" >
 		<option value='' {{ is_null($selected) ? 'selected' : '' }} >&nbsp;</option>
-	@foreach (config('adm_levels') as $key => $uc)
-		<option value="{{$key}}" {{ $key == $selected ? 'selected' : '' }}>{{ $uc }}</option>
+	@foreach (App\Location::AdmLevels() as $level)
+		<option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
+			@lang ('levels.adm.' . $level )
+		</option>
 	@endforeach
 	</select>
             </div>
