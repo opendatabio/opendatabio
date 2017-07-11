@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Kalnoy\Nestedset\NodeTrait;
 use DB;
+use Log;
 
 class Location extends Model
 {
@@ -115,8 +116,27 @@ class Location extends Model
 
 	public function newQuery($excludeDeleted = true)
 	{
-		// this "area" is used as an example, needs to be removed in the final product
-	return parent::newQuery($excludeDeleted)->addSelect('*',DB::raw('AsText(geom) as geom, Area(geom) as area'));
+		// this new Query is hand made as it needs to cater to geom objects as well as 
+		// making sure the nested set columns are the first to be returned
+		// See https://github.com/lazychaser/laravel-nestedset/issues/233
+		return parent::newQuery($excludeDeleted)->addSelect(
+			'_lft', 
+			'_rgt',
+			'id',
+			'name',
+			'parent_id',
+			'altitude',
+			'adm_level',
+			'datum',
+			'uc_id',
+			'notes',
+			'x',
+			'y',
+			'startx',
+			'starty',
+			DB::raw('AsText(geom) as geom'),
+			DB::raw('Area(geom) as area'),
+			DB::raw('Centroid(geom) as centroid')
+		);
 	}
-
 }
