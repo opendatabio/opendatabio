@@ -105,6 +105,7 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.location_map')
+<br>Area: {{ $location->area }}
                 </div>
 
                 <div class="panel-body" id="map" style="
@@ -120,11 +121,37 @@
         </div>
     </div>
 
+<?php 
+function getZoomLevel($area) {
+	if ($area > 700)
+		return 3;
+	if ($area > 400)
+		return 4;
+	if ($area > 100)
+		return 5;
+	if ($area > 20)
+		return 6;
+	if ($area > 5)
+		return 7;
+	if ($area > 0.8)
+		return 8;
+	if ($area > 0.1)
+		return 9;
+	if ($area > 0.01)
+		return 10;
+	if ($area > 0.001)
+		return 11;
+	// default zoom level
+	return 12;
+}
+?>
+
+
 <script>
       function initMap() {
-        var uluru = {lat: {{$location->geomArray[0]['y']}}, lng: {{$location->geomArray[0]['x']}}  };
+        var uluru = {lat: {{$location->centroid['y']}}, lng: {{$location->centroid['x']}}  };
         var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 4,
+          zoom: {{ getZoomLevel($location->area) }},
           center: uluru
 	});
 @if (count($location->geomArray) > 1) 

@@ -34,6 +34,13 @@ class Location extends Model
 		$this->long = substr($point,0, $pos);
 		$this->lat = substr($point, $pos+1);
 	}
+	public function getCentroidAttribute() {
+		$centroid = $this->centroid_raw;
+		if (empty($centroid)) $centroid = $this->geom;
+		$point = substr($centroid, 6, -1);
+		$pos = strpos($point, ' ');
+		return [ 'x' => substr($point,0, $pos), 'y' => substr($point, $pos+1)] ;
+	}
 
 	// query scope for conservation units
 	public function scopeUcs($query) {
@@ -136,7 +143,7 @@ class Location extends Model
 			'starty',
 			DB::raw('AsText(geom) as geom'),
 			DB::raw('Area(geom) as area'),
-			DB::raw('Centroid(geom) as centroid')
+			DB::raw('AsText(Centroid(geom)) as centroid_raw')
 		);
 	}
 }
