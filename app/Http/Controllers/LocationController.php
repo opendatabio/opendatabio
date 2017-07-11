@@ -147,7 +147,7 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-	    $location = Location::with(['ancestors', 'descendants'])->findOrFail($id);
+	    $location = Location::findOrFail($id);
 	    return view('locations.show', [
 		    'location' => $location,
 	    ]);
@@ -209,8 +209,14 @@ class LocationController extends Controller
 		    }
 	    }
 	    $parent = $request['parent_id'];
-	    if ($parent !== 0) {
-		    $location->parent_id = $parent;
+	    if ($parent != 0) {
+		    try{
+			    $location->makeChildOf($parent);
+		    } catch (\Baum\MoveNotPossibleException $e) {
+			    return redirect()->back()
+				    ->withInput()
+				    ->withErrors(Lang::get('messages.movenotpossible'));
+		    }
 	    }
 	    if ($request->uc_id !== 0) {
 		    $location->uc_id = $request->uc_id;

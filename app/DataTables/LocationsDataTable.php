@@ -34,7 +34,7 @@ class LocationsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Location::with('ancestors')->select($this->getColumns());
+        $query = Location::query()->select($this->getColumns());
 
         return $this->applyScopes($query);
     }
@@ -49,7 +49,8 @@ class LocationsDataTable extends DataTable
         return $this->builder()
                     ->columns($this->getColumns())
 		    ->removeColumn('id') // need to remove it from showing HERE
-		    ->removeColumn('_rgt') // need to remove it from showing HERE
+		    ->removeColumn('rgt') // need to remove it from showing HERE
+		    ->removeColumn('lft') // need to remove it from showing HERE
 		    ->addColumn(['data' => 'full_name', 'title' => 'Full name', 'searchable' => true])
                     ->parameters([
                         'dom'     => 'Bfrtip',
@@ -74,7 +75,8 @@ class LocationsDataTable extends DataTable
         return [
             'id',
             'name',
-	    '_rgt',
+	    'rgt',
+	    'lft',
 	    'adm_level',
         ];
     }

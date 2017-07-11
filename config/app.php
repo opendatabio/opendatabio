@@ -25,7 +25,7 @@ return [
     | "alpha", such as 0.1.0-alpha1.
     */
 
-    'version' => '0.1.0-alpha4',
+    'version' => '0.1.0-alpha5',
 
     /* 
      * Proxy settings
@@ -224,6 +224,7 @@ return [
 	Barryvdh\Debugbar\ServiceProvider::class,
 	Yajra\Datatables\DatatablesServiceProvider::class,
 	Yajra\Datatables\ButtonsServiceProvider::class,
+	Baum\Providers\BaumServiceProvider::class,
 
     ],
 

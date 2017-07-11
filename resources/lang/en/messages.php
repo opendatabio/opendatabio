@@ -156,4 +156,5 @@ remove the job information from the database.',
   'confirm_person' => 'Confirm Person insertion',
   'possible_dupes' => 'Possible duplicates',
   'confirm_person_message' => 'Please check that the new Person you are attempting to insert is not a duplicate of the following stored persons. If you are certain that this record is of a new person, not a duplicate, press the button below to finish the insertion.',
+  'movenotpossible' => 'Impossible to move node to this parent.',
 );
