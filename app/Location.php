@@ -3,13 +3,12 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use Kalnoy\Nestedset\NodeTrait;
+use Baum\Node;
 use DB;
 use Log;
 
-class Location extends Model
+class Location extends Node
 {
-	use NodeTrait;
 
 	protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty'];
 	protected $lat, $long;
@@ -47,7 +46,6 @@ class Location extends Model
 		return $query->where('adm_level', Location::LEVEL_UC);
 	}
 
-	// Proposal! Needs to be tested and aproved
 	function getFullNameAttribute() {
 		$str = "";
 		foreach ($this->getAncestors() as $ancestor) { 
@@ -130,24 +128,8 @@ class Location extends Model
 
 	public function newQuery($excludeDeleted = true)
 	{
-		// this new Query is hand made as it needs to cater to geom objects as well as 
-		// making sure the nested set columns are the first to be returned
-		// See https://github.com/lazychaser/laravel-nestedset/issues/233
 		return parent::newQuery($excludeDeleted)->addSelect(
-			'_lft', 
-			'_rgt',
-			'id',
-			'name',
-			'parent_id',
-			'altitude',
-			'adm_level',
-			'datum',
-			'uc_id',
-			'notes',
-			'x',
-			'y',
-			'startx',
-			'starty',
+			'*', 
 			DB::raw('AsText(geom) as geom'),
 			DB::raw('Area(geom) as area'),
 			DB::raw('AsText(Centroid(geom)) as centroid_raw')

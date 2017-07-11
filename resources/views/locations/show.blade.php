@@ -50,7 +50,7 @@
 @endif
 <strong> 
 @lang('messages.total_descendants')
-:</strong> {{ $location->descendants->count() }}
+:</strong> {{ $location->getDescendants()->count() }}
 <br>
 <!--strong>
 @lang('messages.total_area')
@@ -81,18 +81,18 @@
                 </div>
 
                 <div class="panel-body">
-	@if ($location->ancestors->count())
-	@foreach ($location->ancestors as $ancestor)
+	@if ($location->getAncestors()->count())
+	@foreach ($location->getAncestors() as $ancestor)
 		<a href=" {{ url('locations/'. $ancestor->id ) }} ">{{ $ancestor->name }} </a> &gt;
 	@endforeach
 	@endif
 	 {{ $location->name }}
-	 @if ($location->descendants->count())
+	 @if ($location->getDescendants()->count())
 
 	<ul>
 	 @foreach ($location->children as $child)
 		<li> <a href=" {{url('locations/' . $child->id) }}"> {{ $child->name }} </a>
-			{{ $child->descendants->count() ? '(+' . $child->descendants->count() . ')' : ''}}
+			{{ $child->getDescendants()->count() ? '(+' . $child->getDescendants()->count() . ')' : ''}}
 		</li>
 @endforeach
 </ul>
@@ -105,7 +105,6 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.location_map')
-<br>Area: {{ $location->area }}
                 </div>
 
                 <div class="panel-body" id="map" style="
@@ -123,13 +122,13 @@
 
 <?php 
 function getZoomLevel($area) {
-	if ($area > 700)
-		return 3;
 	if ($area > 400)
+		return 3;
+	if ($area > 200)
 		return 4;
-	if ($area > 100)
+	if ($area > 50)
 		return 5;
-	if ($area > 20)
+	if ($area > 15)
 		return 6;
 	if ($area > 5)
 		return 7;

@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-use Kalnoy\Nestedset\NestedSet;
+//use Kalnoy\Nestedset\NestedSet;
 
 class CreateLocationsTable extends Migration
 {
@@ -18,9 +18,12 @@ class CreateLocationsTable extends Migration
         Schema::create('locations', function (Blueprint $table) {
 		$table->increments('id');
 		$table->string('name');
-		// REAL LOCATION DATA: polygon, altitude, (adm) level, datum, resolution
-		// UC selfjoin
-		NestedSet::columns($table);
+		// MIGRATION EDITED ON 0.1.0-alpha5 TO DROP NESTEDSET DEPENDENCY
+//		NestedSet::columns($table);
+		$table->integer('parent_id')->unsigned()->nullable();
+		$table->integer('lft')->unsigned()->default(0);
+		$table->integer('rgt')->unsigned()->default(0);
+		$table->integer('depth')->nullable();
 		$table->timestamps();
         });
     }

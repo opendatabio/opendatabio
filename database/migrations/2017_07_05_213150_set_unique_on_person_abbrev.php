@@ -27,7 +27,7 @@ class SetUniqueOnPersonAbbrev extends Migration
     public function down()
     {
         Schema::table('persons', function (Blueprint $table) {
-		$table->dropUnique('abbreviation');
+		$table->dropUnique(['abbreviation']);
             //
         });
     }
