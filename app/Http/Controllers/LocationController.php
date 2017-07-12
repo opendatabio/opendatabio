@@ -20,7 +20,6 @@ class LocationController extends Controller
     {
 	    return $dataTable->render('locations.index', [
     ]);
-        //
     }
 
     /**
@@ -36,7 +35,6 @@ class LocationController extends Controller
 		    'locations' => $locations,
 		    'uc_list' => $uc_list
 	    ]);
-        //
     }
 
     // Validates the user input for CREATE or UPDATE requests
@@ -84,7 +82,6 @@ class LocationController extends Controller
 	    });
 
 	    return $validator;
-
     }
     /**
      * Store a newly created resource in storage.

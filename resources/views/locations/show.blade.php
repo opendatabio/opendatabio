@@ -104,7 +104,11 @@
             </div>
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    @lang('messages.location_map')
+                    @lang ('messages.location_map')
+		    @if ($location->simplified)
+		    -
+		    @lang ('messages.simplified_map')
+		    @endif
                 </div>
 
                 <div class="panel-body" id="map" style="

@@ -9,15 +9,17 @@ use Log;
 
 class Location extends Node
 {
-
 	protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty'];
 	protected $lat, $long;
+	protected $geom_array = [];
+	protected $isSimplified = false;
 
 	// The "special" adm levels
 	const LEVEL_UC = 99;
 	const LEVEL_PLOT = 100;
 	const LEVEL_TRANSECT = 101;
 	const LEVEL_POINT = 999;
+	// for use in views/* selects
 	static public function AdmLevels() {
 		return array_merge(config('app.adm_levels'), [
 			Location::LEVEL_UC, 
@@ -27,6 +29,7 @@ class Location extends Node
 		]);
 	}
 
+	// helper method to get lat/long from POINTS only
 	public function getlatlong() {
 		$point = substr($this->geom, 6, -1);
 		$pos = strpos($point, ' ');
@@ -64,7 +67,14 @@ class Location extends Node
 		if($invalid) { throw new \UnexpectedValueException('Invalid Geometry object'); }
 	        $this->attributes['geom'] = DB::raw("GeomFromText('$value')");
 	}
+	public function getSimplifiedAttribute() {
+		$this->getGeomArrayAttribute(); // force caching
+		return $this->isSimplified;
+	}
 	public function getGeomArrayAttribute() {
+		// "cache" geom array to reduce overhead
+		if (!empty($this->geom_array)) return $this->geom_array;
+
 		if (substr($this->geom, 0, 5) == "POINT") {
 			$point = substr($this->geom, 6, -1);
 			$pos = strpos($point, ' ');
@@ -76,6 +86,23 @@ class Location extends Node
 			$pos = strpos($element, ' ');
 			$element = ['x' => substr($element,0, $pos), 'y' => substr($element, $pos+1)];
 		}
+		Log::info(sizeof($array));
+		if (sizeof($array) > 1500) {
+			$this->isSimplified = true;
+			// TODO: provide a better simplification for this, such as Douglas-Peucker
+			$result = array();
+			$lapse = ceil(sizeof($array) / 1500);
+			$i = 0;
+			foreach($array as $value) {
+			    if ($i++ % $lapse == 0) {
+			        $result[] = $value;
+			    }
+			}
+			$array = $result;
+		}
+
+		Log::info(sizeof($array));
+		$this->geom_array = $array;
 		return $array;
 	}
 
