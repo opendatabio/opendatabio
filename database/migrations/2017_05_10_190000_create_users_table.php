@@ -19,11 +19,15 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+	    $table->integer('person_id')->unsigned()->nullable();
+	    $table->foreign('person_id')->references('id')->on('persons');
+	    $table->integer('access_level')->default(0);
         });
 
 	DB::table('users')->insert([
 		'email' => 'admin@example.org',
-		'password' => bcrypt('password1')
+		'password' => bcrypt('password1'),
+		'access_level' => 2,
 	]);
     }
 

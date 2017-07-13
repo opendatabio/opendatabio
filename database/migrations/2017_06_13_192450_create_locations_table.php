@@ -18,14 +18,26 @@ class CreateLocationsTable extends Migration
         Schema::create('locations', function (Blueprint $table) {
 		$table->increments('id');
 		$table->string('name');
-		// MIGRATION EDITED ON 0.1.0-alpha5 TO DROP NESTEDSET DEPENDENCY
+		// MIGRATION EDITED ON 0.2.0-alpha1 TO DROP NESTEDSET DEPENDENCY
 //		NestedSet::columns($table);
 		$table->integer('parent_id')->unsigned()->nullable();
 		$table->integer('lft')->unsigned()->default(0);
 		$table->integer('rgt')->unsigned()->default(0);
 		$table->integer('depth')->nullable();
+		$table->integer('altitude')->nullable();
+		$table->integer('adm_level');
+		$table->string('datum')->nullable();
+		$table->integer('uc_id')->unsigned()->nullable();
+		$table->foreign('uc_id')->references('id')->on('locations');
+		$table->unique(['name', 'adm_level']);
+		$table->text('notes')->nullable();
+		$table->decimal('x')->nullable();
+		$table->decimal('y')->nullable();
+		$table->decimal('startx')->nullable();
+		$table->decimal('starty')->nullable();
 		$table->timestamps();
         });
+	DB::statement('ALTER TABLE locations ADD geom GEOMETRYCOLLECTION' );
     }
 
     /**

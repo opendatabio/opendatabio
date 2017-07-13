@@ -13,6 +13,7 @@ class CreateOdbBibkey extends Migration
      */
     public function up()
     {
+        DB::unprepared("DROP FUNCTION IF EXISTS odb_bibkey");
 	DB::unprepared("CREATE FUNCTION odb_bibkey(original TEXT)
 	    		RETURNS VARCHAR(191) DETERMINISTIC
 			RETURN trim(substr(original,instr(original, '{')+1, instr(original,',')-instr(original,'{')-1));
