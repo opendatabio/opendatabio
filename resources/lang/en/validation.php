@@ -98,8 +98,8 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        'parent_id' => [
+            'required_unless' => 'The parent attribute is mandatory except for countries.',
         ],
     ],
 

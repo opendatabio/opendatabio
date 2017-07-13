@@ -177,7 +177,7 @@
 	<?php $selected = old('parent_id', isset($location) ? $location->parent_id : -1); ?>
 
 	<select name="parent_id" id="parent_id" class="form-control" >
-		<!--option value='-1' {{ $selected == -1 ? 'selected' : '' }}>Autodetect</option-->
+		<option value='-1' {{ $selected == -1 ? 'selected' : '' }}>Autodetect</option>
 		<option value='' {{ $selected == 0 ? 'selected' : '' }} >None</option>
 	@foreach ($locations as $parentloc)
 		<option value="{{$parentloc->id}}" {{ $parentloc->id == $selected ? 'selected' : '' }}>{{ $parentloc->name }}</option>

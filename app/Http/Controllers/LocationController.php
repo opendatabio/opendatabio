@@ -8,6 +8,7 @@ use App\DataTables\LocationsDataTable;
 use Validator;
 use DB;
 use Lang;
+use Log;
 
 class LocationController extends Controller
 {
@@ -45,6 +46,7 @@ class LocationController extends Controller
 		    'name' => 'required|string|max:191',
 		    'adm_level' => 'required|integer',
 		    'altitude' => 'integer|nullable',
+		    'parent_id' => 'required_unless:adm_level,0',
 	    ];
 	    if ($request->adm_level == Location::LEVEL_PLOT) { // PLOT
 		    $rules = array_merge($rules, [
@@ -72,13 +74,32 @@ class LocationController extends Controller
 		    ]);
 	    }
 	    $validator = Validator::make($request->all(), $rules);
-	    // MySQL 5.7 has a new IsValid for checking validity, but we must keep compatibility with 5.5
+	    // Now we check if the geometry received is valid, and if it falls inside the parent geometry
 	    $validator->after(function ($validator) use ($request) {
 		    if ($request->adm_level == Location::LEVEL_PLOT or $request->adm_level == Location::LEVEL_POINT) return;
+		    // Dimension returns NULL for invalid geometries
 		    $valid = DB::select('SELECT Dimension(GeomFromText(?)) as valid', [$request->geom]);
 
 		    if (is_null ($valid[0]->valid)) 
 			    $validator->errors()->add('geom', Lang::get('messages.geom_error'));
+	    });
+	    $validator->after(function ($validator) use ($request) {
+		    if ($request->parent_id < 1) return; // don't validate if parent = 0 for none, -1 for autodetect
+		    $geom = $request->geom;
+		    if ($request->adm_level == Location::LEVEL_PLOT or $request->adm_level == Location::LEVEL_POINT) {
+			    // copied from app\Locations, normalize
+			    $values = $request;
+			    $lat = $values['lat1'] + $values['lat2'] / 60 + $values['lat3'] / 3600;
+			    $long = $values['long1'] + $values['long2'] / 60 + $values['long3'] / 3600;
+			    if ( $values['longO'] == 0) $long *= -1;
+			    if ( $values['latO'] == 0) $lat *= -1;
+			    $geom = "POINT(" . $long . " " . $lat . ")";
+		    }
+
+		    $valid = DB::select('SELECT ST_Within(GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->parent_id]);
+
+		    if ($valid[0]->valid != 1) 
+			    $validator->errors()->add('geom', Lang::get('messages.geom_parent_error'));
 	    });
 
 	    return $validator;
@@ -120,12 +141,21 @@ class LocationController extends Controller
 
 	    $parent = $request['parent_id'];
 	    // AUTODETECT PARENT & UC
-//	    if ($parent == -1) {
-//		    $possibles = Location::where('adm_level', '!=', 99)->where('adm_level', '<', [$request->adm_level])
-//			    		   ->whereRaw('MBRContains(geom, GeomFromText(?))', [$request->geom])
-//			    	           ->orderBy('adm_level', 'desc')->get();
-//		    dd($possibles);
-//	    }
+	    if ($parent == -1) {
+		    // TODO: make it work for plots/points
+		    $possibles = Location::where('adm_level', '!=', Location::LEVEL_UC)
+			                   ->where('adm_level', '<', [$request->adm_level])
+			    		   ->whereRaw('ST_Within(GeomFromText(?), geom)', [$request->geom])
+			    	           ->orderBy('adm_level', 'desc')->get();
+		    
+		    if ($possibles->isNotEmpty()) {
+			    $newloc->parent_id = $possibles[0]->id;
+		    } else {
+			    return redirect()->back()
+				    ->withErrors(['parent_id' => Lang::get('messages.unable_autodetect')])
+				    ->withInput();
+		    }
+	    }
 	    if ($parent !== 0) {
 		    $newloc->parent_id = $parent;
 	    }
