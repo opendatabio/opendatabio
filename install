@@ -65,6 +65,39 @@ function checkVersion($name, $command, $min, $recommended, $unsupported = null) 
 		return(1);
 	}
 }
+function checkMysqlVersion($name, $command, $mysqlmin, $mysqlrecommended, $mariadbmin, $mariadbrecommended) { 
+	// some tweaking, as MySQL may be MariaDB
+	exec($command, $result, $status);
+	if ($status != 0) {
+		echo c($name . " does not seem to be installed\n", "danger");
+		return(1);
+	} 
+	preg_match ("/([\d\.-]+).*?([\d\.-]+)/", $result[0], $version);
+	preg_match ("/MariaDB/", $result[0], $ismariadb);
+	if (sizeof($version)==0) {
+		echo c("Error reading the version of " . $name . "\n", "warning");
+		return(1);
+	}
+	if (sizeof($version)==0) { // we have MySQL
+		if ( version_compare ($version[0], $mysqlmin, "<"))	{ 
+			echo c($name . " version is not compatible! Please upgrade!\n", "danger");
+			return(1);
+		} 
+		if ( version_compare ($version[0], $mysqlrecommended, "<")) {
+			echo c($name . " version is below recommended...\n", "warning");
+			return(1);
+		}
+	} else { // we have MariaDB; relevant version is the SECOND string
+		if ( version_compare ($version[2], $mariadbmin, "<"))	{ 
+			echo c($name . " version is not compatible! Please upgrade!\n", "danger");
+			return(1);
+		} 
+		if ( version_compare ($version[2], $mariadbrecommended, "<")) {
+			echo c($name . " version is below recommended...\n", "warning");
+			return(1);
+		}
+	}
+}
 function checkContinue() {
 	echo "Continue? yes/[no] ";
 	$line = trim(fgets(STDIN));
@@ -142,8 +175,8 @@ if ($status == 0) {
 	}
 }
 $trouble = $trouble + checkVersion("Apache Web Server", $apachecmd . " -v", "2.2", "2.4");
-$trouble = $trouble + checkVersion("PHP", "php -v", "5.6", "7.0");
-$trouble = $trouble + checkVersion("MySQL database", "mysql --version", "5.5", "5.7");
+$trouble = $trouble + checkVersion("PHP", "php -v", "7.0", "7.1");
+$trouble = $trouble + checkMysqlVersion("MySQL database", "mysql --version", "5.7", "5.7.6", "10.1.2", "10.1.23");
 $trouble = $trouble + checkVersion("Pandoc", "pandoc --version", "1.10", "1.10");
 $trouble = $trouble + checkVersion("ImageMagick", "convert --version", "6.7.7", "6.8.9", "7.0");
 if($trouble == 0)
