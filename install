@@ -21,6 +21,23 @@ function installComposer() {
 	}
 	echo(c("Composer successfully installed!\n", "success"));
 }
+## From https://stackoverflow.com/questions/11807115 adapted with
+# http://php.net/manual/en/faq.using.php#faq.using.shorthandbytes
+function convertToBytes($from){
+    $number=substr($from,0,-1);
+    switch(strtoupper(substr($from,-1))){
+        case "K":
+            return $number*1024;
+        case "M":
+            return $number*pow(1024,2);
+        case "G":
+            return $number*pow(1024,3);
+        case "T":
+            return $number*pow(1024,4);
+        default:
+            return $from;
+    }
+}
 function c($text, $status) {
 	# Colorize the output
 	switch ($status) {
@@ -119,6 +136,12 @@ function checkCurrentUser() {
 		echo c("The installation script should be executed as a non-privileged user!\n", "danger");
 		checkContinue();
 	}
+	if ($uid != getmyuid()) {
+		echo c("The current user is: " . posix_getpwuid($uid)['name'] . "\n", "danger");
+		echo c("The owner of the installation script is: " . posix_getpwuid(getmyuid())['name'] . "\n", "danger");
+		echo c("The installation script should be executed by the same user that own the files!\n", "danger");
+		checkContinue();
+	}
 }
 function checkMysqlLogBin() { // TODO: change name to checkMysqlConfig?
 exec("mysql -u".getenv('DB_USERNAME').
@@ -203,6 +226,13 @@ if (! extension_loaded("dom"))
 #	echo c("Opcache PHP extension is recommended for better performance...\n", "warning");
 if (! ini_get("allow_url_fopen"))
 	echo(c("The PHP initialization directive allow_url_fopen must be set to true!\n", "danger"));
+if (! ini_get("memory_limit") or convertToBytes(ini_get('memory_limit')) < 256 * 1024 * 1024)
+	echo(c("The PHP initialization directive memory_limit should be at least 256M!\n", "danger"));
+if (! ini_get("post_max_size") or convertToBytes(ini_get('post_max_size')) < 20 * 1024 * 1024)
+	echo(c("The PHP initialization directive post_max_size should be at least 20M!\n", "danger"));
+if (! ini_get("upload_max_filesize") or convertToBytes(ini_get('upload_max_filesize')) < 20 * 1024 * 1024)
+	echo(c("The PHP initialization directive upload_max_filesize should be at least 20M!\n", "danger"));
+
 ### Apache config
 exec($apachecmd . " -M", $result, $status);
 $rewrite = false; $userdir = false;
