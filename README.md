@@ -18,7 +18,7 @@ See our [Wiki page](../../wiki) for details.
 
 ## Install
 ### Prerequisites and versions
-Opendatabio is written in PHP and developed over the Laravel framework. 
+Opendatabio is written in PHP and developed over the Laravel framework version 5.4. 
 The minimum supported PHP version is 7.0, which is available from apt-get in Ubuntu 16.04 and Debian 9.
 
 It also requires a working web server and a database. The minimum required version for MySQL is 5.7.6
@@ -32,6 +32,8 @@ most Linux distributions official repositories, and is therefore not supported a
 Pandoc is used to translate LaTeX code used in the bibliographic references. It is not necessary for the installation,
 but it is suggested for a better user experience. The minimum Pandoc version supported is 1.10.
 
+The background jobs (such as data import/export) may be handled by the program Supervisor. 
+
 The software is being developed and extensively tested using PHP 7.1.7, Apache 2.4.26, 
 MySQL 10.1.25-MariaDB and ImageMagick 6.9.8. If you have trouble or questions about other softwares or versions, please
 contact our team using the Github repository.
@@ -39,12 +41,14 @@ contact our team using the Github repository.
 TODO: Install supervisor, configure queue workers + TIMEOUT, RETRIES
 
 ### Installation instructions
-First, install the prerequisite software: Apache, MySQL, PHP, pandoc and ImageMagick.
+First, install the prerequisite software: Apache, MySQL, PHP, pandoc, supervisor and ImageMagick.
 
 On a Debian 9 system, you need to install some PHP extensions as well. Use:
 ```
 apt-get install apache2 mysql-server php7.0 libapache2-mod-php7.0 php7.0-mysql \ 
-		php7.0-cli imagemagick pandoc php7.0-mbstring php7.0-xml
+		php7.0-cli imagemagick pandoc php7.0-mbstring php7.0-xml \
+		supervisor
+
 a2enmod php7.0
 phpenmod mbstring
 phpenmod xml
@@ -103,6 +107,9 @@ proxy settings, but many more exist in the ".env" and
 "config/app.php" files. In particular, you may want to change
 the language, timezone and e-mail settings. 
 Run `php artisan config:cache` after updating the config files.
+
+If your import/export jobs are not being processed, make sure Supervisor is running 
+(systemctl start supervisord && systemctl enable supervisord), and check the log files at storage/logs/supervisor.log.
 
 ## Development
 

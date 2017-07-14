@@ -177,31 +177,106 @@ EOF", $result, $status);
 		exit();
 	}
 }
+function getApacheCmd() {
+	# Determining cmdline for apache2ctl / httpd
+	exec("which httpd", $result, $status);
+	if ($status == 0) {
+		# ArchLinux, CentOS, Fedora, Red Hat use:
+		$apachecmd = "httpd";
+	} else {
+		# is there an user-accessible apachectl?
+		exec("which apachectl", $result, $status);
+		if ($status == 0) {
+			$apachecmd = "apachectl";
+		} else { # try a /usr/sbin installation
+			$apachecmd = "/usr/sbin/apachectl";
+		}
+	}
+	return $apachecmd;
+}
+function getComposerCmd() {
+	# Do we have a system-wide composer, system-wise composer.phar or local composer.phar?
+	exec("composer", $result, $status);
+	if ($status == 0) {
+		$composer = "composer";
+		echo "Using system-wide composer...\n";
+	} else {
+		exec("composer.phar", $result, $status);
+		if ($status == 0) {
+			$composer = "composer.phar";
+			echo "Using system-wide composer.phar...\n";
+		} else {
+			if (! file_exists("composer.phar")) {
+				installComposer();
+			}
+			$composer = "php composer.phar";
+			echo "Using local composer.phar...\n";
+		}
+	}
+	return $composer;
+}
+function testProxy() {
+	if (getenv('PROXY_URL') != '') {
+		$proxystring = '';
+		if(getenv('PROXY_USER') != '') {
+			$proxystring = getenv('PROXY_USER') . ":" . getenv('PROXY_PASSWORD')."@";
+		}
+		$proxystring .= getenv('PROXY_URL') . ":" . getenv('PROXY_PORT');
 
+		echo "Testing proxy settings...\n";
+		$client = new \GuzzleHttp\Client(['base_uri' => 'http://www.example.com', 'proxy' => $proxystring]);
+		try {
+			$response = $client->request('GET', '');
+			if ($response->getStatusCode() == 200) {
+				echo c("Proxy configuration successfull!\n", "success");
+			} else {
+				echo c("Unable to connect to external providers using the provided proxy (Wrong status code)!\n", "danger");
+			}
+		} catch (GuzzleHttp\Exception\ConnectException $e) {
+			echo c("Unable to connect to external providers using the provided proxy (ConnectException)!\n", "danger");
+		} catch (GuzzleHttp\Exception\ClientException $e) {
+			echo c("Unable to connect to external providers using the provided proxy (ClientException)!\n", "danger");
+		}
+	}
+}
+function checkSupervisor() {
+	# Tests if there is a opendatabio-worker.ini file in common places
+	if ((!file_exists("/etc/supervisor/conf.d/opendatabio-worker.ini")) and
+		(!file_exists("/etc/supervisor.d/opendatabio-worker.ini")))
+		echo c("Could not find supervisor worker file!\n", "danger");
+	echo "Do you wish to review the sample Supervisor worker file? [yes]/no ";
+	$line = trim(fgets(STDIN));
+	if ($line == "" or $line == "y" or $line == "yes") {
+		echo "You should store the following lines in a file called
+			/etc/supervisor/conf.d/opendatabio-worker.ini (Debian/Ubuntu) or 
+			/etc/supervisor.d/opendatabio-worker.ini (ArchLinux)\n(You will need root access for that)\n\n";
+		echo ";--------------\n";
+		echo"[program:opendatabio-worker]\n";
+		echo "process_name=%(program_name)s_%(process_num)02d\n";
+		echo "command=php ". __DIR__ ."/artisan queue:work --sleep=3 --tries=1 --daemon\n";
+		echo "autostart=true\n";
+		echo "autorestart=true\n";
+		echo "user=".posix_getpwuid(getmyuid())['name'] ."\n";
+		echo "numprocs=8\n";
+		echo "redirect_stderr=true\n";
+		echo "stdout_logfile=". __DIR__ ."/storage/logs/supervisor.log\n";
+		echo ";--------------\n\n";
+	}
+}
+
+############ End of functions, starting script
 echo c("Starting OpenDataBio installation! :)\n", "success");
 checkCurrentUser();
 
 echo "Checking versions...\n";
 $trouble = 0;
-# Determining cmdline for apache2ctl / httpd
-exec("which httpd", $result, $status);
-if ($status == 0) {
-	# ArchLinux, CentOS, Fedora, Red Hat use:
-	$apachecmd = "httpd";
-} else {
-	# is there an user-accessible apachectl?
-	exec("which apachectl", $result, $status);
-	if ($status == 0) {
-		$apachecmd = "apachectl";
-	} else { # try a /usr/sbin installation
-		$apachecmd = "/usr/sbin/apachectl";
-	}
-}
+$apachecmd = getApacheCmd();
 $trouble = $trouble + checkVersion("Apache Web Server", $apachecmd . " -v", "2.2", "2.4");
 $trouble = $trouble + checkVersion("PHP", "php -v", "7.0", "7.1");
 $trouble = $trouble + checkMysqlVersion("MySQL database", "mysql --version", "5.7", "5.7.6", "10.1.2", "10.1.23");
 $trouble = $trouble + checkVersion("Pandoc", "pandoc --version", "1.10", "1.10");
 $trouble = $trouble + checkVersion("ImageMagick", "convert --version", "6.7.7", "6.8.9", "7.0");
+$trouble = $trouble + checkVersion("Supervisor", "supervisord --version", "3.0.0", "3.3.0");
 if($trouble == 0)
 	echo c("All versions compatible!\n", "success");
 echo "Checking configuration...\n";
@@ -249,24 +324,7 @@ if (! $rewrite)
 
 checkContinue();
 # Determine which composer to use and run 'composer install'
-# Do we have a system-wide composer, system-wise composer.phar or local composer.phar?
-exec("composer", $result, $status);
-if ($status == 0) {
-	$composer = "composer";
-	echo "Using system-wide composer...\n";
-} else {
-	exec("composer.phar", $result, $status);
-	if ($status == 0) {
-		$composer = "composer.phar";
-		echo "Using system-wide composer.phar...\n";
-	} else {
-		if (! file_exists("composer.phar")) {
-			installComposer();
-		}
-		$composer = "php composer.phar";
-		echo "Using local composer.phar...\n";
-	}
-}
+$composer = getComposerCmd();
 exec($composer . " install", $result, $status);
 if ($status == 0) {
 	echo c("PHP dependencies installed dependencies successfully!\n", "success");
@@ -302,16 +360,25 @@ $line = trim(fgets(STDIN));
 if ($line == "" or $line == "y" or $line == "yes") {
 
 	echo c("Setting the environment variables... for more options, edit the .env file later!\n", "success");
-	echo "Is this installation for development or production? [production]/development ";
+	$prod = getenv('APP_ENV');
+	if ($prod == "production") {
+		echo "Is this installation for development or production? [production]/development ";
+	} else {
+		echo "Is this installation for development or production? production/[development] ";
+	}
 	$line = trim(fgets(STDIN));
-	if ($line == "" or $line == "production") {
+	if (substr($line,0,1) == "p") $prod = "production";
+	if (substr($line,0,1) == "d") $prod = "development";
+	if ($prod == "production") {
 		echo "Using production settings!\n";
 		writeDotEnv('APP_ENV', 'production');
 		writeDotEnv('APP_DEBUG', 'false');
+		writeDotEnv('QUEUE_DRIVER', 'database');
 	} else {
 		echo "Using development settings!\n";
 		writeDotEnv('APP_ENV', 'local');
 		writeDotEnv('APP_DEBUG', 'true');
+		writeDotEnv('QUEUE_DRIVER', 'sync');
 	}
 	echo "What should the base URL for your app be? [".getenv('APP_URL')."] ";
 	$line = trim(fgets(STDIN));
@@ -345,9 +412,16 @@ if ($line == "" or $line == "y" or $line == "yes") {
 	$line = trim(fgets(STDIN));
 	if ($line != "")
 		writeDotEnv('PROXY_PASSWD', $line);
+	echo "Google Maps API key? [".getenv('GMAPS_API_KEY')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('PROXY_PASSWD', $line);
 	# Reloads the environment file
-	$dotenv->load();
+	$dotenv->overload();
 }
+# Tests the proxy configuration
+
+testProxy();
 
 # Database user and connection
 echo "Testing database connection...\n";
@@ -396,6 +470,8 @@ if (getenv('APP_ENV') == 'production') {
 	system("php artisan config:cache");
 	system("php artisan route:cache");
 	system("php artisan optimize");
+	# Check Supervisor config file
+	checkSupervisor();
 }
 
 echo "Changing storage area permissions...\n";
@@ -404,7 +480,4 @@ exec("chmod -fR 777 bootstrap/cache");
 
 echo c("********************************************\n", "success");
 echo c("OpenDataBio has been successfully installed!\n", "success");
-
-# TODO: change default queue settings for dev / prod
 # TODO: check supervisor availability for prod
-# TODO: test proxy settings
