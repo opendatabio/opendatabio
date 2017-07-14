@@ -243,7 +243,15 @@ function checkSupervisor() {
 	# Tests if there is a opendatabio-worker.ini file in common places
 	if ((!file_exists("/etc/supervisor/conf.d/opendatabio-worker.ini")) and
 		(!file_exists("/etc/supervisor.d/opendatabio-worker.ini")))
-		echo c("Could not find supervisor worker file!\n", "danger");
+		echo c("Could not find supervisor worker file!\n", "warning");
+	# Test is supervisor is running
+	exec("ps ahxwwo command", $result);
+	$running = false;
+	foreach ($result as $line) 
+		if (strpos($line, "supervisord"))
+			$running = true;
+	if (!$running)
+		echo c("Supervisor daemon does not seem to be running!\n", "warning");
 	echo "Do you wish to review the sample Supervisor worker file? [yes]/no ";
 	$line = trim(fgets(STDIN));
 	if ($line == "" or $line == "y" or $line == "yes") {
