@@ -241,7 +241,7 @@ function testProxy() {
 }
 function checkSupervisor() {
 	# Tests if there is a opendatabio-worker.ini file in common places
-	if ((!file_exists("/etc/supervisor/conf.d/opendatabio-worker.ini")) and
+	if ((!file_exists("/etc/supervisor/conf.d/opendatabio-worker.conf")) and
 		(!file_exists("/etc/supervisor.d/opendatabio-worker.ini")))
 		echo c("Could not find supervisor worker file!\n", "warning");
 	# Test is supervisor is running
@@ -256,7 +256,7 @@ function checkSupervisor() {
 	$line = trim(fgets(STDIN));
 	if ($line == "" or $line == "y" or $line == "yes") {
 		echo "You should store the following lines in a file called
-			/etc/supervisor/conf.d/opendatabio-worker.ini (Debian/Ubuntu) or 
+			/etc/supervisor/conf.d/opendatabio-worker.conf (Debian/Ubuntu) or 
 			/etc/supervisor.d/opendatabio-worker.ini (ArchLinux)\n(You will need root access for that)\n\n";
 		echo ";--------------\n";
 		echo"[program:opendatabio-worker]\n";
