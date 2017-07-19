@@ -109,6 +109,12 @@ return [
 
     'valid_abbreviation' => '/^[A-Z,\. -]+$/',
 
+    /* API KEYS
+     * Some external services require API keys. You can configure them here:
+     */
+    'gmaps_api_key' => env('GMAPS_API_KEY', ''),
+    'mobot_api_key' => env('MOBOT_API_KEY', ''),
+
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration

@@ -423,7 +423,11 @@ if ($line == "" or $line == "y" or $line == "yes") {
 	echo "Google Maps API key? [".getenv('GMAPS_API_KEY')."] ";
 	$line = trim(fgets(STDIN));
 	if ($line != "")
-		writeDotEnv('PROXY_PASSWD', $line);
+		writeDotEnv('GMAPS_API_KEY', $line);
+	echo "Mobot (tropicos.org) API key? [".getenv('MOBOT_API_KEY')."] ";
+	$line = trim(fgets(STDIN));
+	if ($line != "")
+		writeDotEnv('MOBOT_API_KEY', $line);
 	# Reloads the environment file
 	$dotenv->overload();
 }

@@ -183,7 +183,7 @@ function getZoomLevel($area) {
       }
 </script>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ getenv('GMAPS_API_KEY') }}&callback=initMap">
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config('app.gmaps_api_key') }}&callback=initMap">
     </script>
 
 
