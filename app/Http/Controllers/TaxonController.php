@@ -50,6 +50,28 @@ class TaxonController extends Controller
      */
     public function store(Request $request)
     {
+            $this->authorize('create', Taxon::class);
+            //TODO: validate parent level < taxon level
+            //      validate senior level == taxon level
+            //      validate: not valid if senior present
+            //      validate: author name OR id, not both
+            //      validate: bib ref OR id, not both
+        $this->validate($request, [
+                'name' => 'required|max:191',
+                'level' => 'required',
+        ]);
+            // Laravel sends checkbox as On??
+            if ($request['valid'] == "on") {
+                    $request['valid'] = true;
+            } else {
+                    $request['valid'] = false;
+            }
+
+            Taxon::create($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
+                    'author_id', 'bibreference', 'bibreference_id']));
+            
+            return redirect('taxons')->withStatus(Lang::get('messages.stored'));
+            //TODO: add MOBOT key
         //
     }
 
@@ -61,9 +83,19 @@ class TaxonController extends Controller
      */
     public function show($id)
     {
-	    $taxon = Taxon::findOrFail($id);
+            $taxon = Taxon::findOrFail($id);
+            if ($taxon->author_id)
+                    $author = Person::findOrFail($taxon->author_id);
+            else
+                    $author = null;
+            if ($taxon->bibreference_id)
+                    $bibref = BibReference::findOrFail($taxon->bibreference_id);
+            else
+                    $bibref = null;
 	    return view('taxons.show', [
-		    'taxon' => $taxon,
+                'taxon' => $taxon,
+                'author' => $author,
+                'bibref' => $bibref,
 	    ]);
         //
     }
@@ -76,6 +108,17 @@ class TaxonController extends Controller
      */
     public function edit($id)
     {
+	    $taxons = Taxon::all();
+	    $persons = Person::all();
+	    $references = BibReference::all();
+        $taxon = Taxon::findOrFail($id);
+        return view('taxons.create', [
+            'taxon' => $taxon,
+		    'taxons' => $taxons,
+		    'persons' => $persons,
+		    'references' => $references,
+	    ]);
+        //
         //
     }
 
@@ -88,7 +131,28 @@ class TaxonController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+            $taxon = Taxon::findOrFail($id);
+            $this->authorize('update', $taxon);
+            //TODO: validate parent level < taxon level
+            //      validate senior level == taxon level
+            //      validate: not valid if senior present
+            //      validate: author name OR id, not both
+            //      validate: bib ref OR id, not both
+        $this->validate($request, [
+                'name' => 'required|max:191',
+                'level' => 'required',
+        ]);
+            // Laravel sends checkbox as On??
+            if ($request['valid'] == "on") {
+                    $request['valid'] = true;
+            } else {
+                    $request['valid'] = false;
+            }
+
+            $taxon->update($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
+                    'author_id', 'bibreference', 'bibreference_id']));
+            // TODO: external keys
+            return redirect('taxons')->withStatus(Lang::get('messages.saved'));
     }
 
     /**
@@ -122,6 +186,8 @@ class TaxonController extends Controller
             // 1 -> author
             // 2 -> valid
             // 3 -> reference
+            // 4 -> parent
+            // 5 -> senior
             $rank = Taxon::getRank($mobotdata[1]->RankAbbreviation);
             $valid = $mobotdata[1]->NomenclatureStatusName == "Legitimate";
 
@@ -130,6 +196,9 @@ class TaxonController extends Controller
                             $rank,
                             $mobotdata[1]->Author,
                             $valid,
+                            $mobotdata[1]->DisplayReference . " " . $mobotdata[1]->DisplayDate,
+                            null, // TODO: what to do here???
+                            null, // TODO: idem
                     ]
             ]);
     }

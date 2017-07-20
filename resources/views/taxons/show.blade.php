@@ -11,19 +11,56 @@
 		<div class="panel-body">
                     <!-- Display Validation Errors -->
 		    <p><strong>
-@lang('messages.name_and_author')
-: </strong> <em> {{ $taxon->name }} </em> {{ $taxon->author }} </p>
+@lang('messages.name')
+: </strong> <em> {{ $taxon->name }} </em></p>
+
+<p><strong>
+@lang('messages.author')
+:</strong>
+@if ($author)
+<a href="{{ url('persons/'.$author->id) }}">{{ $author->abbreviation }} </a>
+@else
+{{ $taxon->author }} 
+@endif
+</p>
+
+@if ( $bibref or $taxon->bibreference )
+<p><strong>
+@lang('messages.bibreference')
+:</strong>
+@if ($bibref)
+<a href="{{ url('bibreferences/'.$bibref->id) }}">{{ $bibref->bibkey }} </a>
+@else
+{{ $taxon->bibreference }} 
+@endif
+</p>
+@endif
+
 		    <p><strong>
 @lang('messages.level')
 : </strong> 
 @lang ('levels.tax.' . $taxon->level)
 </p>
+
+
+<p><strong>
+@lang('messages.valid_status')
+: </strong> 
+@if ($taxon->valid) 
+@lang ('messages.isvalid')
+@else
+        @lang ('messages.notvalid')
+@endif
+</p>
+
+
 @if ($taxon->notes) 
 		    <p><strong>
 @lang('messages.level')
 : </strong> {{$taxon->notes}}
 </p>
 @endif
+
 @can ('update', $taxon)
 			    <div class="col-sm-6">
 				<a href="{{ url('taxons/'. $taxon->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">

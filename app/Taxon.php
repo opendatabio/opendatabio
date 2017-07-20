@@ -9,7 +9,7 @@ use DB;
 class Taxon extends Node
 {
         protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
-                'bibreference', 'bibreference_id'];
+                'bibreference', 'bibreference_id', 'parent_id'];
         // for use in selects, lists the most common tax levels
         static public function TaxLevels() { 
                 return [0, 30, 60, 70, 90, 100, 120, 130, 150, 180, 210, 220, 240, 270]; 
@@ -52,5 +52,12 @@ class Taxon extends Node
         public function senior() {
                 return $this->belongsTo('App\Taxon', 'senior_id');
         }
+/*        public function externalrefs() {
+                return $this->hasMany('App\TaxonExternal', 'taxon_id');
+        }
+        public function mobot_key() {
+            return 0;
+        }
+ */
     //
 }

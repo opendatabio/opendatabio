@@ -102,7 +102,7 @@
     <div class="col-md-6 col-md-offset-3">
         <div class="checkbox">
             <label>
-                <input type="checkbox" name="valid" {{ old('valid', isset($taxon) ? $taxon->valid : null ) ? 'checked' : '' }}>
+                <input type="checkbox" name="valid" id="valid" {{ old('valid', isset($taxon) ? $taxon->valid : null ) ? 'checked' : '' }}>
 @lang('messages.valid')
 
             </label>
@@ -163,3 +163,6 @@
     </div>
   </div>
 </div>
+
+<!-- hidden apis -->
+<!--input type="hidden" id="mobot" name="mobot" value="{{ old('mobot', isset($taxon) ? $taxon->mobot_key : null) }}"-->

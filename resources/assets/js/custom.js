@@ -85,7 +85,15 @@ $(document).ready(function(){
 					// ONLY removes the error if request is success
 					$( "#ajax-error" ).collapse("hide");
 					$("#level").val(data.apidata[0]);
-                        // TODO: other stuff
+					$("#author").val(data.apidata[1]);
+                        if (data.apidata[2]) {
+					$("#valid").prop('checked', true);
+                        } else {
+					$("#valid").prop('checked', false);
+                        }
+					$("#bibreference").val(data.apidata[3]);
+					$("#parent_id").val(data.apidata[4]);
+					$("#senior_id").val(data.apidata[5]);
 				}
 			},
 			error: function(e){ 

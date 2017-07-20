@@ -29,7 +29,13 @@
 <div id="ajax-error" class="collapse alert alert-danger">
 @lang('messages.whoops')
 </div>
+@if (isset($taxon))
+		    <form action="{{ url('taxons/' . $taxon->id)}}" method="POST" class="form-horizontal">
+{{ method_field('PUT') }}
+
+@else
 		    <form action="{{ url('taxons')}}" method="POST" class="form-horizontal">
+@endif
 		    <input type="hidden" name="route-url" value="{{ route('checkapis') }}">
 		     {{ csrf_field() }}
 @include ('taxons.form')
