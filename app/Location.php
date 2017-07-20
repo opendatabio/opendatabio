@@ -86,7 +86,6 @@ class Location extends Node
 			$pos = strpos($element, ' ');
 			$element = ['x' => substr($element,0, $pos), 'y' => substr($element, $pos+1)];
 		}
-		Log::info(sizeof($array));
 		if (sizeof($array) > 1500) {
 			$this->isSimplified = true;
 			// TODO: provide a better simplification for this, such as Douglas-Peucker
@@ -101,7 +100,6 @@ class Location extends Node
 			$array = $result;
 		}
 
-		Log::info(sizeof($array));
 		$this->geom_array = $array;
 		return $array;
 	}

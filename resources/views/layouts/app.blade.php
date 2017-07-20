@@ -49,6 +49,9 @@
 			<li><a href="{{ route('persons.index') }}">
 @lang('messages.persons')
 </a></li>
+			<li><a href="{{ route('taxons.index') }}">
+@lang('messages.taxons')
+</a></li>
 			<li><a href="{{ route('references.index') }}">
 @lang('messages.references')
 </a></li>

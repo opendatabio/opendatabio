@@ -36,6 +36,8 @@ Route::resource('references', 'BibReferenceController');
 Route::post('herbaria/checkih', 'HerbariumController@checkih')->name('checkih');
 Route::resource('herbaria', 'HerbariumController', ['only' => ['index', 'show', 'store', 'destroy']]);
 Route::resource('locations', 'LocationController');
+Route::post('taxons/checkapis', 'TaxonController@checkapis')->name('checkapis');
+Route::resource('taxons', 'TaxonController');
 # Users can be resources for the admin
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 
