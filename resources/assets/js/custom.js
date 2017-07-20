@@ -62,6 +62,39 @@ $(document).ready(function(){
 			}
 		})
 	});
+	/** Ajax handling for registering taxons */
+	$("#checkapis").click(function(e) {
+		$( "#spinner" ).css('display', 'inline-block');
+		$.ajaxSetup({ // sends the cross-forgery token!
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			}
+		})
+		e.preventDefault(); // does not allow the form to submit
+		$.ajax({
+			type: "POST",
+			url: $('input[name="route-url"]').val(),
+			dataType: 'json',
+			data: {'name': $('input[name="name"]').val()},
+			success: function (data) {
+				$( "#spinner" ).hide();
+				if ("error" in data) {
+					$( "#ajax-error" ).collapse("show");
+					$( "#ajax-error" ).text(data.error);
+				} else {
+					// ONLY removes the error if request is success
+					$( "#ajax-error" ).collapse("hide");
+					$("#level").val(data.apidata[0]);
+                        // TODO: other stuff
+				}
+			},
+			error: function(e){ 
+				$( "#spinner" ).hide();
+				$( "#ajax-error" ).collapse("show");
+				$( "#ajax-error" ).text('Error sending AJAX request');
+			}
+		})
+	});
 
 	/** For Location create and edit pages. The available fields change with changes on adm_level.
 	 * The "vel" parameter determines the velocity in which the animation is made. **/

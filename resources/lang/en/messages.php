@@ -159,4 +159,5 @@ remove the job information from the database.',
   'movenotpossible' => 'Impossible to move node to this parent.',
   'location_map_error' => 'Error loading the map for this location...',
   'simplified_map' => 'This map was simplified for display...',
+  'hint_taxon_name' => 'Enter the full name of the taxon, including subspecies or variety, but without author. Ex: "Licaria cannella"',
 );

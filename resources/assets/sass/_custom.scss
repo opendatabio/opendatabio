@@ -29,3 +29,10 @@ button.unstyle:hover {
 
 // used in Location screens
 .form-control.latlongpicker { display:inline; width: 20%; }
+
+// used in forms to group input in a relevant way
+.group-together {
+    border: 1px #7f8284 dashed;
+    padding: 5px;
+    margin-right: 5px;
+}

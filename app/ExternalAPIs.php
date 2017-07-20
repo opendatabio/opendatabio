@@ -2,6 +2,7 @@
 
 namespace App;
 use GuzzleHttp\Client as Guzzle;
+use GuzzleHttp\Exception\ClientException;
 
 class ExternalAPIs
 {
@@ -49,10 +50,14 @@ class ExternalAPIs
 		$apikey = config('app.mobot_api_key');
 		$base_uri = "http://services.tropicos.org/";
 		$client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
-		## STEP ONE, search for name summary
-		$response = $client->request('GET', 
-			"Name/Search?name=$searchstring&type=exact&apikey=$apikey&format=json"
-		);
+        ## STEP ONE, search for name summary
+        try {
+                $response = $client->request('GET', 
+                        "Name/Search?name=$searchstring&type=exact&apikey=$apikey&format=json"
+                );
+        } catch (ClientException $e) {
+                return null; #FAILED 
+        }
 		if ($response->getStatusCode() != 200) 
 			return null; # FAILED
 		$answer = json_decode($response->getBody());
@@ -76,8 +81,6 @@ class ExternalAPIs
 			$flags = $flags | ExternalAPIs::MOBOT_NONE_SYNONYM;
 			return [$flags, $answer[0]];
 		}
-//		if (isset($synonym[0]->TotalRows > 1)
-//			$flags = $flags | ExternalAPIs::MOBOT_MULTIPLE_SYNONYM;
 		return [$flags, $answer[0], $synonym[0]->AcceptedName];
 	}
 }

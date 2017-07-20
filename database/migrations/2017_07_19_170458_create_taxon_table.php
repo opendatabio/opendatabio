@@ -19,7 +19,6 @@ class CreateTaxonTable extends Migration
                         $table->integer('level');
                         $table->boolean('valid')->default(0);
                         $table->text('notes')->nullable();
-                        $table->string('validreference')->nullable();
                         $table->integer('senior_id')->unsigned()->nullable();
                         $table->foreign('senior_id')->references('id')->on('taxons');
 
