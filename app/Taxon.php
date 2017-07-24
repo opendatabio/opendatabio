@@ -52,6 +52,9 @@ class Taxon extends Node
         public function senior() {
                 return $this->belongsTo('App\Taxon', 'senior_id');
         }
+        public function juniors() {
+                return $this->hasMany('App\Taxon', 'senior_id');
+        }
 /*        public function externalrefs() {
                 return $this->hasMany('App\TaxonExternal', 'taxon_id');
         }

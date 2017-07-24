@@ -11,6 +11,7 @@ use Response;
 use Lang;
 use Log;
 use Illuminate\Support\MessageBag;
+use App\DataTables\TaxonsDataTable;
 
 class TaxonController extends Controller
 {
@@ -19,8 +20,10 @@ class TaxonController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(TaxonsDataTable $dataTable)
     {
+	    return $dataTable->render('taxons.index', [
+    ]);
         //
     }
 

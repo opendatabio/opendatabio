@@ -79,22 +79,37 @@
                 </div>
 
                 <div class="panel-body">
-	@if ($taxon->getAncestors()->count())
-	@foreach ($taxon->getAncestors() as $ancestor)
-		<a href=" {{ url('taxons/'. $ancestor->id ) }} ">{{ $ancestor->name }} </a> &gt;
-	@endforeach
-	@endif
-	 {{ $taxon->name }}
-	 @if ($taxon->getDescendants()->count())
-	<ul>
-	 @foreach ($taxon->children as $child)
-		<li> <a href=" {{url('taxons/' . $child->id) }}"> {{ $child->name }} </a>
-			{{ $child->getDescendants()->count() ? '(+' . $child->getDescendants()->count() . ')' : ''}}
-		</li>
-@endforeach
-</ul>
-@endif
-
+        @if ($taxon->senior)
+        <p>
+        @lang ('messages.accepted_name'):
+        <a href=" {{url('taxons/' . $taxon->senior->id) }}"> {{ $taxon->senior->name }} </a>
+        </p>
+        @endif
+        @if ($taxon->juniors->count())
+        <p>
+        @lang ('messages.juniors'):
+        <ul>
+        @foreach ($taxon->juniors as $junior)
+        <li><a href=" {{ url('taxons/'. $junior->id ) }} ">{{ $junior->name }} </a> </li>
+        @endforeach
+        </ul>
+        @endif
+        @if ($taxon->getAncestors()->count())
+        @foreach ($taxon->getAncestors() as $ancestor)
+        <a href=" {{ url('taxons/'. $ancestor->id ) }} ">{{ $ancestor->name }} </a> &gt;
+        @endforeach
+        @endif
+        {{ $taxon->name }}
+        @if ($taxon->getDescendants()->count())
+        <ul>
+        @foreach ($taxon->children as $child)
+        <li> <a href=" {{url('taxons/' . $child->id) }}"> {{ $child->name }} </a>
+            {{ $child->getDescendants()->count() ? '(+' . $child->getDescendants()->count() . ')' : ''}}
+        </li>
+        @endforeach
+        </ul>
+        @endif
+        
     
 
                 </div>
