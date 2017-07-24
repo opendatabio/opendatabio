@@ -10,6 +10,7 @@ use App\ExternalAPIs;
 use Response;
 use Lang;
 use Log;
+use Validator;
 use Illuminate\Support\MessageBag;
 use App\DataTables\TaxonsDataTable;
 
@@ -45,6 +46,43 @@ class TaxonController extends Controller
         //
     }
 
+    public function customValidate(Request $request) {
+	    $rules = [
+		    'name' => 'required|string|max:191',
+		    'level' => 'required|integer',
+	    ];
+	    $validator = Validator::make($request->all(), $rules);
+        if ($request->parent_id) {
+                $parent = Taxon::findOrFail($request->parent_id);
+                $validator->after(function ($validator) use ($request, $parent) {
+                        if ($request->level <= $parent->level) 
+                                $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_level_error'));
+                });
+        }
+        if ($request->senior_id) {
+                $senior = Taxon::findOrFail($request->parent_id);
+                $validator->after(function ($validator) use ($request, $senior) {
+                        if (abs($request->level - $senior->level) > 20)
+                                $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_level_error'));
+                        if($request->valid == "on")
+                                $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_valid_error'));
+                });
+        }
+        if ($request->author_id) {
+                $validator->after(function ($validator) use ($request) {
+                        if($request->author)
+                                $validator->errors()->add('author_id', Lang::get('messages.taxon_author_error'));
+                });
+        }
+        if ($request->bibreference_id) {
+                $validator->after(function ($validator) use ($request) {
+                        if($request->bibreference)
+                                $validator->errors()->add('bibreference_id', Lang::get('messages.taxon_bibref_error'));
+                });
+        }
+            return $validator;
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -54,21 +92,20 @@ class TaxonController extends Controller
     public function store(Request $request)
     {
             $this->authorize('create', Taxon::class);
-            //TODO: validate parent level < taxon level
-            //      validate senior level == taxon level
-            //      validate: not valid if senior present
-            //      validate: author name OR id, not both
-            //      validate: bib ref OR id, not both
-        $this->validate($request, [
-                'name' => 'required|max:191',
-                'level' => 'required',
-        ]);
+	    $validator = $this->customValidate($request);
+	    if ($validator->fails()) {
+		    return redirect()->back()
+			    ->withErrors($validator)
+			    ->withInput();
+	    }
             // Laravel sends checkbox as On??
             if ($request['valid'] == "on") {
                     $request['valid'] = true;
             } else {
                     $request['valid'] = false;
             }
+        // always saves the name with only the first letter capitalized
+        $request['name'] = ucfirst($request['name']);
 
             Taxon::create($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
                     'author_id', 'bibreference', 'bibreference_id']));
@@ -136,21 +173,19 @@ class TaxonController extends Controller
     {
             $taxon = Taxon::findOrFail($id);
             $this->authorize('update', $taxon);
-            //TODO: validate parent level < taxon level
-            //      validate senior level == taxon level
-            //      validate: not valid if senior present
-            //      validate: author name OR id, not both
-            //      validate: bib ref OR id, not both
-        $this->validate($request, [
-                'name' => 'required|max:191',
-                'level' => 'required',
-        ]);
+	    $validator = $this->customValidate($request);
+	    if ($validator->fails()) {
+		    return redirect()->back()
+			    ->withErrors($validator)
+			    ->withInput();
+	    }
             // Laravel sends checkbox as On??
             if ($request['valid'] == "on") {
                     $request['valid'] = true;
             } else {
                     $request['valid'] = false;
             }
+        $request['name'] = ucfirst($request['name']);
 
             $taxon->update($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
                     'author_id', 'bibreference', 'bibreference_id']));
@@ -194,6 +229,16 @@ class TaxonController extends Controller
             $rank = Taxon::getRank($mobotdata[1]->RankAbbreviation);
             $valid = $mobotdata[1]->NomenclatureStatusName == "Legitimate";
 
+            $senior = null;
+            if (sizeof($mobotdata) == 3) { // we have a valid senior reference
+                    $tosenior = Taxon::where('name', $mobotdata[2]->ScientificName)->first();
+                    if ($tosenior) {
+                            $senior = $tosenior->id;
+                    } else {
+                            $bag->add('senior_id', Lang::get('messages.senior_not_registered', ['name' => $mobotdata[2]->ScientificName]));
+                    }
+            }
+            Log::info($bag);
             return Response::json(['bag' => $bag, 
                     'apidata' => [
                             $rank,
@@ -201,7 +246,7 @@ class TaxonController extends Controller
                             $valid,
                             $mobotdata[1]->DisplayReference . " " . $mobotdata[1]->DisplayDate,
                             null, // TODO: what to do here???
-                            null, // TODO: idem
+                            $senior, 
                     ]
             ]);
     }

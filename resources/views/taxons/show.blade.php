@@ -103,7 +103,9 @@
         @if ($taxon->getDescendants()->count())
         <ul>
         @foreach ($taxon->children as $child)
-        <li> <a href=" {{url('taxons/' . $child->id) }}"> {{ $child->name }} </a>
+        <li> <a href=" {{url('taxons/' . $child->id) }}"> <?php 
+            if (!$child->valid) echo "**"; echo $child->name;
+        ?> </a>
             {{ $child->getDescendants()->count() ? '(+' . $child->getDescendants()->count() . ')' : ''}}
         </li>
         @endforeach
