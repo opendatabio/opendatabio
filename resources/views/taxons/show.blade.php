@@ -56,7 +56,7 @@
 
 @if ($taxon->notes) 
 		    <p><strong>
-@lang('messages.level')
+@lang('messages.notes')
 : </strong> {{$taxon->notes}}
 </p>
 @endif

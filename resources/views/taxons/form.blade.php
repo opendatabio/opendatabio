@@ -164,5 +164,14 @@
   </div>
 </div>
 
+<!-- notes --> 
+<div class="form-group">
+    <label for="notes" class="col-sm-3 control-label">
+@lang('messages.notes')
+</label>
+	    <div class="col-sm-6">
+	<textarea name="notes" id="notes" class="form-control">{{ old('notes', isset($taxon) ? $taxon->notes : null) }}</textarea>
+            </div>
+</div>
 <!-- hidden apis -->
 <!--input type="hidden" id="mobot" name="mobot" value="{{ old('mobot', isset($taxon) ? $taxon->mobot_key : null) }}"-->

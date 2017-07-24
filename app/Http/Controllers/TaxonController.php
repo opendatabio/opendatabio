@@ -60,12 +60,14 @@ class TaxonController extends Controller
                 });
         }
         if ($request->senior_id) {
-                $senior = Taxon::findOrFail($request->parent_id);
+                $senior = Taxon::findOrFail($request->senior_id);
                 $validator->after(function ($validator) use ($request, $senior) {
                         if (abs($request->level - $senior->level) > 20)
                                 $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_level_error'));
                         if($request->valid == "on")
                                 $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_valid_error'));
+                        if(! $senior->valid)
+                                $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_invalid_error'));
                 });
         }
         if ($request->author_id) {
@@ -108,7 +110,7 @@ class TaxonController extends Controller
         $request['name'] = ucfirst($request['name']);
 
             Taxon::create($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
-                    'author_id', 'bibreference', 'bibreference_id']));
+                    'author_id', 'bibreference', 'bibreference_id', 'notes']));
             
             return redirect('taxons')->withStatus(Lang::get('messages.stored'));
             //TODO: add MOBOT key
@@ -188,7 +190,7 @@ class TaxonController extends Controller
         $request['name'] = ucfirst($request['name']);
 
             $taxon->update($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
-                    'author_id', 'bibreference', 'bibreference_id']));
+                    'author_id', 'bibreference', 'bibreference_id', 'notes']));
             // TODO: external keys
             return redirect('taxons')->withStatus(Lang::get('messages.saved'));
     }
