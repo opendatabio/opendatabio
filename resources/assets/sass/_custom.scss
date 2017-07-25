@@ -36,3 +36,18 @@ button.unstyle:hover {
     padding: 5px;
     margin-right: 5px;
 }
+
+// used for MultipleSelectors (specialists in Edit Person)
+.multipleSelector {
+    display: inline-block;
+    border: 1px dashed;
+    padding: 2px;
+    margin: 5px;
+    cursor: pointer;
+}
+.multipleSelector:after {
+  font-family: "Glyphicons Halflings";
+  content: "\e014"; /* Code for remove */
+  padding-left: 3px;
+}
+

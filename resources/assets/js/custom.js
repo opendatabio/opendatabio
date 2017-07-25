@@ -144,5 +144,20 @@ $(document).ready(function(){
 		setLocationFields(400);
 	});
 	setLocationFields(0);
-		
+
+    /** For use in multiple selectors. Right now used in Edit Person for specialists */
+    // Original: http://odyniec.net/articles/multiple-select-fields/
+        $("#multi-select").change(function()
+                {
+                        var $ul = $('#specialist_ul');
+                        if ( $(this).val() === "") return;
+                        if ($ul.find('input[value=' + $(this).val() + ']').length == 0)
+                                $ul.append('<span class="multipleSelector" onclick="$(this).remove();">' +
+                                        '<input type="hidden" name="specialist[]" value="' +
+                                        $(this).val() + '" /> ' +
+                                        $(this).find('option:selected').text() + '</span>');
+                });
+        $(".multipleSelector").click(function() {
+                $(this).remove();
+        });
 });
