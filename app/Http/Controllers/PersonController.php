@@ -10,6 +10,7 @@ use App\Taxon;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Input;
 use App\DataTables\PersonsDataTable;
+use Log;
 
 class PersonController extends Controller
 {
@@ -114,8 +115,10 @@ class PersonController extends Controller
 	    $person = Person::findOrFail($id);
 	    $this->authorize('update', $person);
 	    $this->checkValid($request, $id);
-	    $person->update($request->all());
-	return redirect('persons')->withStatus(Lang::get('messages.saved'));
+        $person->update($request->only(['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id']));
+        // add/remove specialists
+        $person->taxons()->sync($request['specialist']);
+        return redirect('persons')->withStatus(Lang::get('messages.saved'));
     }
 
     /**

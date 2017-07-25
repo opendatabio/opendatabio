@@ -58,7 +58,7 @@
   </div>
 </div>
 
-
+@if (isset($person))
 <div class="form-group">
     <label for="specialist" class="col-sm-3 control-label">
 @lang('messages.specialist_in')
@@ -68,14 +68,13 @@
 <!-- already specialist in -->
 <span id = "specialist_ul">
     @foreach ($person->taxons as $taxon)
-    <span onclick="this.parentNode.removeChild(this);" style="border: 1px dashed; padding: 3px; cursor: pointer; ">
+    <span class="multipleSelector">
   <input type="hidden" name="specialist[]" value="{{ $taxon->id  }}" />
   {{$taxon->name}}
-    <i class="glyphicon glyphicon-remove"></i>
  </span>
     @endforeach
 </span>
-	<select name="specialist_select" id="specialist_select" class="form-control" onchange="makeSelectList(this)" >
+	<select name="multi-select" id="multi-select" class="form-control">
 		<option value='' >&nbsp;</option>
 	@foreach ($taxons as $taxon)
 		<option value="{{$taxon->id}}" >{{ $taxon->name }}</option>
@@ -88,18 +87,39 @@
     </div>
   </div>
 </div>
-
+@endif <!-- isset person -->
+<script src="http://localhost/opendatabio/js/app.js"></script>
 <script>
-function makeSelectList(select)
-{
-  var $ul = $('#specialist_ul');
-   
-  console.dir(
-      $(select).find('option:selected'));
-  if ($ul.find('input[value=' + $(select).val() + ']').length == 0)
-    $ul.append('<span class="multipleSelector" onclick="$(this).remove();">' +
-      '<input type="hidden" name="specialist[]" value="' + 
-      $(select).val() + '" /> ' +
-      $(select).find('option:selected').text() + '</span>');
-}
+// Thanks to http://odyniec.net/articles/multiple-select-fields/
+$(document).ready(function(){
+    $("#multi-select").change(function() 
+    {
+            var $ul = $('#specialist_ul');
+            if ( $(this).val() === "") return;
+            if ($ul.find('input[value=' + $(this).val() + ']').length == 0)
+                    $ul.append('<span class="multipleSelector" onclick="$(this).remove();">' +
+                    '<input type="hidden" name="specialist[]" value="' + 
+                    $(this).val() + '" /> ' +
+                    $(this).find('option:selected').text() + '</span>');
+    });
+    $(".multipleSelector").click(function() { 
+            $(this).remove();
+    });
+
+});
 </script>
+<style>
+.multipleSelector {
+    display: inline-block;
+    border: 1px dashed;
+    padding: 2px;
+    margin: 5px;
+    cursor: pointer;
+}
+.multipleSelector:after {
+  font-family: "Glyphicons Halflings";
+  content: "\e014"; /* Code for remove */
+  padding-left: 3px;
+}
+
+</style>
