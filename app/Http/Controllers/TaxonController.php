@@ -214,14 +214,16 @@ class TaxonController extends Controller
             $mobotdata = $apis->getMobot($request->name);
             if(is_null($mobotdata))
                     return Response::json(['error' => Lang::get('messages.mobot_error')]);
-            if($mobotdata[0] == 1)
+            if($mobotdata[0] == ExternalAPIs::MOBOT_NOT_FOUND)
                     return Response::json(['error' => Lang::get('messages.mobot_not_found')]);
+            // includes the messages in the return object
             $bag = new MessageBag;
-            // TODO: trata os infos do mobot dentro da message bag
+            if ($mobotdata[0] & ExternalAPIs::MOBOT_MULTIPLE_HITS)
+                    $bag->add('name', Lang::get('messages.mobot_multiple_hits'));
+            if ($mobotdata[0] & ExternalAPIs::MOBOT_NONE_SYNONYM)
+                    $bag->add('name', Lang::get('messages.mobot_none_synonym'));
 
             Log::info($mobotdata);
-
-            // estrutura do objeto de resposta:
             // 0 -> rank
             // 1 -> author
             // 2 -> valid
@@ -229,7 +231,11 @@ class TaxonController extends Controller
             // 4 -> parent
             // 5 -> senior
             $rank = Taxon::getRank($mobotdata[1]->RankAbbreviation);
-            $valid = $mobotdata[1]->NomenclatureStatusName == "Legitimate";
+            $valid = in_array($mobotdata[1]->NomenclatureStatusName, ["Legitimate", "nom. cons."]); 
+
+            Log::info("valid #$valid#");
+
+            $parent = null;
 
             $senior = null;
             if (sizeof($mobotdata) == 3) { // we have a valid senior reference
@@ -240,14 +246,13 @@ class TaxonController extends Controller
                             $bag->add('senior_id', Lang::get('messages.senior_not_registered', ['name' => $mobotdata[2]->ScientificName]));
                     }
             }
-            Log::info($bag);
             return Response::json(['bag' => $bag, 
                     'apidata' => [
                             $rank,
                             $mobotdata[1]->Author,
                             $valid,
                             $mobotdata[1]->DisplayReference . " " . $mobotdata[1]->DisplayDate,
-                            null, // TODO: what to do here???
+                            $parent,
                             $senior, 
                     ]
             ]);

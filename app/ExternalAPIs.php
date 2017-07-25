@@ -9,9 +9,7 @@ class ExternalAPIs
 	private $proxystring = "";
 	public const MOBOT_NOT_FOUND = 1;
 	public const MOBOT_MULTIPLE_HITS = 2;
-	public const MOBOT_SYNONYM = 4;
-	public const MOBOT_MULTIPLE_SYNONYM = 8;
-	public const MOBOT_NONE_SYNONYM = 16;
+	public const MOBOT_NONE_SYNONYM = 4;
 
 	public function __construct() 
 	{
@@ -67,10 +65,11 @@ class ExternalAPIs
 			$flags = $flags | ExternalAPIs::MOBOT_MULTIPLE_HITS;
 		# Check if this name is accepted
 		if ($answer[0]->NomenclatureStatusName == "Legitimate" 
-	         or $answer[0]->NomenclatureStatusName == "No opinion")
+                or $answer[0]->NomenclatureStatusName == "No opinion"
+                or $answer[0]->NomenclatureStatusName == "nom. cons."
+        )
 			return [$flags, $answer[0]];
 		## STEP TWO, look for valid synonyms
-		$flags = $flags | ExternalAPIs::MOBOT_SYNONYM;
 		$response = $client->request('GET', 
 			"Name/". $answer[0]->NameId  ."/AcceptedNames?apikey=$apikey&format=json"
 		);
