@@ -55,6 +55,10 @@ class Taxon extends Node
         public function juniors() {
                 return $this->hasMany('App\Taxon', 'senior_id');
         }
+        // For specialists
+        public function persons() {
+                return $this->belongsToMany('App\Person');
+        }
 /*        public function externalrefs() {
                 return $this->hasMany('App\TaxonExternal', 'taxon_id');
         }

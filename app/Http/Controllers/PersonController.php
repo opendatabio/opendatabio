@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 
 use App\Person;
 use App\Herbarium;
+use App\Taxon;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Input;
 use App\DataTables\PersonsDataTable;
@@ -91,7 +92,14 @@ class PersonController extends Controller
      */
     public function edit($id)
     {
-	 return redirect('persons/'.$id);
+	    $person = Person::findOrFail($id);
+	    $herbaria = Herbarium::all();
+        $taxons = Taxon::all();
+	    return view('persons.edit', [
+		    'person' => $person,
+            'herbaria' => $herbaria,
+            'taxons' => $taxons,
+	    ]);
     }
 
     /**

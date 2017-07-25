@@ -40,4 +40,9 @@ class Person extends Model
     {
         return $this->belongsTo('App\Herbarium');
     }
+    // for specialist taxons
+    public function taxons()
+    {
+            return $this->belongsToMany('App\Taxon');
+    }
 }

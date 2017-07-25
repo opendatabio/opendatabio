@@ -19,7 +19,6 @@ class PersonPolicy
      */
     public function view(User $user, Person $person)
     {
-	Log::info("view??");
         // everyone can view persons
 	    return true;
     }

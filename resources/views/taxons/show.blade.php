@@ -53,6 +53,17 @@
 @endif
 </p>
 
+@if ($taxon->persons->count())
+<p><strong>
+@lang('messages.specialists')
+: </strong> 
+<ul>
+@foreach ($taxon->persons as $person)
+<li><a href="{{ url('persons/' . $person->id ) }}">{{ $person->full_name }}</a></li>
+@endforeach
+</ul>
+</p>
+@endif
 
 @if ($taxon->notes) 
 		    <p><strong>
