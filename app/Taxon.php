@@ -62,8 +62,10 @@ class Taxon extends Node
         public function externalrefs() {
                 return $this->hasMany('App\TaxonExternal', 'taxon_id');
         }
-        public function mobot() {
-                return  $this->externalrefs()->where('name', 'Mobot');
+        public function getMobotAttribute() {
+                $ref = $this->externalrefs()->where('name', 'Mobot');
+                if ($ref->count())
+                        return $ref->first()->reference;
         }
  
     //

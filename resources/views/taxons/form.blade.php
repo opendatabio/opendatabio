@@ -171,7 +171,7 @@
 </label>
         <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="mobotkey" id="mobotkey" class="form-control" value="{{ old('mobotkey', isset($taxon) ? $taxon->mobot->first()->reference : null) }}">
+	<input type="text" name="mobotkey" id="mobotkey" class="form-control" value="{{ old('mobotkey', isset($taxon) ? $taxon->mobot : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint7" class="panel-collapse collapse">
@@ -189,5 +189,3 @@
 	<textarea name="notes" id="notes" class="form-control">{{ old('notes', isset($taxon) ? $taxon->notes : null) }}</textarea>
             </div>
 </div>
-<!-- hidden apis -->
-<!--input type="hidden" id="mobot" name="mobot" value="{{ old('mobot', isset($taxon) ? $taxon->mobot_key : null) }}"-->

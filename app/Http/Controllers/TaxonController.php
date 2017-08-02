@@ -198,7 +198,7 @@ class TaxonController extends Controller
             $taxon->update($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
                     'author_id', 'bibreference', 'bibreference_id', 'notes']));
             // update external keys
-            $refs = $taxon->mobot();
+            $refs = $taxon->externalrefs()->where('name', 'Mobot');
             if ($request['mobotkey']) {
                     if ($refs->count()) {
                             // update
@@ -208,7 +208,7 @@ class TaxonController extends Controller
                             ]);
                     } else {
                             // create
-                            $tax->externalrefs()->create([
+                            $taxon->externalrefs()->create([
                                     'name' => 'Mobot',
                                     'reference' => $request['mobotkey'],
                             ]);

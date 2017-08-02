@@ -7,8 +7,8 @@
                 <div class="panel-heading">
                     @lang('messages.taxon')
 <div style="float:right;">
-@if ($taxon->mobot()->count())
-<a href="http://tropicos.org/Name/{{$taxon->mobot()->first()->reference}}"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
+@if ($taxon->mobot)
+<a href="http://tropicos.org/Name/{{$taxon->mobot}}"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
 @endif
                 </div>
 
