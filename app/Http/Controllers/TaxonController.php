@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Taxon;
+use App\TaxonExternal;
 use App\Person;
 use App\BibReference;
 use App\ExternalAPIs;
@@ -109,12 +110,17 @@ class TaxonController extends Controller
         // always saves the name with only the first letter capitalized
         $request['name'] = ucfirst($request['name']);
 
-            Taxon::create($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
-                    'author_id', 'bibreference', 'bibreference_id', 'notes']));
+        $taxon = Taxon::create($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
+                'author_id', 'bibreference', 'bibreference_id', 'notes']));
+        if ($request['mobotkey']) {
+                TaxonExternal::create([
+                        'taxon_id' => $taxon->id,
+                        'name' => 'Mobot',
+                        'reference' => $request['mobotkey'],
+                ]);
+        }
             
             return redirect('taxons')->withStatus(Lang::get('messages.stored'));
-            //TODO: add MOBOT key
-        //
     }
 
     /**
@@ -175,23 +181,41 @@ class TaxonController extends Controller
     {
             $taxon = Taxon::findOrFail($id);
             $this->authorize('update', $taxon);
-	    $validator = $this->customValidate($request);
-	    if ($validator->fails()) {
-		    return redirect()->back()
-			    ->withErrors($validator)
-			    ->withInput();
-	    }
+            $validator = $this->customValidate($request);
+            if ($validator->fails()) {
+                    return redirect()->back()
+                            ->withErrors($validator)
+                            ->withInput();
+            }
             // Laravel sends checkbox as On??
             if ($request['valid'] == "on") {
                     $request['valid'] = true;
             } else {
                     $request['valid'] = false;
             }
-        $request['name'] = ucfirst($request['name']);
+            $request['name'] = ucfirst($request['name']);
 
             $taxon->update($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
                     'author_id', 'bibreference', 'bibreference_id', 'notes']));
-            // TODO: external keys
+            // update external keys
+            $refs = $taxon->mobot();
+            if ($request['mobotkey']) {
+                    if ($refs->count()) {
+                            // update
+                            $refs->update([
+                                    'name' => 'Mobot',
+                                    'reference' => $request['mobotkey'],
+                            ]);
+                    } else {
+                            // create
+                            $tax->externalrefs()->create([
+                                    'name' => 'Mobot',
+                                    'reference' => $request['mobotkey'],
+                            ]);
+                    }
+            } else {
+                    $refs->first()->delete();
+            }
             return redirect('taxons')->withStatus(Lang::get('messages.saved'));
     }
 
@@ -230,6 +254,7 @@ class TaxonController extends Controller
             // 3 -> reference
             // 4 -> parent
             // 5 -> senior
+            // 6 -> mobot key
             $rank = Taxon::getRank($mobotdata[1]->RankAbbreviation);
             $valid = in_array($mobotdata[1]->NomenclatureStatusName, ["Legitimate", "nom. cons."]); 
 
@@ -254,6 +279,7 @@ class TaxonController extends Controller
                             $mobotdata[1]->DisplayReference . " " . $mobotdata[1]->DisplayDate,
                             $parent,
                             $senior, 
+                            $mobotdata[1]->NameId,
                     ]
             ]);
     }

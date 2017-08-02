@@ -14,9 +14,11 @@ class TaxonExternalTable extends Migration
     public function up()
     {
         Schema::create('taxon_external', function (Blueprint $table) {
+            $table->increments('id');
             $table->integer('taxon_id')->unsigned();
+            $table->foreign('taxon_id')->references('id')->on('taxons');
             $table->string('name');
-            $table->primary(['name', 'taxon_id']);
+            $table->unique(['name', 'taxon_id']);
             $table->string('reference');
             $table->timestamps();
         });

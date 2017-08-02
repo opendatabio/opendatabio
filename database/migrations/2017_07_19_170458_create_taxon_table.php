@@ -37,6 +37,8 @@ class CreateTaxonTable extends Migration
                         $table->integer('rgt')->unsigned()->default(0);
                         $table->integer('depth')->nullable();
 
+                        $table->unique(['name', 'parent_id']);
+
                         $table->timestamps();
                 });
         }

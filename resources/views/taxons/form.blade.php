@@ -164,6 +164,22 @@
   </div>
 </div>
 
+<!-- External refs -->
+<div class="form-group">
+    <label for="mobotkey" class="col-sm-3 control-label">
+@lang('messages.mobot_key')
+</label>
+        <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+	<input type="text" name="mobotkey" id="mobotkey" class="form-control" value="{{ old('mobotkey', isset($taxon) ? $taxon->mobot->first()->reference : null) }}">
+            </div>
+  <div class="col-sm-12">
+    <div id="hint7" class="panel-collapse collapse">
+	@lang ('messages.hint_mobot_key')
+    </div>
+  </div>
+</div>
+
 <!-- notes --> 
 <div class="form-group">
     <label for="notes" class="col-sm-3 control-label">

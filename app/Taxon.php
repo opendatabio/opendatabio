@@ -59,12 +59,12 @@ class Taxon extends Node
         public function persons() {
                 return $this->belongsToMany('App\Person');
         }
-/*        public function externalrefs() {
+        public function externalrefs() {
                 return $this->hasMany('App\TaxonExternal', 'taxon_id');
         }
-        public function mobot_key() {
-            return 0;
+        public function mobot() {
+                return  $this->externalrefs()->where('name', 'Mobot');
         }
- */
+ 
     //
 }

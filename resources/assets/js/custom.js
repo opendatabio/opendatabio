@@ -106,6 +106,7 @@ $(document).ready(function(){
                                         $("#bibreference").val(data.apidata[3]);
                                         $("#parent_id").val(data.apidata[4]);
                                         $("#senior_id").val(data.apidata[5]);
+                                        $("#mobotkey").val(data.apidata[6]);
                                 }
                         },
                         error: function(e){ 

@@ -6,6 +6,10 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.taxon')
+<div style="float:right;">
+@if ($taxon->mobot()->count())
+<a href="http://tropicos.org/Name/{{$taxon->mobot()->first()->reference}}"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
+@endif
                 </div>
 
 		<div class="panel-body">
