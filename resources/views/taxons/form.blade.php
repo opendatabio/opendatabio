@@ -5,7 +5,7 @@
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="name" id="name" class="form-control" value="{{ old('name', isset($taxon) ? $taxon->name : null) }}">
+	<input type="text" name="name" id="name" class="form-control" value="{{ old('name', isset($taxon) ? $taxon->fullname : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint1" class="panel-collapse collapse">
@@ -61,7 +61,7 @@
         <option value = '' ></option>
 	@foreach ($taxons as $parent)
 		<option value="{{$parent->id}}" {{ $parent->id == $selected ? 'selected' : '' }}>
-            {{ $parent->name }}
+            {{ $parent->fullname }}
 		</option>
 	@endforeach
 	</select>
@@ -86,7 +86,7 @@
         <option value = '' ></option>
 	@foreach ($taxons as $senior)
 		<option value="{{$senior->id}}" {{ $senior->id == $selected ? 'selected' : '' }}>
-            {{ $senior->name }}
+            {{ $senior->fullname }}
 		</option>
 	@endforeach
 	</select>

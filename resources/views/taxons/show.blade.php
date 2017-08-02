@@ -16,7 +16,7 @@
                     <!-- Display Validation Errors -->
 		    <p><strong>
 @lang('messages.name')
-: </strong> <em> {{ $taxon->name }} </em></p>
+: </strong> <em> {{ $taxon->fullname }} </em></p>
 
 <p><strong>
 @lang('messages.author')
@@ -97,7 +97,7 @@
         @if ($taxon->senior)
         <p>
         @lang ('messages.accepted_name'):
-        <a href=" {{url('taxons/' . $taxon->senior->id) }}"> {{ $taxon->senior->name }} </a>
+        <a href=" {{url('taxons/' . $taxon->senior->id) }}"> {{ $taxon->senior->fullname }} </a>
         </p>
         @endif
         @if ($taxon->juniors->count())
@@ -105,21 +105,21 @@
         @lang ('messages.juniors'):
         <ul>
         @foreach ($taxon->juniors as $junior)
-        <li><a href=" {{ url('taxons/'. $junior->id ) }} ">{{ $junior->name }} </a> </li>
+        <li><a href=" {{ url('taxons/'. $junior->id ) }} ">{{ $junior->fullname }} </a> </li>
         @endforeach
         </ul>
         @endif
         @if ($taxon->getAncestors()->count())
         @foreach ($taxon->getAncestors() as $ancestor)
-        <a href=" {{ url('taxons/'. $ancestor->id ) }} ">{{ $ancestor->name }} </a> &gt;
+        <a href=" {{ url('taxons/'. $ancestor->id ) }} ">{{ $ancestor->fullname }} </a> &gt;
         @endforeach
         @endif
-        {{ $taxon->name }}
+        {{ $taxon->fullname }}
         @if ($taxon->getDescendants()->count())
         <ul>
         @foreach ($taxon->children as $child)
         <li> <a href=" {{url('taxons/' . $child->id) }}"> <?php 
-            if (!$child->valid) echo "**"; echo $child->name;
+            if (!$child->valid) echo "**"; echo $child->fullname;
         ?> </a>
             {{ $child->getDescendants()->count() ? '(+' . $child->getDescendants()->count() . ')' : ''}}
         </li>

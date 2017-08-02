@@ -22,7 +22,7 @@ class TaxonsDataTable extends DataTable
 		    return '<a href="' . url('taxons/' . $taxon->id) . '">' . 
                     $valid . 
                     // Needs to escape special chars, as this will be passed RAW
-			    htmlspecialchars($taxon->name) . '</a>';
+			    htmlspecialchars($taxon->fullname) . '</a>';
 	    }) 
 	    ->editColumn('level', function($taxon) { return Lang::get('levels.tax.' . $taxon->level); })
 //	    ->addColumn('full_name', function($location) {return $location->full_name;})
@@ -53,6 +53,7 @@ class TaxonsDataTable extends DataTable
 		    ->removeColumn('id') // need to remove it from showing HERE
 		    ->removeColumn('rgt') // need to remove it from showing HERE
 		    ->removeColumn('lft') // need to remove it from showing HERE
+		    ->removeColumn('parent_id') // need to remove it from showing HERE
 		    ->removeColumn('valid') // need to remove it from showing HERE
 //		    ->addColumn(['data' => 'full_name', 'title' => 'Full name', 'searchable' => true])
                     ->parameters([
@@ -78,6 +79,7 @@ class TaxonsDataTable extends DataTable
         return [
             'id',
             'name',
+            'parent_id',
 	    'rgt',
 	    'lft',
         'level',

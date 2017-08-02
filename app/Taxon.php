@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Baum\Node;
 use DB;
+use Log;
 
 class Taxon extends Node
 {
@@ -13,6 +14,24 @@ class Taxon extends Node
         // for use in selects, lists the most common tax levels
         static public function TaxLevels() { 
                 return [0, 30, 60, 70, 90, 100, 120, 130, 150, 180, 210, 220, 240, 270]; 
+        }
+
+        public function setFullnameAttribute($value) {
+                if ($this->level <= 200) 
+                        $this->name = $value;
+                if ($this->level >= 210) // sp. or below, strips evertyhing before the last space
+                        $this->name = trim(substr($value, strrpos($value, ' ') - strlen($value)));
+        }
+        public function getFullnameAttribute() {
+                if ($this->level < 200) return $this->name;
+                if (is_null($this->parent_id)) {
+                        Log::warning('Species or lower registered without parent! ' . $this->name);
+                        return $this->name;
+                }
+                if ($this->level == 210) return $this->parent->fullname . " " . $this->name;
+                if ($this->level == 220) return $this->parent->fullname . " subsp. " . $this->name;
+                if ($this->level == 240) return $this->parent->fullname . " var. " . $this->name;
+                if ($this->level == 270) return $this->parent->fullname . " f. " . $this->name;
         }
         // returns rank numbers from common abbreviations
         static public function getRank($rank) {

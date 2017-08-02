@@ -110,8 +110,10 @@ class TaxonController extends Controller
         // always saves the name with only the first letter capitalized
         $request['name'] = ucfirst($request['name']);
 
-        $taxon = Taxon::create($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
+        $taxon = new Taxon($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author', 
                 'author_id', 'bibreference', 'bibreference_id', 'notes']));
+        $taxon->fullname = $request['name'];
+        $taxon->save();
         if ($request['mobotkey']) {
                 TaxonExternal::create([
                         'taxon_id' => $taxon->id,
@@ -195,8 +197,9 @@ class TaxonController extends Controller
             }
             $request['name'] = ucfirst($request['name']);
 
-            $taxon->update($request->only(['name', 'level', 'valid', 'parent_id', 'senior_id', 'author', 
+            $taxon->update($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author', 
                     'author_id', 'bibreference', 'bibreference_id', 'notes']));
+            $taxon->fullname = $request['name'];
             // update external keys
             $refs = $taxon->externalrefs()->where('name', 'Mobot');
             if ($request['mobotkey']) {
@@ -214,7 +217,8 @@ class TaxonController extends Controller
                             ]);
                     }
             } else {
-                    $refs->first()->delete();
+                    if ($refs->count())
+                        $refs->first()->delete();
             }
             return redirect('taxons')->withStatus(Lang::get('messages.saved'));
     }
