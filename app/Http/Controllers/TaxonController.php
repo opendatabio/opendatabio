@@ -256,18 +256,27 @@ class TaxonController extends Controller
                     return Response::json(['error' => Lang::get('messages.name_error')]);
             $apis = new ExternalAPIs;
             $mobotdata = $apis->getMobot($request->name);
-            if(is_null($mobotdata))
-                    return Response::json(['error' => Lang::get('messages.mobot_error')]);
-            if($mobotdata[0] == ExternalAPIs::MOBOT_NOT_FOUND)
-                    return Response::json(['error' => Lang::get('messages.mobot_not_found')]);
+            $ipnidata = $apis->getIpni($request->name);
+
             // includes the messages in the return object
             $bag = new MessageBag;
-            if ($mobotdata[0] & ExternalAPIs::MOBOT_MULTIPLE_HITS)
-                    $bag->add('name', Lang::get('messages.mobot_multiple_hits'));
-            if ($mobotdata[0] & ExternalAPIs::MOBOT_NONE_SYNONYM)
-                    $bag->add('name', Lang::get('messages.mobot_none_synonym'));
+            if(is_null($mobotdata))
+                    $bag->add('e1', Lang::get('messages.mobot_error'));
+            if($mobotdata[0] & ExternalAPIs::NOT_FOUND)
+                    $bag->add('e2', Lang::get('messages.mobot_not_found'));
+            if ($mobotdata[0] & ExternalAPIs::MULTIPLE_HITS)
+                    $bag->add('e3', Lang::get('messages.mobot_multiple_hits'));
+            if ($mobotdata[0] & ExternalAPIs::NONE_SYNONYM)
+                    $bag->add('e4', Lang::get('messages.mobot_none_synonym'));
+            if(is_null($ipnidata))
+                    $bag->add('e5', Lang::get('messages.ipni_error'));
+            if($ipnidata[0] & ExternalAPIs::NOT_FOUND)
+                    $bag->add('e6', Lang::get('messages.ipni_not_found'));
+            if ($ipnidata[0] & ExternalAPIs::MULTIPLE_HITS)
+                    $bag->add('e7', Lang::get('messages.ipni_multiple_hits'));
 
             Log::info($mobotdata);
+            Log::info($ipnidata);
             // 0 -> rank
             // 1 -> author
             // 2 -> valid
@@ -275,31 +284,58 @@ class TaxonController extends Controller
             // 4 -> parent
             // 5 -> senior
             // 6 -> mobot key
-            $rank = Taxon::getRank($mobotdata[1]->RankAbbreviation);
-            $valid = in_array($mobotdata[1]->NomenclatureStatusName, ["Legitimate", "nom. cons."]); 
+            // 7 -> ipni key
+            $rank = null;
+            if (array_key_exists("rank", $ipnidata))
+                    $rank = $ipnidata["rank"];
+            if (array_key_exists("rank", $mobotdata))
+                    $rank = $mobotdata["rank"];
+            $author = null;
+            if (array_key_exists("author", $ipnidata))
+                    $author = $ipnidata["author"];
+            if (array_key_exists("author", $mobotdata))
+                    $author = $mobotdata["author"];
+            $reference = null;
+            if (array_key_exists("reference", $ipnidata))
+                    $reference = $ipnidata["reference"];
+            if (array_key_exists("reference", $mobotdata))
+                    $reference = $mobotdata["reference"];
 
-            Log::info("valid #$valid#");
+            $rank = Taxon::getRank($rank);
+
+            $valid = null;
+            if (array_key_exists("valid", $mobotdata))
+                    $valid = in_array($mobotdata["valid"], ["Legitimate", "nom. cons."]); 
 
             $parent = null;
 
             $senior = null;
-            if (sizeof($mobotdata) == 3) { // we have a valid senior reference
-                    $tosenior = Taxon::where('name', $mobotdata[2]->ScientificName)->first();
+            if (array_key_exists("senior", $mobotdata) and !is_null($mobotdata["senior"])) {
+                    $tosenior = Taxon::where('name', $mobotdata["senior"])->first();
                     if ($tosenior) {
                             $senior = $tosenior->id;
                     } else {
-                            $bag->add('senior_id', Lang::get('messages.senior_not_registered', ['name' => $mobotdata[2]->ScientificName]));
+                            $bag->add('senior_id', Lang::get('messages.senior_not_registered', ['name' => $mobotdata["senior"]]));
                     }
             }
+
+            $mobotkey = null;
+            if (array_key_exists("key", $mobotdata))
+                    $mobotkey = $mobotdata["key"];
+            $ipnikey = null;
+            if (array_key_exists("key", $ipnidata))
+                    $ipnikey = $ipnidata["key"];
+
             return Response::json(['bag' => $bag, 
                     'apidata' => [
                             $rank,
-                            $mobotdata[1]->Author,
+                            $author,
                             $valid,
-                            $mobotdata[1]->DisplayReference . " " . $mobotdata[1]->DisplayDate,
+                            $reference,
                             $parent,
                             $senior, 
-                            $mobotdata[1]->NameId,
+                            $mobotkey,
+                            $ipnikey,
                     ]
             ]);
     }

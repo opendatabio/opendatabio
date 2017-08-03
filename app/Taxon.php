@@ -36,6 +36,8 @@ class Taxon extends Node
         // returns rank numbers from common abbreviations
         static public function getRank($rank) {
                 switch($rank) {
+                case 'div.':
+                        return 30;
                 case 'cl.':
                         return 60;
                 case 'ord.':
@@ -51,6 +53,8 @@ class Taxon extends Node
                 case 'subg.':
                         return 190;
                 case 'sp.':
+                        return 210;
+                case 'spec.':
                         return 210;
                 case 'subsp.':
                         return 220;
