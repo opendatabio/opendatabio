@@ -53,6 +53,18 @@ class TaxonController extends Controller
 		    'level' => 'required|integer',
 	    ];
 	    $validator = Validator::make($request->all(), $rules);
+        if ($request->level > 180 and ! $request->parent_id) {
+                $validator->after(function ($validator) {
+                        $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_required_error'));
+                });
+        }
+        if (in_array($request->level, [220, 240, 270]) and $request->parent_id) {
+                $parent = Taxon::findOrFail($request->parent_id);
+                if ($parent->level != 210)
+                $validator->after(function ($validator) {
+                        $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_species_error'));
+                });
+        }
         if ($request->parent_id) {
                 $parent = Taxon::findOrFail($request->parent_id);
                 $validator->after(function ($validator) use ($request, $parent) {
@@ -71,16 +83,20 @@ class TaxonController extends Controller
                                 $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_invalid_error'));
                 });
         }
-        if ($request->author_id) {
-                $validator->after(function ($validator) use ($request) {
-                        if($request->author)
-                                $validator->errors()->add('author_id', Lang::get('messages.taxon_author_error'));
+        if ( ($request->author_id and $request_author)
+                or
+             (! $request->author_id and ! $request->author)
+        ) {
+                $validator->after(function ($validator) {
+                        $validator->errors()->add('author_id', Lang::get('messages.taxon_author_error'));
                 });
         }
-        if ($request->bibreference_id) {
-                $validator->after(function ($validator) use ($request) {
-                        if($request->bibreference)
-                                $validator->errors()->add('bibreference_id', Lang::get('messages.taxon_bibref_error'));
+        if ( ($request->bibreference_id and $request->bibreference)
+                or
+             (! $request->bibreference_id and ! $request->bibreference)
+        ) {
+                $validator->after(function ($validator) {
+                        $validator->errors()->add('bibreference_id', Lang::get('messages.taxon_bibref_error'));
                 });
         }
             return $validator;
