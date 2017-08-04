@@ -107,6 +107,7 @@ $(document).ready(function(){
                                         $("#parent_id").val(data.apidata[4]);
                                         $("#senior_id").val(data.apidata[5]);
                                         $("#mobotkey").val(data.apidata[6]);
+                                        $("#ipnikey").val(data.apidata[7]);
                                 }
                         },
                         error: function(e){ 

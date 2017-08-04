@@ -58,6 +58,13 @@ class TaxonController extends Controller
                         $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_required_error'));
                 });
         }
+        if ($request->level > 180) {
+            $parent = Taxon::findOrFail($request->parent_id);
+                if ($parent->level < 170)
+                $validator->after(function ($validator) {
+                        $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_genus_error'));
+                });
+        }
         if (in_array($request->level, [220, 240, 270]) and $request->parent_id) {
                 $parent = Taxon::findOrFail($request->parent_id);
                 if ($parent->level != 210)
@@ -108,9 +115,8 @@ class TaxonController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
-    {
-            $this->authorize('create', Taxon::class);
+    public function store(Request $request) {
+        $this->authorize('create', Taxon::class);
 	    $validator = $this->customValidate($request);
 	    if ($validator->fails()) {
 		    return redirect()->back()
@@ -123,22 +129,15 @@ class TaxonController extends Controller
             } else {
                     $request['valid'] = false;
             }
-        // always saves the name with only the first letter capitalized
-        $request['name'] = ucfirst($request['name']);
 
         $taxon = new Taxon($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author', 
                 'author_id', 'bibreference', 'bibreference_id', 'notes']));
         $taxon->fullname = $request['name'];
-        $taxon->save();
-        if ($request['mobotkey']) {
-                TaxonExternal::create([
-                        'taxon_id' => $taxon->id,
-                        'name' => 'Mobot',
-                        'reference' => $request['mobotkey'],
-                ]);
-        }
-            
-            return redirect('taxons')->withStatus(Lang::get('messages.stored'));
+        $taxon->save(); // we need to save it here to have an id to use on the next methods
+        $taxon->setapikey('Mobot', $request['mobotkey']);
+        $taxon->setapikey('IPNI', $request['ipnikey']);
+        $taxon->save(); 
+        return redirect('taxons')->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -184,8 +183,6 @@ class TaxonController extends Controller
 		    'persons' => $persons,
 		    'references' => $references,
 	    ]);
-        //
-        //
     }
 
     /**
@@ -211,33 +208,17 @@ class TaxonController extends Controller
             } else {
                     $request['valid'] = false;
             }
-            $request['name'] = ucfirst($request['name']);
 
             $taxon->update($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author', 
                     'author_id', 'bibreference', 'bibreference_id', 'notes']));
             $taxon->fullname = $request['name'];
             // update external keys
-            $refs = $taxon->externalrefs()->where('name', 'Mobot');
-            if ($request['mobotkey']) {
-                    if ($refs->count()) {
-                            // update
-                            $refs->update([
-                                    'name' => 'Mobot',
-                                    'reference' => $request['mobotkey'],
-                            ]);
-                    } else {
-                            // create
-                            $taxon->externalrefs()->create([
-                                    'name' => 'Mobot',
-                                    'reference' => $request['mobotkey'],
-                            ]);
-                    }
-            } else {
-                    if ($refs->count())
-                        $refs->first()->delete();
-            }
+            $taxon->setapikey('Mobot', $request['mobotkey']);
+            $taxon->setapikey('IPNI', $request['ipnikey']);
+            $taxon->save();
             return redirect('taxons')->withStatus(Lang::get('messages.saved'));
     }
+
 
     /**
      * Remove the specified resource from storage.

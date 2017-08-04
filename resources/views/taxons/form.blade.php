@@ -173,6 +173,12 @@
 	    <div class="col-sm-6">
 	<input type="text" name="mobotkey" id="mobotkey" class="form-control" value="{{ old('mobotkey', isset($taxon) ? $taxon->mobot : null) }}">
             </div>
+    <label for="ipnikey" class="col-sm-3 control-label">
+@lang('messages.ipni_key')
+</label>
+	    <div class="col-sm-6">
+	<input type="text" name="ipnikey" id="ipnikey" class="form-control" value="{{ old('ipnikey', isset($taxon) ? $taxon->ipni : null) }}">
+            </div>
   <div class="col-sm-12">
     <div id="hint7" class="panel-collapse collapse">
 	@lang ('messages.hint_mobot_key')

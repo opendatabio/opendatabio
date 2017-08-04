@@ -10,6 +10,9 @@
 @if ($taxon->mobot)
 <a href="http://tropicos.org/Name/{{$taxon->mobot}}"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
 @endif
+@if ($taxon->ipni)
+<a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id={{$taxon->ipni}}"><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
+@endif
                 </div>
 
 		<div class="panel-body">

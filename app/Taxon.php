@@ -17,6 +17,9 @@ class Taxon extends Node
         }
 
         public function setFullnameAttribute($value) {
+            // Full names have only the first letter capitalized
+            $value = ucfirst(strtolower($value));
+
                 if ($this->level <= 200) 
                         $this->name = $value;
                 if ($this->level >= 210) // sp. or below, strips evertyhing before the last space
@@ -82,11 +85,34 @@ class Taxon extends Node
         public function persons() {
                 return $this->belongsToMany('App\Person');
         }
+
+        // Functions for handling API keys
+    public function setapikey($name, $reference) {
+        $refs = $this->externalrefs()->where('name', $name);
+        if ($reference) { // if reference is set...
+            if ($refs->count()) { // and we have one already, update it
+                $refs->update([ 'reference' => $reference ]);
+            } else { // none already, so create one
+                $this->externalrefs()->create([
+                    'name' => $name,
+                    'reference' => $reference,
+                ]);
+            }
+        } else { // no reference set
+            if ($refs->count()) // if there was one, delete it
+                $refs->delete();
+        }
+    }
         public function externalrefs() {
                 return $this->hasMany('App\TaxonExternal', 'taxon_id');
         }
         public function getMobotAttribute() {
                 $ref = $this->externalrefs()->where('name', 'Mobot');
+                if ($ref->count())
+                        return $ref->first()->reference;
+        }
+        public function getIpniAttribute() {
+                $ref = $this->externalrefs()->where('name', 'IPNI');
                 if ($ref->count())
                         return $ref->first()->reference;
         }
