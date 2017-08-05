@@ -43,6 +43,8 @@ class Taxon extends Node
                         return 30;
                 case 'cl.':
                         return 60;
+                case 'subcl.':
+                        return 70;
                 case 'ord.':
                         return 90;
                 case 'fam.':
@@ -86,6 +88,10 @@ class Taxon extends Node
                 return $this->belongsToMany('App\Person');
         }
 
+        public function scopeValid($query) {
+            return $query->where('valid', '=', 1);
+        }
+
         // Functions for handling API keys
     public function setapikey($name, $reference) {
         $refs = $this->externalrefs()->where('name', $name);
@@ -116,6 +122,28 @@ class Taxon extends Node
                 if ($ref->count())
                         return $ref->first()->reference;
         }
- 
-    //
+        // returns: mixed. May be string if not found in DB, or int (id) if found
+        static public function getParent($name, $rank, $family) {
+            switch (true) {
+            case $rank <= 120:
+                return null; // Family or above, the current APIs have no parent information
+            case $rank > 120 and $rank <= 180: // sub-family to genus, parent should be a family
+                if (is_null($family)) return null;
+                $searchstr = $family;
+                $toparent = Taxon::where('name', $searchstr);
+                break;
+            case $rank > 180 and $rank <= 210: // species, parent should be genus
+                $searchstr = substr($name, 0, strpos($name, " "));
+                $toparent = Taxon::where('name', $searchstr);
+                break;
+            case $rank > 210 and $rank <= 280: // subsp, var or form, parent should be a species
+                // TODO: what to do here???
+//                $toparent = Taxon::where('name', substr($name, 0, strpos($name, " ", strpos($name, " "))))->first();
+            }
+            if ($toparent->count()) {
+                return $toparent->first()->id;
+            } else {
+                return $searchstr;
+            }
+        }
 }

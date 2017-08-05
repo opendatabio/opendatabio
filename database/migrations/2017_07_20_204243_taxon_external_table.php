@@ -16,7 +16,7 @@ class TaxonExternalTable extends Migration
         Schema::create('taxon_external', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('taxon_id')->unsigned();
-            $table->foreign('taxon_id')->references('id')->on('taxons');
+            $table->foreign('taxon_id')->references('id')->on('taxons')->onDelete('cascade');
             $table->string('name');
             $table->unique(['name', 'taxon_id']);
             $table->string('reference');

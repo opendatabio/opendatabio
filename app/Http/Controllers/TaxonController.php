@@ -288,11 +288,18 @@ class TaxonController extends Controller
             if (array_key_exists("valid", $mobotdata))
                     $valid = in_array($mobotdata["valid"], ["Legitimate", "nom. cons."]); 
 
-            $parent = null;
+            $getparent = null;
+            if (array_key_exists("parent", $mobotdata))
+                    $getparent = $mobotdata["parent"]; 
+            $parent = Taxon::getParent($request["name"], $rank, $getparent);
+            if (! is_null($parent) and ! is_int($parent)) {
+                $bag->add('parent_id', Lang::get('messages.parent_not_registered', ['name' => $parent]));
+            }
+            Log::info("parent: " . $parent);
 
             $senior = null;
             if (array_key_exists("senior", $mobotdata) and !is_null($mobotdata["senior"])) {
-                    $tosenior = Taxon::where('name', $mobotdata["senior"])->first();
+                    $tosenior = Taxon::valid()->where('name', $mobotdata["senior"])->first();
                     if ($tosenior) {
                             $senior = $tosenior->id;
                     } else {
