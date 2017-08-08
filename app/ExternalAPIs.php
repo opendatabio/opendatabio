@@ -8,9 +8,10 @@ use Log;
 class ExternalAPIs
 {
 	private $proxystring = "";
-	public const NOT_FOUND = 1;
-	public const MULTIPLE_HITS = 2;
-	public const NONE_SYNONYM = 4;
+
+	const NOT_FOUND = 1;
+	const MULTIPLE_HITS = 2;
+	const NONE_SYNONYM = 4;
 
 	public function __construct() 
 	{

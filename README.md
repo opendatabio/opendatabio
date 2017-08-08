@@ -118,6 +118,8 @@ This system uses Laravel Mix to compile the SASS and JavaScript code used.
 If you would like to contribute to the app development,
 remember to run `npm run prod` after making any change to these files.
 
+Notice that "doctrine/instantiator" is being held back to 1.0.5 to avoid the dependency on PHP 7.1.
+
 ## Upgrade
 A tool for upgrading duckewiki databases to opendatabio is currently being developed.
 

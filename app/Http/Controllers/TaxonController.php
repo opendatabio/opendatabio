@@ -267,29 +267,29 @@ class TaxonController extends Controller
             // 6 -> mobot key
             // 7 -> ipni key
             $rank = null;
-            if (array_key_exists("rank", $ipnidata))
+            if (!is_null($ipnidata) && array_key_exists("rank", $ipnidata))
                     $rank = $ipnidata["rank"];
-            if (array_key_exists("rank", $mobotdata))
+            if (!is_null($mobotdata) && array_key_exists("rank", $mobotdata))
                     $rank = $mobotdata["rank"];
             $author = null;
-            if (array_key_exists("author", $ipnidata))
+            if (!is_null($ipnidata) && array_key_exists("author", $ipnidata))
                     $author = $ipnidata["author"];
-            if (array_key_exists("author", $mobotdata))
+            if (!is_null($mobotdata) && array_key_exists("author", $mobotdata))
                     $author = $mobotdata["author"];
             $reference = null;
-            if (array_key_exists("reference", $ipnidata))
+            if (!is_null($ipnidata) && array_key_exists("reference", $ipnidata))
                     $reference = $ipnidata["reference"];
-            if (array_key_exists("reference", $mobotdata))
+            if (!is_null($mobotdata) && array_key_exists("reference", $mobotdata))
                     $reference = $mobotdata["reference"];
 
             $rank = Taxon::getRank($rank);
 
             $valid = null;
-            if (array_key_exists("valid", $mobotdata))
+            if (!is_null($mobotdata) && array_key_exists("valid", $mobotdata))
                     $valid = in_array($mobotdata["valid"], ["Legitimate", "nom. cons."]); 
 
             $getparent = null;
-            if (array_key_exists("parent", $mobotdata))
+            if (!is_null($mobotdata) && array_key_exists("parent", $mobotdata))
                     $getparent = $mobotdata["parent"]; 
             $parent = Taxon::getParent($request["name"], $rank, $getparent);
             if (! is_null($parent) and ! is_int($parent)) {
@@ -298,7 +298,7 @@ class TaxonController extends Controller
             Log::info("parent: " . $parent);
 
             $senior = null;
-            if (array_key_exists("senior", $mobotdata) and !is_null($mobotdata["senior"])) {
+            if (!is_null($mobotdata) && array_key_exists("senior", $mobotdata) and !is_null($mobotdata["senior"])) {
                     $tosenior = Taxon::valid()->where('name', $mobotdata["senior"])->first();
                     if ($tosenior) {
                             $senior = $tosenior->id;
@@ -308,10 +308,10 @@ class TaxonController extends Controller
             }
 
             $mobotkey = null;
-            if (array_key_exists("key", $mobotdata))
+            if (!is_null($mobotdata) && array_key_exists("key", $mobotdata))
                     $mobotkey = $mobotdata["key"];
             $ipnikey = null;
-            if (array_key_exists("key", $ipnidata))
+            if (!is_null($ipnidata) && array_key_exists("key", $ipnidata))
                     $ipnikey = $ipnidata["key"];
 
             return Response::json(['bag' => $bag, 
