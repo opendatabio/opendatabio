@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Lang;
+use App\Project;
 
 class User extends Authenticatable
 {
@@ -39,5 +40,8 @@ class User extends Authenticatable
     }
     public function getTextAccessAttribute() {
 	    return Lang::get('levels.access.' . $this->access_level);
+    }
+    public function projects() {
+        return $this->belongsToMany(Project::class)->withPivot('access_level');
     }
 }

@@ -58,6 +58,9 @@
 			<li><a href="{{ route('herbaria.index') }}">
 @lang('messages.herbaria')
 </a></li>
+			<li><a href="{{ route('projects.index') }}">
+@lang('messages.projects')
+</a></li>
 @can ('show', App\User::class)
 			<li><a href="{{ route('users.index') }}">
 @lang('messages.users')
