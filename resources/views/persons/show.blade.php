@@ -62,7 +62,7 @@
 	</strong>
 <ul>
 @foreach ($person->taxons as $taxon)
-<li><a href="{{url('taxons/'. $taxon->id)}}">{{ $taxon->name }}</a></li>
+<li><a href="{{url('taxons/'. $taxon->id)}}">{{ $taxon->fullname }}</a></li>
 @endforeach
 </ul>
 &nbsp;

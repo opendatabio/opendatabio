@@ -11,8 +11,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $this->call(PersonsTableSeeder::class);
+        $this->call(PersonsTableSeeder::class); // depends on populated Herbaria
         $this->call(BibReferencesTableSeeder::class);
         $this->call(LocationsTableSeeder::class);
+        $this->call(TaxonsTableSeeder::class); // depends on populated Persons
     }
 }

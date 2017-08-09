@@ -90,7 +90,7 @@ class TaxonController extends Controller
                                 $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_invalid_error'));
                 });
         }
-        if ( ($request->author_id and $request_author)
+        if ( ($request->author_id and $request->author)
                 or
              (! $request->author_id and ! $request->author)
         ) {

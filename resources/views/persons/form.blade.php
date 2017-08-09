@@ -70,14 +70,14 @@
     @foreach ($person->taxons as $taxon)
     <span class="multipleSelector">
   <input type="hidden" name="specialist[]" value="{{ $taxon->id  }}" />
-  {{$taxon->name}}
+  {{$taxon->fullname}}
  </span>
     @endforeach
 </span>
 	<select name="multi-select" id="multi-select" class="form-control">
 		<option value='' >&nbsp;</option>
 	@foreach ($taxons as $taxon)
-		<option value="{{$taxon->id}}" >{{ $taxon->name }}</option>
+		<option value="{{$taxon->id}}" >{{ $taxon->fullname }}</option>
 	@endforeach
 	</select>
             </div>
