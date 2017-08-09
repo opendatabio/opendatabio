@@ -26,13 +26,32 @@
                 </div>
 
                 <div class="panel-body">
-                    <!-- Display Validation Errors -->
                 <a href="{{url('projects/create')}}" class="btn btn-success">
 @lang ('messages.create')
                 </a>
                 </div>
             </div>
 @endcan
+
+@if ($myprojects)
+            <div class="panel panel-default">
+                <div class="panel-heading">
+
+                    @lang('messages.my_projects')
+                </div>
+
+                <div class="panel-body">
+<ul>
+@foreach ($myprojects as $project)
+    <li><a href="{{url('projects/' . $project->id)}}">{{$project->name}}</a>
+(@lang('levels.project.' . $project->pivot->access_level )
+)</li>
+@endforeach
+    </ul>
+                </div>
+            </div>
+@endif
+
             <!-- Registered Projects -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -46,7 +65,10 @@
 @lang('messages.name')
 </th>
                                 <th>
-@lang('messages.admins')
+@lang('messages.members')
+</th>
+                                <th>
+@lang('messages.data_privacy')
 </th>
 			    </thead>
 <tbody>
@@ -60,6 +82,9 @@
                                         {{ $user->email }} <br/>
                                         @endforeach
                                         </td>
+<td>
+@lang ('levels.privacy.' . $project->privacy)
+</td>
                                     </tr>
 				    @endforeach
 				    </tbody>

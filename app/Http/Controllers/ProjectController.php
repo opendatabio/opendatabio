@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Project;
+use App\User;
+use Auth;
 
 class ProjectController extends Controller
 {
@@ -15,8 +17,12 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Project::paginate(10);
+        $myprojects = null;
+        if (Auth::user() and Auth::user()->projects()->count())
+            $myprojects = Auth::user()->projects;
         return view('projects.index', [
             'projects' => $projects,
+            'myprojects' => $myprojects,
         ]);
     }
 
@@ -49,7 +55,10 @@ class ProjectController extends Controller
      */
     public function show($id)
     {
-        //
+        $project = Project::findOrFail($id);
+        return view('projects.show', [
+            'project' => $project,
+        ]);
     }
 
     /**
@@ -60,6 +69,12 @@ class ProjectController extends Controller
      */
     public function edit($id)
     {
+        $project = Project::findOrFail($id);
+        $users = User::all();
+        return view('projects.edit', [
+            'project' => $project,
+            'users' => $users,
+        ]);
         //
     }
 

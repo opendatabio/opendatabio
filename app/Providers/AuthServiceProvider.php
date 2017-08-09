@@ -20,6 +20,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\User::class    => \App\Policies\UserPolicy::class,
         \App\UserJobs::class    => \App\Policies\UserJobsPolicy::class,
         \App\Taxon::class    => \App\Policies\TaxonPolicy::class,
+        \App\Project::class    => \App\Policies\ProjectPolicy::class,
     ];
 
     /**
