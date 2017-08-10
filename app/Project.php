@@ -4,6 +4,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use App\User;
+use Log;
 
 class Project extends Model
 {
@@ -22,6 +23,33 @@ class Project extends Model
     }
     public function admins() {
         return $this->users()->wherePivot('access_level', '=', Project::ADMIN);
+    }
+    public function isAdmin(User $user) {
+        return in_array($user->id, $this->admins()->pluck('users.id')->all());
+    }
+    public function collabs() {
+        return $this->users()->wherePivot('access_level', '=', Project::COLLABORATOR);
+    }
+    public function viewers() {
+        return $this->users()->wherePivot('access_level', '=', Project::VIEWER);
+    }
+    public function setusers(array $new_users = null, $level) {
+        // inspired by https://stackoverflow.com/questions/42625797/laravel-sync-only-a-subset-of-the-pivot-table?rq=1
+        $current = $this->users->filter(function($users) use ($level) {
+            return $users->pivot->access_level === $level;
+        })->pluck('id');
+
+        $detach = $current->diff($new_users)->all();
+
+        $attach_ids = collect($new_users)->diff($current)->all();
+        $atach_pivot = array_fill(0, count($attach_ids), ['access_level' => $level]);
+        $attach = array_combine($attach_ids, $atach_pivot);
+
+        $this->users()->detach($detach);
+        $this->users()->attach($attach);
+
+        return $this;
+
     }
     //
 }

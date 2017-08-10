@@ -12,12 +12,11 @@ class ProjectPolicy
     public function create(User $user)
     {
 	    return $user->access_level >= User::USER;
-        //
     }
     public function update(User $user, Project $project)
     {
-	    return $user->access_level >= User::USER; // AND user %in% project->admins
-        //
+        return $user->access_level == User::ADMIN or 
+            ($user->access_level == User::USER and $project->isAdmin($user));
     }
 
 }

@@ -66,7 +66,7 @@
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 <!-- already specialist in -->
-<span id = "specialist_ul">
+<span id = "specialist-ul">
     @foreach ($person->taxons as $taxon)
     <span class="multipleSelector">
   <input type="hidden" name="specialist[]" value="{{ $taxon->id  }}" />
@@ -74,7 +74,7 @@
  </span>
     @endforeach
 </span>
-	<select name="multi-select" id="multi-select" class="form-control">
+	<select name="specialist-ms" id="specialist-ms" class="form-control multi-select">
 		<option value='' >&nbsp;</option>
 	@foreach ($taxons as $taxon)
 		<option value="{{$taxon->id}}" >{{ $taxon->fullname }}</option>

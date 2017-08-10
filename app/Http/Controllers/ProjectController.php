@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Project;
 use App\User;
 use Auth;
+use Validator;
+use Lang;
 
 class ProjectController extends Controller
 {
@@ -33,9 +35,26 @@ class ProjectController extends Controller
      */
     public function create()
     {
+        $users = User::all();
+        return view('projects.create', [
+            'users' => $users,
+        ]);
         //
     }
 
+    public function customValidate(Request $request) {
+	    $rules = [
+		    'name' => 'required|string|max:191',
+		    'privacy' => 'required|integer',
+	    ];
+	    $validator = Validator::make($request->all(), $rules);
+        if (! $request->admins) {
+                $validator->after(function ($validator) {
+                        $validator->errors()->add('admins', Lang::get('messages.project_admin_required_error'));
+                });
+        }
+            return $validator;
+    }
     /**
      * Store a newly created resource in storage.
      *
@@ -44,7 +63,19 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create', Project::class);
+	    $validator = $this->customValidate($request);
+	    if ($validator->fails()) {
+		    return redirect()->back()
+			    ->withErrors($validator)
+			    ->withInput();
+	    }
+        $project = new Project($request->only(['name', 'notes', 'privacy']));
+        $project->save(); // needed to generate an id?
+        $project->setusers($request->admins, Project::ADMIN)
+        ->setusers($request->collabs, Project::COLLABORATOR)
+        ->setusers($request->viewers, Project::VIEWER);
+        return redirect('projects')->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -71,7 +102,7 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
         $users = User::all();
-        return view('projects.edit', [
+        return view('projects.create', [
             'project' => $project,
             'users' => $users,
         ]);
@@ -87,6 +118,19 @@ class ProjectController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $project = Project::findOrFail($id);
+        $this->authorize('update', $project);
+	    $validator = $this->customValidate($request);
+	    if ($validator->fails()) {
+		    return redirect()->back()
+			    ->withErrors($validator)
+			    ->withInput();
+	    }
+        $project->update($request->only(['name', 'notes', 'privacy']));
+        $project->setusers($request->admins, Project::ADMIN)
+        ->setusers($request->collabs, Project::COLLABORATOR)
+        ->setusers($request->viewers, Project::VIEWER);
+        return redirect('projects')->withStatus(Lang::get('messages.saved'));
         //
     }
 
