@@ -67,12 +67,21 @@
 	    <div class="col-sm-6">
 <!-- already specialist in -->
 <span id = "specialist-ul">
+    @if (is_null(old('specialist'))) <!-- get the data from the database -->
     @foreach ($person->taxons as $taxon)
     <span class="multipleSelector">
   <input type="hidden" name="specialist[]" value="{{ $taxon->id  }}" />
   {{$taxon->fullname}}
  </span>
-    @endforeach
+     @endforeach
+     @else <!-- !isnull old, so we get the data from old() -->
+    @foreach (old('specialist') as $taxonid)
+    <span class="multipleSelector">
+  <input type="hidden" name="specialist[]" value="{{ $taxonid  }}" />
+  {{ $taxons->find($taxonid)->fullname }}
+ </span>
+     @endforeach
+     @endif
 </span>
 	<select name="specialist-ms" id="specialist-ms" class="form-control multi-select">
 		<option value='' >&nbsp;</option>
