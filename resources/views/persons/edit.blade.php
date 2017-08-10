@@ -25,6 +25,10 @@
 @lang('messages.edit_person')
 
 				</button>
+				<a href="{{url()->previous()}}" class="btn btn-warning">
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.back')
+				</a>
 			    </div>
 			</div>
 		    </form>
