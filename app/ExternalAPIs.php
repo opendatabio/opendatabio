@@ -123,5 +123,43 @@ class ExternalAPIs
                 "senior" => null,
         ];
 	}
+	public function getMycobank($searchstring)
+    {
+        // small helper for getting nested fields
+        function getElement($xml, $field) {
+            $object = simplexml_load_string($xml);
+            return (string) $object->{$field};
+        }
+		$flags = 0;
+		$base_uri = "http://www.mycobank.org/";
+		$client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
+        try {
+                $response = $client->request('GET', 
+                        "Services/Generic/SearchService.svc/rest/xml?layout=14682616000000161&filter=name%3D%22$searchstring%22"
+                );
+        } catch (ClientException $e) {
+                return null; #FAILED 
+        }
+		if ($response->getStatusCode() != 200) 
+			return null; # FAILED
+        $answer = json_decode( json_encode( simplexml_load_string( (string) $response->getBody() ) ) );
+        if (! isset($answer->Taxon) )
+              return [ExternalAPIs::NOT_FOUND];
+		if (count($answer->Taxon) > 1) {
+            $flags = $flags | ExternalAPIs::MULTIPLE_HITS;
+            $ret = $answer->Taxon[0];
+        } else {
+            $ret = $answer->Taxon;
+        }
+        return [$flags, 
+                "rank"   => getElement($ret->rank_pt_, "Name"),
+                "author" => $ret->authorsabbrev_,
+                "valid"  => $ret->namestatus_,
+                "reference" => getElement($ret->literature_pt_, "Name"),
+                "parent" => null, // TODO, will probably need a second query to Mycobank server
+                "key" => $ret->_id,
+                "senior" => getElement($ret->currentname_pt_, "Name"),
+        ];
+	}
 }
 
