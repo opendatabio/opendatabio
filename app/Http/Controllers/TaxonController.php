@@ -286,7 +286,11 @@ class TaxonController extends Controller
 
             $valid = null;
             if (!is_null($mobotdata) && array_key_exists("valid", $mobotdata))
-                    $valid = in_array($mobotdata["valid"], ["Legitimate", "nom. cons."]); 
+		    $valid = in_array($mobotdata["valid"], [
+			    "Legitimate", 
+			    "nom. cons.",
+			    "No opinion",
+		    ]); 
 
             $getparent = null;
             if (!is_null($mobotdata) && array_key_exists("parent", $mobotdata))
