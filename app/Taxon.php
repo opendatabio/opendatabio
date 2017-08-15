@@ -122,6 +122,11 @@ class Taxon extends Node
                 if ($ref->count())
                         return $ref->first()->reference;
         }
+        public function getMycobankAttribute() {
+                $ref = $this->externalrefs()->where('name', 'Mycobank');
+                if ($ref->count())
+                        return $ref->first()->reference;
+        }
         // returns: mixed. May be string if not found in DB, or int (id) if found
         static public function getParent($name, $rank, $family) {
             switch (true) {
@@ -137,8 +142,14 @@ class Taxon extends Node
                 $toparent = Taxon::where('name', $searchstr);
                 break;
             case $rank > 210 and $rank <= 280: // subsp, var or form, parent should be a species
-                // TODO: what to do here???
-//                $toparent = Taxon::where('name', substr($name, 0, strpos($name, " ", strpos($name, " "))))->first();
+                preg_match('/^(\w+)\s(\w+)\s/', $name, $match);
+                $searchstr = trim($match[0]);
+                $gen = Taxon::where('name', $match[1])->pluck('id');
+                $toparent = Taxon::where('name', $match[2])->whereIn('parent_id', $gen);
+                break;
+            default:
+                $toparent = null;
+                $searchstr = null;
             }
             if ($toparent->count()) {
                 return $toparent->first()->id;

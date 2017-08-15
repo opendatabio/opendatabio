@@ -13,6 +13,9 @@
 @if ($taxon->ipni)
 <a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id={{$taxon->ipni}}"><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
 @endif
+@if ($taxon->mycobank)
+<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec={{$taxon->mycobank}}&Fields=All"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
+@endif
                 </div>
 
 		<div class="panel-body">

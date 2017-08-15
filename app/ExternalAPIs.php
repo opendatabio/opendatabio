@@ -45,7 +45,9 @@ class ExternalAPIs
 		return [$IRN, $name];
 	}
 	public function getMobot($searchstring)
-	{
+    {
+        // replaces . in "var." or "subsp."
+        $searchstring = str_replace('.', '%2e', $searchstring);
 		$flags = 0;
 		$apikey = config('app.mobot_api_key');
 		$base_uri = "http://services.tropicos.org/";
@@ -65,7 +67,6 @@ class ExternalAPIs
 			return [ExternalAPIs::NOT_FOUND];
 		if ($answer[0]->TotalRows > 1)
 			$flags = $flags | ExternalAPIs::MULTIPLE_HITS;
-        Log::info([ $answer[0] ] );
 		# Check if this name is accepted
         $senior = null;
         if (! in_array($answer[0]->NomenclatureStatusName, ["Legitimate", "No opinion", "nom. cons."])) {
@@ -123,13 +124,13 @@ class ExternalAPIs
                 "senior" => null,
         ];
 	}
+    // small helper for getting nested fields
+    protected function getElement($xml, $field) {
+        $object = simplexml_load_string($xml);
+        return (string) $object->{$field};
+    }
 	public function getMycobank($searchstring)
     {
-        // small helper for getting nested fields
-        function getElement($xml, $field) {
-            $object = simplexml_load_string($xml);
-            return (string) $object->{$field};
-        }
 		$flags = 0;
 		$base_uri = "http://www.mycobank.org/";
 		$client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
@@ -151,14 +152,40 @@ class ExternalAPIs
         } else {
             $ret = $answer->Taxon;
         }
+        $parent = null;
+        // This is needed because of a bug in Mycobank webservice:
+        $parent_x = simplexml_load_string("<xml>".$ret->classification_."</xml>");
+        $parent_id = (string) $parent_x->ChildrenRecord[ count($parent_x) - 1]->Id;
+        // now we try to find the id in our database...
+        $parent_obj = TaxonExternal::where('name', 'Mycobank')->where('reference', $parent_id)->get();
+        if ($parent_obj->count()) {
+            $parent = $parent_obj->first()->taxon_id;
+        } else { // not found, so we get the name from Mycobank server
+            try {
+                $response = $client->request('GET', 
+                    "Services/Generic/SearchService.svc/rest/xml?layout=14682616000000161&filter=_id%3D%22$parent_id%22"
+                );
+            } catch (ClientException $e) {
+                return null; #FAILED 
+            }
+            if ($response->getStatusCode() != 200) 
+                return null; # FAILED
+            $answer = json_decode( json_encode( simplexml_load_string( (string) $response->getBody() ) ) );
+            $parent = $answer->Taxon->name;
+        }
+        $senior = null;
+        $to_senior = $this->getElement($ret->currentname_pt_, "Name");
+        if ($to_senior != $searchstring)
+            $senior = $to_senior;
+
         return [$flags, 
-                "rank"   => getElement($ret->rank_pt_, "Name"),
+                "rank"   => $this->getElement($ret->rank_pt_, "Name"),
                 "author" => $ret->authorsabbrev_,
                 "valid"  => $ret->namestatus_,
-                "reference" => getElement($ret->literature_pt_, "Name"),
-                "parent" => null, // TODO, will probably need a second query to Mycobank server
+                "reference" => $this->getElement($ret->literature_pt_, "Name"),
+                "parent" => $parent,
                 "key" => $ret->_id,
-                "senior" => getElement($ret->currentname_pt_, "Name"),
+                "senior" => $senior,
         ];
 	}
 }

@@ -108,6 +108,7 @@ $(document).ready(function(){
                                         $("#senior_id").val(data.apidata[5]);
                                         $("#mobotkey").val(data.apidata[6]);
                                         $("#ipnikey").val(data.apidata[7]);
+                                        $("#mycobankkey").val(data.apidata[8]);
                                 }
                         },
                         error: function(e){ 

@@ -20,6 +20,11 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
 		@lang('messages.new_taxon')
+<div style="float:right;">
+<a href="http://tropicos.org/"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
+<a href="http://www.ipni.org/"><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
+<a href="http://www.mycobank.org/"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
+                </div>
                 </div>
 
                 <div class="panel-body">
