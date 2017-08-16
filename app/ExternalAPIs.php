@@ -111,6 +111,8 @@ class ExternalAPIs
         $answer = explode("\n", (string) $response->getBody());
         if ($answer[0] === "")
                 return [ExternalAPIs::NOT_FOUND];
+        if ($answer[0] === "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0 Transitional//EN\">")
+                return [ExternalAPIs::NOT_FOUND]; // search error
 		if (count($answer) > 2)
                 $flags = $flags | ExternalAPIs::MULTIPLE_HITS;
         $ret = explode("%", $answer[1]);

@@ -124,30 +124,26 @@ class Taxon extends Node
                 if ($ref->count())
                         return $ref->first()->reference;
         }
-        // returns: mixed. May be string if not found in DB, or int (id) if found
+        // returns: mixed. May be string if not found in DB, or int (id) if found, or null if no query possible
         static public function getParent($name, $rank, $family) {
             switch (true) {
             case $rank <= 120:
-                return null; // Family or above, the current APIs have no parent information
+                return null; // Family or above, MOBOT has no parent information
             case $rank > 120 and $rank <= 180: // sub-family to genus, parent should be a family
                 if (is_null($family)) return null;
                 $searchstr = $family;
-                $toparent = Taxon::where('name', $searchstr);
                 break;
             case $rank > 180 and $rank <= 210: // species, parent should be genus
                 $searchstr = substr($name, 0, strpos($name, " "));
-                $toparent = Taxon::where('name', $searchstr);
                 break;
             case $rank > 210 and $rank <= 280: // subsp, var or form, parent should be a species
-                preg_match('/^(\w+)\s(\w+)\s/', $name, $match);
-                $searchstr = trim($match[0]);
-                $gen = Taxon::where('name', $match[1])->pluck('id');
-                $toparent = Taxon::where('name', $match[2])->whereIn('parent_id', $gen);
+                preg_match('/^(\w+\s\w+)\s/', $name, $match);
+                $searchstr = trim($match[1]);
                 break;
             default:
-                $toparent = null;
-                $searchstr = null;
+                return null;
             }
+            $toparent = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$searchstr]);
             if ($toparent->count()) {
                 return $toparent->first()->id;
             } else {
