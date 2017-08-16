@@ -53,7 +53,7 @@ class ProjectController extends Controller
                         $validator->errors()->add('admins', Lang::get('messages.project_admin_required_error'));
                 });
         }
-            return $validator;
+        return $validator;
     }
     /**
      * Store a newly created resource in storage.

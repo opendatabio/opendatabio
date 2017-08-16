@@ -63,7 +63,9 @@
     <select name="admins-ms" id="admins-ms" class="form-control multi-select">
         <option value='' >&nbsp;</option>
         @foreach ($users as $user)
+        @if ($user->access_level == App\User::USER or $user->access_level == App\User::ADMIN)
         <option value="{{$user->id}}" >{{ $user->email }}</option>
+        @endif
         @endforeach
     </select>
 </div>
@@ -86,7 +88,9 @@
     <select name="collabs-ms" id="collabs-ms" class="form-control multi-select">
         <option value='' >&nbsp;</option>
         @foreach ($users as $user)
+        @if ($user->access_level == App\User::USER or $user->access_level == App\User::ADMIN)
         <option value="{{$user->id}}" >{{ $user->email }}</option>
+        @endif
         @endforeach
     </select>
 </div>
