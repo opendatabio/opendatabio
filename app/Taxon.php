@@ -15,6 +15,14 @@ class Taxon extends Node
         static public function TaxLevels() { 
                 return [0, 30, 60, 70, 90, 100, 120, 130, 150, 180, 210, 220, 240, 270]; 
         }
+        public function newQuery($excludeDeleted = true)
+        {
+            // includes the full name of a taxon in all queries
+            return parent::newQuery($excludeDeleted)->addSelect(
+                '*', 
+                DB::raw('odb_txname(name, level, parent_id) as fullname')
+            );
+        }
 
         public function setFullnameAttribute($value) {
             // Full names have only the first letter capitalized
@@ -24,17 +32,6 @@ class Taxon extends Node
                         $this->name = $value;
                 if ($this->level >= 210) // sp. or below, strips evertyhing before the last space
                         $this->name = trim(substr($value, strrpos($value, ' ') - strlen($value)));
-        }
-        public function getFullnameAttribute() {
-                if ($this->level < 200) return $this->name;
-                if (is_null($this->parent_id)) {
-                        Log::warning('Species or lower registered without parent! ' . $this->name);
-                        return $this->name;
-                }
-                if ($this->level == 210) return $this->parent->fullname . " " . $this->name;
-                if ($this->level == 220) return $this->parent->fullname . " subsp. " . $this->name;
-                if ($this->level == 240) return $this->parent->fullname . " var. " . $this->name;
-                if ($this->level == 270) return $this->parent->fullname . " f. " . $this->name;
         }
         // returns rank numbers from common abbreviations
         static public function getRank($rank) {

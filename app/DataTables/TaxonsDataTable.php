@@ -5,6 +5,7 @@ namespace App\DataTables;
 use App\Taxon;
 use Yajra\Datatables\Services\DataTable;
 use Lang;
+use DB;
 
 class TaxonsDataTable extends DataTable
 {
@@ -17,7 +18,7 @@ class TaxonsDataTable extends DataTable
     {
         return $this->datatables
             ->eloquent($this->query())
-	    ->editColumn('name', function ($taxon) {
+	    ->editColumn('fullname', function ($taxon) {
                 $valid = ($taxon->valid) ? '' : '**';
 		    return '<a href="' . url('taxons/' . $taxon->id) . '">' . 
                     $valid . 
@@ -25,8 +26,11 @@ class TaxonsDataTable extends DataTable
 			    htmlspecialchars($taxon->fullname) . '</a>';
 	    }) 
 	    ->editColumn('level', function($taxon) { return Lang::get('levels.tax.' . $taxon->level); })
+        ->filterColumn('fullname', function($query, $keyword) {
+                $query->whereRaw("odb_txname(name, level, parent_id) like ?", ["%{$keyword}%"]);
+            })
 //	    ->addColumn('full_name', function($location) {return $location->full_name;})
-	    ->rawColumns(['name']);
+	    ->rawColumns(['fullname']);
     }
 
     /**
@@ -36,8 +40,7 @@ class TaxonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Taxon::query()->select($this->getColumns());
-
+        $query = Taxon::query()->select($this->getColumns())->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'));
         return $this->applyScopes($query);
     }
 
@@ -49,23 +52,20 @@ class TaxonsDataTable extends DataTable
     public function html()
     {
         return $this->builder()
-                    ->columns($this->getColumns())
-		    ->removeColumn('id') // need to remove it from showing HERE
-		    ->removeColumn('rgt') // need to remove it from showing HERE
-		    ->removeColumn('lft') // need to remove it from showing HERE
-		    ->removeColumn('parent_id') // need to remove it from showing HERE
-		    ->removeColumn('valid') // need to remove it from showing HERE
-//		    ->addColumn(['data' => 'full_name', 'title' => 'Full name', 'searchable' => true])
-                    ->parameters([
-                        'dom'     => 'Bfrtip',
-                        'order'   => [[0, 'desc']],
-                        'buttons' => [
-                            'csv',
-                            'excel',
-                            'print',
-                            'reload',
-                        ],
-                    ]);
+            ->columns([
+                'fullname' => ['title' => 'Name'], 
+                'level'
+            ])
+            ->parameters([
+                'dom'     => 'Bfrtip',
+                'order'   => [[0, 'desc']],
+                'buttons' => [
+                    'csv',
+                    'excel',
+                    'print',
+                    'reload',
+                ],
+            ]);
     }
 
     /**
@@ -94,6 +94,6 @@ class TaxonsDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_locations_' . time();
+        return 'odb_taxons_' . time();
     }
 }
