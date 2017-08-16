@@ -60,7 +60,9 @@ class TaxonsTableSeeder extends Seeder
                 'bibreference' => $faker->sentence(3) . " " . $faker->randomNumber(3),
             ]);
             for ($j = 0; $j < $faker->numberBetween(0,3); $j++) {
-                $sp->persons()->attach(Person::all()->random());
+                try {
+                    $sp->persons()->attach(Person::all()->random());
+                } catch (Exception $e) {} // duplicates?
             }
 
         }

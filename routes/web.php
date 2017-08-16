@@ -39,6 +39,7 @@ Route::resource('locations', 'LocationController');
 Route::post('taxons/checkapis', 'TaxonController@checkapis')->name('checkapis');
 Route::resource('taxons', 'TaxonController');
 Route::resource('projects', 'ProjectController');
+Route::resource('plants', 'PlantController');
 # Users can be resources for the admin
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 

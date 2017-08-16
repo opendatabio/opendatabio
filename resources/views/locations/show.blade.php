@@ -102,6 +102,27 @@
 
                 </div>
             </div>
+
+
+	@if ($location->plants()->count())
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    @lang('messages.plants')
+                </div>
+
+                <div class="panel-body">
+<ul>
+@foreach ($location->plants as $plant)
+<li> <a href="{{url('plants/' . $plant->id)}}">{{ $plant->fullname }} </a></li>
+@endforeach
+</ul>
+                </div>
+            </div>
+	@endif
+
+
+
+
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang ('messages.location_map')

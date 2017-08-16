@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\User;
 use Log;
+use App\Plant;
 
 class Project extends Model
 {
@@ -32,6 +33,9 @@ class Project extends Model
     }
     public function viewers() {
         return $this->users()->wherePivot('access_level', '=', Project::VIEWER);
+    }
+    public function plants() {
+        return $this->hasMany(Plant::class);
     }
     public function setusers(array $new_users = null, $level) {
         // inspired by https://stackoverflow.com/questions/42625797/laravel-sync-only-a-subset-of-the-pivot-table?rq=1

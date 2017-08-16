@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Baum\Node;
 use DB;
 use Log;
+use App\Plant;
 
 class Location extends Node
 {
@@ -115,6 +116,10 @@ class Location extends Node
     public function uc()
     {
         return $this->belongsTo('App\Location', 'uc_id');
+    }
+    public function plants()
+    {
+        return $this->hasMany(Plant::class);
     }
 
 	// getter method for parts of latitude/longitude
