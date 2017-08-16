@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Lang;
 use App\User;
+use App\Project;
 
 class UserController extends Controller
 {
@@ -41,6 +42,14 @@ class UserController extends Controller
 	    if (! is_null($request->password))
 	    	$user->password = bcrypt($request->password);
 	    $user->access_level = $request->access_level;
+        if ($user->access_level == User::ADMIN or $user->access_level == User::USER) {
+            if(! $user->projects()->count()) { // this user is not member of any project, let's create one for him/her
+                $proj = Project::create([
+                    'name' => substr($user->email, 0, strpos($user->email, '@')) . " Workspace",
+                ]);
+                $proj->users()->attach($user, ['access_level' => Project::ADMIN]);
+            }
+        }
 	    $user->save();
 	return redirect('users')->withStatus(Lang::get('messages.saved'));
     }

@@ -67,7 +67,7 @@
         @endforeach
     </select>
 </div>
-<div class="clearfix"></div>
+</div><div class="form-group">
 <label for="collabs" class="col-sm-3 control-label">
 @lang('messages.collabs')
 </label>
@@ -90,7 +90,7 @@
         @endforeach
     </select>
 </div>
-<div class="clearfix"></div>
+</div><div class="form-group">
 <label for="collabs" class="col-sm-3 control-label">
 @lang('messages.viewers')
 </label>
