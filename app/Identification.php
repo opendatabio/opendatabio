@@ -13,7 +13,7 @@ class Identification extends Model
     const VEL_AFF = 5;
 
     protected $fillable = ['person_id', 'taxon_id', 'object_id', 'object_type', 'date', 'modifier', 'herbarium_id', 'notes'];
-    public function objects() {
+    public function object() {
         return $this->morphTo('object');
     }
     public function person() {

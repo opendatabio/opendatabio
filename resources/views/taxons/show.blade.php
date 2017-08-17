@@ -93,6 +93,7 @@
 @endcan
                 </div>
             </div>
+        </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -132,10 +133,39 @@
         @endforeach
         </ul>
         @endif
-        
-    
+                </div>
+            </div>
+<!-- TODO!!! FIX FOR VOUCHERS -->
+@if ($taxon->identifications()->count()) 
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    @lang('messages.plants')
+                </div>
+
+                <div class="panel-body">
+<!-- TODO paginate?? -->
+<table class="table table-striped" id="references-table">
+                            <thead>
+                                <th>
+@lang('messages.location_and_tag')
+</th>
+                </thead>
+<tbody>
+                                @foreach ($taxon->identifications as $id)
+                                    <tr>
+                    <td class="table-text">
+                    <a href="{{ url('plants/'.$id->object->id) }}">{{ $id->object->fullname }}</a>
+                    </td>
+                                    </tr>
+                    @endforeach
+                    </tbody>
+                        </table>
+
 
                 </div>
             </div>
+@endif
+
     </div>
 @endsection

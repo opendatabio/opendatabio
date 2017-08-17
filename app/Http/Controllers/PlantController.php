@@ -14,7 +14,10 @@ class PlantController extends Controller
      */
     public function index()
     {
-        //
+	    $plants = Plant::with(['location','identification.taxon'])->paginate(10);
+	    return view('plants.index', [
+		    'plants' => $plants,
+	    ]);
     }
 
     /**

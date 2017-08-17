@@ -150,7 +150,7 @@ class TaxonController extends Controller
      */
     public function show($id)
     {
-            $taxon = Taxon::findOrFail($id);
+            $taxon = Taxon::with('identifications.object')->findOrFail($id);
             if ($taxon->author_id)
                     $author = Person::findOrFail($taxon->author_id);
             else
@@ -159,6 +159,7 @@ class TaxonController extends Controller
                     $bibref = BibReference::findOrFail($taxon->bibreference_id);
             else
                     $bibref = null;
+
 	    return view('taxons.show', [
                 'taxon' => $taxon,
                 'author' => $author,

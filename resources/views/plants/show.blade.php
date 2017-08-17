@@ -11,9 +11,7 @@
 @lang('messages.identification')
 : </strong>
 @if (is_null($identification))
-    <em>
         @lang ('messages.unidentified')
-    </em>
 @else
     <em>        
     <a href="{{url('taxons/' . $identification->taxon->id)}}">
@@ -87,11 +85,15 @@
 <p><strong>
 @lang('messages.collectors')
 :</strong>
-<ul>
-@foreach ($plant->get_collectors() as $collector)
-<li><a href="{{url('persons/' . $collector->id)}}">{{$collector->full_name}}</a></li>
-@endforeach
-</ul>
+@if (! is_null($plant->get_collectors()))
+    <ul>
+    @foreach ($plant->get_collectors() as $collector)
+    <li><a href="{{url('persons/' . $collector->id)}}">{{$collector->full_name}}</a></li>
+    @endforeach
+    </ul>
+@else
+    @lang ('messages.not_registered')
+@endif
 </p>
 
 
