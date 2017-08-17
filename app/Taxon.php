@@ -89,6 +89,14 @@ class Taxon extends Node
             return $query->where('valid', '=', 1);
         }
 
+        public function scopeLeaf($query) {
+            // partially reimplemented from Etrepat/Baum
+              $grammar = $this->getConnection()->getQueryGrammar();
+              $rgtCol = $grammar->wrap($this->getQualifiedRightColumnName());
+              $lftCol = $grammar->wrap($this->getQualifiedLeftColumnName());
+              return $query->where('level', '>=', 210)->whereRaw($rgtCol . ' - ' . $lftCol . ' = 1');
+        }
+
         // Functions for handling API keys
     public function setapikey($name, $reference) {
         $refs = $this->externalrefs()->where('name', $name);
@@ -123,6 +131,9 @@ class Taxon extends Node
                 $ref = $this->externalrefs()->where('name', 'Mycobank');
                 if ($ref->count())
                         return $ref->first()->reference;
+        }
+        public function identifications() {
+            return $this->hasMany(Identification::class);
         }
         // returns: mixed. May be string if not found in DB, or int (id) if found, or null if no query possible
         static public function getParent($name, $rank, $family) {

@@ -32,6 +32,10 @@ class Plant extends Model
     {
         return $this->belongsTo(Project::class);
     }
+    public function identification() 
+    {
+        return $this->morphOne(Identification::class, 'object');
+    }
     // NOT a relationship, this returns a collection of persons
     public function get_collectors() {
         $collectors = $this->morphMany(Collector::class, 'object')->get();

@@ -48,8 +48,10 @@ class PlantController extends Controller
     {
         // TODO: authorize
         $plant = Plant::findOrFail($id);
+        $identification = $plant->identification;
         return view('plants.show', [
             'plant' => $plant,
+            'identification' => $identification,
         ]);
     }
 

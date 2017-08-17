@@ -20,11 +20,24 @@ class PlantsTableSeeder extends Seeder
             } catch (Exception $e) {}
         }
     }
+    protected function Identify($plant, $faker, $persons, $taxons) {
+            $modifier = $faker->numberBetween(0, 20) == 0 ?
+                $faker->numberBetween(1, 5) : 0;
+            App\Identification::create([
+                'person_id' => $persons->random()->id,
+                'taxon_id' => $taxons->random()->id,
+                'object_id' => $plant->id,
+                'object_type' => 'App\Plant',
+                'date' => Carbon\Carbon::now(),
+                'modifier' => $modifier,
+            ]);
+    }
     public function run()
     {
 	    $faker = Faker\Factory::create();
         $projects = \App\Project::all();
         $persons = \App\Person::all();
+        $taxons = \App\Taxon::valid()->leaf()->get();
         $plots = \App\Location::where('adm_level', \App\Location::LEVEL_PLOT)->get();
         $points = \App\Location::where('adm_level', \App\Location::LEVEL_POINT)->get();
         // on points
@@ -37,6 +50,7 @@ class PlantsTableSeeder extends Seeder
             ]);
             $plant->save();
             $this->addCollectors($plant, $faker, $persons);
+            $this->Identify($plant, $faker, $persons, $taxons);
         }
         // on plots
         for ($i = 0; $i < 1000; $i++) {
@@ -51,6 +65,7 @@ class PlantsTableSeeder extends Seeder
                                                 $faker->numberBetween(0, $plot->x) . ")";
             $plant->save();
             $this->addCollectors($plant, $faker, $persons);
+            $this->Identify($plant, $faker, $persons, $taxons);
         }
     }
 }

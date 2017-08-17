@@ -7,7 +7,52 @@
                 <div class="panel-heading">
                     @lang('messages.plant')
 		<div class="panel-body">
-		    <p><strong>
+<p><strong>
+@lang('messages.identification')
+: </strong>
+@if (is_null($identification))
+    <em>
+        @lang ('messages.unidentified')
+    </em>
+@else
+    <em>        
+    <a href="{{url('taxons/' . $identification->taxon->id)}}">
+        {{ $identification->taxon->fullname }}
+    </a>
+    </em>
+    @if ($identification->modifier)
+        @lang ('levels.identification.' . $identification->modifier)
+    @endif
+    </p>
+    <p><strong>
+    @lang('messages.identified_by')
+    :</strong>
+    <a href="url({{'persons/' . $identification->person->id}})">
+        {{ $identification->person->full_name }}
+    </a> ({{ $identification->date }})
+    </p>
+    @if ($identification->herbarium_id)
+    <p><strong>
+    @lang('messages.identification_based_on')
+    :</strong>
+    <a href="url({{'herbaria/' . $identification->herbarium_id}})">
+        {{ $identification->herbarium->acronym }}
+    </a>
+    </p>
+    @endif
+    @if ($identification->notes)
+    <p><strong>
+    @lang('messages.identification_notes')
+    :</strong>
+        {{ $identification->notes }}
+    </a> 
+    </p>
+    @endif
+
+
+@endif
+        
+<p><strong>
 @lang('messages.location')
 : </strong>  
 <a href="{{url('locations/' . $plant->location->id)}}">{{$plant->location->name}}</a>
