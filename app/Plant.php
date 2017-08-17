@@ -3,13 +3,24 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use App\Location;
 use App\Project;
 use App\Collector;
 use DB;
+use Auth;
 
 class Plant extends Model
 {
+//    protected static function boot()
+//    {
+//        parent::boot();
+
+ //       static::addGlobalScope('id', function (Builder $builder) {
+//            $builder->join('projects', 'projects.id', '=', 'project_id')->where('projects.id', '=', 1);
+//        });
+//    }
+    //    maybe http://lyften.com/journal/user-settings-using-laravel-5-eloquent-global-scopes.html ???
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
 	public function setRelativePositionAttribute($value) {
 		if (is_null($value)) {
@@ -51,5 +62,4 @@ class Plant extends Model
 			DB::raw('AsText(relative_position) as relativePosition')
 		);
 	}
-    //
 }
