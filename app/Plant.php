@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\Location;
 use App\Project;
+use App\Collector;
 use DB;
 
 class Plant extends Model
@@ -30,6 +31,14 @@ class Plant extends Model
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+    // NOT a relationship, this returns a collection of persons
+    public function get_collectors() {
+        $collectors = $this->morphMany(Collector::class, 'object')->get();
+        if (! $collectors->count()) return null;
+        return collect($collectors)->map(function ($item) {
+            return $item->person;
+        });
     }
 	public function newQuery($excludeDeleted = true)
 	{

@@ -9,54 +9,43 @@
                 </div>
 
 		<div class="panel-body">
-<div class="col-sm-6">
+<p>
 	<strong>
 	@lang('messages.full_name')
-	</strong>
-</div>
-<div class="col-sm-6">
+:</strong>
 	{{ $person->full_name }}
-</div>
-<div class="col-sm-6">
+</p>
+<p>
 	<strong>
 	@lang('messages.abbreviation')
-	</strong>
-</div>
-<div class="col-sm-6">
+:</strong>
 	{{ $person->abbreviation }}
-</div>
-<div class="col-sm-6">
+</p>
+<p>
 	<strong>
 	@lang('messages.email')
-	</strong>
-</div>
-<div class="col-sm-6">
+:</strong>
 	{{ $person->email }}
-</div>
-<div class="col-sm-6">
+</p>
+@if ($person->institution)
+<p>
 	<strong>
 	@lang('messages.institution')
-	</strong>
-</div>
-<div class="col-sm-6">
-
+:</strong>
 	{{ $person->institution }}
-&nbsp;
-</div>
-<div class="col-sm-6">
+</p>
+@endif
+@if ($person->herbarium)
+<p>
 	<strong>
 	@lang('messages.herbarium')
-	</strong>
-</div>
-<div class="col-sm-6">
-@if ($person->herbarium)
+:</strong>
 <a href="{{url('herbaria/'. $person->herbarium->id)}}">{{ $person->herbarium->acronym }}</a>
 @endif
-&nbsp;
-</div>
+</p>
 
 @if ($person->taxons->count())
-<div class="col-sm-12">
+<p>
 	<strong>
 	@lang('messages.specialist_in')
 	</strong>
@@ -65,8 +54,7 @@
 <li><a href="{{url('taxons/'. $taxon->id)}}">{{ $taxon->fullname }}</a></li>
 @endforeach
 </ul>
-&nbsp;
-</div>
+</p>
 @endif
 @can ('update', $person)
 				<a class="btn btn-success" href="{{url ('persons/' . $person->id . '/edit')}}">
@@ -75,7 +63,23 @@
 				</a>
 @endcan
             </div>
+</div>
+@if ($person->get_plants()->count())
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    @lang('messages.collector')
+                </div>
+
+		<div class="panel-body">
+<p>
+<ul>
+@foreach ($person->get_plants() as $plant)
+<li><a href="{{url('plants/' . $plant->id)}}">{{$plant->fullname}}</a></li>
+@endforeach
+</ul>
+            </div>
+@endif
+            
 <!-- Other details (specialist, collects, etc?) -->
-        </div>
     </div>
 @endsection

@@ -4,6 +4,8 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use FuzzyWuzzy\Fuzz;
+use App\Collector;
+use App\Plant;
 
 class Person extends Model
 {
@@ -44,5 +46,14 @@ class Person extends Model
     public function taxons()
     {
             return $this->belongsToMany('App\Taxon');
+    }
+    // NOT a relationship, this returns a collection
+    // TODO: should this be done with something like "belongsToMany"/"morphToMany" via Collectors?
+    public function get_plants()
+    {
+        $collected = Collector::where('person_id', $this->id)->where('object_type', 'App\Plant')->get();
+        return collect($collected)->map(function ($item) {
+            return $item->collected;
+        });
     }
 }

@@ -9,10 +9,22 @@ class PlantsTableSeeder extends Seeder
      *
      * @return void
      */
+    protected function addCollectors($plant, $faker, $persons) {
+        for ($i = 0; $i < $faker->numberBetween(0, 4); $i++) {
+            try {
+            App\Collector::create([
+                'person_id' => $persons->random()->id,
+                'object_type' => 'App\Plant',
+                'object_id' => $plant->id,
+            ]);
+            } catch (Exception $e) {}
+        }
+    }
     public function run()
     {
 	    $faker = Faker\Factory::create();
         $projects = \App\Project::all();
+        $persons = \App\Person::all();
         $plots = \App\Location::where('adm_level', \App\Location::LEVEL_PLOT)->get();
         $points = \App\Location::where('adm_level', \App\Location::LEVEL_POINT)->get();
         // on points
@@ -24,6 +36,7 @@ class PlantsTableSeeder extends Seeder
                 'project_id' => $projects->random()->id,
             ]);
             $plant->save();
+            $this->addCollectors($plant, $faker, $persons);
         }
         // on plots
         for ($i = 0; $i < 1000; $i++) {
@@ -37,7 +50,7 @@ class PlantsTableSeeder extends Seeder
             $plant->relativePosition = "POINT (" . $faker->numberBetween(0, $plot->y) . " " .
                                                 $faker->numberBetween(0, $plot->x) . ")";
             $plant->save();
-
+            $this->addCollectors($plant, $faker, $persons);
         }
     }
 }

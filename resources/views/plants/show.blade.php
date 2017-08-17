@@ -39,6 +39,17 @@
 </p>
 @endif
 
+<p><strong>
+@lang('messages.collectors')
+:</strong>
+<ul>
+@foreach ($plant->get_collectors() as $collector)
+<li><a href="{{url('persons/' . $collector->id)}}">{{$collector->full_name}}</a></li>
+@endforeach
+</ul>
+</p>
+
+
 @can ('update', $plant)
 			    <div class="col-sm-6">
 				<a href="{{ url('plant/'. $plant->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
