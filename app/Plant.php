@@ -9,18 +9,35 @@ use App\Project;
 use App\Collector;
 use DB;
 use Auth;
+use App\User;
 
 class Plant extends Model
 {
-//    protected static function boot()
-//    {
-//        parent::boot();
+    protected static function boot()
+    {
+        parent::boot();
 
- //       static::addGlobalScope('id', function (Builder $builder) {
-//            $builder->join('projects', 'projects.id', '=', 'project_id')->where('projects.id', '=', 1);
-//        });
-//    }
-    //    maybe http://lyften.com/journal/user-settings-using-laravel-5-eloquent-global-scopes.html ???
+        static::addGlobalScope('projects.id', function (Builder $builder) {
+            // first, the easy cases. No logged in user?
+            if (is_null(Auth::user())) {
+                return $builder->join('projects', 'projects.id', '=', 'project_id')
+                    ->where('projects.privacy', '=', Project::PRIVACY_PUBLIC);
+            }
+            // superadmins see everything
+            if (Auth::user()->access_level == User::ADMIN) {
+                return $builder;
+            }
+            // now the complex case: the regular user
+            $q1 = $builder->join('projects', 'projects.id', '=', 'project_id')
+                    ->where('projects.privacy', '=', Project::PRIVACY_PUBLIC);
+            return $builder->join('projects', 'projects.id', '=', 'plants.project_id')
+                ->join('project_user', 'projects.id', '=', 'project_user.project_id')
+                ->whereRaw('( projects.privacy != ' .  Project::PRIVACY_PUBLIC . ' )
+AND
+(project_user.user_id = ' . Auth::user()->id . ' )
+');
+        });
+    }
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
 	public function setRelativePositionAttribute($value) {
 		if (is_null($value)) {
@@ -57,8 +74,15 @@ class Plant extends Model
     }
 	public function newQuery($excludeDeleted = true)
 	{
+        // This uses the explicit list to avoid conflict due to global scope
+        // maybe check http://lyften.com/journal/user-settings-using-laravel-5-eloquent-global-scopes.html ???
 		return parent::newQuery($excludeDeleted)->addSelect(
-			'*', 
+            'plants.id', 
+            'plants.tag',
+            'plants.project_id',
+            'plants.date',    
+            'plants.notes',
+            'plants.location_id',
 			DB::raw('AsText(relative_position) as relativePosition')
 		);
 	}
