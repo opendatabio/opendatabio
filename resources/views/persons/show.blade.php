@@ -64,7 +64,7 @@
 @endcan
             </div>
 </div>
-@if ($person->get_plants()->count())
+@if ($collected->count())
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.collector')
@@ -73,8 +73,11 @@
 		<div class="panel-body">
 <p>
 <ul>
-@foreach ($person->get_plants() as $plant)
-<li><a href="{{url('plants/' . $plant->id)}}">{{$plant->fullname}}</a></li>
+@foreach ($collected as $scollected)
+@if ($scollected->object)
+<li><a href="{{url('plants/' . $scollected->object->id)}}">{{$scollected->object->fullname}}</a>
+    (<em>{{$scollected->object->identification->taxon->fullname}}</em>)</li>
+@endif
 @endforeach
 </ul>
             </div>

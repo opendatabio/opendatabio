@@ -66,13 +66,8 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
     {
         return $this->morphOne(Identification::class, 'object');
     }
-    // NOT a relationship, this returns a collection of persons
-    public function get_collectors() {
-        $collectors = $this->morphMany(Collector::class, 'object')->get();
-        if (! $collectors->count()) return null;
-        return collect($collectors)->map(function ($item) {
-            return $item->person;
-        });
+    public function collectors() {
+        return $this->morphMany(Collector::class, 'object');
     }
 	public function newQuery($excludeDeleted = true)
 	{

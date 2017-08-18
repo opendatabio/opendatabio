@@ -52,9 +52,11 @@ class PlantController extends Controller
         // TODO: authorize
         $plant = Plant::findOrFail($id);
         $identification = $plant->identification;
+        $collectors = $plant->collectors;
         return view('plants.show', [
             'plant' => $plant,
             'identification' => $identification,
+            'collectors' => $collectors,
         ]);
     }
 

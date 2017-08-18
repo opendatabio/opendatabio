@@ -14,6 +14,12 @@ class UsersTableSeeder extends Seeder
 	    $faker = Faker\Factory::create();
         $persons = App\Person::all();
 
+        DB::table('users')->insert([
+            'email' => 'user@example.org',
+            'password' => bcrypt('password1'),
+            'access_level' => 1,
+        ]);
+
         for ($i = 0; $i < 40; $i++) {
 		    $person = null;
 		    if($faker->numberBetween(1,3) == 1) 

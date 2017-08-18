@@ -12,7 +12,7 @@ class Collector extends Model
     public function person() {
         return $this->belongsTo(Person::class);
     }
-    public function collected() {
+    public function object() {
         return $this->morphTo('object');
     }
     //

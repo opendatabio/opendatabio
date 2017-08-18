@@ -113,7 +113,9 @@
                 <div class="panel-body">
 <ul>
 @foreach ($location->plants as $plant)
-<li> <a href="{{url('plants/' . $plant->id)}}">{{ $plant->fullname }} </a></li>
+<li> <a href="{{url('plants/' . $plant->id)}}">{{ $plant->fullname }} </a>
+    (<em>{{$plant->identification->taxon->fullname}}</em>)</li>
+</li>
 @endforeach
 </ul>
                 </div>

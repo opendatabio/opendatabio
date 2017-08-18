@@ -247,4 +247,5 @@ remove the job information from the database.',
   'collection_date' => 'Collection date',
   'collectors' => 'Collectors',
   'collector' => 'Collector',
+  'not_registered' => 'Not registered',
 );

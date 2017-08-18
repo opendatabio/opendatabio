@@ -37,6 +37,16 @@
 </ul>
 </p>
 
+<p><strong>
+@lang('messages.viewers')
+:</strong>
+<ul>
+@foreach ($project->users()->wherePivot('access_level', '=', App\Project::VIEWER)->get() as $admin)
+<li> {{ $admin->email }} </li>
+@endforeach
+</ul>
+</p>
+
 @if ($project->notes) 
 		    <p><strong>
 @lang('messages.notes')
@@ -55,6 +65,27 @@
 @endcan
                 </div>
             </div>
+	@if ($project->plants()->count())
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    @lang('messages.plants')
+                </div>
+
+                <div class="panel-body">
+<ul>
+@foreach ($project->plants as $plant)
+<li> <a href="{{url('plants/' . $plant->id)}}">{{ $plant->fullname }} </a>
+@if ($plant->identification)
+(<em>{{$plant->identification->taxon->fullname}}</em>)
+@else
+    @lang ('messages.unidentified')
+@endif
+</li>
+@endforeach
+</ul>
+                </div>
+            </div>
+	@endif
 <!-- Other details (specialist, herbarium, collects, etc?) -->
     </div>
 @endsection

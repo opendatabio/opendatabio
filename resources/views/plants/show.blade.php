@@ -25,7 +25,7 @@
     <p><strong>
     @lang('messages.identified_by')
     :</strong>
-    <a href="url({{'persons/' . $identification->person->id}})">
+    <a href="{{url('persons/' . $identification->person->id)}}">
         {{ $identification->person->full_name }}
     </a> ({{ $identification->date }})
     </p>
@@ -33,7 +33,7 @@
     <p><strong>
     @lang('messages.identification_based_on')
     :</strong>
-    <a href="url({{'herbaria/' . $identification->herbarium_id}})">
+    <a href="{{url('herbaria/' . $identification->herbarium_id)}}">
         {{ $identification->herbarium->acronym }}
     </a>
     </p>
@@ -85,10 +85,10 @@
 <p><strong>
 @lang('messages.collectors')
 :</strong>
-@if (! is_null($plant->get_collectors()))
+@if ($collectors->count())
     <ul>
-    @foreach ($plant->get_collectors() as $collector)
-    <li><a href="{{url('persons/' . $collector->id)}}">{{$collector->full_name}}</a></li>
+    @foreach ($collectors as $collector)
+    <li><a href="{{url('persons/' . $collector->person->id)}}">{{$collector->person->full_name}}</a></li>
     @endforeach
     </ul>
 @else

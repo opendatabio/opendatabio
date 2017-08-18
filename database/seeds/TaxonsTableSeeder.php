@@ -59,6 +59,7 @@ class TaxonsTableSeeder extends Seeder
                 'author' => $faker->lastName,
                 'bibreference' => $faker->sentence(3) . " " . $faker->randomNumber(3),
             ]);
+            // Specialists
             for ($j = 0; $j < $faker->numberBetween(0,3); $j++) {
                 try {
                     $sp->persons()->attach(Person::all()->random());
@@ -66,8 +67,49 @@ class TaxonsTableSeeder extends Seeder
             }
 
         }
-
-        // Specialists
-
+        // subsp
+	    for ($i = 0; $i < 10; $i++) {
+            $parent = App\Taxon::where('level', 210)->get()->random()->id;
+            for ($j = 0; $j < $faker->numberBetween(1,5); $j++) {
+                $name = $faker->word;
+                if (strlen($name) < 4) $name .= $faker->word;
+                $sp = Taxon::create([
+                    'name' => $name,
+                    'parent_id' => $parent,
+                    'level' => collect([220, 240, 270])->random(),
+                    'valid' => 1,
+                    'author' => $faker->lastName,
+                    'bibreference' => $faker->sentence(3) . " " . $faker->randomNumber(3),
+                ]);
+                // Specialists
+                for ($k = 0; $k < $faker->numberBetween(0,3); $k++) {
+                    try {
+                        $sp->persons()->attach(Person::all()->random());
+                    } catch (Exception $e) {} // duplicates?
+                }
+            }
+        }
+        // invalid species
+        $level = 210;
+	    for ($i = 0; $i < 20; $i++) {
+            $name = $faker->word;
+            if (strlen($name) < 4) $name .= $faker->word;
+            $senior = App\Taxon::where('level', 210)->get()->random()->id;
+            $sp = Taxon::create([
+                'name' => $name,
+                'parent_id' => App\Taxon::where('level', 180)->get()->random()->id,
+                'level' => $level,
+                'valid' => 0,
+                'senior_id' => $senior,
+                'author' => $faker->lastName,
+                'bibreference' => $faker->sentence(3) . " " . $faker->randomNumber(3),
+            ]);
+            // Specialists
+            for ($j = 0; $j < $faker->numberBetween(0,3); $j++) {
+                try {
+                    $sp->persons()->attach(Person::all()->random());
+                } catch (Exception $e) {} // duplicates?
+            }
+        }
     }
 }

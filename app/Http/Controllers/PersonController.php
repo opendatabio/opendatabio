@@ -77,11 +77,11 @@ class PersonController extends Controller
      */
     public function show($id)
     {
-	    $person = Person::findOrFail($id);
-	    $herbaria = Herbarium::all();
+	    $person = Person::with('collected.object')->findOrFail($id);
+        $collected = $person->collected;
 	    return view('persons.show', [
 		    'person' => $person,
-		    'herbaria' => $herbaria,
+		    'collected' => $collected,
 	    ]);
     }
 

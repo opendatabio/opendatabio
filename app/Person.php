@@ -47,13 +47,7 @@ class Person extends Model
     {
             return $this->belongsToMany('App\Taxon');
     }
-    // NOT a relationship, this returns a collection
-    // TODO: should this be done with something like "belongsToMany"/"morphToMany" via Collectors?
-    public function get_plants()
-    {
-        $collected = Collector::where('person_id', $this->id)->where('object_type', 'App\Plant')->get();
-        return collect($collected)->map(function ($item) {
-            return $item->collected;
-        });
+    public function collected() {
+        return $this->hasMany(Collector::class);
     }
 }

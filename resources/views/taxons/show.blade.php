@@ -153,11 +153,13 @@
                 </thead>
 <tbody>
                                 @foreach ($taxon->identifications as $id)
+                                @if ($id->object)
                                     <tr>
                     <td class="table-text">
                     <a href="{{ url('plants/'.$id->object->id) }}">{{ $id->object->fullname }}</a>
                     </td>
                                     </tr>
+                                @endif
                     @endforeach
                     </tbody>
                         </table>
