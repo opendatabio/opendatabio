@@ -28,14 +28,16 @@ class Plant extends Model
                 return $builder;
             }
             // now the complex case: the regular user
-            $q1 = $builder->join('projects', 'projects.id', '=', 'project_id')
-                    ->where('projects.privacy', '=', Project::PRIVACY_PUBLIC);
-            return $builder->join('projects', 'projects.id', '=', 'plants.project_id')
-                ->join('project_user', 'projects.id', '=', 'project_user.project_id')
-                ->whereRaw('( projects.privacy != ' .  Project::PRIVACY_PUBLIC . ' )
-AND
-(project_user.user_id = ' . Auth::user()->id . ' )
-');
+            return $builder->whereRaw('plants.id IN
+(SELECT p1.id FROM plants AS p1
+JOIN projects ON (projects.id = p1.project_id)
+WHERE projects.privacy > 0
+UNION 
+SELECT p1.id FROM plants AS p1
+JOIN projects ON (projects.id = p1.project_id)
+JOIN project_user ON (projects.id = project_user.project_id)
+WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
+)');
         });
     }
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
