@@ -24,7 +24,7 @@
     </p>
     <p><strong>
     @lang('messages.identified_by')
-    :</strong>
+:</strong>
     <a href="{{url('persons/' . $identification->person->id)}}">
         {{ $identification->person->full_name }}
     </a> ({{ $identification->date }})
@@ -32,7 +32,7 @@
     @if ($identification->herbarium_id)
     <p><strong>
     @lang('messages.identification_based_on')
-    :</strong>
+:</strong>
     <a href="{{url('herbaria/' . $identification->herbarium_id)}}">
         {{ $identification->herbarium->acronym }}
     </a>
@@ -41,7 +41,7 @@
     @if ($identification->notes)
     <p><strong>
     @lang('messages.identification_notes')
-    :</strong>
+:</strong>
         {{ $identification->notes }}
     </a> 
     </p>
@@ -99,7 +99,7 @@
 
 @can ('update', $plant)
 			    <div class="col-sm-6">
-				<a href="{{ url('plant/'. $plant->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
+				<a href="{{ url('plants/'. $plant->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')
 

@@ -41,15 +41,15 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
         });
     }
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
-	public function setRelativePositionAttribute($value) {
-		if (is_null($value)) {
+	public function setRelativePositionAttribute($x, $y = null) {
+		if (is_null($x) and is_null($y)) {
 			$this->attributes['relative_position'] = null;
 			return;
 		}
 		// MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
 		$invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val")[0]->val;
 		if($invalid) { throw new \UnexpectedValueException('Invalid Geometry object'); }
-	        $this->attributes['relative_position'] = DB::raw("GeomFromText('$value')");
+	        $this->attributes['relative_position'] = DB::raw("GeomFromText('POINT($y $x)')");
 	}
     public function getFullnameAttribute() {
         return $this->location->name . "-" . $this->tag;
