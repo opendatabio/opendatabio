@@ -114,10 +114,20 @@
 <ul>
 @foreach ($location->plants as $plant)
 <li> <a href="{{url('plants/' . $plant->id)}}">{{ $plant->fullname }} </a>
-    (<em>{{$plant->identification->taxon->fullname}}</em>)</li>
+@if ($plant->identification)
+    (<em>{{$plant->identification->taxon->fullname}}</em>)
+@else
+    (@lang ('messages.unidentified'))
+@endif
 </li>
 @endforeach
 </ul>
+
+@if (isset($chartjs))
+<div style = "width:100%; height:400px; overflow:auto;">
+{!! $chartjs->render() !!}
+</div>
+@endif
                 </div>
             </div>
 	@endif

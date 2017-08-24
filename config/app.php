@@ -231,6 +231,7 @@ return [
 	Yajra\Datatables\DatatablesServiceProvider::class,
 	Yajra\Datatables\ButtonsServiceProvider::class,
 	Baum\Providers\BaumServiceProvider::class,
+    Fx3costa\LaravelChartJs\Providers\ChartjsServiceProvider::class,
 
     ],
 

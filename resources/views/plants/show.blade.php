@@ -54,6 +54,9 @@
 @lang('messages.location')
 : </strong>  
 <a href="{{url('locations/' . $plant->location->id)}}">{{$plant->location->name}}</a>
+@if ($plant->x)
+(X: {{$plant->x}} Y: {{$plant->y}})
+@endif
 </p>
 
 <p><strong>

@@ -41,13 +41,13 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
         });
     }
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
-	public function setRelativePositionAttribute($x, $y = null) {
+	public function setRelativePosition($x, $y = null) {
 		if (is_null($x) and is_null($y)) {
 			$this->attributes['relative_position'] = null;
 			return;
 		}
 		// MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
-		$invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val")[0]->val;
+		$invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('POINT($y $x)')) as val")[0]->val;
 		if($invalid) { throw new \UnexpectedValueException('Invalid Geometry object'); }
 	        $this->attributes['relative_position'] = DB::raw("GeomFromText('POINT($y $x)')");
 	}
@@ -82,5 +82,15 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
             'plants.location_id',
 			DB::raw('AsText(relative_position) as relativePosition')
 		);
+	}
+	public function getXAttribute() {
+		$point = substr($this->relativePosition, 6, -1);
+		$pos = strpos($point, ' ');
+		return substr($point, $pos+1);
+	}
+	public function getYAttribute() {
+		$point = substr($this->relativePosition, 6, -1);
+		$pos = strpos($point, ' ');
+		return substr($point,0, $pos);
 	}
 }

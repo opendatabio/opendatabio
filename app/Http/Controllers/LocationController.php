@@ -174,11 +174,42 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-	    $location = Location::findOrFail($id);
-	    return view('locations.show', [
-		    'location' => $location,
-	    ]);
-        //
+	    $location = Location::with(['plants.identification.taxon'])->findOrFail($id);
+        $plants = $location->plants;
+
+        if ($location->x) {
+            if ($location->x > $location->y) {
+                $width = 400;
+                $height = 400 / $location->x * $location->y;
+            } else {
+                $height = 400;
+                $width = 400 / $location->y * $location->x;
+            }
+    
+            $chartjs = app()->chartjs
+                ->name('LocationPlants')
+                ->type('scatter')
+                ->size(['width' => $width, 'height' => $height ])
+                ->labels($plants->map(function($x) {return $x->tag;})->all())
+                ->datasets([
+                    [
+                        "label" => "Plants in location",
+                        "showLine" => false,
+                        'backgroundColor' => "rgba(38, 185, 154, 0.31)",
+                        'borderColor' => "rgba(38, 185, 154, 0.7)",
+                        "pointBorderColor" => "rgba(38, 185, 154, 0.7)",
+                        "pointBackgroundColor" => "rgba(38, 185, 154, 0.7)",
+                        "pointHoverBackgroundColor" => "rgba(220,220,20,0.7)",
+                        "pointHoverBorderColor" => "rgba(220,220,20,1)",
+                        'data' =>  $plants->map(function($x) {return ['x' => $x->x, 'y' => $x->y];})->all()
+                    ]
+                ])
+                ->options([
+                    "maintainAspectRatio" => true,
+                ]);
+            return view('locations.show', compact('chartjs', 'location'));
+        } // else
+        return view('locations.show', compact('location'));
     }
 
     /**
@@ -192,12 +223,7 @@ class LocationController extends Controller
 	    $locations = Location::all();
 	    $uc_list = Location::ucs()->get();
 	    $location = Location::findOrFail($id);
-	    // TODO: change this view name?
-	    return view('locations.create', [
-		    'locations' => $locations,
-		    'location' => $location,
-		    'uc_list' => $uc_list
-	    ]);
+        return view('locations.create', compact('locations', 'location', 'uc_list'));
     }
 
     /**

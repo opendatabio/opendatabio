@@ -57,8 +57,11 @@ class PlantController extends Controller
     }
 
     public function customValidate (Request $request, Plant $plant = null) {
+        // for checking duplicates
         $plantid = null;
         if ($plant) $plantid = $plant->id;
+
+        $location = Location::findOrFail($request->location_id);
 	    $rules = [
             'location_id' => 'required|integer',
             'project_id' => 'required|integer',
@@ -77,6 +80,8 @@ class PlantController extends Controller
                     $query->where('location_id', $request->location_id);
                 }),
             ],
+            'x' => 'nullable|numeric|min:0|max:'.$location->x,
+            'y' => 'nullable|numeric|min:0|max:'.$location->y,
         ];
 	    $validator = Validator::make($request->all(), $rules);
 	    return $validator;
@@ -100,6 +105,9 @@ class PlantController extends Controller
         $plant = Plant::create($request->only([
             'tag', 'location_id', 'project_id', 'date', 'notes', 
         ]));
+        $plant->setRelativePosition($request->x, $request->y);
+        $plant->save();
+
         // TODO: relative position
         foreach($request->collector as $collector)
             $plant->collectors()->create(['person_id' => $collector]);
@@ -181,7 +189,8 @@ class PlantController extends Controller
         $plant->update($request->only([
             'tag', 'location_id', 'project_id', 'date', 'notes', 
         ]));
-        // TODO: relative position
+        $plant->setRelativePosition($request->x, $request->y);
+        $plant->save();
         
         // "sync" collectors. See app/Project.php / setusers()
         $current = $plant->collectors->pluck('person_id');

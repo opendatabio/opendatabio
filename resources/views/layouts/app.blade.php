@@ -13,6 +13,9 @@
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
+    <!-- Chart.js -->
+    <script src="{{ asset('js/Chart.min.js') }}"></script>
+
     <!-- Scripts -->
     <script>
         window.Laravel = {!! json_encode([

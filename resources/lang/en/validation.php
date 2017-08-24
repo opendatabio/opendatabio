@@ -101,6 +101,13 @@ return [
         'parent_id' => [
             'required_unless' => 'The parent attribute is mandatory except for countries.',
         ],
+        // these are for registering plants
+        'x' => [
+            'max' => 'The x and y attributes must be smaller or equal than the indicated plot dimensions.',
+        ],
+        'y' => [
+            'max' => 'The x and y attributes must be smaller or equal than the indicated plot dimensions.',
+        ],
     ],
 
     /*

@@ -88,9 +88,16 @@
     <label for="relative_position" class="col-sm-3 control-label">
 @lang('messages.relative_position')
 </label>
+        <a data-toggle="collapse" href="#hint12" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<textarea name="relative_position" id="relative_position" class="form-control">{{ old('relative_position', isset($plant) ? $plant->relative_position : null) }}</textarea>
+	X: <input type="text" name="x" id="x" class="form-control latlongpicker" value="{{ old('x', isset($location) ? $location->x : null) }}">(m)&nbsp;
+	Y: <input type="text" name="y" id="y" class="form-control latlongpicker" value="{{ old('y', isset($location) ? $location->y : null) }}">(m)
             </div>
+  <div class="col-sm-12">
+    <div id="hint12" class="panel-collapse collapse">
+	@lang('messages.plant_position_hint')
+    </div>
+  </div>
 </div>
 
 <!-- collector -->
