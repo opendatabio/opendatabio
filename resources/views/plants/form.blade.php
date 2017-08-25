@@ -66,7 +66,7 @@
 </label>
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="date" id="date" class="form-control" value="{{ old('date', isset($plant) ? $plant->date : null) }}">
+	<input type="text" name="date" id="date" class="form-control date-picker" value="{{ old('date', isset($plant) ? $plant->date : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint4" class="panel-collapse collapse">
@@ -217,7 +217,7 @@
 </label>
         <a data-toggle="collapse" href="#hint8" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="identification_date" id="identification_date" class="form-control" value="{{ old('identification_date', isset($plant) ? $plant->identification->date : null) }}">
+	<input type="text" name="identification_date" id="identification_date" class="form-control date-picker" value="{{ old('identification_date', isset($plant) ? $plant->identification->date : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint8" class="panel-collapse collapse">
