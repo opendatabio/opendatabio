@@ -171,7 +171,4 @@ $(document).ready(function(){
                 $(this).remove();
         });
 
-
-    // Date picker and incomplete date picker code here
-    $(".date-picker").datepicker();
 });

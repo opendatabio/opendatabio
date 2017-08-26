@@ -1,4 +1,3 @@
-
 // Fonts
 @import url(https://fonts.googleapis.com/css?family=Raleway:300,400,600);
 
@@ -9,5 +8,7 @@
 // Bootstrap
 @import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap";
 
-//jQuery-UI
-@import "node_modules/jquery-ui-bundle/jquery-ui";
+// Datatables
+@import "node_modules/datatables/media/css/jquery.dataTables.min";
+@import "buttons.datatables";
+

@@ -4,7 +4,7 @@
 
 try {
 	window.$ = window.jQuery = require('jquery');
-    window.$ = $.extend(require('jquery-ui-bundle'));
+//    window.$ = $.extend(require('jquery-ui-bundle'));
 	require('bootstrap-sass');
 	require('datatables');
 	require('datatables.net-buttons');

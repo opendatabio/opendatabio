@@ -66,7 +66,6 @@ class PlantController extends Controller
             'location_id' => 'required|integer',
             'project_id' => 'required|integer',
             'collector' => 'required|array',
-            'date' => 'required',
             'identifier_id' => 'required',
             'taxon_id' => 'required',
             'identification_date' => 'required',
@@ -84,6 +83,9 @@ class PlantController extends Controller
             'y' => 'nullable|numeric|min:0|max:'.$location->y,
         ];
 	    $validator = Validator::make($request->all(), $rules);
+	    $validator->after(function ($validator) use ($request) {
+            // TODO: check date
+	    });
 	    return $validator;
     }
     /**
@@ -103,9 +105,10 @@ class PlantController extends Controller
 			    ->withInput();
 	    }
         $plant = Plant::create($request->only([
-            'tag', 'location_id', 'project_id', 'date', 'notes', 
+            'tag', 'location_id', 'project_id', 'notes', 
         ]));
         $plant->setRelativePosition($request->x, $request->y);
+        $plant->setDate($request->date_month, $request->date_day, $request->date_year);
         $plant->save();
 
         // TODO: relative position
@@ -187,9 +190,10 @@ class PlantController extends Controller
                 ->withInput();
         }
         $plant->update($request->only([
-            'tag', 'location_id', 'project_id', 'date', 'notes', 
+            'tag', 'location_id', 'project_id', 'notes', 
         ]));
         $plant->setRelativePosition($request->x, $request->y);
+        $plant->setDate($request->date_month, $request->date_day, $request->date_year);
         $plant->save();
         
         // "sync" collectors. See app/Project.php / setusers()

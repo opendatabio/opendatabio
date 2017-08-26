@@ -66,7 +66,36 @@
 </label>
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="date" id="date" class="form-control date-picker" value="{{ old('date', isset($plant) ? $plant->date : null) }}">
+	<select name="date_month" id="date_month" class="form-control partdatepicker">
+	<?php $selected = old('date_month', isset($plant) ? $plant->month : null); ?>
+        <option value=0 > 
+            @lang ('messages.unknown_date')
+        </option>
+	@for ($i = 1; $i <= 12; $i ++)
+        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
+            {{str_pad($i, 2, '0',STR_PAD_LEFT)}}
+        </option>
+	@endfor
+	</select> / 
+	<select name="date_day" id="date_day" class="form-control partdatepicker">
+	<?php $selected = old('date_day', isset($plant) ? $plant->day : null); ?>
+        <option value=0 > 
+            @lang ('messages.unknown_date')
+        </option>
+	@for ($i = 1; $i <= 31; $i ++)
+        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
+            {{str_pad($i, 2, '0',STR_PAD_LEFT)}}
+        </option>
+	@endfor
+	</select> / 
+	<select name="date_year" id="date_year" class="form-control partdatepicker">
+	<?php $selected = old('date_year', isset($plant) ? date("Y",strtotime($plant->date)) : null); ?>
+	@for ($i = 1900; $i <= config('app.max_year'); $i ++)
+        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
+            {{$i}}
+        </option>
+	@endfor
+	</select>  
             </div>
   <div class="col-sm-12">
     <div id="hint4" class="panel-collapse collapse">

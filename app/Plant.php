@@ -10,9 +10,12 @@ use App\Collector;
 use DB;
 use Auth;
 use App\User;
+use App\IncompleteDate;
 
 class Plant extends Model
 {
+    use IncompleteDate;
+
     protected static function boot()
     {
         parent::boot();
@@ -51,6 +54,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
 		if($invalid) { throw new \UnexpectedValueException('Invalid Geometry object'); }
 	        $this->attributes['relative_position'] = DB::raw("GeomFromText('POINT($y $x)')");
 	}
+
     public function getFullnameAttribute() {
         return $this->location->name . "-" . $this->tag;
     }
