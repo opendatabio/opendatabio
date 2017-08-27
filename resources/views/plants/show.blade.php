@@ -27,7 +27,7 @@
 :</strong>
     <a href="{{url('persons/' . $identification->person->id)}}">
         {{ $identification->person->full_name }}
-    </a> ({{ $identification->date }})
+    </a> ({{ $identification->formatDate }})
     </p>
     @if ($identification->herbarium_id)
     <p><strong>
@@ -74,7 +74,7 @@
 <p><strong>
 @lang('messages.collection_date')
 :</strong>
-{{$plant->date}}
+{{$plant->formatDate}}
 </p>
 
 @if ($plant->notes)
@@ -95,7 +95,7 @@
     @endforeach
     </ul>
 @else
-    @lang ('messages.not_registered')
+    @lang('messages.not_registered')
 @endif
 </p>
 

@@ -115,9 +115,10 @@ return [
     'gmaps_api_key' => env('GMAPS_API_KEY', ''),
     'mobot_api_key' => env('MOBOT_API_KEY', ''),
 
-    /* Maximum year to be shown on date pickers
-     */
-    'max_year' => 2020,
+    /* Maximum year to be shown on date pickers */
+    'max_year' => date('Y'),
+    /* Minimum year to be shown on date pickers */
+    'min_year' => 1900,
 
     /*
     |--------------------------------------------------------------------------

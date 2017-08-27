@@ -68,7 +68,6 @@ class PlantController extends Controller
             'collector' => 'required|array',
             'identifier_id' => 'required',
             'taxon_id' => 'required',
-            'identification_date' => 'required',
             'identification_notes' => 'required_with:herbarium_id',
             'tag' => [ // tag / location must be unique
                 'required',
@@ -84,7 +83,24 @@ class PlantController extends Controller
         ];
 	    $validator = Validator::make($request->all(), $rules);
 	    $validator->after(function ($validator) use ($request) {
-            // TODO: check date
+            // if date is complete, it must check as valid
+            if ($request->date_day and !checkdate( $request->date_month, $request->date_day, $request->date_year))
+                    $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
+            if ($request->identification_date_day and !checkdate( $request->identification_date_month, $request->identification_date_day, $request->identification_date_year))
+                $validator->errors()->add('identification_date_day', Lang::get('messages.invalid_identification_date_error'));
+            // if month is unknown, day must be unknown too
+            if ($request->date_day and ! $request->date_month)
+                $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
+            if ($request->identification_date_day and ! $request->identification_date_month)
+                $validator->errors()->add('identification_date_day', Lang::get('messages.invalid_identification_date_error'));
+            // collection date must be in the past or today
+            $colldate = strtotime( $request->date_year ."-". $request->date_month ."-". $request->date_day );
+            if ($colldate > strtotime(date('Y-m-d')))
+                    $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
+            // identification date must be in the past or today AND equal or after collection date
+            $iddate = strtotime( $request->identification_date_year ."-". $request->identification_date_month ."-". $request->identification_date_day);
+            if ($iddate > strtotime(date('Y-m-d')) or $iddate < $colldate)
+                    $validator->errors()->add('identification_date_day', Lang::get('messages.identification_date_future_error'));
 	    });
 	    return $validator;
     }
@@ -104,24 +120,28 @@ class PlantController extends Controller
 			    ->withErrors($validator)
 			    ->withInput();
 	    }
-        $plant = Plant::create($request->only([
+        $plant = new Plant($request->only([
             'tag', 'location_id', 'project_id', 'notes', 
         ]));
         $plant->setRelativePosition($request->x, $request->y);
         $plant->setDate($request->date_month, $request->date_day, $request->date_year);
         $plant->save();
 
-        // TODO: relative position
         foreach($request->collector as $collector)
             $plant->collectors()->create(['person_id' => $collector]);
-        $plant->identification()->create([
+        $plant->identification = new Identification([
+            'object_id' => $plant->id,
+            'object_type' => 'App\Plant',
             'person_id' => $request->identifier_id,
             'taxon_id' => $request->taxon_id,
-            'date' => $request->identification_date,
             'modifier' => $request->modifier,
             'herbarium_id' => $request->herbarium_id,
             'notes' => $request->notes,
         ]);
+        $plant->identification->setDate($request->identification_date_month,
+            $request->identification_date_day,
+            $request->identification_date_year);
+        $plant->identification->save();
         return redirect('plants')->withStatus(Lang::get('messages.stored'));
     }
 
@@ -207,7 +227,6 @@ class PlantController extends Controller
         $identifiers = [
             'person_id' => $request->identifier_id,
             'taxon_id' => $request->taxon_id,
-            'date' => $request->identification_date,
             'modifier' => $request->modifier,
             'herbarium_id' => $request->herbarium_id,
             'notes' => $request->identification_notes,
@@ -215,10 +234,13 @@ class PlantController extends Controller
         if ($plant->identification) {
             $plant->identification()->update($identifiers);
         } else {
-            $plant->identification()->create($identifiers);
+            $plant->identification = new Identification(array_merge($identifiers, ['object_id' => $plant->id, 'object_type' => 'App\Plant']));
         }
+        $plant->identification->setDate($request->identification_date_month,
+            $request->identification_date_day,
+            $request->identification_date_year);
+        $plant->identification->save();
         return redirect('plants')->withStatus(Lang::get('messages.saved'));
-        //
     }
 
     /**

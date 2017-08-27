@@ -3,9 +3,13 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\IncompleteDate;
 
 class Identification extends Model
 {
+    use IncompleteDate;
+
+    // Possible modifiers for the identification
     const NONE = 0;
     const SS = 1;
     const SL = 2;
@@ -34,6 +38,4 @@ class Identification extends Model
     public function herbarium() {
         return $this->belongsTo(Herbarium::class);
     }
-        
-    //
 }
