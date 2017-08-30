@@ -76,7 +76,7 @@
 	    <div class="col-sm-6">
     <input type="text" name="senior_autocomplete" id="senior_autocomplete" class="form-control"
     value="{{ old('senior_autocomplete', (isset($taxon) and $taxon->senior) ? $taxon->senior->fullname : null) }}">
-    <input type="text" name="senior_id" id="senior_id"
+    <input type="hidden" name="senior_id" id="senior_id"
     value="{{ old('senior_id', isset($taxon) ? $taxon->senior_id : null) }}">
             </div>
   <div class="col-sm-12">
