@@ -16,7 +16,8 @@ class DatabaseSeeder extends Seeder
         $this->call(ProjectsTableSeeder::class); // depends on populated Users
         $this->call(BibReferencesTableSeeder::class);
         $this->call(LocationsTableSeeder::class);
-        $this->call(TaxonsTableSeeder::class); // depends on populated Persons
-        $this->call(PlantsTableSeeder::class); // depends on populated Persons, Locations, Taxons, Projects, Herbaria
+        $this->call(TaxonsTableSeeder::class); // depends on populated Persons 
+        $this->call(PlantsTableSeeder::class); // depends on populated Persons, Locations, Taxons, Projects, Herbaria 
+        $this->call(VouchersTableSeeder::class); // depends on populated Persons, Locations, Taxons, Projects, Herbaria, Plants
     }
 }

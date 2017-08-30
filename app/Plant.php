@@ -10,6 +10,7 @@ use App\Collector;
 use DB;
 use Auth;
 use App\User;
+use App\Voucher;
 use App\IncompleteDate;
 
 class Plant extends Model
@@ -54,7 +55,6 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
 		if($invalid) { throw new \UnexpectedValueException('Invalid Geometry object'); }
 	        $this->attributes['relative_position'] = DB::raw("GeomFromText('POINT($y $x)')");
 	}
-
     public function getFullnameAttribute() {
         return $this->location->name . "-" . $this->tag;
     }
@@ -65,6 +65,10 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
     public function project()
     {
         return $this->belongsTo(Project::class);
+    }
+    public function vouchers()
+    {
+        return $this->morphMany(Voucher::class, 'parent');
     }
     public function identification() 
     {
@@ -87,6 +91,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
 			DB::raw('AsText(relative_position) as relativePosition')
 		);
 	}
+    // getters for the Relative Position
 	public function getXAttribute() {
 		$point = substr($this->relativePosition, 6, -1);
 		$pos = strpos($point, ' ');

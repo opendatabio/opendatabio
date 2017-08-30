@@ -37,6 +37,9 @@ class Project extends Model
     public function plants() {
         return $this->hasMany(Plant::class);
     }
+    public function vouchers() {
+        return $this->hasMany(Voucher::class);
+    }
     public function setusers(array $new_users = null, $level) {
         // inspired by https://stackoverflow.com/questions/42625797/laravel-sync-only-a-subset-of-the-pivot-table?rq=1
         $current = $this->users->filter(function($users) use ($level) {
@@ -55,5 +58,4 @@ class Project extends Model
         return $this;
 
     }
-    //
 }

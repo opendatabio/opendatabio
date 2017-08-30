@@ -4,7 +4,6 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Person;
-use App\Plant; //?
 
 class Collector extends Model
 {
@@ -15,5 +14,4 @@ class Collector extends Model
     public function object() {
         return $this->morphTo('object');
     }
-    //
 }

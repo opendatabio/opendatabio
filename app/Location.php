@@ -122,6 +122,10 @@ class Location extends Node
     {
         return $this->hasMany(Plant::class);
     }
+    public function vouchers()
+    {
+        return $this->morphMany(Voucher::class, 'parent');
+    }
 
 	// getter method for parts of latitude/longitude
 	public function getLat1Attribute() { 

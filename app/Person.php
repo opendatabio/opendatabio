@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use FuzzyWuzzy\Fuzz;
 use App\Collector;
 use App\Plant;
+use App\Voucher;
 use Illuminate\Database\Eloquent\Builder;
 
 class Person extends Model
@@ -56,5 +57,8 @@ class Person extends Model
     }
     public function collected() {
         return $this->hasMany(Collector::class);
+    }
+    public function vouchers() {
+        return $this->hasMany(Voucher::class);
     }
 }
