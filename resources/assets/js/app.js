@@ -8,5 +8,6 @@ try {
 	require('bootstrap-sass');
 	require('datatables');
 	require('datatables.net-buttons');
+    require('devbridge-autocomplete');
 } catch (e) {}
 

@@ -52,3 +52,14 @@
         </div>
     </div>
 @endsection
+
+@push ('scripts')
+<script>
+$("#taxon_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('taxons/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#taxon_id").val(suggestion.data);
+    }
+    });
+</script>
+@endpush

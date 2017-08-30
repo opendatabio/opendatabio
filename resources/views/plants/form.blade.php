@@ -175,16 +175,12 @@
 </label>
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('taxon_id', (isset($plant) and $plant->identification) ? $plant->identification->taxon_id : null); ?>
+    <input type="text" name="taxon_autocomplete" id="taxon_autocomplete" class="form-control"
+    value="{{ old('taxon_autocomplete', (isset($plant) and $plant->identification) ? $plant->identification->taxon->fullname : null) }}">
+    <input type="hidden" name="taxon_id" id="taxon_id"
+    value="{{ old('taxon_id', (isset($plant) and $plant->identification) ? $plant->identification->taxon_id : null) }}">
 
-	<select name="taxon_id" id="taxon_id" class="form-control" >
-		<option value='' >&nbsp;</option>
-	@foreach ($taxons as $taxon)
-		<option value="{{$taxon->id}}" {{ $taxon->id == $selected ? 'selected' : '' }}>
-            {{ $taxon->fullname }}
-		</option>
-	@endforeach
-	</select>
+
             </div>
   <div class="col-sm-12">
     <div id="hint6" class="panel-collapse collapse">

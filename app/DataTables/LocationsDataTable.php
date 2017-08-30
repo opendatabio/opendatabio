@@ -54,7 +54,7 @@ class LocationsDataTable extends DataTable
 		    ->addColumn(['data' => 'full_name', 'title' => 'Full name', 'searchable' => true])
                     ->parameters([
                         'dom'     => 'Bfrtip',
-                        'order'   => [[0, 'desc']],
+                        'order'   => [[0, 'asc']],
                         'buttons' => [
                             'csv',
                             'excel',

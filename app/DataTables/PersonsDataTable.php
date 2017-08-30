@@ -48,7 +48,7 @@ class PersonsDataTable extends DataTable
 		    ->removeColumn('id') // need to remove it from showing HERE
                     ->parameters([
                         'dom'     => 'Bfrtip',
-                        'order'   => [[0, 'desc']],
+                        'order'   => [[0, 'asc']],
                         'buttons' => [
                             'csv',
                             'excel',

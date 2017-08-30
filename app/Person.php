@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use FuzzyWuzzy\Fuzz;
 use App\Collector;
 use App\Plant;
+use Illuminate\Database\Eloquent\Builder;
 
 class Person extends Model
 {
@@ -13,6 +14,12 @@ class Person extends Model
 	protected $table = 'persons';
 	protected $fillable = ['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id'];
 
+    protected static function boot() {
+        parent::boot();
+        static::addGlobalScope('order', function (Builder $builder) {
+            $builder->orderBy('abbreviation', 'asc');
+        });
+    }
 
 	// Looks for possible duplication of persons. Returns a collection of possible dupes
 	public static function duplicates($fullname, $abbreviation) {
