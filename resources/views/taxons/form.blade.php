@@ -55,16 +55,10 @@
 </label>
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('parent_id', isset($taxon) ? $taxon->parent_id : null); ?>
-
-	<select name="parent_id" id="parent_id" class="form-control" >
-        <option value = '' ></option>
-	@foreach ($taxons as $parent)
-		<option value="{{$parent->id}}" {{ $parent->id == $selected ? 'selected' : '' }}>
-            {{ $parent->fullname }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control"
+    value="{{ old('parent_autocomplete', (isset($taxon) and $taxon->parent) ? $taxon->parent->fullname : null) }}">
+    <input type="hidden" name="parent_id" id="parent_id"
+    value="{{ old('parent_id', isset($taxon) ? $taxon->parent_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint6" class="panel-collapse collapse">
@@ -80,16 +74,10 @@
 </label>
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('senior_id', isset($taxon) ? $taxon->senior_id : null); ?>
-
-	<select name="senior_id" id="senior_id" class="form-control" >
-        <option value = '' ></option>
-	@foreach ($taxons as $senior)
-		<option value="{{$senior->id}}" {{ $senior->id == $selected ? 'selected' : '' }}>
-            {{ $senior->fullname }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="senior_autocomplete" id="senior_autocomplete" class="form-control"
+    value="{{ old('senior_autocomplete', (isset($taxon) and $taxon->senior) ? $taxon->senior->fullname : null) }}">
+    <input type="text" name="senior_id" id="senior_id"
+    value="{{ old('senior_id', isset($taxon) ? $taxon->senior_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint4" class="panel-collapse collapse">

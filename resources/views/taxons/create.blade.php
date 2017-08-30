@@ -61,3 +61,26 @@
         </div>
     </div>
 @endsection
+
+@push ('scripts')
+<script>
+$("#parent_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('taxons/autocompletefull')}}",
+    onSelect: function (suggestion) {
+        $("#parent_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#parent_id").val(null);
+    }
+    });
+$("#senior_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('taxons/autocompletefull')}}",
+    onSelect: function (suggestion) {
+        $("#senior_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#senior_id").val(null);
+    }
+    });
+</script>
+@endpush

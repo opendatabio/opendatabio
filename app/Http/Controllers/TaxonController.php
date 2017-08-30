@@ -335,28 +335,30 @@ class TaxonController extends Controller
                 ]); 
 
             $getparent = null;
+            $parent = null;
             if (!is_null($mobotdata) && array_key_exists("parent", $mobotdata))
                     $getparent = $mobotdata["parent"]; 
             $parent = Taxon::getParent($request["name"], $rank, $getparent);
             if (!is_null($mycobankdata) && array_key_exists("parent", $mycobankdata))
-                    $parent = $mycobankdata["parent"]; 
-            if (! is_null($parent) and ! is_int($parent)) {
+                    $parent = $mycobankdata["parent"]; // mycobank api already returns a "getParent"
+            if (! is_null($parent) and ! is_array($parent)) {
                 $bag->add('parent_id', Lang::get('messages.parent_not_registered', ['name' => $parent]));
+                $parent = null;
             }
 
             $senior = null;
             if (!is_null($mobotdata) && array_key_exists("senior", $mobotdata) and !is_null($mobotdata["senior"])) {
-                    $tosenior = Taxon::valid()->where('name', $mobotdata["senior"])->first();
+                    $tosenior = Taxon::valid()->whereRaw('odb_txname(name, level, parent_id) = ?', [$mobotdata["senior"]])->first();
                     if ($tosenior) {
-                            $senior = $tosenior->id;
+                            $senior = [$tosenior->id, $tosenior->fullname];
                     } else {
                             $bag->add('senior_id', Lang::get('messages.senior_not_registered', ['name' => $mobotdata["senior"]]));
                     }
             }
             if (!is_null($mycobankdata) && array_key_exists("senior", $mycobankdata) and !is_null($mycobankdata["senior"])) {
-                    $tosenior = Taxon::valid()->where('name', $mycobankdata["senior"])->first();
+                    $tosenior = Taxon::valid()->whereRaw('odb_txname(name, level, parent_id) = ?', [$mycobankdata["senior"]])->first();
                     if ($tosenior) {
-                            $senior = $tosenior->id;
+                            $senior = [$tosenior->id, $tosenior->fullname];
                     } else {
                             $bag->add('senior_id', Lang::get('messages.senior_not_registered', ['name' => $mycobankdata["senior"]]));
                     }

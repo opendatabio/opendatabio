@@ -157,7 +157,7 @@ class Taxon extends Node
             }
             $toparent = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$searchstr]);
             if ($toparent->count()) {
-                return $toparent->first()->id;
+                return [$toparent->first()->id, $searchstr];
             } else {
                 return $searchstr;
             }

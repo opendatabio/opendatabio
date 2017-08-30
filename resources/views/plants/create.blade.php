@@ -59,6 +59,9 @@ $("#taxon_autocomplete").devbridgeAutocomplete({
     serviceUrl: "{{url('taxons/autocomplete')}}",
     onSelect: function (suggestion) {
         $("#taxon_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#taxon_id").val(null);
     }
     });
 </script>

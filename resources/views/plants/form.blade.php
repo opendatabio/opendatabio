@@ -179,8 +179,6 @@
     value="{{ old('taxon_autocomplete', (isset($plant) and $plant->identification) ? $plant->identification->taxon->fullname : null) }}">
     <input type="hidden" name="taxon_id" id="taxon_id"
     value="{{ old('taxon_id', (isset($plant) and $plant->identification) ? $plant->identification->taxon_id : null) }}">
-
-
             </div>
   <div class="col-sm-12">
     <div id="hint6" class="panel-collapse collapse">

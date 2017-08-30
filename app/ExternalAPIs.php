@@ -161,7 +161,7 @@ class ExternalAPIs
         // now we try to find the id in our database...
         $parent_obj = TaxonExternal::where('name', 'Mycobank')->where('reference', $parent_id)->get();
         if ($parent_obj->count()) {
-            $parent = $parent_obj->first()->taxon_id;
+            $parent = [$parent_obj->first()->taxon_id, $parent_obj->first()->taxon->fullname];
         } else { // not found, so we get the name from Mycobank server
             try {
                 $response = $client->request('GET', 
