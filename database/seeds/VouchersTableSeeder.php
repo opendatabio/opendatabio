@@ -20,6 +20,14 @@ class VouchersTableSeeder extends Seeder
             } catch (Exception $e) {}
         }
     }
+    protected function addHerbaria($voucher, $faker, $herbaria) {
+        $n = $faker->numberBetween(0,2);
+        for ($i = 0; $i < $n; $i++) {
+            try {
+                $voucher->herbaria()->attach($herbaria->random(), ['herbarium_number' => $faker->bothify('??? ####')]);
+            } catch (Exception $e) {}
+        }
+    }
     protected function Identify($voucher, $faker, $persons, $taxons) {
             $modifier = $faker->numberBetween(0, 20) == 0 ?
                 $faker->numberBetween(1, 5) : 0;
@@ -40,6 +48,7 @@ class VouchersTableSeeder extends Seeder
         $taxons = \App\Taxon::valid()->leaf()->get();
         $locations = \App\Location::whereIn('adm_level', [\App\Location::LEVEL_PLOT, \App\Location::LEVEL_POINT])->get();
         $plants = \App\Plant::all();
+        $herbaria = \App\Herbarium::all();
         // on locations
         for($i = 0; $i < 100; $i++) {
             $voucher = new \App\Voucher([
@@ -53,21 +62,24 @@ class VouchersTableSeeder extends Seeder
             try {
             $voucher->save();
             $this->addCollectors($voucher, $faker, $persons);
+            $this->addHerbaria($voucher, $faker, $herbaria);
             $this->Identify($voucher, $faker, $persons, $taxons);
             } catch (Exception $e) {}
         }
         // on plants
         for ($i = 0; $i < 100; $i++) {
+            $plant = $plants->random();
             $voucher = new \App\Voucher([
-                'parent_id' => $plants->random()->id,
+                'parent_id' => $plant->id,
                 'parent_type' => 'App\Plant',
                 'person_id' => $persons->random()->id,
                 'number' => $faker->randomNumber(4),
                 'date' => Carbon\Carbon::now(),
-                'project_id' => $projects->random()->id,
+                'project_id' => $plant->project_id,
             ]);
             try {
             $voucher->save();
+            $this->addHerbaria($voucher, $faker, $herbaria);
             $this->addCollectors($voucher, $faker, $persons);
             } catch (Exception $e) {}
         }

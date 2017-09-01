@@ -58,6 +58,9 @@
 			<li><a href="{{ route('plants.index') }}">
 @lang('messages.plants')
 </a></li>
+			<li><a href="{{ route('vouchers.index') }}">
+@lang('messages.vouchers')
+</a></li>
 			<li><a href="{{ route('references.index') }}">
 @lang('messages.references')
 </a></li>

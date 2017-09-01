@@ -13,7 +13,7 @@ class Herbarium extends Model
     {
         return $this->hasMany(Person::class);
     }
-    public function herbaria() {
-        return $this->belongsToMany(Voucher::class)->withPivot('number');
+    public function vouchers() {
+        return $this->belongsToMany(Voucher::class)->withPivot('herbarium_number');
     }
 }

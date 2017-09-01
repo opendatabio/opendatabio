@@ -155,26 +155,46 @@ $(document).ready(function(){
     // trigger this on page load
 	setLocationFields(0);
 
+    // For setting the visibility of fields in the voucher create/edit screens. 
+    function setVoucherFields(vel) {
+        var selector = $("#parent_type");
+        switch (selector.val()) {
+            case 'App\\Plant':
+                $("#location_group").hide(vel);
+                $("#project_group").hide(vel);
+                $("#identification_group").hide(vel);
+                $("#plant_group").show(vel);
+                break;
+            case 'App\\Location':
+                $("#location_group").show(vel);
+                $("#project_group").show(vel);
+                $("#identification_group").show(vel);
+                $("#plant_group").hide(vel);
+                break;
+        }
+    }
+    setVoucherFields(0);
+    $("#parent_type").change(function() { setVoucherFields(400); });
+
     /** For use in multiple selectors. Right now used in Edit Person for specialists */
     // Original: http://odyniec.net/articles/multiple-select-fields/
     // The elements are tied by the NAME, CLASS AND ID attributes, use them as
     // ul: ID specialist-ul 
     // inputs: NAME specialist[] CLASS .multipleSelector
     // select: NAME specialist-ms CLASS .multi-select
-        $(".multi-select").change(function()
-                {
-                    var $name = $(this).attr('name');
-                    $name = $name.substring(0, $name.length-3);
-                    var $ul = $("#" + $name + "-ul");
-                        if ( $(this).val() === "") return;
-                        if ($ul.find('input[value=' + $(this).val() + ']').length == 0)
-                                $ul.append('<span class="multipleSelector" onclick="$(this).remove();">' +
-                                        '<input type="hidden" name="' + $name + '[]" value="' +
-                                        $(this).val() + '" /> ' +
-                                        $(this).find('option:selected').text() + '</span>');
-                });
-        $(".multipleSelector").click(function() {
-                $(this).remove();
+    $(".multi-select").change(function()
+        {
+            var $name = $(this).attr('name');
+            $name = $name.substring(0, $name.length-3);
+            var $ul = $("#" + $name + "-ul");
+            if ( $(this).val() === "") return;
+            if ($ul.find('input[value=' + $(this).val() + ']').length == 0)
+                $ul.append('<span class="multipleSelector" onclick="$(this).remove();">' +
+                    '<input type="hidden" name="' + $name + '[]" value="' +
+                    $(this).val() + '" /> ' +
+                    $(this).find('option:selected').text() + '</span>');
         });
-
+    $(".multipleSelector").click(function() {
+        $(this).remove();
+    });
 });

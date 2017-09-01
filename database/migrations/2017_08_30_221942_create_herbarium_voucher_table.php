@@ -16,12 +16,12 @@ class CreateHerbariumVoucherTable extends Migration
         Schema::create('herbarium_voucher', function (Blueprint $table) {
             $table->increments('id');
             $table->timestamps();
-            $table->integer('herbarium_id')->unsigned()->nullable();
+            $table->integer('herbarium_id')->unsigned();
             $table->foreign('herbarium_id')->references('id')->on('herbaria');
-            $table->integer('voucher_id')->unsigned()->nullable();
+            $table->integer('voucher_id')->unsigned();
             $table->foreign('voucher_id')->references('id')->on('vouchers');
             $table->unique(['voucher_id', 'herbarium_id']);
-            $table->string('number');
+            $table->string('herbarium_number');
         });
     }
 

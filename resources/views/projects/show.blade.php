@@ -86,6 +86,29 @@
                 </div>
             </div>
 	@endif
+	@if ($project->vouchers()->count())
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    @lang('messages.vouchers')
+                </div>
+
+                <div class="panel-body">
+<ul>
+@foreach ($project->vouchers as $voucher)
+<li> <a href="{{url('vouchers/' . $voucher->id)}}">{{ $voucher->fullname }} </a>
+@if ($voucher->identification)
+(<em>{{$voucher->identification->taxon->fullname}}</em>)
+@elseif (($voucher->parent instanceof App\Plant) and $voucher->parent->identification)
+(<em>{{$voucher->parent->identification->taxon->fullname}}</em>)
+@else
+    @lang ('messages.unidentified')
+@endif
+</li>
+@endforeach
+</ul>
+                </div>
+            </div>
+	@endif
 <!-- Other details (specialist, herbarium, collects, etc?) -->
     </div>
 @endsection

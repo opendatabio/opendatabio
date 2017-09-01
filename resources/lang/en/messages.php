@@ -269,4 +269,5 @@ remove the job information from the database.',
   'invalid_identification_date_error' => 'The identification date entered is invalid. Note that if the month is marked as unknown, the day must be unknown too.',
   'date_future_error' => 'The collection date must not be greater than today.',
   'identification_date_future_error' => 'The identification date must not be less than the collection date, and must not be greater than today.',
+  'welcome_message' => 'Welcome to OpenDataBio. Currently, we have information about :nplants plants and :nvouchers vouchers.',
 );

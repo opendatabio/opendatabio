@@ -8,8 +8,7 @@
                 <div class="panel-heading">Dashboard</div>
 
                 <div class="panel-body">
-                    You are logged in!
-			<!-- TODO: translate interface? -->
+                    @lang ('messages.welcome_message', compact('nplants', 'nvouchers'))
                 </div>
             </div>
         </div>

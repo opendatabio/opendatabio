@@ -21,7 +21,7 @@ class Plant extends Model
     {
         parent::boot();
 
-        static::addGlobalScope('projects.id', function (Builder $builder) {
+        static::addGlobalScope('projectScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
                 return $builder->join('projects', 'projects.id', '=', 'project_id')

@@ -28,7 +28,8 @@ class ExternalAPIs
 		$base_uri = "http://sweetgum.nybg.org/science/ih/";
 		$client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
 		## STEP ONE, get to the list of herbaria
-		$response = $client->request('GET', 'herbarium_list.php?col_NamOrganisationAcronym='.$acronym);
+        # URL updated 01/09/2017
+		$response = $client->request('GET', 'herbarium_list.php?NamOrganisationAcronym='.$acronym);
 		if ($response->getStatusCode() != 200) 
 			return null; # FAILED
 		$body = (string) $response->getBody();

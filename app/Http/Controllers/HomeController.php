@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
+use App\Plant;
+use App\Voucher;
 
 class HomeController extends Controller
 {
@@ -24,6 +26,8 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $nplants = Plant::withoutGlobalScopes()->count();
+        $nvouchers = Voucher::withoutGlobalScopes()->count();
+        return view('home', compact('nplants', 'nvouchers'));
     }
 }

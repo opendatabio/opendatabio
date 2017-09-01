@@ -136,7 +136,7 @@ class PlantController extends Controller
             'taxon_id' => $request->taxon_id,
             'modifier' => $request->modifier,
             'herbarium_id' => $request->herbarium_id,
-            'notes' => $request->notes,
+            'notes' => $request->identification_notes,
         ]);
         $plant->identification->setDate($request->identification_date_month,
             $request->identification_date_day,

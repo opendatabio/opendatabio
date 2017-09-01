@@ -70,6 +70,22 @@
                         </table>
                 </div>
             </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    @lang('messages.vouchers')
+                </div>
+
+		<div class="panel-body">
+            <ul>
+            @foreach ($herbarium->vouchers as $voucher)
+                <li><a href="{{url('vouchers/'.$voucher->id)}}">{{$voucher->fullname}}</a> ({{$voucher->pivot->herbarium_number}})</li>
+            @endforeach
+            </ul>
+        </div>
+            </div>
+
+
         </div>
     </div>
 @endsection
