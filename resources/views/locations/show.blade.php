@@ -107,15 +107,17 @@
 	@if ($location->plants()->count())
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    @lang('messages.plants')
+                    @lang('messages.plants_and_vouchers')
                 </div>
 
                 <div class="panel-body">
 <ul>
-@foreach ($location->plants as $plant)
-<li> <a href="{{url('plants/' . $plant->id)}}">{{ $plant->fullname }} </a>
+@foreach ($plants as $plant)
+<li> <a href="{{url($plant->typename . '/' . $plant->id)}}">{{ $plant->fullname }} </a>
 @if ($plant->identification)
     (<em>{{$plant->identification->taxon->fullname}}</em>)
+    @elseif ($plant->parent and $plant->parent->identification)
+    (<em>{{$plant->parent->identification->taxon->fullname}}</em>)
 @else
     (@lang ('messages.unidentified'))
 @endif

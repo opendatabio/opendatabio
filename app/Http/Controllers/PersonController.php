@@ -77,12 +77,13 @@ class PersonController extends Controller
      */
     public function show($id)
     {
-	    $person = Person::with('collected.object')->findOrFail($id);
-        $collected = $person->collected;
-	    return view('persons.show', [
-		    'person' => $person,
-		    'collected' => $collected,
-	    ]);
+	    $person = Person::findOrFail($id);
+        $person->load('collected.object');
+        $vouchers = $person->vouchers;
+        $vouchers->load(['identification','parent']);
+        $collected = collect($person->vouchers)->merge( $person->collected->map(function ($x) {return $x->object;}));
+        $collected = $collected->reject(function($x) {return is_null($x);});
+        return view('persons.show', compact('person', 'collected'));
     }
 
     /**

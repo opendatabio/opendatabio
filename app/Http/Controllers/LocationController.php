@@ -176,6 +176,11 @@ class LocationController extends Controller
     {
 	    $location = Location::with(['plants.identification.taxon'])->findOrFail($id);
         $plants = $location->plants;
+        $vouchers = $location->vouchers;
+        foreach ($plants as $plant) {
+            $vouchers = $vouchers->merge($plant->vouchers);
+        }
+        $plants = $plants->merge($vouchers);
 
         if ($location->x) {
             if ($location->x > $location->y) {
@@ -207,9 +212,9 @@ class LocationController extends Controller
                 ->options([
                     "maintainAspectRatio" => true,
                 ]);
-            return view('locations.show', compact('chartjs', 'location'));
+            return view('locations.show', compact('chartjs', 'location', 'plants'));
         } // else
-        return view('locations.show', compact('location'));
+        return view('locations.show', compact('location', 'plants'));
     }
 
     /**

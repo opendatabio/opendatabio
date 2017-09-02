@@ -140,7 +140,7 @@
 
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    @lang('messages.plants')
+                    @lang('messages.plants_and_vouchers')
                 </div>
 
                 <div class="panel-body">
@@ -148,7 +148,7 @@
 <table class="table table-striped" id="references-table">
                             <thead>
                                 <th>
-@lang('messages.location_and_tag')
+@lang('messages.tag_or_number')
 </th>
                 </thead>
 <tbody>
@@ -156,7 +156,7 @@
                                 @if ($id->object)
                                     <tr>
                     <td class="table-text">
-                    <a href="{{ url('plants/'.$id->object->id) }}">{{ $id->object->fullname }}</a>
+                    <a href="{{ url($id->object->typename . '/'.$id->object->id) }}">{{ $id->object->fullname }}</a>
                     </td>
                                     </tr>
                                 @endif

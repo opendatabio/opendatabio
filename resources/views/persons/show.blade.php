@@ -74,10 +74,15 @@
 <p>
 <ul>
 @foreach ($collected as $scollected)
-@if ($scollected->object)
-<li><a href="{{url('plants/' . $scollected->object->id)}}">{{$scollected->object->fullname}}</a>
-    (<em>{{$scollected->object->identification->taxon->fullname}}</em>)</li>
+<li><a href="{{url($scollected->typename . '/' . $scollected->id)}}">{{$scollected->fullname}}</a>
+@if ($scollected->identification)
+    (<em>{{$scollected->identification->taxon->fullname}}</em>)
+@elseif ($scollected->parent and $scollected->parent->identification)
+    (<em>{{$scollected->parent->identification->taxon->fullname}}</em>)
+@else
+    @lang ('messages.unidentified')        
 @endif
+</li>
 @endforeach
 </ul>
             </div>

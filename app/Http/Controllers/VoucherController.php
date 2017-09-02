@@ -150,6 +150,7 @@ class VoucherController extends Controller
                     'parent_id' => $request->parent_plant_id,
                 ]));
             $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
+            $voucher->save();
         }
 
         // common:

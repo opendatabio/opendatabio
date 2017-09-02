@@ -17,6 +17,9 @@ class Voucher extends Model
 
     protected $fillable = ['parent_id', 'parent_type', 'person_id', 'number', 'date', 'notes', 'project_id']; 
 
+    // for use when receiving this as part of a morph relation
+    public function getTypenameAttribute() { return "vouchers"; }
+
     protected static function boot()
     {
         parent::boot();

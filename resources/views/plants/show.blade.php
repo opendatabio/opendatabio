@@ -6,6 +6,7 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.plant')
+                </div>
 		<div class="panel-body">
 <p><strong>
 @lang('messages.identification')
@@ -111,6 +112,22 @@
 @endcan
                 </div>
             </div>
+
+            @if ($plant->vouchers->count())
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    @lang('messages.vouchers')
+                </div>
+		<div class="panel-body">
+        <ul>
+        @foreach ($plant->vouchers as $voucher) 
+            <li><a href="{{url('vouchers/'. $voucher->id)}}">{{$voucher->fullname}}</a></li>
+        @endforeach
+        </ul>
+        </div>
+            </div>
+            @endif
+
 <!-- Other details (specialist, herbarium, collects, etc?) -->
     </div>
 @endsection

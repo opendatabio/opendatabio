@@ -17,6 +17,9 @@ class Plant extends Model
 {
     use IncompleteDate;
 
+    // for use when receiving this as part of a morph relation
+    public function getTypenameAttribute() { return "plants"; }
+
     protected static function boot()
     {
         parent::boot();
