@@ -94,11 +94,10 @@ class VoucherController extends Controller
 	    $persons = Person::all();
 	    $plants = Plant::with('location')->get();
 	    $projects = Auth::user()->projects;
-	    $h_v = null;
         // TODO: better handling here
         if (! $projects->count())
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-	    return view('vouchers.create', compact( 'taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants', 'h_v'));
+	    return view('vouchers.create', compact( 'taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants'));
     }
 
 
@@ -160,6 +159,8 @@ class VoucherController extends Controller
                 $voucher->collectors()->create(['person_id' => $collector]);
             }
 
+        $voucher->setHerbariaNumbers($request->herbarium);
+
         return redirect('vouchers/'.$voucher->id)->withStatus(Lang::get('messages.stored'));
     }
 
@@ -185,6 +186,19 @@ class VoucherController extends Controller
      */
     public function edit($id)
     {
+        if (! Auth::user())
+            return view('common.unauthorized');
+        $voucher = Voucher::findOrFail($id);
+	    $taxons = Taxon::leaf()->valid()->get();
+	    $herbaria = Herbarium::all();
+	    $locations = Location::all();
+	    $persons = Person::all();
+	    $plants = Plant::with('location')->get();
+	    $projects = Auth::user()->projects;
+        // TODO: better handling here
+        if (! $projects->count())
+            return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
+	    return view('vouchers.create', compact('voucher', 'taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants'));
         //
     }
 
@@ -197,7 +211,67 @@ class VoucherController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $voucher = Voucher::findOrFail($id);
+        $this->authorize('update', $voucher);
+	    $validator = $this->customValidate($request, $voucher);
+	    if ($validator->fails()) {
+		    return redirect()->back()
+			    ->withErrors($validator)
+			    ->withInput();
+        }
+        if ($request->parent_type == "App\Location") {
+            $voucher->update(array_merge(
+                $request->only(['person_id', 'number', 'notes', 'project_id', 'parent_type']), [
+                    'parent_id' => $request->parent_location_id,
+                ]));
+            $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
+            $voucher->save();
+
+            $ident_array = [
+                'object_id' => $voucher->id,
+                'object_type' => 'App\Voucher',
+                'person_id' => $request->identifier_id,
+                'taxon_id' => $request->taxon_id,
+                'modifier' => $request->modifier,
+                'herbarium_id' => $request->herbarium_id,
+                'notes' => $request->identification_notes,
+            ];
+            if ($voucher->identification()->count()) {
+                $voucher->identification()->update($ident_array);
+            } else {
+                $voucher->identification = new Identification($ident_array);
+            }
+            $voucher->identification->setDate($request->identification_date_month,
+                $request->identification_date_day,
+                $request->identification_date_year);
+            $voucher->identification->save();
+        } else { // Plant
+            $plant = Plant::findOrFail($request->parent_plant_id);
+            $voucher->update(array_merge(
+                $request->only(['person_id', 'number', 'notes', 'parent_type']), [
+                    'project_id' => $plant->project_id,
+                    'parent_id' => $request->parent_plant_id,
+                ]));
+            $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
+            $voucher->save();
+            if ($voucher->identification()->count())
+                $voucher->identification()->delete();
+        }
+
+        // common:
+        if ($request->collector) {
+            // sync collectors. See app/Project.php / setusers()
+            $current = $voucher->collectors->pluck('person_id');
+            $detach = $current->diff($request->collector)->all();
+            $attach = collect($request->collector)->diff($current)->all();
+            $voucher->collectors()->whereIn('person_id', $detach)->delete();
+            foreach($attach as $collector)
+                $voucher->collectors()->create(['person_id' => $collector]);
+        }
+
+        $voucher->setHerbariaNumbers($request->herbarium);
+
+        return redirect('vouchers/'.$voucher->id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**

@@ -149,7 +149,7 @@
 </label>
         <a data-toggle="collapse" href="#hintpl" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('parent_location_id', isset($plant) ? $plant->parent_id : null); ?>
+	<?php $selected = old('parent_location_id', isset($voucher) ? $voucher->parent_id : null); ?>
 
 	<select name="parent_location_id" id="parent_location_id" class="form-control" >
         <option value=""> </option>
@@ -162,7 +162,7 @@
             </div>
   <div class="col-sm-12">
     <div id="hintpl" class="panel-collapse collapse">
-	@lang('messages.plant_location_hint')
+	@lang('messages.voucher_parent_location_hint')
     </div>
   </div>
 </div>
@@ -171,9 +171,9 @@
     <label for="parent_plant_id" class="col-sm-3 control-label">
 @lang('messages.parent_plant')
 </label>
-        <a data-toggle="collapse" href="#hintpl" class="btn btn-default">?</a>
+        <a data-toggle="collapse" href="#hintpp" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('parent_plant_id', isset($plant) ? $plant->parent_id : null); ?>
+	<?php $selected = old('parent_plant_id', isset($voucher) ? $voucher->parent_id : null); ?>
 
 	<select name="parent_plant_id" id="parent_plant_id" class="form-control" >
         <option value=""> </option>
@@ -185,8 +185,8 @@
 	</select>
             </div>
   <div class="col-sm-12">
-    <div id="hintpl" class="panel-collapse collapse">
-	@lang('messages.plant_plant_hint')
+    <div id="hintpp" class="panel-collapse collapse">
+	@lang('messages.voucher_parent_plant_hint')
     </div>
   </div>
 </div>
@@ -195,7 +195,7 @@
     <label for="project" class="col-sm-3 control-label">
 @lang('messages.project')
 </label>
-        <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
+        <a data-toggle="collapse" href="#hintprj" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<?php $selected = old('project_id', isset($voucher) ? $voucher->project_id : null); ?>
 
@@ -208,7 +208,7 @@
 	</select>
             </div>
   <div class="col-sm-12">
-    <div id="hint3" class="panel-collapse collapse">
+    <div id="hintprj" class="panel-collapse collapse">
 	@lang('messages.voucher_project_hint')
     </div>
   </div>
@@ -386,8 +386,8 @@
 @foreach ($herbaria as $herbarium) 
     <tr>
         <td>{{$herbarium->acronym}}</td>
-        <!-- TODO: set value here -->
-        <td><input name="herbarium-{{$herbarium->id}}" value=""></td>
+        <td><input name="herbarium[{{$herbarium->id}}]" value="{{ old('herbarium.' . $herbarium->id, (isset($voucher) and $voucher->herbaria->find($herbarium->id)) ? $voucher->herbaria->find($herbarium->id)->pivot->herbarium_number : null ) }}
+"></td>
     </tr>
 @endforeach
     <tr>

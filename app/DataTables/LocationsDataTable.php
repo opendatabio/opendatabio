@@ -5,6 +5,7 @@ namespace App\DataTables;
 use App\Location;
 use Yajra\Datatables\Services\DataTable;
 use Lang;
+use DB;
 
 class LocationsDataTable extends DataTable
 {
@@ -34,7 +35,23 @@ class LocationsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Location::query()->select($this->getColumns());
+        $query = Location::query()->select([
+            'locations.name', 
+            'locations.adm_level', 
+            DB::raw('count(plants.id) as plant_count'),
+            'locations.rgt', 
+            'locations.lft', 
+            'locations.id', 
+        ])->join('plants', function($join) {
+            $join->on('plants.location_id', '>=', 'lft');
+            $join->on('plants.location_id', '<=', 'rgt');
+        })->groupBy([
+            'locations.id', 
+            'locations.name', 
+            'locations.rgt', 
+            'locations.lft', 
+            'locations.adm_level', 
+        ]);
 
         return $this->applyScopes($query);
     }
@@ -47,38 +64,22 @@ class LocationsDataTable extends DataTable
     public function html()
     {
         return $this->builder()
-                    ->columns($this->getColumns())
-		    ->removeColumn('id') // need to remove it from showing HERE
-		    ->removeColumn('rgt') // need to remove it from showing HERE
-		    ->removeColumn('lft') // need to remove it from showing HERE
-		    ->addColumn(['data' => 'full_name', 'title' => 'Full name', 'searchable' => true])
-                    ->parameters([
-                        'dom'     => 'Bfrtip',
-                        'order'   => [[0, 'asc']],
-                        'buttons' => [
-                            'csv',
-                            'excel',
-                            'print',
-                            'reload',
-                        ],
-                    ]);
-    }
-
-    /**
-     * Get columns.
-     *
-     * @return array
-     */
-    protected function getColumns()
-    {
-	    // we need to ask for all of the columns that might be needed for other methods
-        return [
-            'id',
-            'name',
-	    'rgt',
-	    'lft',
-	    'adm_level',
-        ];
+            ->columns([
+                ['data' => 'name', 'title' => 'Name', 'searchable' => true, 'orderable' => true], 
+                ['data' => 'adm_level', 'title' => 'Adm Level', 'searchable' => true, 'orderable' => true], 
+                ['data' => 'plant_count', 'title' => 'Plant Count', 'searchable' => false], 
+                ['data' => 'full_name', 'title' => 'Full Name', 'searchable' => false, 'orderable' => false], 
+            ])
+            ->parameters([
+                'dom'     => 'Bfrtip',
+                'order'   => [[0, 'asc']],
+                'buttons' => [
+                    'csv',
+                    'excel',
+                    'print',
+                    'reload',
+                ],
+            ]);
     }
 
     /**

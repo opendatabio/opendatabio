@@ -76,6 +76,18 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
     public function herbaria() {
         return $this->belongsToMany(Herbarium::class)->withPivot('herbarium_number');
     }
+    public function setHerbariaNumbers($herbaria) {
+        // drop "null" values
+        $herbaria = array_filter($herbaria);
+        if (empty($herbaria)) {
+            $this->herbaria()->detach();
+            return;
+        }
+        // transforms the array to be Laravel-friendly
+        foreach ($herbaria as $key => &$value) $value = ['herbarium_number' => $value];
+        // syncs the data
+        $this->herbaria()->sync($herbaria);
+    }
     public function identification() 
     {
         return $this->morphOne(Identification::class, 'object');
