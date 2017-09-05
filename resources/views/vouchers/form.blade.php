@@ -43,31 +43,12 @@
 </label>
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-<span id = "collector-ul">
-    @if (is_null(old('collector'))) <!-- get the data from the database -->
-        @if (isset($voucher))
-    @foreach ($voucher->collectors as $collector)
-    <span class="multipleSelector">
-  <input type="hidden" name="collector[]" value="{{ $collector->person->id  }}" />
-  {{$collector->person->abbreviation}}
- </span>
-     @endforeach
-        @endif
-     @else <!-- !isnull old, so we get the data from old() -->
-    @foreach (old('collector') as $collector)
-    <span class="multipleSelector">
-  <input type="hidden" name="collector[]" value="{{ $collector  }}" />
-  {{ $persons->find($collector)->abbreviation }}
- </span>
-     @endforeach
-     @endif
-</span>
-	<select name="collector-ms" id="collector-ms" class="form-control multi-select">
-		<option value='' >&nbsp;</option>
-	@foreach ($persons as $person)
-		<option value="{{$person->id}}" >{{ $person->abbreviation }}</option>
-	@endforeach
-	</select>
+{!! Multiselect::select(
+    'collector', 
+    $persons->pluck('abbreviation', 'id'), 
+    isset($voucher) ? $voucher->collectors->pluck('person_id') : [],
+    ['class' => 'multiselect form-control']
+) !!}
             </div>
   <div class="col-sm-12">
     <div id="hint3" class="panel-collapse collapse">

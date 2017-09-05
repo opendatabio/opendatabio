@@ -43,83 +43,37 @@
 </label>
 <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 <div class="col-sm-6">
-    <!-- already admins -->
-    <span id = "admins-ul">
-         @if (isset($project))
-         @foreach ($project->admins as $admin)
-         <span class="multipleSelector">
-          <input type="hidden" name="admins[]" value="{{ $admin->id  }}" />
-          {{$admin->email}}
-         </span>
-         @endforeach
-         @else <!-- isset project -->
-         <span class="multipleSelector">
-          <input type="hidden" name="admins[]" value="{{ Auth::user()->id  }}" />
-          {{Auth::user()->email}}
-         </span>
-         @endif <!-- isset project -->
-
-    </span>
-    <select name="admins-ms" id="admins-ms" class="form-control multi-select">
-        <option value='' >&nbsp;</option>
-        @foreach ($users as $user)
-        @if ($user->access_level == App\User::USER or $user->access_level == App\User::ADMIN)
-        <option value="{{$user->id}}" >{{ $user->email }}</option>
-        @endif
-        @endforeach
-    </select>
+{!! Multiselect::select(
+    'admins', 
+    $fullusers->pluck('email', 'id'), isset($project) ? $project->admins->pluck('id') : [Auth::user()->id],
+     ['class' => 'multiselect form-control']
+) !!}
 </div>
 </div><div class="form-group">
 <label for="collabs" class="col-sm-3 control-label">
 @lang('messages.collabs')
 </label>
 <div class="col-sm-6">
-    <!-- already collabs -->
-    <span id = "collabs-ul">
-         @if (isset($project))
-         @foreach ($project->collabs as $collab)
-         <span class="multipleSelector">
-          <input type="hidden" name="collabs[]" value="{{ $collab->id  }}" />
-          {{$collab->email}}
-         </span>
-         @endforeach
-         @endif
-    </span>
-    <select name="collabs-ms" id="collabs-ms" class="form-control multi-select">
-        <option value='' >&nbsp;</option>
-        @foreach ($users as $user)
-        @if ($user->access_level == App\User::USER or $user->access_level == App\User::ADMIN)
-        <option value="{{$user->id}}" >{{ $user->email }}</option>
-        @endif
-        @endforeach
-    </select>
+{!! Multiselect::select(
+    'collabs', 
+    $fullusers->pluck('email', 'id'), isset($project) ? $project->collabs->pluck('id') : [],
+     ['class' => 'multiselect form-control']
+) !!}
 </div>
 </div><div class="form-group">
 <label for="collabs" class="col-sm-3 control-label">
 @lang('messages.viewers')
 </label>
 <div class="col-sm-6">
-    <!-- already viewers -->
-    <span id = "viewers-ul">
-         @if (isset($project))
-         @foreach ($project->viewers as $viewer)
-         <span class="multipleSelector">
-          <input type="hidden" name="viewers[]" value="{{ $viewer->id  }}" />
-          {{$viewer->email}}
-         </span>
-         @endforeach
-         @endif
-    </span>
-    <select name="viewers-ms" id="viewers-ms" class="form-control multi-select">
-        <option value='' >&nbsp;</option>
-        @foreach ($users as $user)
-        <option value="{{$user->id}}" >{{ $user->email }}</option>
-        @endforeach
-    </select>
+{!! Multiselect::select(
+    'viewers', 
+    $allusers->pluck('email', 'id'), isset($project) ? $project->viewers->pluck('id') : [],
+     ['class' => 'multiselect form-control']
+) !!}
 </div>
 <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
 	@lang('messages.project_admins_hint')
     </div>
 </div>
-</div><!-- form group -->
+</div>

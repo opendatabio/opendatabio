@@ -118,7 +118,7 @@ class PersonController extends Controller
 	    $this->checkValid($request, $id);
         $person->update($request->only(['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id']));
         // add/remove specialists
-        $person->taxons()->sync($request['specialist']);
+        $person->taxons()->sync($request->specialist);
         return redirect('persons')->withStatus(Lang::get('messages.saved'));
     }
 

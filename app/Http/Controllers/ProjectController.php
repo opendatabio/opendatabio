@@ -35,11 +35,9 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        $users = User::all();
-        return view('projects.create', [
-            'users' => $users,
-        ]);
-        //
+        $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
+        $allusers = User::all();
+        return view('projects.create', compact('fullusers', 'allusers'));
     }
 
     public function customValidate(Request $request) {
@@ -101,12 +99,9 @@ class ProjectController extends Controller
     public function edit($id)
     {
         $project = Project::findOrFail($id);
-        $users = User::all();
-        return view('projects.create', [
-            'project' => $project,
-            'users' => $users,
-        ]);
-        //
+        $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
+        $allusers = User::all();
+        return view('projects.create', compact('project', 'fullusers', 'allusers'));
     }
 
     /**

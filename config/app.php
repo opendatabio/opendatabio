@@ -237,6 +237,7 @@ return [
 	Yajra\Datatables\ButtonsServiceProvider::class,
 	Baum\Providers\BaumServiceProvider::class,
     Fx3costa\LaravelChartJs\Providers\ChartjsServiceProvider::class,
+    AndreChalom\LaravelMultiselect\MultiselectServiceProvider::class,
 
     ],
 
@@ -288,6 +289,7 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
 	'Datatables' => Yajra\Datatables\Facades\Datatables::class,
 	'Debugbar' => Barryvdh\Debugbar\Facade::class,
+    'Multiselect' => AndreChalom\LaravelMultiselect\MultiselectFacade::class,
 
     ],
 

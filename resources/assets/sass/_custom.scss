@@ -39,18 +39,8 @@ button.unstyle:hover {
 }
 
 // used for MultipleSelectors (specialists in Edit Person)
-.multipleSelector {
-    display: inline-block;
-    border: 1px dashed;
-    padding: 2px;
-    margin: 5px;
-    cursor: pointer;
-}
-.multipleSelector:after {
-  font-family: "Glyphicons Halflings";
-  content: "\e014"; /* Code for remove */
-  padding-left: 3px;
-}
+.multiselector { display: inline-block; border: 1px dashed; padding: 2px; margin: 5px; cursor: pointer; }
+.multiselector:after { font-family: "Glyphicons Halflings"; content: "\e014"; padding-left: 3px; }
 
 // Used in autocomplete plugin
 .autocomplete-suggestions { border: 1px solid #999; background: #FFF; overflow: auto; }

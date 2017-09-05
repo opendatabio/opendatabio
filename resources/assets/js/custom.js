@@ -175,26 +175,4 @@ $(document).ready(function(){
     }
     setVoucherFields(0);
     $("#parent_type").change(function() { setVoucherFields(400); });
-
-    /** For use in multiple selectors. Right now used in Edit Person for specialists */
-    // Original: http://odyniec.net/articles/multiple-select-fields/
-    // The elements are tied by the NAME, CLASS AND ID attributes, use them as
-    // ul: ID specialist-ul 
-    // inputs: NAME specialist[] CLASS .multipleSelector
-    // select: NAME specialist-ms CLASS .multi-select
-    $(".multi-select").change(function()
-        {
-            var $name = $(this).attr('name');
-            $name = $name.substring(0, $name.length-3);
-            var $ul = $("#" + $name + "-ul");
-            if ( $(this).val() === "") return;
-            if ($ul.find('input[value=' + $(this).val() + ']').length == 0)
-                $ul.append('<span class="multipleSelector" onclick="$(this).remove();">' +
-                    '<input type="hidden" name="' + $name + '[]" value="' +
-                    $(this).val() + '" /> ' +
-                    $(this).find('option:selected').text() + '</span>');
-        });
-    $(".multipleSelector").click(function() {
-        $(this).remove();
-    });
 });
