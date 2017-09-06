@@ -17,7 +17,7 @@
         "wyndow/fuzzywuzzy": "^0.6.0",
         "yajra/laravel-datatables-buttons": "^1.3",
         "yajra/laravel-datatables-oracle": "^7.0",
-        "andrechalom/laravel-multiselect": "dev-master"
+        "andrechalom/laravel-multiselect": "^0.0.1"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^2.4",
@@ -26,12 +26,6 @@
         "phpunit/phpunit": "~5.7",
         "doctrine/instantiator": "1.0.5"
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/andrechalom/laravel-multiselect"
-        }
-    ],
     "autoload": {
         "classmap": [
             "database"

@@ -4,30 +4,30 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "8240e534a66f5bcfcc681afbec9e2fbf",
+    "content-hash": "2afab94ccffacfd92e7a909b4938dd5a",
     "packages": [
         {
             "name": "andrechalom/laravel-multiselect",
-            "version": "dev-master",
+            "version": "v0.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/andrechalom/laravel-multiselect.git",
-                "reference": "5a35f2e70aad8667a2a6052c6bd4011a818e8bd7"
+                "reference": "b8526f879ab90fa34078a770f6cb30b7a739e675"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/andrechalom/laravel-multiselect/zipball/5a35f2e70aad8667a2a6052c6bd4011a818e8bd7",
-                "reference": "5a35f2e70aad8667a2a6052c6bd4011a818e8bd7",
+                "url": "https://api.github.com/repos/andrechalom/laravel-multiselect/zipball/b8526f879ab90fa34078a770f6cb30b7a739e675",
+                "reference": "b8526f879ab90fa34078a770f6cb30b7a739e675",
                 "shasum": ""
             },
             "require": {
-                "illuminate/http": "~5.1",
-                "illuminate/support": "~5.1",
-                "php": "~5.6|~7.0"
+                "illuminate/http": "^5.1",
+                "illuminate/support": "^5.1",
+                "php": "^5.6|^7.0"
             },
             "require-dev": {
-                "phpunit/phpunit": ">=5.4.3",
-                "squizlabs/php_codesniffer": "^2.3"
+                "phpunit/php-code-coverage": ">=4.0",
+                "phpunit/phpunit": ">=5.4.3"
             },
             "type": "library",
             "extra": {
@@ -40,22 +40,7 @@
                     "AndreChalom\\LaravelMultiselect\\": "src"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "AndreChalom\\LaravelMultiselect\\": "tests"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ],
-                "check-style": [
-                    "phpcs -p --standard=PSR2 --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests"
-                ],
-                "fix-style": [
-                    "phpcbf -p --standard=PSR2 --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "GPLv3"
             ],
@@ -75,11 +60,7 @@
                 "multiple",
                 "select"
             ],
-            "support": {
-                "source": "https://github.com/andrechalom/laravel-multiselect/tree/master",
-                "issues": "https://github.com/andrechalom/laravel-multiselect/issues"
-            },
-            "time": "2017-09-05T22:46:01+00:00"
+            "time": "2017-09-06T02:57:50+00:00"
         },
         {
             "name": "barryvdh/laravel-translation-manager",
@@ -4656,9 +4637,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "andrechalom/laravel-multiselect": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
