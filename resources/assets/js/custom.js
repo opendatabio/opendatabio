@@ -149,9 +149,7 @@ $(document).ready(function(){
 				$("#super-x").hide(vel);
 		}
 	}
-	$("#adm_level").change(function() {
-		setLocationFields(400);
-	});
+	$("#adm_level").change(function() { setLocationFields(400); });
     // trigger this on page load
 	setLocationFields(0);
 
@@ -173,6 +171,7 @@ $(document).ready(function(){
                 break;
         }
     }
-    setVoucherFields(0);
     $("#parent_type").change(function() { setVoucherFields(400); });
+    // trigger this on page load
+    setVoucherFields(0);
 });

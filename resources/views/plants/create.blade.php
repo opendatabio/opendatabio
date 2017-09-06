@@ -55,14 +55,24 @@
 
 @push ('scripts')
 <script>
-$("#taxon_autocomplete").devbridgeAutocomplete({
+$(document).ready(function() {
+    $("#taxon_autocomplete").devbridgeAutocomplete({
     serviceUrl: "{{url('taxons/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#taxon_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#taxon_id").val(null);
-    }
-    });
+        onSelect: function (suggestion) {
+            $("#taxon_id").val(suggestion.data);
+        },
+        onInvalidateSelection: function() {
+            $("#taxon_id").val(null);
+            // When the identification of a plant or voucher is changed, all related fields are reset
+            $('input:radio[name=modifier][value=0]').trigger('click');
+            $("#identifier_id").val('');
+            $("#identification_date_year").val((new Date).getFullYear());
+            $("#identification_date_month").val(0);
+            $("#identification_date_day").val(0);
+            $("#herbarium_id").val('');
+            $("#identification_notes").val('');
+        }
+});
+});
 </script>
 @endpush

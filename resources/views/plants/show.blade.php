@@ -73,7 +73,7 @@
 </p>
 
 <p><strong>
-@lang('messages.collection_date')
+@lang('messages.tag_date')
 :</strong>
 {{$plant->formatDate}}
 </p>
@@ -87,7 +87,7 @@
 @endif
 
 <p><strong>
-@lang('messages.collectors')
+@lang('messages.tag_team')
 :</strong>
 @if ($collectors->count())
     <ul>

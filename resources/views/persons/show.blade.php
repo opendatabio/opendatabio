@@ -67,7 +67,7 @@
 @if ($collected->count())
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    @lang('messages.collector')
+                    @lang('messages.tagged_or_collected')
                 </div>
 
 		<div class="panel-body">
@@ -87,7 +87,5 @@
 </ul>
             </div>
 @endif
-            
-<!-- Other details (specialist, collects, etc?) -->
     </div>
 @endsection

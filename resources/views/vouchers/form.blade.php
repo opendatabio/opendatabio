@@ -316,7 +316,7 @@
 
 <div class="form-group">
     <label for="herbarium_id" class="col-sm-3 control-label">
-@lang('messages.herbarium')
+@lang('messages.id_herbarium')
 </label>
         <a data-toggle="collapse" href="#hint10" class="btn btn-default">?</a>
 	    <div class="col-sm-6">

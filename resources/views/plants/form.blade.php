@@ -62,7 +62,7 @@
 
 <div class="form-group">
     <label for="date" class="col-sm-3 control-label">
-@lang('messages.collection_date')
+@lang('messages.tag_date')
 </label>
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
@@ -132,11 +132,11 @@
 <!-- collector -->
 <div class="form-group">
     <label for="collectors" class="col-sm-3 control-label">
-@lang('messages.collectors')
+@lang('messages.tag_team')
 </label>
         <a data-toggle="collapse" href="#hint5" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-{!! Multiselect::select('collector', $persons->pluck('abbreviation', 'id'), isset($plant) ? $plant->collectors->pluck('id') : [], ['class' => 'multiselect form-control']) !!}
+{!! Multiselect::select('collector', $persons->pluck('abbreviation', 'id'), isset($plant) ? $plant->collectors->pluck('person_id') : [], ['class' => 'multiselect form-control']) !!}
             </div>
   <div class="col-sm-12">
     <div id="hint5" class="panel-collapse collapse">
@@ -153,7 +153,7 @@
 	    <div class="col-sm-6">
     <input type="text" name="taxon_autocomplete" id="taxon_autocomplete" class="form-control"
     value="{{ old('taxon_autocomplete', (isset($plant) and $plant->identification) ? $plant->identification->taxon->fullname : null) }}">
-    <input type="hidden" name="taxon_id" id="taxon_id"
+    <input type="text" name="taxon_id" id="taxon_id"
     value="{{ old('taxon_id', (isset($plant) and $plant->identification) ? $plant->identification->taxon_id : null) }}">
             </div>
   <div class="col-sm-12">
@@ -256,7 +256,7 @@
 
 <div class="form-group">
     <label for="herbarium_id" class="col-sm-3 control-label">
-@lang('messages.herbarium')
+@lang('messages.id_herbarium')
 </label>
         <a data-toggle="collapse" href="#hint10" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
