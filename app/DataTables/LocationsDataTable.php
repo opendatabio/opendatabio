@@ -38,19 +38,9 @@ class LocationsDataTable extends DataTable
         $query = Location::query()->select([
             'locations.name', 
             'locations.adm_level', 
-            DB::raw('count(plants.id) as plant_count'),
             'locations.rgt', 
             'locations.lft', 
             'locations.id', 
-        ])->join('plants', function($join) {
-            $join->on('plants.location_id', '>=', 'lft');
-            $join->on('plants.location_id', '<=', 'rgt');
-        })->groupBy([
-            'locations.id', 
-            'locations.name', 
-            'locations.rgt', 
-            'locations.lft', 
-            'locations.adm_level', 
         ]);
 
         return $this->applyScopes($query);
@@ -67,7 +57,6 @@ class LocationsDataTable extends DataTable
             ->columns([
                 ['data' => 'name', 'title' => 'Name', 'searchable' => true, 'orderable' => true], 
                 ['data' => 'adm_level', 'title' => 'Adm Level', 'searchable' => true, 'orderable' => true], 
-                ['data' => 'plant_count', 'title' => 'Plant Count', 'searchable' => false], 
                 ['data' => 'full_name', 'title' => 'Full Name', 'searchable' => false, 'orderable' => false], 
             ])
             ->parameters([
