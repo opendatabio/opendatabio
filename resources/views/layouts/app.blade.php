@@ -70,6 +70,9 @@
 			<li><a href="{{ route('projects.index') }}">
 @lang('messages.projects')
 </a></li>
+			<li><a href="{{ route('tags.index') }}">
+@lang('messages.tags')
+</a></li>
 @can ('show', App\User::class)
 			<li><a href="{{ route('users.index') }}">
 @lang('messages.users')
