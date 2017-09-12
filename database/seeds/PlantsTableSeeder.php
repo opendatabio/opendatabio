@@ -34,6 +34,7 @@ class PlantsTableSeeder extends Seeder
     }
     public function run()
     {
+        if (\App\Plant::count()) return;
 	    $faker = Faker\Factory::create();
         $projects = \App\Project::all();
         $persons = \App\Person::all();
@@ -51,7 +52,7 @@ class PlantsTableSeeder extends Seeder
             $plant->save();
             $this->addCollectors($plant, $faker, $persons);
             $this->Identify($plant, $faker, $persons, $taxons);
-        }
+        } 
         // on plots
         for ($i = 0; $i < 1000; $i++) {
             $plot = $plots->random();
@@ -60,9 +61,10 @@ class PlantsTableSeeder extends Seeder
                 'tag' => $i,
                 'date' => Carbon\Carbon::now(),
                 'project_id' => $projects->random()->id,
+                'relative_position' => DB::raw('GeomFromText(\'POINT(' . 
+                    $faker->numberBetween(0, $plot->y) . ' ' .
+                    $faker->numberBetween(0, $plot->x) . ')\')'),
             ]);
-            $plant->relativePosition = "POINT (" . $faker->numberBetween(0, $plot->y) . " " .
-                                                $faker->numberBetween(0, $plot->x) . ")";
             $plant->save();
             $this->addCollectors($plant, $faker, $persons);
             $this->Identify($plant, $faker, $persons, $taxons);

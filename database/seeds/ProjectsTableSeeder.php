@@ -11,6 +11,7 @@ class ProjectsTableSeeder extends Seeder
      */
     public function run()
     {
+        if(\App\Project::count() > 5) return;
         $faker = Faker\Factory::create();
         $users = App\User::all();
 

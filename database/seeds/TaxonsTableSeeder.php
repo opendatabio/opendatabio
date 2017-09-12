@@ -13,6 +13,8 @@ class TaxonsTableSeeder extends Seeder
      */
     public function run()
     {
+        if (\App\Taxon::count()) return;
+
 	    $faker = Faker\Factory::create();
         // families
         $level = 120;

@@ -12,6 +12,8 @@ class PersonsTableSeeder extends Seeder
      */
     public function run()
     {
+        if (\App\Person::count()) return;
+
 	    $faker = Faker\Factory::create();
 
 	    for ($i = 0; $i < 40; $i++) {
