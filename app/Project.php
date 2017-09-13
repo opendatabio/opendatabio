@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use App\User;
 use Log;
+use DB;
 use App\Plant;
 
 class Project extends Model
@@ -40,22 +41,21 @@ class Project extends Model
     public function vouchers() {
         return $this->hasMany(Voucher::class);
     }
-    public function setusers(array $new_users = null, $level) {
-        // inspired by https://stackoverflow.com/questions/42625797/laravel-sync-only-a-subset-of-the-pivot-table?rq=1
-        $current = $this->users->filter(function($users) use ($level) {
-            return $users->pivot->access_level === $level;
-        })->pluck('id');
+    public function setusers($viewers, $collabs, $admins) {
+        // removes duplicates, keeping the higher permission
+        $viewers = collect($viewers)->diff($collabs)->diff($admins)->all();
+        $collabs = collect($collabs)->diff($admins)->all();
 
-        $detach = $current->diff($new_users)->all();
-
-        $attach_ids = collect($new_users)->diff($current)->all();
-        $atach_pivot = array_fill(0, count($attach_ids), ['access_level' => $level]);
-        $attach = array_combine($attach_ids, $atach_pivot);
-
-        $this->users()->detach($detach);
+        DB::transaction(function () use ($admins, $collabs, $viewers) {
+            $this->users()->detach();
+            $this->setusers_level($admins, Project::ADMIN);
+            $this->setusers_level($collabs, Project::COLLABORATOR);
+            $this->setusers_level($viewers, Project::VIEWER);
+        });
+    }
+    protected function setusers_level(array $new_users = null, $level) {
+        $atach_pivot = array_fill(0, count($new_users), ['access_level' => $level]);
+        $attach = array_combine($new_users, $atach_pivot);
         $this->users()->attach($attach);
-
-        return $this;
-
     }
 }

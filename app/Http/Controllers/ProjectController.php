@@ -40,19 +40,6 @@ class ProjectController extends Controller
         return view('projects.create', compact('fullusers', 'allusers'));
     }
 
-    public function customValidate(Request $request) {
-	    $rules = [
-		    'name' => 'required|string|max:191',
-		    'privacy' => 'required|integer',
-	    ];
-	    $validator = Validator::make($request->all(), $rules);
-        if (! $request->admins) {
-                $validator->after(function ($validator) {
-                        $validator->errors()->add('admins', Lang::get('messages.project_admin_required_error'));
-                });
-        }
-        return $validator;
-    }
     /**
      * Store a newly created resource in storage.
      *
@@ -62,18 +49,15 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Project::class);
-	    $validator = $this->customValidate($request);
-	    if ($validator->fails()) {
-		    return redirect()->back()
-			    ->withErrors($validator)
-			    ->withInput();
-	    }
+        $this->validate($request, [
+		    'name' => 'required|string|max:191',
+		    'privacy' => 'required|integer',
+            'admins' => 'required|array|min:1',
+	    ]);
         $project = new Project($request->only(['name', 'notes', 'privacy']));
         $project->save(); // needed to generate an id?
-        $project->setusers($request->admins, Project::ADMIN)
-        ->setusers($request->collabs, Project::COLLABORATOR)
-        ->setusers($request->viewers, Project::VIEWER);
-        return redirect('projects')->withStatus(Lang::get('messages.stored'));
+        $project->setusers($request->viewers, $request->collabs, $request->admins);
+        return redirect('projects/' . $project->id )->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -105,7 +89,7 @@ class ProjectController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     3* Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
@@ -115,18 +99,14 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
         $this->authorize('update', $project);
-	    $validator = $this->customValidate($request);
-	    if ($validator->fails()) {
-		    return redirect()->back()
-			    ->withErrors($validator)
-			    ->withInput();
-	    }
+        $this->validate($request, [
+		    'name' => 'required|string|max:191',
+		    'privacy' => 'required|integer',
+            'admins' => 'required|array|min:',
+	    ]);
         $project->update($request->only(['name', 'notes', 'privacy']));
-        $project->setusers($request->admins, Project::ADMIN)
-        ->setusers($request->collabs, Project::COLLABORATOR)
-        ->setusers($request->viewers, Project::VIEWER);
-        return redirect('projects')->withStatus(Lang::get('messages.saved'));
-        //
+        $project->setusers($request->viewers, $request->collabs, $request->admins);
+        return redirect('projects/'.$id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**

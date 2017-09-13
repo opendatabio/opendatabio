@@ -60,7 +60,8 @@ class TagController extends Controller
      */
     public function show($id)
     {
-        // TODO
+        $tag = Tag::with('datasets')->findOrFail($id);
+        return view('tags.show', compact('tag'));
     }
 
     /**
