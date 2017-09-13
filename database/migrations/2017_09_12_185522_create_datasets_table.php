@@ -19,6 +19,8 @@ class CreateDatasetsTable extends Migration
             $table->string('name')->unique();
             $table->text('notes')->nullable();
             $table->integer('privacy')->default(0);
+            $table->integer('bibreference_id')->unsigned()->nullable();
+            $table->foreign('bibreference_id')->references('id')->on('bib_references');
         });
     }
 

@@ -23,7 +23,7 @@ Auth::routes();
 Route::get('/selfedit', 'Auth\SelfEditController@selfedit')->name('selfedit');
 Route::put('/selfupdate', 'Auth\SelfEditController@selfupdate')->name('selfupdate');
 
-# Home controller (for logged in users?)
+# Home controller for logged in users
 Route::get('/home', 'HomeController@index')->name('home');
 
 # Resources (with non-default BEFORE resources):
@@ -49,6 +49,8 @@ Route::get('taxons/autocompletefull', 'TaxonController@autocompletefull');
 Route::resource('taxons', 'TaxonController');
 
 Route::resource('projects', 'ProjectController');
+
+Route::resource('datasets', 'DatasetController');
 
 Route::resource('plants', 'PlantController');
 

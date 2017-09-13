@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Lang;
 use App\Project;
+use App\Dataset;
 
 class User extends Authenticatable
 {
@@ -51,5 +52,8 @@ class User extends Authenticatable
     }
     public function projects() {
         return $this->belongsToMany(Project::class)->withPivot('access_level');
+    }
+    public function datasets() {
+        return $this->belongsToMany(Dataset::class)->withPivot('access_level');
     }
 }

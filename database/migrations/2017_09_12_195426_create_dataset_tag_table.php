@@ -20,6 +20,7 @@ class CreateDatasetTagTable extends Migration
 	    $table->foreign('dataset_id')->references('id')->on('datasets');
 	    $table->integer('tag_id')->unsigned();
 	    $table->foreign('tag_id')->references('id')->on('tags');
+        $table->unique(['tag_id', 'dataset_id']);
         });
     }
 
