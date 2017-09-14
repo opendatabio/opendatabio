@@ -9,7 +9,6 @@ use Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
-use Yajra\Datatables\Datatables;
 
 class BibReferenceController extends Controller
 {

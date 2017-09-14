@@ -3,7 +3,9 @@
 namespace App\DataTables;
 
 use App\Location;
-use Yajra\Datatables\Services\DataTable;
+use Yajra\DataTables\Services\DataTable;
+use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\DataTables;
 use Lang;
 use DB;
 
@@ -14,10 +16,9 @@ class LocationsDataTable extends DataTable
      *
      * @return \Yajra\Datatables\Engines\BaseEngine
      */
-    public function dataTable()
+    public function dataTable(DataTables $dataTables, $query)
     {
-        return $this->datatables
-            ->eloquent($this->query())
+        return (new EloquentDataTable($query))
 	    ->editColumn('name', function ($location) {
 		    return '<a href="' . url('locations/' . $location->id) . '">' . 
 			    // Needs to escape special chars, as this will be passed RAW

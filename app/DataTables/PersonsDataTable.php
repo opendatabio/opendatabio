@@ -3,7 +3,9 @@
 namespace App\DataTables;
 
 use App\Person;
-use Yajra\Datatables\Services\DataTable;
+use Yajra\DataTables\Services\DataTable;
+use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\DataTables;
 
 class PersonsDataTable extends DataTable
 {
@@ -12,10 +14,9 @@ class PersonsDataTable extends DataTable
      *
      * @return \Yajra\Datatables\Engines\BaseEngine
      */
-    public function dataTable()
+    public function dataTable(DataTables $dataTables, $query)
     {
-        return $this->datatables
-            ->eloquent($this->query())
+        return (new EloquentDataTable($query))
 	    ->editColumn('abbreviation', function ($person) {
 		    return '<a href="' . url('persons/' . $person->id) . '">' . 
 			    // Needs to escape special chars, as this will be passed RAW

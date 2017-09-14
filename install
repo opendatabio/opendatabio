@@ -481,7 +481,6 @@ if (getenv('APP_ENV') == 'production') {
 	echo c("Running code optimizations for production environment...\n", "success");
 	system("php artisan config:cache");
 	system("php artisan route:cache");
-	system("php artisan optimize");
 	# Check Supervisor config file
 	checkSupervisor();
 }

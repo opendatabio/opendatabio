@@ -3,7 +3,9 @@
 namespace App\DataTables;
 
 use App\Taxon;
-use Yajra\Datatables\Services\DataTable;
+use Yajra\DataTables\Services\DataTable;
+use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\DataTables;
 use Lang;
 use DB;
 
@@ -14,10 +16,9 @@ class TaxonsDataTable extends DataTable
      *
      * @return \Yajra\Datatables\Engines\BaseEngine
      */
-    public function dataTable()
+    public function dataTable(DataTables $dataTables, $query)
     {
-        return $this->datatables
-            ->eloquent($this->query())
+        return (new EloquentDataTable($query))
 	    ->editColumn('fullname', function ($taxon) {
                 $valid = ($taxon->valid) ? '' : '**';
 		    return '<a href="' . url('taxons/' . $taxon->id) . '">' . 
