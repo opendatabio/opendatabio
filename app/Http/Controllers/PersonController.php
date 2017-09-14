@@ -58,7 +58,7 @@ class PersonController extends Controller
 		    }
 	    }
 	$person = Person::create($request->all());
-	return redirect('persons')->withStatus(Lang::get('messages.stored'));
+	return redirect('persons/' . $person->id)->withStatus(Lang::get('messages.stored'));
     }
 
     protected function checkValid(Request $request, $id = null) {
@@ -119,7 +119,7 @@ class PersonController extends Controller
         $person->update($request->only(['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id']));
         // add/remove specialists
         $person->taxons()->sync($request->specialist);
-        return redirect('persons')->withStatus(Lang::get('messages.saved'));
+        return redirect('persons/' . $id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**

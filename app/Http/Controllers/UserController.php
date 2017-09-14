@@ -51,7 +51,7 @@ class UserController extends Controller
             }
         }
 	    $user->save();
-	return redirect('users')->withStatus(Lang::get('messages.saved'));
+	return redirect('users/' . $id)->withStatus(Lang::get('messages.saved'));
     }
     public function destroy($id)
     {

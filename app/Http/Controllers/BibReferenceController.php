@@ -108,7 +108,7 @@ class BibReferenceController extends Controller
 
 	    $reference->bibtex = $request->bibtex;
 	    $reference->save();
-	    return redirect('references')->withStatus(Lang::get('messages.saved'));
+	    return redirect('references/' . $id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**

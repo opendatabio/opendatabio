@@ -158,7 +158,7 @@ class TaxonController extends Controller
         $taxon->setapikey('IPNI', $request['ipnikey']);
         $taxon->setapikey('Mycobank', $request['mycobankkey']);
         $taxon->save(); 
-        return redirect('taxons')->withStatus(Lang::get('messages.stored'));
+        return redirect('taxons/' . $taxon->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -239,7 +239,7 @@ class TaxonController extends Controller
             $taxon->setapikey('IPNI', $request['ipnikey']);
             $taxon->setapikey('Mycobank', $request['mycobankkey']);
             $taxon->save();
-            return redirect('taxons')->withStatus(Lang::get('messages.saved'));
+            return redirect('taxons/' . $id)->withStatus(Lang::get('messages.saved'));
     }
 
 

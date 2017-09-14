@@ -49,7 +49,7 @@ class TagController extends Controller
             $tag->translations()
                 ->save(new UserTranslation(['language_id' => $key, 'translation' => $translation]));
         }
-        return redirect('tags')->withStatus(Lang::get('messages.stored'));
+        return redirect('tags/' . $tag->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -101,7 +101,7 @@ class TagController extends Controller
                 $tag->translations()->where('language_id', '=', $key)->delete();
             }
         }
-        return redirect('tags')->withStatus(Lang::get('messages.saved'));
+        return redirect('tags/' . $id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**
