@@ -14,11 +14,14 @@ class Dataset extends Model
     const PRIVACY_PUBLIC = 2;
     const PRIVACY_LEVELS = [Dataset::PRIVACY_AUTH, Dataset::PRIVACY_REGISTERED, Dataset::PRIVACY_PUBLIC];
 
-    protected $fillable = ['name', 'notes', 'privacy'];
+    protected $fillable = ['name', 'notes', 'privacy', 'bibreference_id'];
 /*    public function measurements() {
         return $this->hasMany(Measurement::class);
 } */ 
     public function tags() {
         return $this->belongsToMany(Tag::class);
+    }
+    public function reference() {
+        return $this->belongsTo(BibReference::class, 'bibreference_id');
     }
 }

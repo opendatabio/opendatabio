@@ -89,7 +89,7 @@ class ProjectController extends Controller
     }
 
     /**
-     3* Update the specified resource in storage.
+     * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id

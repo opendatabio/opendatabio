@@ -97,6 +97,22 @@ class CreateTagsTable extends Migration
             'language_id' => '2',
             'translation' => 'Química do solo',
         ]);
+
+        DB::table('tags')->insert([
+            'id' => 6,
+        ]);
+        DB::table('user_translations')->insert([
+            'translatable_id' => '6',
+            'translatable_type' => 'App\\Tag',
+            'language_id' => '1',
+            'translation' => 'Taxonomic and morphologic characters',
+        ]);
+        DB::table('user_translations')->insert([
+            'translatable_id' => '6',
+            'translatable_type' => 'App\\Tag',
+            'language_id' => '2',
+            'translation' => 'Caracteres taxonômicos e morfológicos',
+        ]);
     }
 
     /**

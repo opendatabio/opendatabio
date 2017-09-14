@@ -81,11 +81,6 @@
 @lang('messages.users')
 </a></li>
 @endcan
-@can ('index', App\UserJobs::class)
-			<li><a href="{{ route('userjobs.index') }}">
-@lang('messages.userjobs')
-</a></li>
-@endcan
                         &nbsp;
                     </ul>
 
@@ -120,6 +115,11 @@
                                             {{ csrf_field() }}
                                         </form>
                                     </li>
+@can ('index', App\UserJobs::class)
+			<li><a href="{{ route('userjobs.index') }}">
+@lang('messages.userjobs')
+</a></li>
+@endcan
                                 </ul>
                             </li>
                         @endif

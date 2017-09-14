@@ -49,7 +49,16 @@ class DatasetController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create', Dataset::class);
+        $this->validate($request, [
+		    'name' => 'required|string|max:191',
+		    'privacy' => 'required|integer',
+            'admins' => 'required|array|min:1',
+	    ]);
+        $dataset = Dataset::create($request->only(['name', 'notes', 'privacy', 'bibreference_id']));
+        $dataset->setusers($request->viewers, $request->collabs, $request->admins);
+        $dataset->tags()->attach($request->tags);
+        return redirect('datasets/' . $dataset->id )->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -60,7 +69,8 @@ class DatasetController extends Controller
      */
     public function show($id)
     {
-        //
+        $dataset = Dataset::findOrFail($id);
+        return view('datasets.show', compact('dataset'));
     }
 
     /**
@@ -71,7 +81,12 @@ class DatasetController extends Controller
      */
     public function edit($id)
     {
-        //
+        $tags = Tag::all();
+        $references = BibReference::all();
+        $dataset = Dataset::findOrFail($id);
+        $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
+        $allusers = User::all();
+        return view('datasets.create', compact('dataset', 'fullusers', 'allusers', 'tags', 'references'));
     }
 
     /**
@@ -83,7 +98,17 @@ class DatasetController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $dataset = Dataset::findOrFail($id);
+        $this->authorize('update', $dataset);
+        $this->validate($request, [
+		    'name' => 'required|string|max:191',
+		    'privacy' => 'required|integer',
+            'admins' => 'required|array|min:',
+	    ]);
+        $dataset->update($request->only(['name', 'notes', 'privacy', 'bibreference_id']));
+        $dataset->setusers($request->viewers, $request->collabs, $request->admins);
+        $dataset->tags()->sync($request->tags);
+        return redirect('datasets/'. $id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**
