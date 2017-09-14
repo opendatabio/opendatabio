@@ -15,11 +15,13 @@ class DatasetsTableSeeder extends Seeder
         $faker = Faker\Factory::create();
         $users = App\User::all();
         $tags = App\Tag::all();
+        $references = App\BibReference::all();
 
         for ($i = 0; $i < 40; $i++) {
             $dataset = App\Dataset::create([
                 'name' => $faker->sentence(3),
                 'privacy' => $faker->numberBetween(0,2),
+                'bibreference_id' => ($faker->numberBetween(0,3) == 0 ? $references->random()->id : null),
             ]);
             for ($j = 0; $j < $faker->numberBetween(3,10); $j++) {
                 try {

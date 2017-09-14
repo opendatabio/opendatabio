@@ -44,7 +44,7 @@
 <ul>
 @foreach ($mydatasets as $dataset)
     <li><a href="{{url('datasets/' . $dataset->id)}}">{{$dataset->name}}</a>
-(@lang('levels.dataset.' . $dataset->pivot->access_level )
+(@lang('levels.project.' . $dataset->pivot->access_level )
 )</li>
 @endforeach
     </ul>
