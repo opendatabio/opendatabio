@@ -49,10 +49,16 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Project::class);
+        $fullusers = User::where('access_level', '=', User::USER)
+            ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
+        $fullusers = implode(',', $fullusers->all());
         $this->validate($request, [
 		    'name' => 'required|string|max:191',
 		    'privacy' => 'required|integer',
             'admins' => 'required|array|min:1',
+            'admins.*' => 'numeric|in:' . $fullusers,
+            'collabs' => 'nullable|array',
+            'collabs.*' => 'numeric|in:' . $fullusers,
 	    ]);
         $project = new Project($request->only(['name', 'notes', 'privacy']));
         $project->save(); // needed to generate an id?
@@ -99,10 +105,16 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
         $this->authorize('update', $project);
+        $fullusers = User::where('access_level', '=', User::USER)
+            ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
+        $fullusers = implode(',', $fullusers->all());
         $this->validate($request, [
 		    'name' => 'required|string|max:191',
 		    'privacy' => 'required|integer',
-            'admins' => 'required|array|min:',
+            'admins' => 'required|array|min:1',
+            'admins.*' => 'numeric|in:' . $fullusers,
+            'collabs' => 'nullable|array',
+            'collabs.*' => 'numeric|in:' . $fullusers,
 	    ]);
         $project->update($request->only(['name', 'notes', 'privacy']));
         $project->setusers($request->viewers, $request->collabs, $request->admins);

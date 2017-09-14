@@ -321,4 +321,5 @@ remove the job information from the database.',
   'dataset_admins_hint' => 'Use these selectors to add users to the administrator, collaborator or viewer lists of this dataset. Administrator have full control and access, collaborators have limited control, and viewers have read-only access to the project\'s data. Notice that only full users and superadmins may be assigned as dataset collaborators or admins. Users that are only registered may only be assigned as viewers.',
   'dataset' => 'Dataset',
   'translations' => 'Translations',
+  'access_level_change_hint' => 'The access level of a user determines what he or she can do in the system. SuperAdmins have edit access to all data in the system. Full users can be collaborators or admins to projects and datasets, and registered users may only view data that is explicitly shared with them. When you promote a user to Full User or Superadmin, the system will automatically create a workspace for him or her. If you demote a user to Registered User, the system will automatically remove all admin and collaborator access he or she had in projects and datasets.',
 );

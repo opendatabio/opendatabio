@@ -14,20 +14,15 @@ class UserController extends Controller
     {
 	    $this->authorize('show', User::class);
 	    $users = User::orderBy('email')->paginate(10);
-	    return view('users.index', [
-        'users' => $users
-    ]);
+        return view('users.index', compact('users'));
     }
     public function edit($id) {
 	    $user = User::findOrFail($id);
 	    $this->authorize('update', $user);
-	    return view('users.edit', [
-	    	'user' => $user
-	]);
+        return view('users.edit', compact('user'));
     }
     public function show($id) {
-	    $this->authorize('show', User::class);
-	    return redirect ('users/'.$id.'/edit');
+        return $this->edit($id);
     }
     public function update(Request $request, $id)
     {
@@ -35,9 +30,14 @@ class UserController extends Controller
 	    $user = User::findOrFail($id);
 	    $this->authorize('update', $user);
 	    // ATTENTION, the system admin may set any password for a user, regardless of other restrictions elsewhere
-	    $this->validate($request, [
-		'email' => ['max:191', 'email', 'unique:users,email,'.$id]
-	]);
+        $this->validate($request, [
+            'email' => ['max:191', 'email', 'unique:users,email,'.$id]
+        ]);
+        if ($request->access_level == USER::REGISTERED) { // if he got demoted...
+            // Reference: https://stackoverflow.com/questions/40104319/laravel-5-update-all-pivot-entries
+            $user->datasets()->newPivotStatement()->where('user_id', '=', $user->id)->update(['access_level' => Project::VIEWER]);
+            $user->projects()->newPivotStatement()->where('user_id', '=', $user->id)->update(['access_level' => Project::VIEWER]);
+        }
 	    $user->email = $request->email;
 	    if (! is_null($request->password))
 	    	$user->password = bcrypt($request->password);
@@ -49,9 +49,15 @@ class UserController extends Controller
                 ]);
                 $proj->users()->attach($user, ['access_level' => Project::ADMIN]);
             }
+            if(! $user->datasets()->count()) { // this user is not member of any project, let's create one for him/her
+                $dataset = Dataset::create([
+                    'name' => substr($user->email, 0, strpos($user->email, '@')) . " Data Workspace",
+                ]);
+                $dataset->users()->attach($user, ['access_level' => Project::ADMIN]);
+            }
         }
 	    $user->save();
-	return redirect('users/' . $id)->withStatus(Lang::get('messages.saved'));
+	return redirect('users/'. $id)->withStatus(Lang::get('messages.saved'));
     }
     public function destroy($id)
     {

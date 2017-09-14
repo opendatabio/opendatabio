@@ -50,10 +50,16 @@ class DatasetController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Dataset::class);
+        $fullusers = User::where('access_level', '=', User::USER)
+            ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
+        $fullusers = implode(',', $fullusers->all());
         $this->validate($request, [
 		    'name' => 'required|string|max:191',
 		    'privacy' => 'required|integer',
             'admins' => 'required|array|min:1',
+            'admins.*' => 'numeric|in:' . $fullusers,
+            'collabs' => 'nullable|array',
+            'collabs.*' => 'numeric|in:' . $fullusers,
 	    ]);
         $dataset = Dataset::create($request->only(['name', 'notes', 'privacy', 'bibreference_id']));
         $dataset->setusers($request->viewers, $request->collabs, $request->admins);
@@ -100,10 +106,16 @@ class DatasetController extends Controller
     {
         $dataset = Dataset::findOrFail($id);
         $this->authorize('update', $dataset);
+        $fullusers = User::where('access_level', '=', User::USER)
+            ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
+        $fullusers = implode(',', $fullusers->all());
         $this->validate($request, [
 		    'name' => 'required|string|max:191',
 		    'privacy' => 'required|integer',
-            'admins' => 'required|array|min:',
+            'admins' => 'required|array|min:1',
+            'admins.*' => 'numeric|in:' . $fullusers,
+            'collabs' => 'nullable|array',
+            'collabs.*' => 'numeric|in:' . $fullusers,
 	    ]);
         $dataset->update($request->only(['name', 'notes', 'privacy', 'bibreference_id']));
         $dataset->setusers($request->viewers, $request->collabs, $request->admins);
