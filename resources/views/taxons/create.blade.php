@@ -65,7 +65,7 @@
 @push ('scripts')
 <script>
 $("#parent_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('taxons/autocompletefull')}}",
+    serviceUrl: "{{url('taxons/autocomplete')}}",
     onSelect: function (suggestion) {
         $("#parent_id").val(suggestion.data);
     },
@@ -74,7 +74,7 @@ $("#parent_autocomplete").devbridgeAutocomplete({
     }
     });
 $("#senior_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('taxons/autocompletefull')}}",
+    serviceUrl: "{{url('taxons/autocomplete')}}",
     onSelect: function (suggestion) {
         $("#senior_id").val(suggestion.data);
     },

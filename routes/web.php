@@ -45,7 +45,6 @@ Route::resource('locations', 'LocationController');
 
 Route::post('taxons/checkapis', 'TaxonController@checkapis')->name('checkapis');
 Route::get('taxons/autocomplete', 'TaxonController@autocomplete');
-Route::get('taxons/autocompletefull', 'TaxonController@autocompletefull');
 Route::resource('taxons', 'TaxonController');
 
 Route::resource('projects', 'ProjectController');
