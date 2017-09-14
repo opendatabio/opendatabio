@@ -70,14 +70,15 @@
 			<li><a href="{{ route('projects.index') }}">
 @lang('messages.projects')
 </a></li>
+			<li><a href="{{ route('datasets.index') }}">
+@lang('messages.datasets')
+</a></li>
+			<li><a href="{{ route('tags.index') }}">
+@lang('messages.tags')
+</a></li>
 @can ('show', App\User::class)
 			<li><a href="{{ route('users.index') }}">
 @lang('messages.users')
-</a></li>
-@endcan
-@can ('index', App\UserJobs::class)
-			<li><a href="{{ route('userjobs.index') }}">
-@lang('messages.userjobs')
 </a></li>
 @endcan
                         &nbsp;
@@ -114,6 +115,11 @@
                                             {{ csrf_field() }}
                                         </form>
                                     </li>
+@can ('index', App\UserJobs::class)
+			<li><a href="{{ route('userjobs.index') }}">
+@lang('messages.userjobs')
+</a></li>
+@endcan
                                 </ul>
                             </li>
                         @endif

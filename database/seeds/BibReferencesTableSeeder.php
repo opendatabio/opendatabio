@@ -11,9 +11,10 @@ class BibReferencesTableSeeder extends Seeder
      */
     public function run()
     {
+        if( \App\BibReference::count()) return;
 	    $faker = Faker\Factory::create();
 
-	    for ($i = 0; $i < 15; $i++) {
+	    for ($i = 0; $i < 50; $i++) {
 		    $lname = $faker->lastName;
 		    $name = $lname  . ", ".strtoupper($faker->randomLetter) . ".";
 		    if ($faker->numberBetween(1,4) == 1)

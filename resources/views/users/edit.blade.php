@@ -41,6 +41,7 @@
 </div>
 <div class="form-group">
     <label for="access" class="col-sm-3 control-label">Access Level</label>
+        <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
     <div class="col-sm-6">
 	<?php $selected = old('access_level', $user->access_level); ?>
 	<select name="access_level" id="access_level" class="form-control" >
@@ -51,6 +52,11 @@
 	@endforeach
 	</select>
     </div>
+  <div class="col-sm-12">
+    <div id="hint2" class="panel-collapse collapse">
+	@lang('messages.access_level_change_hint')
+    </div>
+  </div>
 </div>
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">

@@ -163,7 +163,7 @@ class LocationController extends Controller
 		    $newloc->uc_id = $request->uc_id;
 	    }
 	    $newloc->save();
-	return redirect('locations')->withStatus(Lang::get('messages.stored'));
+	return redirect('locations/' . $newloc->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -280,8 +280,7 @@ class LocationController extends Controller
 		    $location->uc_id = $request->uc_id;
 	    }
 	    $location->save();
-	return redirect('locations')->withStatus(Lang::get('messages.stored'));
-        //
+	return redirect('locations/' . $id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**

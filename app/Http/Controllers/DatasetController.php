@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Project;
+use App\Tag;
+use App\BibReference;
+use App\Dataset;
 use App\User;
 use Auth;
 use Validator;
 use Lang;
 
-class ProjectController extends Controller
+class DatasetController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -18,14 +20,11 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $projects = Project::paginate(10);
-        $myprojects = null;
-        if (Auth::user() and Auth::user()->projects()->count())
-            $myprojects = Auth::user()->projects;
-        return view('projects.index', [
-            'projects' => $projects,
-            'myprojects' => $myprojects,
-        ]);
+        $datasets = Dataset::paginate(10);
+        $mydatasets = null;
+        if (Auth::user() and Auth::user()->datasets()->count())
+            $mydatasets = Auth::user()->datasets;
+        return view('datasets.index', compact('datasets', 'mydatasets'));
     }
 
     /**
@@ -37,7 +36,9 @@ class ProjectController extends Controller
     {
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
-        return view('projects.create', compact('fullusers', 'allusers'));
+        $tags = Tag::all();
+        $references = BibReference::all();
+        return view('datasets.create', compact('fullusers', 'allusers', 'tags', 'references'));
     }
 
     /**
@@ -48,7 +49,7 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create', Project::class);
+        $this->authorize('create', Dataset::class);
         $fullusers = User::where('access_level', '=', User::USER)
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
@@ -60,10 +61,10 @@ class ProjectController extends Controller
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:' . $fullusers,
 	    ]);
-        $project = new Project($request->only(['name', 'notes', 'privacy']));
-        $project->save(); // needed to generate an id?
-        $project->setusers($request->viewers, $request->collabs, $request->admins);
-        return redirect('projects/' . $project->id )->withStatus(Lang::get('messages.stored'));
+        $dataset = Dataset::create($request->only(['name', 'notes', 'privacy', 'bibreference_id']));
+        $dataset->setusers($request->viewers, $request->collabs, $request->admins);
+        $dataset->tags()->attach($request->tags);
+        return redirect('datasets/' . $dataset->id )->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -74,10 +75,8 @@ class ProjectController extends Controller
      */
     public function show($id)
     {
-        $project = Project::findOrFail($id);
-        return view('projects.show', [
-            'project' => $project,
-        ]);
+        $dataset = Dataset::findOrFail($id);
+        return view('datasets.show', compact('dataset'));
     }
 
     /**
@@ -88,10 +87,12 @@ class ProjectController extends Controller
      */
     public function edit($id)
     {
-        $project = Project::findOrFail($id);
+        $tags = Tag::all();
+        $references = BibReference::all();
+        $dataset = Dataset::findOrFail($id);
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
-        return view('projects.create', compact('project', 'fullusers', 'allusers'));
+        return view('datasets.create', compact('dataset', 'fullusers', 'allusers', 'tags', 'references'));
     }
 
     /**
@@ -103,8 +104,8 @@ class ProjectController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $project = Project::findOrFail($id);
-        $this->authorize('update', $project);
+        $dataset = Dataset::findOrFail($id);
+        $this->authorize('update', $dataset);
         $fullusers = User::where('access_level', '=', User::USER)
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
@@ -116,9 +117,10 @@ class ProjectController extends Controller
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:' . $fullusers,
 	    ]);
-        $project->update($request->only(['name', 'notes', 'privacy']));
-        $project->setusers($request->viewers, $request->collabs, $request->admins);
-        return redirect('projects/'.$id)->withStatus(Lang::get('messages.saved'));
+        $dataset->update($request->only(['name', 'notes', 'privacy', 'bibreference_id']));
+        $dataset->setusers($request->viewers, $request->collabs, $request->admins);
+        $dataset->tags()->sync($request->tags);
+        return redirect('datasets/'. $id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**

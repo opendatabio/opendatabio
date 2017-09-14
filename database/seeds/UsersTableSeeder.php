@@ -11,14 +11,17 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
+        if (\App\User::count() > 5) return;
 	    $faker = Faker\Factory::create();
         $persons = App\Person::all();
 
+        try {
         DB::table('users')->insert([
             'email' => 'user@example.org',
             'password' => bcrypt('password1'),
             'access_level' => 1,
         ]);
+        } catch (Exception $e) {}
 
         for ($i = 0; $i < 40; $i++) {
 		    $person = null;

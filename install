@@ -125,8 +125,16 @@ function writeDotEnv($key, $value) { // edited from Laravel Framework @ KeyGener
 	file_put_contents(".env", preg_replace(
 		"/^{$key}=.+/m",
 		"{$key}=".$value,
-		file_get_contents(".env")
-	));
+        file_get_contents(".env"),
+        -1,
+        $counter
+    ));
+    if ($counter > 0) return; // all is well
+    file_put_contents(".env", 
+        file_get_contents(".env") . "\n" . 
+        "### ADDED BY install SCRIPT " . date('Y-m-d') . "\n" . 
+        $key . "=" . $value . "\n"
+    );
 }
 function checkCurrentUser() {
 	$uid = posix_geteuid();

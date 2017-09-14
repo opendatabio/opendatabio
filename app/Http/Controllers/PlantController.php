@@ -142,7 +142,7 @@ class PlantController extends Controller
             $request->identification_date_day,
             $request->identification_date_year);
         $plant->identification->save();
-        return redirect('plants')->withStatus(Lang::get('messages.stored'));
+        return redirect('plants/' . $plant->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -240,7 +240,7 @@ class PlantController extends Controller
             $request->identification_date_day,
             $request->identification_date_year);
         $plant->identification->save();
-        return redirect('plants')->withStatus(Lang::get('messages.saved'));
+        return redirect('plants/' . $id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**

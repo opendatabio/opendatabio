@@ -42,6 +42,7 @@ class VouchersTableSeeder extends Seeder
     }
     public function run()
     {
+        if (\App\Voucher::count()) return;
 	    $faker = Faker\Factory::create();
         $projects = \App\Project::all();
         $persons = \App\Person::all();
