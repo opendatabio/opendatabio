@@ -153,7 +153,7 @@
 	    <div class="col-sm-6">
     <input type="text" name="taxon_autocomplete" id="taxon_autocomplete" class="form-control"
     value="{{ old('taxon_autocomplete', (isset($plant) and $plant->identification) ? $plant->identification->taxon->fullname : null) }}">
-    <input type="text" name="taxon_id" id="taxon_id"
+    <input type="hidden" name="taxon_id" id="taxon_id"
     value="{{ old('taxon_id', (isset($plant) and $plant->identification) ? $plant->identification->taxon_id : null) }}">
             </div>
   <div class="col-sm-12">
