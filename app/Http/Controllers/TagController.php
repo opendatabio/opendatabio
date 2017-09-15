@@ -42,12 +42,16 @@ class TagController extends Controller
     {
         $this->authorize('create', Tag::class);
         $this->validate($request, [
-            'translation' => 'required|array',
+            'name' => 'required|array',
+            'name.*' => 'required',
+            'description' => 'required|array',
         ]);
         $tag = Tag::create();
-        foreach ($request->translation as $key => $translation) {
-            $tag->translations()
-                ->save(new UserTranslation(['language_id' => $key, 'translation' => $translation]));
+        foreach ($request->name as $key => $translation) {
+            $tag->setTranslation(UserTranslation::NAME, $key, $translation);
+        }
+        foreach ($request->description as $key => $translation) {
+            $tag->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
         }
         return redirect('tags/' . $tag->id)->withStatus(Lang::get('messages.stored'));
     }
@@ -89,17 +93,15 @@ class TagController extends Controller
         $tag = Tag::findOrFail($id);
         $this->authorize('update', $tag);
         $this->validate($request, [
-            'translation' => 'required|array',
+            'name' => 'required|array',
+            'name.*' => 'required',
+            'description' => 'required|array',
         ]);
-        foreach ($request->translation as $key => $translation) {
-            if ($translation and $tag->translations()->where('language_id', '=', $key)->count()) {
-                $tag->translations()->where('language_id', '=', $key)->update(['translation' => $translation]);
-            } elseif ($translation) {
-                $tag->translations()
-                    ->save(new UserTranslation(['language_id' => $key, 'translation' => $translation]));
-            } else {
-                $tag->translations()->where('language_id', '=', $key)->delete();
-            }
+        foreach ($request->name as $key => $translation) {
+            $tag->setTranslation(UserTranslation::NAME, $key, $translation);
+        }
+        foreach ($request->description as $key => $translation) {
+            $tag->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
         }
         return redirect('tags/' . $id)->withStatus(Lang::get('messages.saved'));
     }

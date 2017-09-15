@@ -10,7 +10,10 @@
 		<div class="panel-body">
 		    <p><strong>
 @lang('messages.name')
-: </strong> {{ $tag->translation }} </p>
+: </strong> {{ $tag->name }} </p>
+		    <p><strong>
+@lang('messages.description')
+: </strong> {{ $tag->description }} </p>
 @can ('update', $tag)
 		    <a href="{{ url('tags/'.$tag->id.'/edit') }}" class="btn btn-success">
 				    <i class="fa fa-btn fa-plus"></i>

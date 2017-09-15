@@ -25,12 +25,14 @@ class CreateTagsTable extends Migration
             'translatable_id' => '1',
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
+            'translation_type' => '0',
             'translation' => 'Census',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '1',
             'translatable_type' => 'App\\Tag',
             'language_id' => '2',
+            'translation_type' => '0',
             'translation' => 'Censo',
         ]);
 
@@ -41,12 +43,14 @@ class CreateTagsTable extends Migration
             'translatable_id' => '2',
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
+            'translation_type' => '0',
             'translation' => 'Floristics',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '2',
             'translatable_type' => 'App\\Tag',
             'language_id' => '2',
+            'translation_type' => '0',
             'translation' => 'Florística',
         ]);
 
@@ -57,12 +61,14 @@ class CreateTagsTable extends Migration
             'translatable_id' => '3',
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
+            'translation_type' => '0',
             'translation' => 'Functional characters',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '3',
             'translatable_type' => 'App\\Tag',
             'language_id' => '2',
+            'translation_type' => '0',
             'translation' => 'Caracteres funcionais',
         ]);
 
@@ -73,12 +79,14 @@ class CreateTagsTable extends Migration
             'translatable_id' => '4',
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
+            'translation_type' => '0',
             'translation' => 'Mollecular data',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '4',
             'translatable_type' => 'App\\Tag',
             'language_id' => '2',
+            'translation_type' => '0',
             'translation' => 'Dados moleculares',
         ]);
 
@@ -89,12 +97,14 @@ class CreateTagsTable extends Migration
             'translatable_id' => '5',
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
+            'translation_type' => '0',
             'translation' => 'Soil chemistry',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '5',
             'translatable_type' => 'App\\Tag',
             'language_id' => '2',
+            'translation_type' => '0',
             'translation' => 'Química do solo',
         ]);
 
@@ -105,12 +115,14 @@ class CreateTagsTable extends Migration
             'translatable_id' => '6',
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
+            'translation_type' => '0',
             'translation' => 'Taxonomic and morphologic characters',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '6',
             'translatable_type' => 'App\\Tag',
             'language_id' => '2',
+            'translation_type' => '0',
             'translation' => 'Caracteres taxonômicos e morfológicos',
         ]);
     }

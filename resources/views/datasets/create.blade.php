@@ -65,7 +65,7 @@
 <div class="col-sm-6">
 {!! Multiselect::select(
     'tags', 
-    $tags->pluck('translation', 'id'), isset($dataset) ? $dataset->tags->pluck('id') : [],
+    $tags->pluck('name', 'id'), isset($dataset) ? $dataset->tags->pluck('id') : [],
      ['class' => 'multiselect form-control']
 ) !!}
 </div>

@@ -7,7 +7,10 @@ use App\Language;
 
 class UserTranslation extends Model
 {
-    protected $fillable = ['translatable_type', 'translatable_id', 'language_id', 'translation'];
+    const NAME = 0;
+    const DESCRIPTION = 1;
+
+    protected $fillable = ['translatable_type', 'translatable_id', 'language_id', 'translation', 'translation_type'];
     public function language() {
         return $this->belongsTo(Language::class);
     }

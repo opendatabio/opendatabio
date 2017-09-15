@@ -90,7 +90,7 @@
 </td>
                                         <td class="table-text">
                                         @foreach ($dataset->tags as $tag)
-                                        <a href="{{url('tags/'. $tag->id)}}">{{ $tag->translation }}</a>
+                                        <a href="{{url('tags/'. $tag->id)}}">{{ $tag->name }}</a>
 <br/>
                                         @endforeach
                                         </td>

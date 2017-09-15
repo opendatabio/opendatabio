@@ -36,10 +36,7 @@
 		     {{ csrf_field() }}
 
 <div class="form-group">
-<label for="translations" class="col-sm-3 control-label">
-@lang ('messages.translations')
-</label>
-    <div class="col-sm-6">
+    <div class="col-sm-12">
 <table class="table table-striped">
 <thead>
     <th>
@@ -48,13 +45,16 @@
     <th>
 @lang('messages.tag_name')
     </th>
+    <th>
+@lang('messages.description')
+    </th>
 </thead>
 <tbody>
 @foreach ($languages as $language) 
     <tr>
         <td>{{$language->name}}</td>
-        <td><input name="translation[{{$language->id}}]" value="{{ old('translation.' . $language->id, (isset($tag) and $tag->translations->where('language_id', '=', $language->id)->count()) ? $tag->translations->where('language_id', '=', $language->id)->first()->translation : null ) }}
-"></td>
+        <td><input name="name[{{$language->id}}]" value="{{ old('name.' . $language->id, isset($tag) ? $tag->translate(\App\UserTranslation::NAME, $language->id) : null) }}"></td>
+        <td><input name="description[{{$language->id}}]" value="{{ old('description.' . $language->id, isset($tag) ? $tag->translate(\App\UserTranslation::DESCRIPTION, $language->id) : null) }}"></td>
     </tr>
 @endforeach
     <tr>

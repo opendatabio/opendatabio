@@ -20,7 +20,8 @@ class CreateUserTranslationsTable extends Migration
             $table->string('translatable_type');
             $table->integer('language_id')->unsigned();
             $table->foreign('language_id')->references('id')->on('languages');
-            $table->unique(['language_id', 'translatable_type', 'translatable_id'], 'user_translations_language_translatable_unique');
+            $table->tinyInteger('translation_type');
+            $table->unique(['language_id', 'translatable_type', 'translatable_id', 'translation_type'], 'user_translations_language_translatable_unique');
             $table->string('translation');
         });
     }

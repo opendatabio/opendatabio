@@ -49,7 +49,7 @@
                                 @foreach ($tags as $tag)
                                     <tr>
 					<td class="table-text">
-					<a href="{{ url('tags/'.$tag->id) }}">{{ $tag->translation }}</a>
+					<a href="{{ url('tags/'.$tag->id) }}">{{ $tag->name }}</a>
 					</td>
                                     </tr>
 				    @endforeach
