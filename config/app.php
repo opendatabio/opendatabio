@@ -231,13 +231,11 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-	Barryvdh\TranslationManager\ManagerServiceProvider::class,
-	Barryvdh\Debugbar\ServiceProvider::class,
-	Yajra\Datatables\DatatablesServiceProvider::class,
-	Yajra\Datatables\ButtonsServiceProvider::class,
-	Baum\Providers\BaumServiceProvider::class,
-    Fx3costa\LaravelChartJs\Providers\ChartjsServiceProvider::class,
-    AndreChalom\LaravelMultiselect\MultiselectServiceProvider::class,
+        Baum\Providers\BaumServiceProvider::class,
+        Fx3costa\LaravelChartJs\Providers\ChartjsServiceProvider::class,
+        AndreChalom\LaravelMultiselect\MultiselectServiceProvider::class,
+        Barryvdh\TranslationManager\ManagerServiceProvider::class,
+        
 
     ],
 
@@ -287,10 +285,7 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-	'Datatables' => Yajra\Datatables\Facades\Datatables::class,
-	'Debugbar' => Barryvdh\Debugbar\Facade::class,
-    'Multiselect' => AndreChalom\LaravelMultiselect\MultiselectFacade::class,
-
+        'Multiselect' => AndreChalom\LaravelMultiselect\MultiselectFacade::class,
     ],
 
 ];

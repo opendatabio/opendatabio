@@ -52,4 +52,19 @@ return [
         ],
         'orientation' => 'landscape',
     ],
+
+    /**
+     * Default html builder parameters.
+     * Not working??
+     */
+    'parameters' => [
+        'order'   => [[0, 'desc']],
+        'buttons' => [
+            'create',
+            'export',
+            'print',
+            'reset',
+            'reload',
+        ],
+    ]
 ];

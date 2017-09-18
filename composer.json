@@ -4,27 +4,29 @@
     "license": "GPLv3",
     "type": "project",
     "require": {
-        "php": ">=5.6.4",
-        "barryvdh/laravel-translation-manager": "^0.2.8",
+        "php": "^7.0",
+        "laravel/framework": "5.5.*",
         "baum/baum": "^1.1",
         "fx3costa/laravelchartjs": "^2.3",
         "gasparesganga/php-shapefile": "^2.2",
         "guzzlehttp/guzzle": "~6.0",
-        "laravel/framework": "5.4.*",
-        "laravel/tinker": "~1.0",
         "renanbr/bibtex-parser": "^0.5.0",
         "ryakad/pandoc-php": "^1.0",
         "wyndow/fuzzywuzzy": "^0.6.0",
-        "yajra/laravel-datatables-buttons": "^1.3",
-        "yajra/laravel-datatables-oracle": "^7.0",
-        "andrechalom/laravel-multiselect": "^0.0.3"
+        "yajra/laravel-datatables-buttons": "^3.0",
+        "yajra/laravel-datatables-oracle": "^8.0",
+        "andrechalom/laravel-multiselect": "dev-master"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^2.4",
+        "barryvdh/laravel-debugbar": "~3.0",
+        "barryvdh/laravel-translation-manager": "^0.4.0",
+        "doctrine/instantiator": "1.0.5",
+        "filp/whoops": "~2.0",
         "fzaninotto/faker": "~1.4",
+        "laravel/tinker": "~1.0",
+        "maximebf/debugbar": "^1.14",
         "mockery/mockery": "0.9.*",
-        "phpunit/phpunit": "~5.7",
-        "doctrine/instantiator": "1.0.5"
+        "phpunit/phpunit": "~6.0"
     },
     "autoload": {
         "classmap": [
@@ -47,12 +49,10 @@
             "php artisan key:generate"
         ],
         "post-install-cmd": [
-            "Illuminate\\Foundation\\ComposerScripts::postInstall",
-            "php artisan optimize"
+            "Illuminate\\Foundation\\ComposerScripts::postInstall"
         ],
         "post-update-cmd": [
-            "Illuminate\\Foundation\\ComposerScripts::postUpdate",
-            "php artisan optimize"
+            "Illuminate\\Foundation\\ComposerScripts::postUpdate"
         ]
     },
     "config": {
