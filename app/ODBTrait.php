@@ -10,7 +10,14 @@ class ODBTrait extends Model
     use Translatable; 
 
     protected $fillable = ['type', 'export_name', 'unit', 'range_min', 'range_max', 'link_type'];
-    protected $table = ['traits'];
+    protected $table = 'traits';
+
+    const OBJECT_TYPES = [
+        Plant::class,
+        Voucher::class,
+        Location::class,
+        Taxon::class,
+    ];
 
     const QUANT_INTEGER = 0;
     const QUANT_REAL = 1;
@@ -31,7 +38,7 @@ class ODBTrait extends Model
         ODBTrait::LINK,
     ];
 
-    public function objects() {
+    public function object_types() {
         return $this->hasMany(TraitObject::class, 'trait_id');
     }
     public function categories() {

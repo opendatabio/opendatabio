@@ -57,6 +57,8 @@ Route::resource('vouchers', 'VoucherController');
 
 Route::resource('tags', 'TagController');
 
+Route::resource('traits', 'TraitController');
+
 # Users can be resources for the admin
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 

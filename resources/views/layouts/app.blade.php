@@ -61,26 +61,42 @@
 			<li><a href="{{ route('vouchers.index') }}">
 @lang('messages.vouchers')
 </a></li>
-			<li><a href="{{ route('references.index') }}">
-@lang('messages.references')
-</a></li>
-			<li><a href="{{ route('herbaria.index') }}">
-@lang('messages.herbaria')
-</a></li>
 			<li><a href="{{ route('projects.index') }}">
 @lang('messages.projects')
 </a></li>
 			<li><a href="{{ route('datasets.index') }}">
 @lang('messages.datasets')
 </a></li>
-			<li><a href="{{ route('tags.index') }}">
-@lang('messages.tags')
+
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                                    @lang('messages.auxiliary') <span class="caret"></span>
+                                </a>
+
+                                <ul class="dropdown-menu" role="menu">
+			<li><a href="{{ route('references.index') }}">
+@lang('messages.references')
+</a></li>
+			<li><a href="{{ route('herbaria.index') }}">
+@lang('messages.herbaria')
 </a></li>
 @can ('show', App\User::class)
 			<li><a href="{{ route('users.index') }}">
 @lang('messages.users')
 </a></li>
 @endcan
+			<li><a href="{{ route('tags.index') }}">
+@lang('messages.tags')
+</a></li>
+			<li><a href="{{ route('traits.index') }}">
+@lang('messages.traits')
+</a></li>
+
+                                </ul>
+                            </li>
+
+
+
                         &nbsp;
                     </ul>
 
