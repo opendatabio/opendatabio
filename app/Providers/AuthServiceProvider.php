@@ -25,6 +25,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\Plant::class    => \App\Policies\PlantPolicy::class,
         \App\Voucher::class    => \App\Policies\VoucherPolicy::class,
         \App\Tag::class    => \App\Policies\TagPolicy::class,
+        \App\ODBTrait::class    => \App\Policies\TraitPolicy::class,
     ];
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\ODBTrait;
 use Illuminate\Http\Request;
+use App\Language;
 
 class TraitController extends Controller
 {
@@ -25,7 +26,8 @@ class TraitController extends Controller
      */
     public function create()
     {
-        //
+        $languages = Language::all();
+        return view('traits.create', compact('languages'));
     }
 
     /**
@@ -42,12 +44,12 @@ class TraitController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\ODBTrait  $oDBTrait
      * @return \Illuminate\Http\Response
      */
-    public function show(ODBTrait $ODBTrait)
+    public function show($id)
     {
-        //
+        $odbtrait = ODBTrait::findOrFail($id);
+        return view('traits.show', compact('odbtrait'));
     }
 
     /**
@@ -56,7 +58,7 @@ class TraitController extends Controller
      * @param  \App\ODBTrait  $oDBTrait
      * @return \Illuminate\Http\Response
      */
-    public function edit(ODBTrait $ODBTrait)
+    public function edit(ODBTrait $odbtrait)
     {
         //
     }
@@ -68,7 +70,7 @@ class TraitController extends Controller
      * @param  \App\ODBTrait  $oDBTrait
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, ODBTrait $ODBTrait)
+    public function update(Request $request, ODBTrait $odbtrait)
     {
         //
     }
@@ -79,7 +81,7 @@ class TraitController extends Controller
      * @param  \App\ODBTrait  $oDBTrait
      * @return \Illuminate\Http\Response
      */
-    public function destroy(ODBTrait $ODBTrait)
+    public function destroy(ODBTrait $odbtrait)
     {
         //
     }
