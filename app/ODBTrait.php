@@ -18,6 +18,14 @@ class ODBTrait extends Model
         Location::class,
         Taxon::class,
     ];
+    
+    public function getObjectKeys() {
+        $ret = [];
+        foreach ($this->object_types()->pluck('object_type') as $search) {
+            $ret[] = array_keys(ODBTrait::OBJECT_TYPES, $search)[0];
+        }
+        return $ret;
+    }
 
     const QUANT_INTEGER = 0;
     const QUANT_REAL = 1;
@@ -37,6 +45,44 @@ class ODBTrait extends Model
         ODBTrait::COLOR,
         ODBTrait::LINK,
     ];
+
+    // for input validation
+    public static function rules($id = null, $merge = []) {
+        return array_merge(
+            [
+                'name' => 'required|array',
+                'name.*' => 'required',
+                'description' => 'required|array',
+                'export_name' => 'required|string|unique:traits,export_name,' . $id,
+                'type' => 'required|integer',
+                'objects' => 'required|array|min:1',
+                'objects.*' => 'required|integer|min:0|max:' . (count(ODBTrait::OBJECT_TYPES) - 1),
+                'unit' => 'required_if:type,0,1',
+            ], $merge);
+    }
+
+    public function setFieldsFromRequest($request) {
+        if (in_array($this->type, [ODBTrait::QUANT_INTEGER, ODBTrait::QUANT_REAL])) {
+            $this->unit = $request->unit;
+            $this->range_max = $request->range_max;
+            $this->range_min = $request->range_min;
+        } else {
+            $this->unit = null;
+            $this->range_max = null;
+            $this->range_min = null;
+        }
+        $this->object_types()->delete();
+        foreach ($request->objects as $key) {
+            $this->object_types()->create(['object_type' => ODBTrait::OBJECT_TYPES[$key]]);
+        }
+        foreach ($request->name as $key => $translation) {
+            $this->setTranslation(UserTranslation::NAME, $key, $translation);
+        }
+        foreach ($request->description as $key => $translation) {
+            $this->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
+        }
+        $this->save();
+    }
 
     public function object_types() {
         return $this->hasMany(TraitObject::class, 'trait_id');

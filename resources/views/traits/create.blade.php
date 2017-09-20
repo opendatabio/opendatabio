@@ -66,9 +66,16 @@
     <label for="export_name" class="col-sm-3 control-label">
         @lang('messages.export_name')
     </label>
+        <a data-toggle="collapse" href="#hinte" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-        <input name="export_name" value="{{ old('export_name', isset($odbtrait) ? $odbtrait->export_name : null) }}">
+        <input name="export_name" value="{{ old('export_name', isset($odbtrait) ? $odbtrait->export_name : null) }}"
+    class="form-control">
         </div>
+  <div class="col-sm-12">
+    <div id="hinte" class="panel-collapse collapse">
+	@lang('messages.trait_export_hint')
+    </div>
+  </div>
 </div>
     
 <div class="form-group">
@@ -102,7 +109,7 @@
 {!! Multiselect::select(
     'objects', 
     \App\ODBTrait::OBJECT_TYPES, 
-    isset($odbtrait) ? $odbtrait->object_types()->pluck('object_type') : [],
+    isset($odbtrait) ? $odbtrait->getObjectKeys() : [],
     ['class' => 'multiselect form-control']
 ) !!}
             </div>
@@ -122,7 +129,7 @@
             </div>
   <div class="col-sm-12">
     <div id="hint1" class="panel-collapse collapse">
-@lang('messages.hint_trait_number')
+@lang('messages.hint_trait_unit')
     </div>
   </div>
 </div>
@@ -130,13 +137,13 @@
     <label for="range_min" class="col-sm-3 control-label">
 @lang('messages.range_min')
 </label>
-        <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
+        <a data-toggle="collapse" href="#hint11" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<input type="text" name="range_min" id="range_min" class="form-control" value="{{ old('range_min', isset($odbtrait) ? $odbtrait->range_min : null) }}">
             </div>
   <div class="col-sm-12">
-    <div id="hint1" class="panel-collapse collapse">
-@lang('messages.hint_trait_number')
+    <div id="hint11" class="panel-collapse collapse">
+@lang('messages.hint_trait_min')
     </div>
   </div>
 </div>
@@ -144,13 +151,13 @@
     <label for="range_max" class="col-sm-3 control-label">
 @lang('messages.range_max')
 </label>
-        <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
+        <a data-toggle="collapse" href="#hint12" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<input type="text" name="range_max" id="range_max" class="form-control" value="{{ old('range_max', isset($odbtrait) ? $odbtrait->range_max : null) }}">
             </div>
   <div class="col-sm-12">
-    <div id="hint1" class="panel-collapse collapse">
-@lang('messages.hint_trait_number')
+    <div id="hint12" class="panel-collapse collapse">
+@lang('messages.hint_trait_max')
     </div>
   </div>
 </div>

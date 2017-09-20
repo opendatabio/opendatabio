@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\ODBTrait;
 use Illuminate\Http\Request;
 use App\Language;
+use App\UserTranslation;
+use Lang;
 
 class TraitController extends Controller
 {
@@ -38,7 +40,11 @@ class TraitController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create', ODBTrait::class);
+        $this->validate($request, ODBTrait::rules());
+        $odbtrait = ODBTrait::create($request->only(['export_name', 'type']));
+        $odbtrait->setFieldsFromRequest($request);
+        return redirect('traits/' . $odbtrait->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -55,33 +61,37 @@ class TraitController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\ODBTrait  $oDBTrait
      * @return \Illuminate\Http\Response
      */
-    public function edit(ODBTrait $odbtrait)
+    public function edit($id)
     {
-        //
+        $languages = Language::all();
+        $odbtrait = ODBTrait::findOrFail($id);
+        return view('traits.create', compact('languages', 'odbtrait'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\ODBTrait  $oDBTrait
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, ODBTrait $odbtrait)
+    public function update(Request $request, $id)
     {
-        //
+        $odbtrait = ODBTrait::findOrFail($id);
+        $this->authorize('update', $odbtrait);
+        $this->validate($request, ODBTrait::rules($id));
+        $odbtrait->update($request->only(['export_name', 'type']));
+        $odbtrait->setFieldsFromRequest($request);
+        return redirect('traits/' . $id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\ODBTrait  $oDBTrait
      * @return \Illuminate\Http\Response
      */
-    public function destroy(ODBTrait $odbtrait)
+    public function destroy($id)
     {
         //
     }
