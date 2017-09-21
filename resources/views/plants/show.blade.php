@@ -99,8 +99,15 @@
     @lang('messages.not_registered')
 @endif
 </p>
-
-
+@if ($plant->measurements()->count())
+<div class="col-sm-6">
+    <a href="{{ url('plants/'. $plant->id. '/measurements')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $plant->measurements()->count() }}
+@lang('messages.measurements')
+    </a>
+</div>
+@endif
 @can ('update', $plant)
 			    <div class="col-sm-6">
 				<a href="{{ url('plants/'. $plant->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">

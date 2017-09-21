@@ -119,6 +119,15 @@
 </p>
 
 
+@if ($voucher->measurements()->count())
+<div class="col-sm-6">
+    <a href="{{ url('vouchers/'. $voucher->id. '/measurements')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $voucher->measurements()->count() }}
+@lang('messages.measurements')
+    </a>
+</div>
+@endif
 @can ('update', $voucher)
 			    <div class="col-sm-6">
 				<a href="{{ url('vouchers/'. $voucher->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">

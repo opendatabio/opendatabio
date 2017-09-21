@@ -82,6 +82,15 @@
 </p>
 @endif
 
+@if ($taxon->measurements()->count())
+<div class="col-sm-6">
+    <a href="{{ url('taxons/'. $taxon->id. '/measurements')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $taxon->measurements()->count() }}
+@lang('messages.measurements')
+    </a>
+</div>
+@endif
 @can ('update', $taxon)
 			    <div class="col-sm-6">
 				<a href="{{ url('taxons/'. $taxon->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">

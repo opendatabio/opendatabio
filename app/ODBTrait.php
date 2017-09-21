@@ -91,6 +91,6 @@ class ODBTrait extends Model
         return $this->hasMany(TraitCategory::class, 'trait_id');
     }
     public function measurements() {
-        return $this->hasMany(Measurements::class, 'trait_id');
+        return $this->hasMany(Measurement::class, 'trait_id');
     }
 }

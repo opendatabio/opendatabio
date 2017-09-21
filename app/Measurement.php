@@ -40,6 +40,38 @@ class Measurement extends Model
         return $this->belongsTo(Dataset::class);
     }
 
+    // provides a common interface for getting/setting value for different types of measurements
+    public function getValueActualAttribute() {
+        switch ($this->type) {
+        case ODBTrait::QUANT_INTEGER:
+            return $this->value_i;
+            break;
+        case ODBTrait::QUANT_REAL:
+            return $this->value;
+            break;
+        case ODBTrait::TEXT:
+        case ODBTrait::COLOR:
+            return $this->value_a;
+            break;
+            // TODO: Link & categories
+        }
+    }
+    public function setValueActualAttribute($value) {
+        switch ($this->type) {
+        case ODBTrait::QUANT_INTEGER:
+            $this->value_i = $value;
+            break;
+        case ODBTrait::QUANT_REAL:
+            $this->value = $value;
+            break;
+        case ODBTrait::TEXT:
+        case ODBTrait::COLOR:
+            $this->value_a = $value;
+            break;
+            // TODO: Link & categories
+        }
+    }
+
     protected static function boot()
     {
         parent::boot();
