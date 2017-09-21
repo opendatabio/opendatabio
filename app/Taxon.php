@@ -24,6 +24,10 @@ class Taxon extends Node
                 DB::raw('odb_txname(name, level, parent_id) as fullname')
             );
         }
+    public function measurements()
+    {
+        return $this->morphMany(Measurement::class, 'measured');
+    }
 
         public function setFullnameAttribute($value) {
             // Full names have only the first letter capitalized

@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Baum\Node;
 use DB;
 use Log;
-use App\Plant;
 
 class Location extends Node
 {
@@ -31,6 +30,10 @@ class Location extends Node
 		]);
 	}
 
+    public function measurements()
+    {
+        return $this->morphMany(Measurement::class, 'measured');
+    }
 	// helper method to get lat/long from POINTS only
 	public function getlatlong() {
 		$point = substr($this->geom, 6, -1);

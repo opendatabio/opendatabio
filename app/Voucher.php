@@ -4,10 +4,6 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use App\Person;
-use App\Project;
-use App\Herbarium;
-use App\IncompleteDate;
 use Lang;
 use Auth;
 
@@ -61,6 +57,10 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
             'vouchers.parent_type'
 		);
 	}
+    public function measurements()
+    {
+        return $this->morphMany(Measurement::class, 'measured');
+    }
     public function getFullnameAttribute() {
         return $this->person->abbreviation . "-" . $this->number;
     }

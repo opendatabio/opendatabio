@@ -90,4 +90,7 @@ class ODBTrait extends Model
     public function categories() {
         return $this->hasMany(TraitCategory::class, 'trait_id');
     }
+    public function measurements() {
+        return $this->hasMany(Measurements::class, 'trait_id');
+    }
 }
