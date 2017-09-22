@@ -45,6 +45,9 @@
 @lang('messages.object')
 :</strong>
 {{ $object->fullname }}
+@if ($object->identification)
+    (<em>{{ $object->identification->taxon->fullname }}</em>)
+@endif
 </p>
                         <table class="table table-striped" id="references-table">
                             <thead>
@@ -68,7 +71,7 @@
 					<a href="{{ url('traits/' . $measurement->trait_id) }}">{{ $measurement->odbtrait->name }}</a>
 					</td>
 					<td class="table-text">
-					<a href="{{ url($object->typename . '/' . $object->id .  '/measurements/'.$measurement->id) }}">{{ $measurement->valueActual }}</a>
+					<a href="{{ url('measurements/'.$measurement->id) }}">{{ $measurement->valueActual }}</a>
 					</td>
 					<td class="table-text">
 					{{ $measurement->odbtrait->unit}}

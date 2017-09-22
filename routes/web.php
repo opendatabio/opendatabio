@@ -62,7 +62,9 @@ Route::resource('traits', 'TraitController');
 # Users can be resources for the admin
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 
+# Measures use a somewhat complicated schema for routes?
 Route::get('plants/{id}/measurements', 'MeasurementController@indexPlants');
 Route::get('locations/{id}/measurements', 'MeasurementController@indexLocations');
 Route::get('taxons/{id}/measurements', 'MeasurementController@indexTaxons');
 Route::get('vouchers/{id}/measurements', 'MeasurementController@indexVouchers');
+Route::resource('measurements', 'MeasurementController', ['only' => 'show']);
