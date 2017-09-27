@@ -68,6 +68,13 @@
 @lang('messages.measurements')
     </a>
 </div>
+@else
+<div class="col-sm-6">
+    <a href="{{ url('locations/'. $location->id. '/measurements/create')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.create_measurements')
+    </a>
+</div>
 @endif
 @can ('update', $location)
 			    <div class="col-sm-6">

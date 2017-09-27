@@ -17,7 +17,7 @@ class Location extends Node
 
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
-    public function getTypenameAttribute() { return "plants"; }
+    public function getTypenameAttribute() { return "locations"; }
 	// The "special" adm levels
 	const LEVEL_UC = 99;
 	const LEVEL_PLOT = 100;

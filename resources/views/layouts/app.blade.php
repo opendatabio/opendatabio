@@ -49,9 +49,6 @@
 			<li><a href="{{ route('locations.index') }}">
 @lang('messages.locations')
 </a></li>
-			<li><a href="{{ route('persons.index') }}">
-@lang('messages.persons')
-</a></li>
 			<li><a href="{{ route('taxons.index') }}">
 @lang('messages.taxons')
 </a></li>
@@ -74,6 +71,9 @@
                                 </a>
 
                                 <ul class="dropdown-menu" role="menu">
+			<li><a href="{{ route('persons.index') }}">
+@lang('messages.persons')
+</a></li>
 			<li><a href="{{ route('references.index') }}">
 @lang('messages.references')
 </a></li>
@@ -94,9 +94,6 @@
 
                                 </ul>
                             </li>
-
-
-
                         &nbsp;
                     </ul>
 

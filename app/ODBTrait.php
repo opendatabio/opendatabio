@@ -87,10 +87,19 @@ class ODBTrait extends Model
     public function object_types() {
         return $this->hasMany(TraitObject::class, 'trait_id');
     }
+    public function valid_type($type) {
+
+        return in_array($type, $this->object_types->pluck('object_type')->all());
+    }
     public function categories() {
         return $this->hasMany(TraitCategory::class, 'trait_id');
     }
     public function measurements() {
         return $this->hasMany(Measurement::class, 'trait_id');
+    }
+    public function scopeAppliesTo($query, $class) {
+        return $query->whereHas('object_types', function($q) use ($class) {
+            return $q->where('object_type', '=', $class);
+        });
     }
 }

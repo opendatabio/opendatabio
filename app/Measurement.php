@@ -15,7 +15,7 @@ class Measurement extends Model
 
     use IncompleteDate;
 
-    public function measured() //later
+    public function measured() 
     {
         return $this->morphTo();
     }
