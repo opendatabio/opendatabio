@@ -61,4 +61,7 @@ class Person extends Model
     public function vouchers() {
         return $this->hasMany(Voucher::class);
     }
+    public function measurements() {
+        return $this->hasMany(Measurements::class);
+    }
 }

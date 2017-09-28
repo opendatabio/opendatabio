@@ -3,9 +3,9 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use RenanBr\BibTexParser\Listener as Listener;
-use RenanBr\BibTexParser\Parser as Parser;
-use RenanBr\BibTexParser\ParseException as ParseException;
+use RenanBr\BibTexParser\Listener;
+use RenanBr\BibTexParser\Parser;
+use RenanBr\BibTexParser\ParseException;
 use Pandoc\Pandoc;
 use Pandoc\PandocException;
 use Debugbar;
@@ -18,6 +18,16 @@ class BibReference extends Model
 	protected $entries = null;
 	protected $appends = ['author', 'title', 'year', 'bibkey'];
 	protected $fillable = ['bibtex'];
+
+    public function datasets() {
+        return $this->hasMany(Dataset::class, 'bibreference_id');
+    }
+    public function measurements() {
+        return $this->hasMany(Measurement::class, 'bibreference_id');
+    }
+    public function taxons() {
+        return $this->hasMany(Taxon::class, 'bibreference_id');
+    }
 
 	public function validBibtex($string) {
 		$listener = new Listener;

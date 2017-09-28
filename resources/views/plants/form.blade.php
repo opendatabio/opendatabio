@@ -66,36 +66,10 @@
 </label>
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<select name="date_year" id="date_year" class="form-control partdatepicker">
-	<?php $selected = old('date_year', isset($plant) ? $plant->year : null); ?>
-	@for ($i = config('app.max_year'); $i >= config('app.min_year'); $i --)
-        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
-            {{$i}}
-        </option>
-	@endfor
-	</select> /
-	<select name="date_month" id="date_month" class="form-control partdatepicker">
-	<?php $selected = old('date_month', isset($plant) ? $plant->month : null); ?>
-        <option value=0 > 
-            @lang('messages.unknown_date')
-        </option>
-	@for ($i = 1; $i <= 12; $i ++)
-        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
-            {{str_pad($i, 2, '0',STR_PAD_LEFT)}}
-        </option>
-	@endfor
-	</select> / 
-	<select name="date_day" id="date_day" class="form-control partdatepicker">
-	<?php $selected = old('date_day', isset($plant) ? $plant->day : null); ?>
-        <option value=0 > 
-            @lang('messages.unknown_date')
-        </option>
-	@for ($i = 1; $i <= 31; $i ++)
-        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
-            {{str_pad($i, 2, '0',STR_PAD_LEFT)}}
-        </option>
-	@endfor
-	</select> 
+{!! View::make('common.incompletedate')->with([
+    'object' => isset($plant) ? $plant : null, 
+    'field_name' => 'date'
+]) !!}
             </div>
   <div class="col-sm-12">
     <div id="hint4" class="panel-collapse collapse">
@@ -216,36 +190,10 @@
 </label>
         <a data-toggle="collapse" href="#hint8" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<select name="identification_date_year" id="identification_date_year" class="form-control partdatepicker">
-	<?php $selected = old('identification_date_year', (isset($plant) and $plant->identification) ? $plant->identification->year : null); ?>
-	@for ($i = config('app.max_year'); $i >= config('app.min_year'); $i --)
-        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
-            {{$i}}
-        </option>
-	@endfor
-	</select> /
-	<select name="identification_date_month" id="identification_date_month" class="form-control partdatepicker">
-	<?php $selected = old('identification_date_month', (isset($plant) and $plant->identification) ? $plant->identification->month : null); ?>
-        <option value=0 > 
-            @lang('messages.unknown_date')
-        </option>
-	@for ($i = 1; $i <= 12; $i ++)
-        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
-            {{str_pad($i, 2, '0',STR_PAD_LEFT)}}
-        </option>
-	@endfor
-	</select> / 
-	<select name="identification_date_day" id="identification_date_day" class="form-control partdatepicker">
-	<?php $selected = old('identification_date_day', (isset($plant) and $plant->identification) ? $plant->identification->day : null); ?>
-        <option value=0 > 
-            @lang('messages.unknown_date')
-        </option>
-	@for ($i = 1; $i <= 31; $i ++)
-        <option value="{{$i}}" {{ $i == $selected ? 'selected' : '' }}>
-            {{str_pad($i, 2, '0',STR_PAD_LEFT)}}
-        </option>
-	@endfor
-	</select> 
+{!! View::make('common.incompletedate')->with([
+    'object' => (isset($plant) and $plant->identification) ? $plant->identification : null, 
+    'field_name' => 'identification_date'
+]) !!}
             </div>
   <div class="col-sm-12">
     <div id="hint8" class="panel-collapse collapse">

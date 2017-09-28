@@ -6,9 +6,6 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 use App\User;
 use App\ODBTrait;
 
-
-//TODO!!
-
 class TraitPolicy
 {
     use HandlesAuthorization;
@@ -25,7 +22,7 @@ class TraitPolicy
      */
     public function create(User $user)
     {
-        return true;
+	    return $user->access_level >= User::USER;
     }
 
     /**
@@ -33,7 +30,11 @@ class TraitPolicy
      */
     public function update(User $user, ODBTrait $odbtrait)
     {
-        return true;
+        if ($user->access_level == User::ADMIN)
+            return true;
+        if ($user->access_level == User::USER and $odbtrait->measurements()->count() == 0)
+            return true;
+        return false;
     }
 
     /**

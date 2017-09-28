@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/andrechalom/laravel-multiselect.git",
-                "reference": "a89970f9c4d7a6d2c8501a3cb71389e0f004f06a"
+                "reference": "f6607248a621ec4c244e32581e9049f6074a896f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/andrechalom/laravel-multiselect/zipball/a89970f9c4d7a6d2c8501a3cb71389e0f004f06a",
-                "reference": "a89970f9c4d7a6d2c8501a3cb71389e0f004f06a",
+                "url": "https://api.github.com/repos/andrechalom/laravel-multiselect/zipball/f6607248a621ec4c244e32581e9049f6074a896f",
+                "reference": "f6607248a621ec4c244e32581e9049f6074a896f",
                 "shasum": ""
             },
             "require": {
@@ -68,7 +68,7 @@
                 "multiple",
                 "select"
             ],
-            "time": "2017-09-20T03:49:11+00:00"
+            "time": "2017-09-22T16:22:12+00:00"
         },
         {
             "name": "baum/baum",
@@ -677,16 +677,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v5.5.9",
+            "version": "v5.5.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "a0fdfd2c90318c107b6a8d69189ec9a6607379e3"
+                "reference": "74f5831447817034838b3539c644303036df3d8e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/a0fdfd2c90318c107b6a8d69189ec9a6607379e3",
-                "reference": "a0fdfd2c90318c107b6a8d69189ec9a6607379e3",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/74f5831447817034838b3539c644303036df3d8e",
+                "reference": "74f5831447817034838b3539c644303036df3d8e",
                 "shasum": ""
             },
             "require": {
@@ -805,7 +805,7 @@
                 "framework",
                 "laravel"
             ],
-            "time": "2017-09-20T13:45:36+00:00"
+            "time": "2017-09-22T13:33:35+00:00"
         },
         {
             "name": "laravelcollective/html",

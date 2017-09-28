@@ -4,20 +4,15 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use App\Location;
-use App\Project;
-use App\Collector;
 use DB;
 use Auth;
-use App\User;
-use App\Voucher;
-use App\IncompleteDate;
 
 class Plant extends Model
 {
     use IncompleteDate;
 
     // for use when receiving this as part of a morph relation
+    // TODO: maybe can be changed to get_class($p)?
     public function getTypenameAttribute() { return "plants"; }
 
     protected static function boot()
@@ -72,6 +67,10 @@ WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
     public function vouchers()
     {
         return $this->morphMany(Voucher::class, 'parent');
+    }
+    public function measurements()
+    {
+        return $this->morphMany(Measurement::class, 'measured');
     }
     public function identification() 
     {

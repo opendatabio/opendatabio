@@ -10,6 +10,9 @@ use Log;
 
 class Taxon extends Node
 {
+    // for use when receiving this as part of a morph relation
+    // TODO: maybe can be changed to get_class($p)?
+    public function getTypenameAttribute() { return "taxons"; }
         protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
                 'bibreference', 'bibreference_id', 'parent_id', 'notes'];
         // for use in selects, lists the most common tax levels
@@ -24,6 +27,10 @@ class Taxon extends Node
                 DB::raw('odb_txname(name, level, parent_id) as fullname')
             );
         }
+    public function measurements()
+    {
+        return $this->morphMany(Measurement::class, 'measured');
+    }
 
         public function setFullnameAttribute($value) {
             // Full names have only the first letter capitalized

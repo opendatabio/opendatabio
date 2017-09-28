@@ -15,9 +15,9 @@ class Dataset extends Model
     const PRIVACY_LEVELS = [Dataset::PRIVACY_AUTH, Dataset::PRIVACY_REGISTERED, Dataset::PRIVACY_PUBLIC];
 
     protected $fillable = ['name', 'notes', 'privacy', 'bibreference_id'];
-/*    public function measurements() {
+    public function measurements() {
         return $this->hasMany(Measurement::class);
-} */ 
+}  
     public function tags() {
         return $this->belongsToMany(Tag::class);
     }
