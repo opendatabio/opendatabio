@@ -4,6 +4,8 @@ A modern system for storing and retrieving plant data - floristics, ecology and 
 This project improves and reimplements code from the Duckewiki project. Duckewiki is a tribute to Adolpho Ducke,
 one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
 
+A companion R package is being developed [here](https://github.com/opendatabio/opendatabio-r).
+
 ## Authors
 **Coordinator:** 
 - Alberto Vicentini (vicentini.beto@gmail.com)
