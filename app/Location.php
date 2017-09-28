@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Baum\Node;
 use DB;
 use Log;
-use App\Plant;
 
 class Location extends Node
 {
@@ -16,6 +15,9 @@ class Location extends Node
 	protected $geom_array = [];
 	protected $isSimplified = false;
 
+    // for use when receiving this as part of a morph relation
+    // TODO: maybe can be changed to get_class($p)?
+    public function getTypenameAttribute() { return "locations"; }
 	// The "special" adm levels
 	const LEVEL_UC = 99;
 	const LEVEL_PLOT = 100;
@@ -31,6 +33,10 @@ class Location extends Node
 		]);
 	}
 
+    public function measurements()
+    {
+        return $this->morphMany(Measurement::class, 'measured');
+    }
 	// helper method to get lat/long from POINTS only
 	public function getlatlong() {
 		$point = substr($this->geom, 6, -1);

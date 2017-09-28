@@ -12,6 +12,9 @@ use Lang;
 class Taxon extends Node
 {
     protected $appends = ['levelName'];
+    // for use when receiving this as part of a morph relation
+    // TODO: maybe can be changed to get_class($p)?
+    public function getTypenameAttribute() { return "taxons"; }
         protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
                 'bibreference', 'bibreference_id', 'parent_id', 'notes'];
         // for use in selects, lists the most common tax levels
@@ -29,6 +32,11 @@ class Taxon extends Node
         public function getLevelNameAttribute() {
             return Lang::get('levels.tax.' . $this->level);
         }
+    public function measurements()
+    {
+        return $this->morphMany(Measurement::class, 'measured');
+    }
+
         public function setFullnameAttribute($value) {
             // Full names have only the first letter capitalized
             $value = ucfirst(strtolower($value));

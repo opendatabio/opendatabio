@@ -16,7 +16,7 @@ Route::get('/', 'WelcomeController@index');
 # Setting the locale:
 Route::get('welcome/{locale}', 'WelcomeController@setAppLocale');
 
-# Default auth routes
+# Default auth routes (login, logout, change password, etc)
 Auth::routes();
 
 # Users can update their own data
@@ -27,7 +27,6 @@ Route::put('/selfupdate', 'Auth\SelfEditController@selfupdate')->name('selfupdat
 Route::get('/home', 'HomeController@index')->name('home');
 
 # Resources (with non-default BEFORE resources):
-
 Route::get('persons/getdata', 'PersonController@getdata');
 Route::resource('persons', 'PersonController');
 
@@ -62,3 +61,13 @@ Route::resource('traits', 'TraitController');
 # Users can be resources for the admin
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 
+# Measures use a somewhat complicated schema for routes?
+Route::get('plants/{id}/measurements/create', 'MeasurementController@createPlants');
+Route::get('locations/{id}/measurements/create', 'MeasurementController@createLocations');
+Route::get('taxons/{id}/measurements/create', 'MeasurementController@createTaxons');
+Route::get('vouchers/{id}/measurements/create', 'MeasurementController@createVouchers');
+Route::get('plants/{id}/measurements', 'MeasurementController@indexPlants');
+Route::get('locations/{id}/measurements', 'MeasurementController@indexLocations');
+Route::get('taxons/{id}/measurements', 'MeasurementController@indexTaxons');
+Route::get('vouchers/{id}/measurements', 'MeasurementController@indexVouchers');
+Route::resource('measurements', 'MeasurementController', ['only' => ['show', 'store', 'edit', 'update']]);

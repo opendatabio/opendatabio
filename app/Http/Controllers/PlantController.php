@@ -83,23 +83,18 @@ class PlantController extends Controller
         ];
 	    $validator = Validator::make($request->all(), $rules);
 	    $validator->after(function ($validator) use ($request) {
-            // if date is complete, it must check as valid
-            if ($request->date_day and !checkdate( $request->date_month, $request->date_day, $request->date_year))
+            $colldate = [$request->date_month, $request->date_day, $request->date_year];
+            $iddate = [$request->identification_date_month, $request->identification_date_day, $request->identification_date_year];
+            if (!Plant::checkDate($colldate))
                     $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
-            if ($request->identification_date_day and !checkdate( $request->identification_date_month, $request->identification_date_day, $request->identification_date_year))
-                $validator->errors()->add('identification_date_day', Lang::get('messages.invalid_identification_date_error'));
-            // if month is unknown, day must be unknown too
-            if ($request->date_day and ! $request->date_month)
-                $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
-            if ($request->identification_date_day and ! $request->identification_date_month)
+            if (!Plant::checkDate($iddate))
                 $validator->errors()->add('identification_date_day', Lang::get('messages.invalid_identification_date_error'));
             // collection date must be in the past or today
-            $colldate = strtotime( $request->date_year ."-". $request->date_month ."-". $request->date_day );
-            if ($colldate > strtotime(date('Y-m-d')))
+            if (!Plant::beforeOrSimilar($colldate, date('Y-m-d')))
                     $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
             // identification date must be in the past or today AND equal or after collection date
-            $iddate = strtotime( $request->identification_date_year ."-". $request->identification_date_month ."-". $request->identification_date_day);
-            if ($iddate > strtotime(date('Y-m-d')) or $iddate < $colldate)
+            if (!(Plant::beforeOrSimilar($iddate, date('Y-m-d')) and 
+                Plant::beforeOrSimilar($colldate, $iddate)))
                     $validator->errors()->add('identification_date_day', Lang::get('messages.identification_date_future_error'));
 	    });
 	    return $validator;

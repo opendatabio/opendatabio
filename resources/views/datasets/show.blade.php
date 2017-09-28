@@ -6,6 +6,7 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.dataset')
+                </div>
 		<div class="panel-body">
 		    <p><strong>
 @lang('messages.name')
@@ -72,6 +73,41 @@
 @endcan
                 </div>
             </div>
+@if ($dataset->measurements()->count())
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    @lang('messages.measurements')
+                </div>
+		<div class="panel-body">
+            <table class="table table-striped">
+            <thead>
+                <th>
+            @lang('messages.object')
+                </th>
+                <th>
+            @lang('messages.trait')
+                </th>
+                <th>
+            @lang('messages.value')
+                </th>
+            </thead>
+            <tbody>
+                @foreach ($dataset->measurements as $measurement)
+                <tr>
+                    <td>
+<?php try{ ?>
+                    {{$measurement->measured->fullname}}</td>
+<?php } catch (Exception $e) {echo "Undefined: id $measurement->id</td>";} ?>
+                    <td>{{$measurement->odbtrait->name}}</td>
+                    <td>{{$measurement->valueActual}}</td>
+                </tr>
+                @endforeach
+            </tbody>
+            </table>
+        </div>
+            </div>
+
+@endif
 </div>
     </div>
 @endsection
