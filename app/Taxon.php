@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Builder;
 use Baum\Node;
 use DB;
 use Log;
+use Lang;
 
 class Taxon extends Node
 {
+    protected $appends = ['levelName'];
         protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
                 'bibreference', 'bibreference_id', 'parent_id', 'notes'];
         // for use in selects, lists the most common tax levels
@@ -24,7 +26,9 @@ class Taxon extends Node
                 DB::raw('odb_txname(name, level, parent_id) as fullname')
             );
         }
-
+        public function getLevelNameAttribute() {
+            return Lang::get('levels.tax.' . $this->level);
+        }
         public function setFullnameAttribute($value) {
             // Full names have only the first letter capitalized
             $value = ucfirst(strtolower($value));

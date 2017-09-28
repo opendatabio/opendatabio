@@ -33,7 +33,7 @@ class TaxonController extends Controller
         if ($request->external)
             $taxons = $taxons->with('externalrefs');
         $taxons = $taxons->get();
-	    return Response::json(['taxons' => $taxons]);
+	    return Response::json(['data' => $taxons]);
     }
 
     /**
