@@ -14,7 +14,9 @@ use Illuminate\Http\Request;
 |
 */
 
+
 function v0api() {
+    Route::get('/',           '\App\Api\v0\TestController@index');
     Route::get('taxons',      '\App\Api\v0\TaxonController@index');
     Route::get('taxons/{id}', '\App\Api\v0\TaxonController@show');
 }

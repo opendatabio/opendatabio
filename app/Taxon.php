@@ -11,7 +11,7 @@ use Lang;
 
 class Taxon extends Node
 {
-    protected $appends = ['levelName', 'authorSimple', 'bibreferenceSimple'];
+//    protected $appends = ['levelName', 'authorSimple', 'bibreferenceSimple'];
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
     public function getTypenameAttribute() { return "taxons"; }

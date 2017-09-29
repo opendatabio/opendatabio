@@ -20,6 +20,8 @@ Route::get('welcome/{locale}', 'WelcomeController@setAppLocale');
 Auth::routes();
 
 # Users can update their own data
+Route::get('/token', 'Auth\SelfEditController@token');
+Route::post('/token', 'Auth\SelfEditController@resetToken');
 Route::get('/selfedit', 'Auth\SelfEditController@selfedit')->name('selfedit');
 Route::put('/selfupdate', 'Auth\SelfEditController@selfupdate')->name('selfupdate');
 

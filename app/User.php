@@ -41,8 +41,14 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token',
+        'password', 'remember_token', 'api_token',
     ];
+
+    public function setToken() {
+        $this->api_token = substr(bcrypt($this->email . date('YmdHis') . config('app.key')),8,12);
+        $this->save();
+    }
+
     public function userjobs()
     {
         return $this->hasMany('App\UserJobs');
