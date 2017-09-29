@@ -14,7 +14,7 @@ class AddApiTokenToUsers extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('api_token')->unique();
+            $table->string('api_token')->nullable()->unique();
         });
     }
 
