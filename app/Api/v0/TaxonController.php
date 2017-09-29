@@ -32,8 +32,22 @@ class TaxonController extends Controller
             $taxons = $taxons->valid();
         if ($request->external)
             $taxons = $taxons->with('externalrefs');
+        if ($request->limit)
+            $taxons->limit($request->limit);
         $taxons = $taxons->get();
-	    return Response::json(['data' => $taxons]);
+
+        $fields = ($request->fields ? $request->fields : "simple");
+        if ($fields == "simple")
+            $fields = ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id'];
+        else 
+            $fields = explode(',',$fields);
+        if ($fields != "all")
+            $taxons = $taxons->map(function ($obj) use ($fields) {
+                return collect($obj->toArray())
+                    ->only($fields)
+                    ->all();
+            });
+        return Response::json(['data' => $taxons]);
     }
 
     /**

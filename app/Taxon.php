@@ -11,7 +11,7 @@ use Lang;
 
 class Taxon extends Node
 {
-    protected $appends = ['levelName'];
+    protected $appends = ['levelName', 'authorSimple', 'bibreferenceSimple'];
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
     public function getTypenameAttribute() { return "taxons"; }
@@ -83,6 +83,16 @@ class Taxon extends Node
         }
         public function author_person() {
                 return $this->belongsTo('App\Person', 'author_id');
+        }
+        public function getAuthorSimpleAttribute() {
+            if ($this->author)
+                return $this->author;
+            return $this->author_person->abbreviation;
+        }
+        public function getBibreferenceSimpleAttribute() {
+            if ($this->bibreference)
+                return $this->bibreference;
+            return $this->reference->bibtex;
         }
         public function reference() {
                 return $this->belongsTo('App\BibReference', 'bibreference_id');
