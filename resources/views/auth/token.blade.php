@@ -11,17 +11,17 @@
                 <div class="panel-body">
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
-<p>
-@lang ('messages.token_help')</p>
-<p><strong>
-@lang('messages.api_token') :</strong>
-<span class="large"> {{ Auth::user()->api_token }} </span> </p>
-
-<p>
-@lang ('messages.reset_token_help')
-                    <!-- Edit Person Form -->
 		    <form action="{{ url('token') }}" method="POST" class="form-horizontal">
 			 {{ csrf_field() }}
+<p> @lang ('messages.token_help')</p>
+<div class="form-group">
+    <label for="password" class="col-sm-3 control-label">
+@lang('messages.api_token'):
+</label>
+	    <div class="col-sm-6">
+<span class="large"> {{ Auth::user()->api_token }} </span> 
+</div></div>
+<p>@lang ('messages.reset_token_help')</p>
 <div class="form-group">
     <label for="password" class="col-sm-3 control-label">
 @lang('messages.current_password')
