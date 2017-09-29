@@ -7,7 +7,10 @@ use App\Http\Controllers\Controller;
 
 use App\Person;
 use Auth;
+use Log;
 use Validator;
+use Hash;
+use Lang;
 
 class SelfEditController extends Controller
 {
@@ -20,6 +23,17 @@ class SelfEditController extends Controller
 	    return view('auth.selfedit', [
 		    'persons' => $persons,
 	    ]);
+    }
+    public function token() {
+        if (is_null(Auth::user()->api_token))
+            Auth::user()->setToken();
+        return view('auth.token');
+    }
+    public function resetToken(Request $request) {
+        if (! Hash::check($request->password, Auth::user()->password))
+            return redirect('token')->withErrors(['password' => Lang::get('messages.wrong_password')]);
+        Auth::user()->setToken();
+        return redirect('token')->withStatus(Lang::get('messages.saved'));
     }
     public function selfupdate(Request $request) {
 		// Checks the e-mail and new_password for validity. new_password is OPTIONAL

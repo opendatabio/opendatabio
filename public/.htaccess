@@ -5,9 +5,11 @@
 
     RewriteEngine On
 
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)/$ /$1 [L,R=301]
+#    Redirect Trailing Slashes If Not A Folder...
+#    Removed from .htaccess as this app is supposed to be served inside a custom directory
+#    See discussion in https://stackoverflow.com/questions/21735527/laravel-trailing-slashes-redirect-to-localhost
+#    RewriteCond %{REQUEST_FILENAME} !-d
+#    RewriteRule ^(.*)/$ /$1 [L,R=301]
 
     # Handle Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d

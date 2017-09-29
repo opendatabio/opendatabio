@@ -117,6 +117,14 @@
 			    <li><a href="{{ route('selfedit') }}">
 @lang('messages.edit_profile')
 </a></li>
+			    <li><a href="{{ url('token') }}">
+@lang('messages.api_token')
+</a></li>
+@can ('index', App\UserJobs::class)
+			<li><a href="{{ route('userjobs.index') }}">
+@lang('messages.userjobs')
+</a></li>
+@endcan
                                     <li>
                                         <a href="{{ route('logout') }}"
                                             onclick="event.preventDefault();
@@ -128,11 +136,6 @@
                                             {{ csrf_field() }}
                                         </form>
                                     </li>
-@can ('index', App\UserJobs::class)
-			<li><a href="{{ route('userjobs.index') }}">
-@lang('messages.userjobs')
-</a></li>
-@endcan
                                 </ul>
                             </li>
                         @endif
