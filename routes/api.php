@@ -15,15 +15,13 @@ use Illuminate\Http\Request;
 */
 
 
-function v0api() {
+$v0api = function () {
     Route::get('/',           '\App\Api\v0\TestController@index');
     Route::get('taxons',      '\App\Api\v0\TaxonController@index');
     Route::get('taxons/{id}', '\App\Api\v0\TaxonController@show');
-}
+};
+
+Route::group(['prefix' => 'v0'], $v0api);
+
 // With no specification, defaults to v0
-v0api();
-
-
-Route::group(['prefix' => 'v0'], function() { 
-    v0api();
-});
+Route::group(['prefix' => '/'], $v0api);
