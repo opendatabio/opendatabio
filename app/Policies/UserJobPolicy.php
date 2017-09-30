@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\User;
-use App\UserJobs;
+use App\UserJob;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class UserJobsPolicy
+class UserJobPolicy
 {
     use HandlesAuthorization;
 
@@ -17,7 +17,7 @@ class UserJobsPolicy
      * @param  \App\UserJob  $userJob
      * @return mixed
      */
-    public function view(User $user, UserJobs $userJob)
+    public function view(User $user, UserJob $userJob)
     {
 	    //
 	    return $user->id == $userJob->user->id;
@@ -47,7 +47,7 @@ class UserJobsPolicy
      * @param  \App\UserJob  $userJob
      * @return mixed
      */
-    public function update(User $user, UserJobs $userJob)
+    public function update(User $user, UserJob $userJob)
     {
         //
 	    return $user->id == $userJob->user->id;
@@ -60,7 +60,7 @@ class UserJobsPolicy
      * @param  \App\UserJob  $userJob
      * @return mixed
      */
-    public function delete(User $user, UserJobs $userJob)
+    public function delete(User $user, UserJob $userJob)
     {
         //
 	    return $user->id == $userJob->user->id;

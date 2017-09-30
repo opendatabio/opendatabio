@@ -120,7 +120,7 @@
 			    <li><a href="{{ url('token') }}">
 @lang('messages.api_token')
 </a></li>
-@can ('index', App\UserJobs::class)
+@can ('index', App\UserJob::class)
 			<li><a href="{{ route('userjobs.index') }}">
 @lang('messages.userjobs')
 </a></li>

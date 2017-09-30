@@ -18,7 +18,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\BibReference::class    => \App\Policies\BibReferencePolicy::class,
         \App\Location::class    => \App\Policies\LocationPolicy::class,
         \App\User::class    => \App\Policies\UserPolicy::class,
-        \App\UserJobs::class    => \App\Policies\UserJobsPolicy::class,
+        \App\UserJob::class    => \App\Policies\UserJobPolicy::class,
         \App\Taxon::class    => \App\Policies\TaxonPolicy::class,
         \App\Project::class    => \App\Policies\ProjectPolicy::class,
         \App\Dataset::class    => \App\Policies\DatasetPolicy::class,

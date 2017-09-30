@@ -11,16 +11,14 @@ return [
     | API, giving you convenient access to each back-end using the same
     | syntax for each one. Here you may set the default queue driver.
     |
-    | Supported: "sync", "database", "null"
+    | Supported: "database"
     | 
-    | NOTICE: the 'sync' driver can be used on development environment,
-    | but the recommended driver for production environment is 'database'.
-    | Other back-ends such as beanstalkd are supported by Laravel, but have
-    | not been tested under OpenDataBio development.
+    | NOTICE: only the "database" driver is supported as UserJobs depends on
+    | database functionality
     |
     */
 
-    'default' => env('QUEUE_DRIVER', 'sync'),
+    'default' => 'database',
 
     /*
     |--------------------------------------------------------------------------
@@ -34,9 +32,6 @@ return [
     */
 
     'connections' => [
-        'sync' => [
-            'driver' => 'sync',
-        ],
         'database' => [
             'driver' => 'database',
             'table' => 'jobs',

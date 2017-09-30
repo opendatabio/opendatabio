@@ -9,7 +9,7 @@ use RenanBr\BibTexParser\Processor\AuthorProcessor;
 use RenanBr\BibTexParser\ParseException as ParseException;
 use App\BibReference;
 use App\Jobs\AppJob;
-use App\UserJobs;
+
 use Log;
 
 class ImportBibReferences extends AppJob
@@ -17,23 +17,14 @@ class ImportBibReferences extends AppJob
     protected $contents, $standardize;
 
     /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct($contents, $standardize, UserJobs $userjob)
-    {
-	    parent::__construct($userjob);
-	    $this->contents = $contents;
-	    $this->standardize = $standardize;
-    }
-    /**
      * Execute the job.
      *
      * @return void
      */
     public function inner_handle()
     {
+        $this->contents = $this->userjob->data['contents'];
+        $this->standardize = $this->userjob->data['standardize'];
 	    $listener = new Listener;
 	    $listener->setTagNameCase(CASE_LOWER);
 	    $listener->addTagValueProcessor(new AuthorProcessor());

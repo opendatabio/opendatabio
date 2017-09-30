@@ -32,9 +32,9 @@ Route::get('/home', 'HomeController@index')->name('home');
 Route::get('persons/getdata', 'PersonController@getdata');
 Route::resource('persons', 'PersonController');
 
-Route::post('userjobs/{userjob}/retry', 'UserJobsController@retry');
-Route::post('userjobs/{userjob}/cancel', 'UserJobsController@cancel');
-Route::resource('userjobs', 'UserJobsController', ['only' => ['index', 'show', 'destroy']]);
+Route::post('userjobs/{userjob}/retry', 'UserJobController@retry');
+Route::post('userjobs/{userjob}/cancel', 'UserJobController@cancel');
+Route::resource('userjobs', 'UserJobController', ['only' => ['index', 'show', 'destroy']]);
 
 Route::get('references/getdata', 'BibReferenceController@getdata');
 Route::resource('references', 'BibReferenceController');

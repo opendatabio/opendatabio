@@ -6,8 +6,6 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Lang;
-use App\Project;
-use App\Dataset;
 
 class User extends Authenticatable
 {
@@ -51,7 +49,7 @@ class User extends Authenticatable
 
     public function userjobs()
     {
-        return $this->hasMany('App\UserJobs');
+        return $this->hasMany(UserJob::class);
     }
     public function getTextAccessAttribute() {
 	    return Lang::get('levels.access.' . $this->access_level);

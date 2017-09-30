@@ -9,12 +9,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use Illuminate\Database\Eloquent\Model;
-use App\UserJobs;
+use App\UserJob;
 use DB;
 use Log;
 
 // All app jobs must extend this:
-// This class intermediates between the jobs dispatched and the UserJobs model
+// This class intermediates between the jobs dispatched and the UserJob model
 class AppJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -25,7 +25,7 @@ class AppJob implements ShouldQueue
      *
      * @return void
      */
-    public function __construct(UserJobs $userjob)
+    public function __construct(UserJob $userjob)
     {
 	    $this->userjob = $userjob;
 	    $this->log = "";
@@ -37,6 +37,9 @@ class AppJob implements ShouldQueue
      * @return void
      */
     public function inner_handle() {
+        Log::info("Running inner handle");
+        Log::info ("id: #" . $this->job->getJobId() . "#");
+        Log::info ("queue: #" . $this->job->getQueue() . "#");
 	    // Virtual!!
     }
     public function setError() {
@@ -48,6 +51,8 @@ class AppJob implements ShouldQueue
     public function handle()
     {
 	    $this->userjob->setProcessing();
+        $this->userjob->job_id = $this->job->getJobId();
+        $this->userjob->save();
 	    DB::beginTransaction();
 	    try {
 		    $this->inner_handle();

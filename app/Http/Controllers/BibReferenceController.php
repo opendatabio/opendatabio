@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\BibReference;
-use App\UserJobs;
+use App\UserJob;
 use Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
+use App\Jobs\ImportBibReferences;
 
 class BibReferenceController extends Controller
 {
@@ -43,9 +44,9 @@ class BibReferenceController extends Controller
     public function store(Request $request)
     {
 	    $this->authorize('create', BibReference::class);
-	    $this->authorize('create', UserJobs::class);
+	    $this->authorize('create', UserJob::class);
 	    $contents = file_get_contents($request->rfile->getRealPath());
-	    UserJobs::dispatch ("importbibreferences", ['contents' => $contents, 'standardize' => $request->standardize]);
+	    UserJob::dispatch (ImportBibReferences::class, ['contents' => $contents, 'standardize' => $request->standardize]);
 	return redirect('references')->withStatus(Lang::get('messages.dispatched'));
     }
 

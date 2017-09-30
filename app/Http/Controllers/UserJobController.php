@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\UserJobs;
+use App\UserJob;
 use Auth;
 use Lang;
 use Queue;
 
-class UserJobsController extends Controller
+class UserJobController extends Controller
 {
 	public function __construct()
 	{
@@ -24,7 +24,7 @@ class UserJobsController extends Controller
 	}
     public function destroy($id)
     {
-	    $userjob = UserJobs::findOrFail($id);
+	    $userjob = UserJob::findOrFail($id);
 	    $this->authorize('delete', $userjob);
 	    try {
 		    $job_id = $userjob->job_id;
@@ -38,7 +38,7 @@ class UserJobsController extends Controller
 	return redirect('userjobs')->withStatus(Lang::get('messages.removed'));
     }
 	public function cancel($id) { // TODO: only allow cancel of Submitted jobs?
-		$job = UserJobs::findOrFail($id);
+		$job = UserJob::findOrFail($id);
 		$this->authorize('update', $job);
 		$job->status = 'Cancelled';
 		$job_id = $job->job_id;
@@ -49,13 +49,13 @@ class UserJobsController extends Controller
 		return redirect('userjobs')->withStatus(Lang::get('messages.saved'));
 	}
 	public function retry($id) {
-		$job = UserJobs::findOrFail($id);
+		$job = UserJob::findOrFail($id);
 		$this->authorize('update', $job);
 		$job->retry();
 		return redirect('userjobs')->withStatus(Lang::get('messages.saved'));
 	}
 	public function show($id) {
-		$job = UserJobs::findOrFail($id);
+		$job = UserJob::findOrFail($id);
 		$this->authorize('view', $job);
 		return view('userjobs.show',[
 			'job' => $job,
