@@ -58,4 +58,5 @@ return ['access.0' => 'Registered user',
 	'tax.260' => 'Superform',
 	'tax.270' => 'Form',
 	'tax.280' => 'Subform',
+	'tax.-100' => 'Clade',
 ];

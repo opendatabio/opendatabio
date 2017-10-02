@@ -11,7 +11,6 @@ use Lang;
 
 class Taxon extends Node
 {
-//    protected $appends = ['levelName', 'authorSimple', 'bibreferenceSimple'];
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
     public function getTypenameAttribute() { return "taxons"; }
@@ -19,7 +18,7 @@ class Taxon extends Node
                 'bibreference', 'bibreference_id', 'parent_id', 'notes'];
         // for use in selects, lists the most common tax levels
         static public function TaxLevels() { 
-                return [0, 30, 60, 70, 90, 100, 120, 130, 150, 180, 210, 220, 240, 270]; 
+                return [0, 30, 60, 70, 90, 100, 120, 130, 150, 180, 210, 220, 240, 270, -100]; 
         }
         public function newQuery($excludeDeleted = true)
         {
@@ -48,35 +47,54 @@ class Taxon extends Node
         }
         // returns rank numbers from common abbreviations
         static public function getRank($rank) {
+            $rank = strtolower($rank);
                 switch($rank) {
+                case 'kingdom':
+                    return 0;
                 case 'div.':
+                case 'phyl.':
+                case 'phylum': 
+                case 'division':
                         return 30;
                 case 'cl.':
+                case 'class':
                         return 60;
                 case 'subcl.':
+                case 'subclass':
                         return 70;
                 case 'ord.':
+                case 'order':
                         return 90;
                 case 'fam.':
+                case 'family':
                         return 120;
                 case 'subfam.':
+                case 'subfamily':
                         return 130;
                 case 'tr.':
+                case 'tribe':
                         return 150;
                 case 'gen.':
+                case 'genus':
                         return 180;
                 case 'subg.':
+                case 'subgenus':
                         return 190;
                 case 'sp.':
-                        return 210;
                 case 'spec.':
+                case 'species':
                         return 210;
                 case 'subsp.':
+                case 'subspecies':
                         return 220;
                 case 'var.':
+                case 'variety':
                         return 240;
                 case 'f.':
-                        return 270;
+                case 'form':
+                    return 270;
+                case 'clade':
+                    return -100;
                 default:
                         return 0;
                 }

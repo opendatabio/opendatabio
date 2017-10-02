@@ -39,6 +39,9 @@
                                 <th>
 @lang('messages.updated_at')
 </th>
+                                <th>
+@lang('messages.progress')
+</th>
                                 <th colspan=2>
 @lang('messages.actions')
 </th>
@@ -52,6 +55,7 @@
                                         <td class="table-text">{{ $job->status }}</td>
                                         <td class="table-text">{{ $job->created_at }}</td>
                                         <td class="table-text">{{ $job->updated_at }}</td>
+                                        <td class="table-text">{{ $job->percentage }}</td>
 					<td class="table-text">
 					@if ($job->status == 'Failed' or $job->status == 'Cancelled')
 <form action="{{ url('userjobs/'.$job->id.'/retry') }}" method="POST">

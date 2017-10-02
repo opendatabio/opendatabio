@@ -32,11 +32,13 @@ class UserJobController extends Controller
 
         $fields = ($request->fields ? $request->fields : "simple");
         if ($fields == "simple")
-            $fields = ['id', 'dispatcher', 'log', 'status'];
+            $fields = ['id', 'dispatcher', 'status', 'percentage', 'created_at', 'updated_at'];
         else 
             $fields = explode(',',$fields);
         if ($fields[0] != "all")
             $jobs = $jobs->map(function ($obj) use ($fields) {
+                if (in_array('percentage', $fields))
+                    $obj->append('percentage');
                 return collect($obj->toArray())
                     ->only($fields)
                     ->all();

@@ -372,4 +372,5 @@ remove the job information from the database.',
   'no_valid_dataset_error' => 'The logged in user has no valid datasets!',
   'no_valid_trait_error' => 'There is no trait available for creating measurements. Create a new trait in the Traits menu.',
   'invalid_trait_type_error' => 'The allowed object types for this trait are not compatible with the referenced object.',
+  'progress' => 'Progress',
 );

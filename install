@@ -323,6 +323,8 @@ if (! ini_get("post_max_size") or convertToBytes(ini_get('post_max_size')) < 20 
 	echo(c("The PHP initialization directive post_max_size should be at least 20M!\n", "danger"));
 if (! ini_get("upload_max_filesize") or convertToBytes(ini_get('upload_max_filesize')) < 20 * 1024 * 1024)
 	echo(c("The PHP initialization directive upload_max_filesize should be at least 20M!\n", "danger"));
+if (ini_get("max_execution_time") < 600)
+	echo(c("The PHP initialization directive max_execution_time should be at least 600 seconds!\n", "danger"));
 
 ### Apache config
 exec($apachecmd . " -M", $result, $status);

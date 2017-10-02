@@ -51,21 +51,22 @@ class AppJob implements ShouldQueue
     }
     public function handle()
     {
+        // temporarily removing rollback capabilities:
 	    $this->userjob->setProcessing();
         $this->userjob->job_id = $this->job->getJobId();
         $this->userjob->save();
-	    DB::beginTransaction();
+//	    DB::beginTransaction();
 	    try {
 		    $this->inner_handle();
 		    if ($this->errors) {
-			    DB::rollback();
+//			    DB::rollback();
 			    $this->userjob->setFailed($this->log);
 		    } else {
-			    DB::commit();
+//			    DB::commit();
 			    $this->userjob->setSuccess($this->log);
 		    }
 	    } catch (\Exception $e) {
-			    DB::rollback();
+//			    DB::rollback();
 			    $this->log .= "EXCEPTION " . $e->getMessage();
 			    $this->userjob->setFailed($this->log);
 	    }

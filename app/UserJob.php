@@ -42,6 +42,24 @@ class UserJob extends Model
         return unserialize($this->rawdata);
     }
 
+    public function setProgressMax($value) {
+        $this->progress_max = $value;
+        $this->progress = 0;
+        $this->save();
+    }
+
+    public function tickProgress() {
+        $this->progress++;
+        $this->save();
+    }
+
+    // show formatted progress
+    public function getPercentageAttribute() {
+        if ($this->progress_max == 0)
+            return " - %";
+        return round(100 * $this->progress / $this->progress_max) . "%";
+    }
+
 	// entry point for jobs. place the job on queue
 	static public function dispatch($dispatcher, $rawdata) {
 		// create Job entry

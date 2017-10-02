@@ -95,7 +95,7 @@ class TaxonController extends Controller
         if ($request->parent_id) {
                 $parent = Taxon::findOrFail($request->parent_id);
                 $validator->after(function ($validator) use ($request, $parent) {
-                        if ($request->level <= $parent->level) 
+                        if ($request->level <= $parent->level and ($request->level != -100 and $parent->level != -100)) 
                                 $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_level_error'));
                 });
         }
