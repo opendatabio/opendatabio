@@ -47,5 +47,6 @@ class UserJob extends Model
 		// create Job entry
 		$userjob = UserJob::create(['dispatcher' => $dispatcher, 'rawdata' => serialize($rawdata), 'user_id' => Auth::user()->id]);
         $job = $dispatcher::dispatch($userjob);
+        return $userjob->id;
 	}
 }

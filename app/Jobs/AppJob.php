@@ -47,6 +47,7 @@ class AppJob implements ShouldQueue
     }
     public function appendLog($text) {
 	    $this->log .= $text;
+        Log::info($text);
     }
     public function handle()
     {

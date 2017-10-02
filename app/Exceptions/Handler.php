@@ -7,6 +7,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Auth\Access\AuthorizationException;
+use Log;
 
 class Handler extends ExceptionHandler
 {
@@ -38,7 +39,7 @@ class Handler extends ExceptionHandler
     }
 
     /**
-     * Render an exception into an HTTP response.
+     * Render an exception into an HTTP response. May return a JSON error depending on $request
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Exception  $exception
@@ -47,9 +48,15 @@ class Handler extends ExceptionHandler
     public function render($request, Exception $exception)
     {
 	if ($exception instanceof ModelNotFoundException) {
+        if ($request->expectsJson()) {
+            return response()->json(['error' => 'Not found.'], 404);
+        }
         	return response()->view('common.notfound');
     	}
 	if ($exception instanceof AuthorizationException) { 
+        if ($request->expectsJson()) {
+            return response()->json(['error' => 'Unauthorized.'], 403);
+        }
       	return response()->view('common.unauthorized');
     	}
         return parent::render($request, $exception);
@@ -67,7 +74,6 @@ class Handler extends ExceptionHandler
         if ($request->expectsJson()) {
             return response()->json(['error' => 'Unauthenticated.'], 401);
         }
-
         return redirect()->guest(route('login'));
     }
 }
