@@ -172,7 +172,6 @@ class ExternalAPIs
         // just get Mycobank data if single name or binomial name or a full subsp/var name
         if (sizeof($searchar) != 3)
             return $this->getMycobankInner($searchstring);
-        Log::info("rabbit hole");
 
         // otherwise... we need to guess if this is subsp, var or f...
         $subname = $searchar[0] . ' ' . $searchar[1] . ' subsp. ' . $searchar[2];
@@ -181,9 +180,7 @@ class ExternalAPIs
         if (! ($try[0] & ExternalAPIs::NOT_FOUND))
             return $try;
         $varname = $searchar[0] . ' ' . $searchar[1] . ' var. ' . $searchar[2];
-        Log::info($varname); 
         $try = $this->getMycobankInner($varname);
-        Log::info($try[0]);
         if (! ($try[0] & ExternalAPIs::NOT_FOUND))
             return $try;
         $fname = $searchar[0] . ' ' . $searchar[1] . ' f. ' . $searchar[2];
