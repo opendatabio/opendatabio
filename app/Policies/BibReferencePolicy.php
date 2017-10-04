@@ -42,7 +42,15 @@ class BibReferencePolicy
      */
     public function update(User $user, BibReference $bibReference)
     {
-	    return $user->access_level >= User::USER;
+        if ($user->access_level == User::ADMIN) 
+            return true;
+        // regular users can only update bibreferences that have no associates resources
+        if ($user->access_level == User::USER) 
+            return (
+                $bibReference->taxons()->count() + 
+                $bibReference->datasets()->count() + 
+                $bibReference->measurements()->count()
+            ) == 0;
     }
 
     /**
@@ -54,6 +62,11 @@ class BibReferencePolicy
      */
     public function delete(User $user, BibReference $bibReference)
     {
-	    return $user->access_level >= User::USER;
+        // ANY user can only remove bibreferences that have no associates resources
+        return (
+            $bibReference->taxons()->count() + 
+            $bibReference->datasets()->count() + 
+            $bibReference->measurements()->count()
+        ) == 0;
     }
 }

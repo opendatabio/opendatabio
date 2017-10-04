@@ -39,7 +39,7 @@
 @lang('messages.bibreference')
 :</strong>
 @if ($bibref)
-<a href="{{ url('bibreferences/'.$bibref->id) }}">{{ $bibref->bibkey }} </a>
+<a href="{{ url('references/'.$bibref->id) }}">{{ $bibref->bibkey }} </a>
 @else
 {{ $taxon->bibreference }} 
 @endif
