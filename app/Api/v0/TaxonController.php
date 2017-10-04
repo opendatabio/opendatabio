@@ -68,17 +68,4 @@ class TaxonController extends Controller
         $jobid = UserJob::dispatch(ImportTaxons::class, ['data' => $request->post()]);
         return Response::json(['message' => 'OK', 'userjob' => $jobid]);
     }
-
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show(Request $request, $id)
-    {
-            $taxon = Taxon::findOrFail($id);
-            return $this->wrap_response($taxon);
-    }
 }

@@ -96,7 +96,7 @@ class Taxon extends Node
                 case 'clade':
                     return -100;
                 default:
-                        return 0;
+                    return null;
                 }
         }
         public function author_person() {

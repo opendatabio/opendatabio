@@ -38,8 +38,8 @@ class AppJob implements ShouldQueue
      */
     public function inner_handle() {
         Log::info("Running inner handle");
-        Log::info ("id: #" . $this->job->getJobId() . "#");
-        Log::info ("queue: #" . $this->job->getQueue() . "#");
+        Log::info("id: #" . $this->job->getJobId() . "#");
+        Log::info("queue: #" . $this->job->getQueue() . "#");
 	    // Virtual!!
     }
     public function setError() {
@@ -58,6 +58,9 @@ class AppJob implements ShouldQueue
 //	    DB::beginTransaction();
 	    try {
 		    $this->inner_handle();
+            // mark jobs with reported errors as "Failed", EXCEPT if they have already been cancelled
+            // TODO!
+		    // if ($this->errors and $this->userjob->fresh()->status != "Cancelled") {
 		    if ($this->errors) {
 //			    DB::rollback();
 			    $this->userjob->setFailed($this->log);
@@ -67,7 +70,7 @@ class AppJob implements ShouldQueue
 		    }
 	    } catch (\Exception $e) {
 //			    DB::rollback();
-			    $this->log .= "EXCEPTION " . $e->getMessage();
+			    $this->appendLog("BLOCKING EXCEPTION " . $e->getMessage());
 			    $this->userjob->setFailed($this->log);
 	    }
     }
