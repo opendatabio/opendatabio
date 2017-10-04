@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Baum\Node;
 use DB;
 use Log;
+use Lang;
 
 class Location extends Node
 {
@@ -56,6 +57,10 @@ class Location extends Node
 	public function scopeUcs($query) {
 		return $query->where('adm_level', Location::LEVEL_UC);
 	}
+
+    public function getLevelNameAttribute() {
+            return Lang::get('levels.adm.' . $this->adm_level);
+    }
 
 	function getFullNameAttribute() {
 		$str = "";
