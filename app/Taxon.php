@@ -105,12 +105,14 @@ class Taxon extends Node
         public function getAuthorSimpleAttribute() {
             if ($this->author)
                 return $this->author;
-            return $this->author_person->abbreviation;
+            if ($this->author_person)
+               return $this->author_person->abbreviation;
         }
         public function getBibreferenceSimpleAttribute() {
             if ($this->bibreference)
                 return $this->bibreference;
-            return $this->reference->bibtex;
+            if ($this->reference)
+                return $this->reference->bibtex;
         }
         public function reference() {
                 return $this->belongsTo('App\BibReference', 'bibreference_id');
