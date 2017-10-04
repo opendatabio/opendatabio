@@ -9,6 +9,7 @@ use RenanBr\BibTexParser\ParseException;
 use Pandoc\Pandoc;
 use Pandoc\PandocException;
 use Debugbar;
+use DB;
 
 use Illuminate\Support\Facades\Log;
 
@@ -16,7 +17,7 @@ class BibReference extends Model
 {
 	// "cached" entries, so we don't need to parse the bibtex for every call
 	protected $entries = null;
-	protected $appends = ['author', 'title', 'year', 'bibkey'];
+//	protected $appends = ['author', 'title', 'year', 'bibkey'];
 	protected $fillable = ['bibtex'];
 
     public function datasets() {
@@ -98,7 +99,7 @@ class BibReference extends Model
 			return '';
 		}
 	}
-	public function getBibkeyAttribute() {
+	public function getParsedBibkeyAttribute() {
 		if (is_null($this->entries)) 
 			$this->parseBibtex();
 		if(count($this->entries) > 0 and array_key_exists('citation-key', $this->entries[0])) {
@@ -107,5 +108,12 @@ class BibReference extends Model
 			return '';
 		}
 	}
-
+    public function newQuery($excludeDeleted = true)
+    {
+        // includes the full name of a taxon in all queries
+        return parent::newQuery($excludeDeleted)->addSelect(
+            '*', 
+            DB::raw('odb_bibkey(bibtex) as bibkey')
+        );
+    }
 }
