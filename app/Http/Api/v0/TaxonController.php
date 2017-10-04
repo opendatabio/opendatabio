@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Api\v0;
+namespace App\Http\Api\v0;
 
-use App\Api\v0\Controller;
+use App\Http\Api\v0\Controller;
 use App\Jobs\ImportTaxons;
 use Illuminate\Http\Request;
 use App\Taxon;

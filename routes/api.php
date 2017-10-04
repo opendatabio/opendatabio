@@ -16,10 +16,10 @@ use Illuminate\Http\Request;
 
 
 $v0api = function () {
-    Route::get('/',           '\App\Api\v0\TestController@index');
-    Route::post('taxons',      '\App\Api\v0\TaxonController@store');
-    Route::get('taxons',      '\App\Api\v0\TaxonController@index');
-    Route::get('jobs',      '\App\Api\v0\UserJobController@index');
+    Route::get('/',           '\App\Http\Api\v0\TestController@index');
+    Route::post('taxons',      '\App\Http\Api\v0\TaxonController@store');
+    Route::get('taxons',      '\App\Http\Api\v0\TaxonController@index');
+    Route::get('jobs',      '\App\Http\Api\v0\UserJobController@index');
 };
 
 Route::group(['prefix' => 'v0'], $v0api);

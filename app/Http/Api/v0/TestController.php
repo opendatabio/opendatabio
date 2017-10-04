@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Api\v0;
-use App\Api\v0\Controller;
+namespace App\Http\Api\v0;
+use App\Http\Api\v0\Controller;
 use Auth;
 
 class TestController extends Controller
