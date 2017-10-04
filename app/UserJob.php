@@ -15,16 +15,12 @@ class UserJob extends Model
 	}
 
 	// event fired from job on success
-	public function setSuccess($log = null) {
-		if (!is_null($log))
-			$this->log .= $log . "\n";
+	public function setSuccess() {
 		$this->status = 'Success';
 		$this->save();
 	}
 	// event fired from job on failure
-	public function setFailed($log = null) {
-		if (!is_null($log))
-			$this->log .= $log . "\n";
+	public function setFailed() {
 		$this->status = 'Failed';
 		$this->save();
 	}
@@ -35,7 +31,7 @@ class UserJob extends Model
 	}
 	// user sent a "retry" from the interface
 	public function retry() {
-		$this->update(['status' => 'Submitted', 'log' => '']);
+		$this->update(['status' => 'Submitted']);
         $job = $this->dispatcher::dispatch($this);
 	}
     public function getDataAttribute() {

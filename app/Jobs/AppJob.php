@@ -18,7 +18,7 @@ use Log;
 class AppJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    protected $userjob, $log, $errors;
+    protected $userjob, $errors;
 
     /**
      * Create a new job instance.
@@ -28,7 +28,8 @@ class AppJob implements ShouldQueue
     public function __construct(UserJob $userjob)
     {
 	    $this->userjob = $userjob;
-	    $this->log = "";
+        $this->userjob->log = json_encode([]);
+        $this->userjob->save();
 	    $this->errors = false;
     }
     /**
@@ -37,16 +38,19 @@ class AppJob implements ShouldQueue
      * @return void
      */
     public function inner_handle() {
+	    // Virtual method!! Should be implemented by all jobs
         Log::info("Running inner handle");
         Log::info("id: #" . $this->job->getJobId() . "#");
         Log::info("queue: #" . $this->job->getQueue() . "#");
-	    // Virtual!!
     }
     public function setError() {
 	    $this->errors = true;
     }
     public function appendLog($text) {
-	    $this->log .= $text;
+        $log = json_decode($this->userjob->fresh()->log, true);
+        array_push($log, $text);
+	    $this->userjob->log = json_encode($log);
+        $this->userjob->save();
         Log::info($text);
     }
     public function handle()
@@ -59,19 +63,17 @@ class AppJob implements ShouldQueue
 	    try {
 		    $this->inner_handle();
             // mark jobs with reported errors as "Failed", EXCEPT if they have already been cancelled
-            // TODO!
-		    // if ($this->errors and $this->userjob->fresh()->status != "Cancelled") {
-		    if ($this->errors) {
+		    if ($this->errors and $this->userjob->fresh()->status != "Cancelled") {
 //			    DB::rollback();
-			    $this->userjob->setFailed($this->log);
+			    $this->userjob->setFailed();
 		    } else {
 //			    DB::commit();
-			    $this->userjob->setSuccess($this->log);
+			    $this->userjob->setSuccess();
 		    }
 	    } catch (\Exception $e) {
 //			    DB::rollback();
 			    $this->appendLog("BLOCKING EXCEPTION " . $e->getMessage());
-			    $this->userjob->setFailed($this->log);
+			    $this->userjob->setFailed();
 	    }
     }
 }

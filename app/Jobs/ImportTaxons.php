@@ -20,7 +20,7 @@ class ImportTaxons extends AppJob
         $data = $this->userjob->data['data'];
         if (! count($data)) {
             $this->setError();
-            $this->appendLog ("ERROR: data received is empty!");
+            $this->appendLog("ERROR: data received is empty!");
             return;
         }
         $this->userjob->setProgressMax(count($data));
@@ -28,28 +28,28 @@ class ImportTaxons extends AppJob
             // has this job been cancelled?
             // calls "fresh" to make sure we're not receiving a cached object
             if ($this->userjob->fresh()->status == "Cancelled") {
-                $this->appendLog ("WARNING: received CANCEL signal");
+                $this->appendLog("WARNING: received CANCEL signal");
                 break;
             }
             $this->userjob->tickProgress();
 
             if (! is_array($taxon)) {
                 $this->setError();
-                $this->appendLog ("ERROR: taxon entry is not formatted as array!" . serialize($taxon));
+                $this->appendLog("ERROR: taxon entry is not formatted as array!" . serialize($taxon));
                 continue;
             }
             if (! array_key_exists('name', $taxon)) {
                 $this->setError();
-                $this->appendLog ("ERROR: entry needs a name: " . implode(';',$taxon));
+                $this->appendLog("ERROR: entry needs a name: " . implode(';',$taxon));
                 continue;
             }
             // Arrived here: let's import it!!
             try {
                 $this->import($taxon);
                 $this->appendLog ($taxon['name'] . " imported");
-            } catch (Exception $e) { 
+            } catch (\Exception $e) { 
                 $this->setError();
-                $this->appendLog("Exception ".$e->message() . " on taxon " . $taxon['name']);
+                $this->appendLog("Exception ".$e->getMessage() . " on taxon " . $taxon['name']);
             }
         }
     }
