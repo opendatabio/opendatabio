@@ -45,7 +45,32 @@ class ExternalAPIs
 
 		return [$IRN, $name];
 	}
-	public function getMobot($searchstring)
+    public function getMobot($searchstring) {
+        $searchar = explode(' ', $searchstring);
+        // special case! MOBOT treats "forma" abbreviation as f.
+        if (sizeof($searchar) == 4 and $searchar[2] == "f.")
+            return $this->getMobotInner(
+                $searchar[0] . ' ' . $searchar[1] . ' fo. ' . $searchar[3]
+            );
+        // just get MOBOT data if single name or binomial name or a full subsp/var name
+        if (sizeof($searchar) != 3)
+            return $this->getMobotInner($searchstring);
+
+        // otherwise... we need to guess if this is subsp, var or f...
+        $subname = $searchar[0] . ' ' . $searchar[1] . ' subsp. ' . $searchar[2];
+        $try = $this->getMobotInner($subname);
+        // if we find something, return it!
+        if (! ($try[0] & ExternalAPIs::NOT_FOUND))
+            return $try;
+        $varname = $searchar[0] . ' ' . $searchar[1] . ' var. ' . $searchar[2];
+        $try = $this->getMobotInner($varname);
+        if (! ($try[0] & ExternalAPIs::NOT_FOUND))
+            return $try;
+        $fname = $searchar[0] . ' ' . $searchar[1] . ' fo. ' . $searchar[2];
+        // if we arrived here and nothing was found, nothing will. 
+        return $this->getMobotInner($fname);
+    }
+	protected function getMobotInner($searchstring)
     {
         // replaces . in "var." or "subsp."
         $searchstring = str_replace('.', '%2e', $searchstring);
@@ -95,9 +120,15 @@ class ExternalAPIs
         ];
 	}
 	public function getIpni($searchstring)
-	{
+    {
+        // transform names with 3 components to genus epithet subsp. subepithet for IPNI compatibility
+        $searchar = explode(' ', $searchstring);
+        if (sizeof($searchar) == 3) {
+            // otherwise... we need to guess if this is subsp, var or f...
+            $searchstring = $searchar[0] . ' ' . $searchar[1] . ' subsp. ' . $searchar[2];
+        }
+
 		$flags = 0;
-		$apikey = config('app.mobot_api_key');
 		$base_uri = "http://www.ipni.org/";
 		$client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
         try {
@@ -129,10 +160,37 @@ class ExternalAPIs
 	}
     // small helper for getting nested fields
     protected function getElement($xml, $field) {
+        if (is_object($xml)) {
+            Log::warning("Object received in ExternalAPIs->getElement" . serialize($xml));
+            return null;
+        }
         $object = simplexml_load_string($xml);
         return (string) $object->{$field};
     }
-	public function getMycobank($searchstring)
+    public function getMycobank($searchstring) {
+        $searchar = explode(' ', $searchstring);
+        // just get Mycobank data if single name or binomial name or a full subsp/var name
+        if (sizeof($searchar) != 3)
+            return $this->getMycobankInner($searchstring);
+        Log::info("rabbit hole");
+
+        // otherwise... we need to guess if this is subsp, var or f...
+        $subname = $searchar[0] . ' ' . $searchar[1] . ' subsp. ' . $searchar[2];
+        $try = $this->getMycobankInner($subname);
+        // if we find something, return it!
+        if (! ($try[0] & ExternalAPIs::NOT_FOUND))
+            return $try;
+        $varname = $searchar[0] . ' ' . $searchar[1] . ' var. ' . $searchar[2];
+        Log::info($varname); 
+        $try = $this->getMycobankInner($varname);
+        Log::info($try[0]);
+        if (! ($try[0] & ExternalAPIs::NOT_FOUND))
+            return $try;
+        $fname = $searchar[0] . ' ' . $searchar[1] . ' f. ' . $searchar[2];
+        // if we arrived here and nothing was found, nothing will. 
+        return $this->getMycobankInner($fname);
+    }
+	protected function getMycobankInner($searchstring)
     {
 		$flags = 0;
 		$base_uri = "http://www.mycobank.org/";

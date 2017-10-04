@@ -91,6 +91,7 @@ class Taxon extends Node
                 case 'variety':
                         return 240;
                 case 'f.':
+                case 'fo.':
                 case 'form':
                     return 270;
                 case 'clade':

@@ -107,10 +107,16 @@ $(document).ready(function(){
                                         if (data.apidata[4]) {
                                             $("#parent_id").val(data.apidata[4][0]);
                                             $("#parent_autocomplete").val(data.apidata[4][1]);
+                                        } else {
+                                            $("#parent_id").val("");
+                                            $("#parent_autocomplete").val("");
                                         }
                                         if (data.apidata[5]) {
                                             $("#senior_id").val(data.apidata[5][0]);
                                             $("#senior_autocomplete").val(data.apidata[5][1]);
+                                        } else {
+                                            $("#senior_id").val("");
+                                            $("#senior_autocomplete").val("");
                                         }
                                         $("#mobotkey").val(data.apidata[6]);
                                         $("#ipnikey").val(data.apidata[7]);
