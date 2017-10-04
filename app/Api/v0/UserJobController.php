@@ -31,18 +31,7 @@ class UserJobController extends Controller
         $jobs = $jobs->get();
 
         $fields = ($request->fields ? $request->fields : "simple");
-        if ($fields == "simple")
-            $fields = ['id', 'dispatcher', 'status', 'percentage', 'created_at', 'updated_at'];
-        else 
-            $fields = explode(',',$fields);
-        if ($fields[0] != "all")
-            $jobs = $jobs->map(function ($obj) use ($fields) {
-                if (in_array('percentage', $fields))
-                    $obj->append('percentage');
-                return collect($obj->toArray())
-                    ->only($fields)
-                    ->all();
-            });
+        $jobs = $this->setFields($jobs, $fields, ['id', 'dispatcher', 'status', 'percentage', 'created_at', 'updated_at']);
         return $this->wrap_response($jobs);
     }
 }

@@ -42,22 +42,8 @@ class TaxonController extends Controller
         $taxons = $taxons->get();
 
         $fields = ($request->fields ? $request->fields : "simple");
-        if ($fields == "simple")
-            $fields = ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id'];
-        else 
-            $fields = explode(',',$fields);
-        if ($fields[0] != "all")
-            $taxons = $taxons->map(function ($obj) use ($fields) {
-                if (in_array('levelName', $fields))
-                    $obj->append('levelName');
-                if (in_array('authorSimple', $fields))
-                    $obj->append('authorSimple');
-                if (in_array('bibreferenceSimple', $fields))
-                    $obj->append('bibreferenceSimple');
-                return collect($obj->toArray())
-                    ->only($fields)
-                    ->all();
-            });
+        $taxons = $this->setFields($taxons, $fields, ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id']);
+
         return $this->wrap_response($taxons);
     }
 

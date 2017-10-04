@@ -12,6 +12,7 @@ use URL;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    // Wraps the data to be sent with key "data" and adds metadata about the server and request
     public function wrap_response($data) {
         return Response::json([
             'meta' => [
@@ -22,5 +23,28 @@ class Controller extends BaseController
             ],
             'data' => $data,
         ]);
+    }
+    // Filters the designated fields in the collection to be returned
+    public function setFields($collection, $fields, $simple) {
+        // Special keyword "all", returns the collection untransformed
+        if ($fields == "all")
+            return $collection;
+        // Special keyword "simple", returns a default listing of fields
+        if ($fields == "simple")
+            $fields = $simple;
+        else 
+            $fields = explode(',',$fields);
+
+        $collection = $collection->map(function ($obj) use ($fields) {
+            foreach($fields as $field) {
+                // appends custom accessors to the JSON response
+                if ($obj->hasGetMutator($field))
+                    $obj->append($field);
+            }
+            return collect($obj->toArray())
+                ->only($fields)
+                ->all();
+        });
+        return $collection;
     }
 }
