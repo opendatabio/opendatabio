@@ -84,37 +84,69 @@ class Location extends Node
 		$this->getGeomArrayAttribute(); // force caching
 		return $this->isSimplified;
 	}
+    protected function extractXY($point) {
+			$pos = strpos($point, ' ');
+			return ['x' => substr($point,0, $pos), 'y' => substr($point, $pos+1)];
+    }
+    public function getGeomTypeAttribute() {
+		if (substr($this->geom, 0, 5) == "POINT") {
+            return "point";
+        }
+        if (substr($this->geom, 0, 7) == "POLYGON") {
+            return "polygon";
+        }
+        if (substr($this->geom, 0, 12) == "MULTIPOLYGON") {
+            return "multipolygon";
+        }
+        return "unsupported";
+    }
+    protected function simplify($array, $factor) {
+        $this->isSimplified = true;
+        // TODO: provide a better simplification for this, such as Douglas-Peucker
+        $result = array();
+        $lapse = ceil(sizeof($array) / $factor);
+        $i = 0;
+        foreach($array as $value) {
+            if ($i++ % $lapse == 0) {
+                $result[] = $value;
+            }
+        }
+        return $result;
+    }
 	public function getGeomArrayAttribute() {
 		// "cache" geom array to reduce overhead
 		if (!empty($this->geom_array)) return $this->geom_array;
 
-		if (substr($this->geom, 0, 5) == "POINT") {
-			$point = substr($this->geom, 6, -1);
-			$pos = strpos($point, ' ');
-			return [['x' => substr($point,0, $pos), 'y' => substr($point, $pos+1)]];
+		if ($this->geomType == "point") {
+			return $this->extractXY(substr($this->geom, 6, -1));
 		}
-		if (substr($this->geom, 0, 7) != "POLYGON") return; // not working with other things
-		$array = explode(',', substr($this->geom, 9, -2));
-		foreach($array as &$element) {
-			$pos = strpos($element, ' ');
-			$element = ['x' => substr($element,0, $pos), 'y' => substr($element, $pos+1)];
-		}
-		if (sizeof($array) > 1500) {
-			$this->isSimplified = true;
-			// TODO: provide a better simplification for this, such as Douglas-Peucker
-			$result = array();
-			$lapse = ceil(sizeof($array) / 1500);
-			$i = 0;
-			foreach($array as $value) {
-			    if ($i++ % $lapse == 0) {
-			        $result[] = $value;
-			    }
-			}
-			$array = $result;
-		}
+		if ($this->geomType == "polygon") {
+            $array = explode(',', substr($this->geom, 9, -2));
+            foreach($array as &$element) {
+                $element = $this->extractXY($element);
+            }
+            if (sizeof($array) > 1500) {
+                $array = $this->simplify($array, 1500);
+            }
+            $this->geom_array = [$array];
+        }
+		if ($this->geomType == "multipolygon") {
+            $array = explode(')),((', substr($this->geom, 15, -3));
+            foreach($array as &$polygon) {
+                $p_array = explode(',', $polygon);
+                foreach($p_array as &$element) {
+                    $element = $this->extractXY($element);
+                }
+                $factor = 1500;
+                if (sizeof($p_array) > $factor) {
+                    $p_array = $this->simplify($p_array, $factor);
+                }
+                $polygon = $p_array;
+            }
+            $this->geom_array = $array;
+        }
 
-		$this->geom_array = $array;
-		return $array;
+		return $this->geom_array;
 	}
 
 	public function setGeomFromParts($values) {

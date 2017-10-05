@@ -205,11 +205,11 @@ function getZoomLevel($area) {
           zoom: {{ getZoomLevel($location->area) }},
           center: uluru
 	});
-@if (count($location->geomArray) > 1) 
-	var polygon = new google.maps.Polygon({
+@if (in_array($location->geomType, ['polygon', 'multipolygon'])) 
+@foreach ($location->geomArray as $polygon)
+	new google.maps.Polygon({
 	paths: [
-<?php $i = 0; ?>
-	@foreach ($location->geomArray as $point)
+	@foreach ($polygon as $point)
 	 {lat: {{$point['y']}}, lng: {{$point['x']}}},
 	 @endforeach
 	 ],
@@ -219,9 +219,10 @@ function getZoomLevel($area) {
           strokeWeight: 2,
           fillColor: '#00FF00',
           fillOpacity: 0.3
-        });
-@else
-<?php $point = $location->geomArray[0]; ?>
+    });
+@endforeach
+@elseif ($location->geomType == "point")
+<?php $point = $location->geomArray; ?>
   var marker = new google.maps.Marker({
   position: {lat: {{$point['y']}}, lng: {{$point['x']}} },
     map: map,
