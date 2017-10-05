@@ -149,6 +149,20 @@ class Location extends Node
 		return $this->geom_array;
 	}
 
+    public static function detectParent($geom, $max_level, $parent_uc) {
+        $possibles = Location::where('adm_level', '<', $max_level)
+            ->whereRaw('ST_Within(GeomFromText(?), geom)', [$geom])
+            ->orderBy('adm_level', 'desc');
+        if ($parent_uc) # only looks for UCs
+            $possibles = $possibles->where('adm_level', '=', Location::LEVEL_UC);
+        else # only looks for NON-UCs
+            $possibles = $possibles->where('adm_level', '!=', Location::LEVEL_UC);
+        $possibles = $possibles->get();
+        if ($possibles->count())
+            return $possibles->first()->id;
+        return null;
+    }
+
 	public function setGeomFromParts($values) {
 		$lat = $values['lat1'] + $values['lat2'] / 60 + $values['lat3'] / 3600;
 		$long = $values['long1'] + $values['long2'] / 60 + $values['long3'] / 3600;

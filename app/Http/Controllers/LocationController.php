@@ -140,27 +140,23 @@ class LocationController extends Controller
 	    }
 
 	    $parent = $request['parent_id'];
+	    $uc = $request['uc_id'];
 	    // AUTODETECT PARENT & UC
 	    if ($parent == -1) {
-		    // TODO: make it work for plots/points
-		    $possibles = Location::where('adm_level', '!=', Location::LEVEL_UC)
-			                   ->where('adm_level', '<', [$request->adm_level])
-			    		   ->whereRaw('ST_Within(GeomFromText(?), geom)', [$request->geom])
-			    	           ->orderBy('adm_level', 'desc')->get();
-		    
-		    if ($possibles->isNotEmpty()) {
-			    $newloc->parent_id = $possibles[0]->id;
-		    } else {
-			    return redirect()->back()
-				    ->withErrors(['parent_id' => Lang::get('messages.unable_autodetect')])
-				    ->withInput();
-		    }
+            $parent = Location::detectParent($request->geom, $request->adm_level, false);
+            if ($parent == null)
+                return redirect()->back()
+                ->withErrors(['parent_id' => Lang::get('messages.unable_autodetect')])
+                ->withInput();
 	    }
 	    if ($parent !== 0) {
 		    $newloc->parent_id = $parent;
 	    }
-	    if ($request->uc_id !== 0) {
-		    $newloc->uc_id = $request->uc_id;
+	    if ($uc == -1) {
+            $uc = Location::detectParent($request->geom, $request->adm_level, true);
+	    }
+	    if ($uc !== 0) {
+		    $newloc->uc_id = $uc;
 	    }
 	    $newloc->save();
 	return redirect('locations/' . $newloc->id)->withStatus(Lang::get('messages.stored'));
@@ -266,7 +262,20 @@ class LocationController extends Controller
 			    $location->geom = $request->geom;
 		    }
 	    }
+
 	    $parent = $request['parent_id'];
+	    $uc = $request['uc_id'];
+	    if ($parent == -1) {
+            $parent = Location::detectParent($request->geom, $request->adm_level, false);
+            if ($parent == null)
+                return redirect()->back()
+                ->withErrors(['parent_id' => Lang::get('messages.unable_autodetect')])
+                ->withInput();
+	    }
+	    if ($uc == -1) {
+            $uc = Location::detectParent($request->geom, $request->adm_level, true);
+	    }
+
 	    if ($parent != 0) {
 		    try{
 			    $location->makeChildOf($parent);
@@ -276,8 +285,8 @@ class LocationController extends Controller
 				    ->withErrors(Lang::get('messages.movenotpossible'));
 		    }
 	    }
-	    if ($request->uc_id !== 0) {
-		    $location->uc_id = $request->uc_id;
+	    if ($uc !== 0) {
+		    $location->uc_id = $uc;
 	    }
 	    $location->save();
 	return redirect('locations/' . $id)->withStatus(Lang::get('messages.stored'));
