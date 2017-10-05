@@ -20,6 +20,7 @@ $v0api = function () {
     Route::post('taxons',      '\App\Http\Api\v0\TaxonController@store');
     Route::get('taxons',      '\App\Http\Api\v0\TaxonController@index');
     Route::get('locations',      '\App\Http\Api\v0\LocationController@index');
+    Route::post('locations',      '\App\Http\Api\v0\LocationController@store');
     Route::get('jobs',      '\App\Http\Api\v0\UserJobController@index');
 };
 

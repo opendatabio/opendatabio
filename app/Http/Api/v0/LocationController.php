@@ -10,6 +10,8 @@ use Validator;
 use Response;
 use Illuminate\Support\MessageBag;
 use App\Location;
+use App\UserJob;
+use App\Jobs\ImportLocations;
 
 class LocationController extends Controller
 {
