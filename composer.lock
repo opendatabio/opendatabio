@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "3e38218735ab54aebdda12ebf6dcd31f",
+    "content-hash": "83230419ab2b69a079abb3a8577d2a22",
     "packages": [
         {
             "name": "andrechalom/laravel-multiselect",
@@ -391,52 +391,6 @@
             "time": "2017-09-08T14:50:55+00:00"
         },
         {
-            "name": "gasparesganga/php-shapefile",
-            "version": "v2.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/gasparesganga/php-shapefile.git",
-                "reference": "a45fa15e282741e129e1e48da9eface3b6d57ba8"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/gasparesganga/php-shapefile/zipball/a45fa15e282741e129e1e48da9eface3b6d57ba8",
-                "reference": "a45fa15e282741e129e1e48da9eface3b6d57ba8",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "ShapeFile\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Gaspare Sganga",
-                    "email": "contact@gasparesganga.com",
-                    "homepage": "http://gasparesganga.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "PHP library to read any ESRI Shapefile and its associated DBF into a PHP Array or WKT",
-            "homepage": "http://gasparesganga.com/labs/php-shapefile/",
-            "keywords": [
-                "ESRI",
-                "Shapefile",
-                "dbf",
-                "shape",
-                "shp"
-            ],
-            "time": "2017-09-14T11:58:45+00:00"
-        },
-        {
             "name": "guzzlehttp/guzzle",
             "version": "6.3.0",
             "source": {
@@ -677,16 +631,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v5.5.13",
+            "version": "v5.5.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "bfbe20d32ee9f98c89df852847827407a5127be4"
+                "reference": "26c700eb79e5bb55b59df2c495c9c71f16f43302"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/bfbe20d32ee9f98c89df852847827407a5127be4",
-                "reference": "bfbe20d32ee9f98c89df852847827407a5127be4",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/26c700eb79e5bb55b59df2c495c9c71f16f43302",
+                "reference": "26c700eb79e5bb55b59df2c495c9c71f16f43302",
                 "shasum": ""
             },
             "require": {
@@ -805,7 +759,7 @@
                 "framework",
                 "laravel"
             ],
-            "time": "2017-09-24T19:09:38+00:00"
+            "time": "2017-10-03T17:41:03+00:00"
         },
         {
             "name": "laravelcollective/html",
@@ -1751,16 +1705,16 @@
         },
         {
             "name": "swiftmailer/swiftmailer",
-            "version": "v6.0.1",
+            "version": "v6.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/swiftmailer/swiftmailer.git",
-                "reference": "008f088d535ed3333af5ad804dd4c0eaf97c2805"
+                "reference": "412333372fb6c8ffb65496a2bbd7321af75733fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/swiftmailer/swiftmailer/zipball/008f088d535ed3333af5ad804dd4c0eaf97c2805",
-                "reference": "008f088d535ed3333af5ad804dd4c0eaf97c2805",
+                "url": "https://api.github.com/repos/swiftmailer/swiftmailer/zipball/412333372fb6c8ffb65496a2bbd7321af75733fc",
+                "reference": "412333372fb6c8ffb65496a2bbd7321af75733fc",
                 "shasum": ""
             },
             "require": {
@@ -1796,13 +1750,13 @@
                 }
             ],
             "description": "Swiftmailer, free feature-rich PHP mailer",
-            "homepage": "http://swiftmailer.org",
+            "homepage": "http://swiftmailer.symfony.com",
             "keywords": [
                 "email",
                 "mail",
                 "mailer"
             ],
-            "time": "2017-05-20T06:20:27+00:00"
+            "time": "2017-09-30T22:39:41+00:00"
         },
         {
             "name": "symfony/console",
@@ -2798,16 +2752,16 @@
         },
         {
             "name": "yajra/laravel-datatables-buttons",
-            "version": "v3.0.0",
+            "version": "v3.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yajra/laravel-datatables-buttons.git",
-                "reference": "6d21a03330ec5edbd1966b66641c7a125e300de4"
+                "reference": "497023242febcc299ed861135714b41ca85f0347"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yajra/laravel-datatables-buttons/zipball/6d21a03330ec5edbd1966b66641c7a125e300de4",
-                "reference": "6d21a03330ec5edbd1966b66641c7a125e300de4",
+                "url": "https://api.github.com/repos/yajra/laravel-datatables-buttons/zipball/497023242febcc299ed861135714b41ca85f0347",
+                "reference": "497023242febcc299ed861135714b41ca85f0347",
                 "shasum": ""
             },
             "require": {
@@ -2858,7 +2812,7 @@
                 "jquery",
                 "laravel"
             ],
-            "time": "2017-08-31T01:58:11+00:00"
+            "time": "2017-10-05T03:41:04+00:00"
         },
         {
             "name": "yajra/laravel-datatables-html",
