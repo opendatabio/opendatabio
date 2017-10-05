@@ -92,11 +92,11 @@ class ImportLocations extends AppJob
         $location = new Location([
             'name' => $name,
             'adm_level' => $adm_level, 
-            'parent_id' => $parent, 
             'altitude' => $altitude,
             'datum' => $datum,
             'notes' => $notes,
         ]);
+        $location->parent_id = $parent;
         if (is_null($geom)) {
             $location->geom = "POINT ($y $x)";
         } else {

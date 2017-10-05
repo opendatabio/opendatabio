@@ -159,10 +159,12 @@ exec("mysql -u".getenv('DB_USERNAME').
 SHOW VARIABLES LIKE 'log_bin';
 SHOW VARIABLES LIKE 'log_bin_trust_function_creators';
 SHOW VARIABLES LIKE 'max_allowed_packet';
+SHOW VARIABLES LIKE 'innodb_log_file_size';
 EOF", $result, $status);
 	$logbin = false;
 	$logbin_trust = false;
 	$max_packet_ok = false;
+	$innodb_log_size = false;
 	foreach($result as $line) {
 		if (preg_match('/log_bin\s+(\w*)/', $line, $matches) and $matches[1] == "ON")
 			$logbin = true;
@@ -172,11 +174,18 @@ EOF", $result, $status);
 			$logbin_trust = true;
 	}
 	foreach($result as $line) { // checks max_allows_
-		if (preg_match('/max_allowed_packet\s+(\d*)/', $line, $matches) and $matches[1] > 100 * 1024 * 1024)
+		if (preg_match('/max_allowed_packet\s+(\d*)/', $line, $matches) and $matches[1] > 99 * 1024 * 1024)
 			$max_packet_ok = true;
+	}
+	foreach($result as $line) { // checks max_allows_
+		if (preg_match('/innodb_log_file_size\s+(\d*)/', $line, $matches) and $matches[1] > 299 * 1024 * 1024)
+			$innodb_log_size = true;
 	}
 	if ($max_packet_ok === false) {
 		echo c("Your MySQL settings have max_allowed_packet lower than the recommended 100M. This can break large data imports!\n", "warning");
+	}
+	if ($innodb_log_size === false) {
+		echo c("Your MySQL settings have innodb_log_file_size lower than the recommended 300M. This can break large data imports!\n", "warning");
 	}
 	if ($logbin === true and $logbin_trust === false) {
 		echo c("Your current MySQL settings have binary logging activated, but not log_bin_trust_function_creators.\n", "danger");
@@ -269,7 +278,7 @@ function checkSupervisor() {
 		echo ";--------------\n";
 		echo"[program:opendatabio-worker]\n";
 		echo "process_name=%(program_name)s_%(process_num)02d\n";
-		echo "command=php ". __DIR__ ."/artisan queue:work --sleep=3 --tries=1 --daemon\n";
+		echo "command=php ". __DIR__ ."/artisan queue:work --sleep=3 --tries=1 --timeout=0 --daemon\n";
 		echo "autostart=true\n";
 		echo "autorestart=true\n";
 		echo "user=".posix_getpwuid(getmyuid())['name'] ."\n";
@@ -319,12 +328,12 @@ if (! ini_get("allow_url_fopen"))
 	echo(c("The PHP initialization directive allow_url_fopen must be set to true!\n", "danger"));
 if (! ini_get("memory_limit") or convertToBytes(ini_get('memory_limit')) < 256 * 1024 * 1024)
 	echo(c("The PHP initialization directive memory_limit should be at least 256M!\n", "danger"));
-if (! ini_get("post_max_size") or convertToBytes(ini_get('post_max_size')) < 20 * 1024 * 1024)
-	echo(c("The PHP initialization directive post_max_size should be at least 20M!\n", "danger"));
-if (! ini_get("upload_max_filesize") or convertToBytes(ini_get('upload_max_filesize')) < 20 * 1024 * 1024)
-	echo(c("The PHP initialization directive upload_max_filesize should be at least 20M!\n", "danger"));
-if (ini_get("max_execution_time") < 600)
-	echo(c("The PHP initialization directive max_execution_time should be at least 600 seconds!\n", "danger"));
+if (! ini_get("post_max_size") or convertToBytes(ini_get('post_max_size')) < 30 * 1024 * 1024)
+	echo(c("The PHP initialization directive post_max_size should be at least 30M!\n", "danger"));
+if (! ini_get("upload_max_filesize") or convertToBytes(ini_get('upload_max_filesize')) < 30 * 1024 * 1024)
+	echo(c("The PHP initialization directive upload_max_filesize should be at least 30M!\n", "danger"));
+#if (ini_get("max_execution_time") < 600)
+#	echo(c("The PHP initialization directive max_execution_time should be at least 600 seconds!\n", "danger"));
 
 ### Apache config
 exec($apachecmd . " -M", $result, $status);
