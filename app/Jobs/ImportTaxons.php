@@ -46,7 +46,6 @@ class ImportTaxons extends AppJob
             // Arrived here: let's import it!!
             try {
                 $this->import($taxon);
-                $this->appendLog ($taxon['name'] . " imported");
             } catch (\Exception $e) { 
                 $this->setError();
                 $this->appendLog("Exception ".$e->getMessage() . " on taxon " . $taxon['name']);

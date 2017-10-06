@@ -45,7 +45,6 @@ class ImportLocations extends AppJob
             // Arrived here: let's import it!!
             try {
                 $this->import($location);
-                $this->appendLog ($location['name'] . " imported");
             } catch (\Exception $e) { 
                 $this->setError();
                 $this->appendLog("Exception ".$e->getMessage() . " on location " . $location['name']);

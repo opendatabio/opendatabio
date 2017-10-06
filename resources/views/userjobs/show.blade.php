@@ -38,7 +38,7 @@
 
 			<p><strong>
 @lang('messages.status')
-: </strong> {{ $job->status }} </p>
+: </strong> {{ $job->status }} ({{ $job->percentage }})</p>
 			<p><strong>
 @lang('messages.log')
 : </strong><br>
