@@ -218,10 +218,9 @@ class Location extends Node
 		return ($this->long > 0);
 	}
 
-	public function newQuery($excludeDeleted = true)
+	public function scopeWithGeom($query)
 	{
-		return parent::newQuery($excludeDeleted)->addSelect(
-			'*', 
+		return $query->addSelect('*',
 			DB::raw('AsText(geom) as geom'),
 			DB::raw('Area(geom) as area'),
 			DB::raw('AsText(Centroid(geom)) as centroid_raw')

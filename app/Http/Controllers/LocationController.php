@@ -170,7 +170,7 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-	    $location = Location::with(['plants.identification.taxon'])->findOrFail($id);
+	    $location = Location::with(['plants.identification.taxon'])->withGeom()->findOrFail($id);
         $plants = $location->plants;
         $vouchers = $location->vouchers;
         foreach ($plants as $plant) {

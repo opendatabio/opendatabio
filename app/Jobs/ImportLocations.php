@@ -70,7 +70,15 @@ class ImportLocations extends AppJob
                 $this->appendLog("WARNING: Position for location $name not available. Skipping import...");
                 return;
         }
+
+        // Is this location already imported? 
+        if(Location::where('name', '=', $name)->where('adm_level', '=', $adm_level)->count() > 0) {
+            $this->appendLog ("WARNING: location " . $name . " already imported to database");
+            return;
+        } 
+
         $parent = array_key_exists('parent', $location) ? $location['parent'] : null;
+        $uc = array_key_exists('uc', $location) ? $location['uc'] : null;
         // parent might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
         if (!is_numeric($parent) and !is_null($parent)) {
             $parent_obj = Location::where('name', '=', $parent)->get();
@@ -81,13 +89,29 @@ class ImportLocations extends AppJob
                 return;
             }
         }
+        if (!is_numeric($uc) and !is_null($uc)) {
+            $uc_obj = Location::uc()->where('name', '=', $uc)->get();
+            if($uc_obj->count()) {
+                $uc =  $uc_obj->first()->id;
+            } else {
+                $this->appendLog("WARNING: Conservation unit for location $name is listed as $uc, but this was not found in the database.");
+                return;
+            }
+        }
+        # Create geom from lat/long
+        if (is_null($geom)) {
+            $geom = "POINT ($y $x)";
+        }
         // TODO: several other validation checks
-        // TODO: Autoguess parent
-        // Is this location already imported? 
-        if(Location::where('name', '=', $name)->where('adm_level', '=', $adm_level)->count() > 0) {
-            $this->appendLog ("WARNING: location " . $name . " already imported to database");
-            return;
-        } 
+
+
+        // Autoguess parent/UC
+	    if (is_null($parent)) {
+            $parent = Location::detectParent($geom, $adm_level, false);
+	    }
+	    if (is_null($uc)) {
+            $uc = Location::detectParent($geom, $adm_level, true);
+	    }
 
         $location = new Location([
             'name' => $name,
@@ -96,12 +120,13 @@ class ImportLocations extends AppJob
             'datum' => $datum,
             'notes' => $notes,
         ]);
-        $location->parent_id = $parent;
-        if (is_null($geom)) {
-            $location->geom = "POINT ($y $x)";
-        } else {
-            $location->geom = $geom;
+	    if ($parent !== 0) {
+		    $location->parent_id = $parent;
+	    }
+	    if ($uc !== 0) {
+		    $location->uc_id = $uc;
         }
+        $location->geom = $geom;
 
         $location->save();
         return;
