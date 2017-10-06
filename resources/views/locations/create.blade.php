@@ -199,7 +199,7 @@
 	<?php $selected = old('uc_id', isset($location) ? $location->uc_id : -1); ?>
 
 	<select name="uc_id" id="uc_id" class="form-control" >
-		<!--option value='-1' {{ $selected == -1 ? 'selected' : '' }}>Autodetect</option-->
+		<option value='-1' {{ $selected == -1 ? 'selected' : '' }}>Autodetect</option>
 		<option value='' {{ $selected == 0 ? 'selected' : '' }} >None</option>
 	@foreach ($uc_list as $uc)
 		<option value="{{$uc->id}}" {{ $uc->id == $selected ? 'selected' : '' }}>{{ $uc->name }}</option>
