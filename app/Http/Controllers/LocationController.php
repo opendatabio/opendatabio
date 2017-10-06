@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Location;
 use App\DataTables\LocationsDataTable;
 use Validator;
@@ -41,9 +42,17 @@ class LocationController extends Controller
     // Validates the user input for CREATE or UPDATE requests
     // Notice that the fields that will be used are different based on the
     // adm_level declared
-    public function customValidate (Request $request) {
+    public function customValidate (Request $request, $id = null) {
 	    $rules = [
-		    'name' => 'required|string|max:191',
+            'name' => [
+                'required',
+                'string',
+                'max:191',
+                Rule::unique('locations')->ignore($id)
+                ->where(function ($query) use ($request) {
+                    $query->where('parent_id', $request->parent_id);
+                }),
+            ],
 		    'adm_level' => 'required|integer',
 		    'altitude' => 'integer|nullable',
 		    'parent_id' => 'required_unless:adm_level,0',
@@ -223,7 +232,7 @@ class LocationController extends Controller
     {
 	    $locations = Location::all();
 	    $uc_list = Location::ucs()->get();
-	    $location = Location::findOrFail($id);
+	    $location = Location::withGeom()->findOrFail($id);
         return view('locations.create', compact('locations', 'location', 'uc_list'));
     }
 
@@ -238,7 +247,7 @@ class LocationController extends Controller
     {
 	    $location = Location::findOrFail($id);
 	    $this->authorize('update', $location);
-	    $validator = $this->customValidate($request);
+	    $validator = $this->customValidate($request, $id);
 	    if ($validator->fails()) {
 		    return redirect()->back()
 			    ->withErrors($validator)

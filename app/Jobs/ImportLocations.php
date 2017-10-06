@@ -71,12 +71,6 @@ class ImportLocations extends AppJob
                 return;
         }
 
-        // Is this location already imported? 
-        if(Location::where('name', '=', $name)->where('adm_level', '=', $adm_level)->count() > 0) {
-            $this->appendLog ("WARNING: location " . $name . " already imported to database");
-            return;
-        } 
-
         $parent = array_key_exists('parent', $location) ? $location['parent'] : null;
         $uc = array_key_exists('uc', $location) ? $location['uc'] : null;
         // parent might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
@@ -103,6 +97,12 @@ class ImportLocations extends AppJob
             $geom = "POINT ($y $x)";
         }
         // TODO: several other validation checks
+        // Is this location already imported? 
+        if ($parent)
+            if(Location::where('name', '=', $name)->where('parent_id', '=', $parent)->count() > 0) {
+                $this->appendLog ("WARNING: location " . $name . " already imported to database");
+                return;
+            } 
 
 
         // Autoguess parent/UC
