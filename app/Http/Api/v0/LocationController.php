@@ -24,7 +24,7 @@ class LocationController extends Controller
     {
         $locations = Location::query()->withGeom();
         if ($request->id)
-            $locations = $locations->where('id', '=', $request->id);
+            $locations = $locations->whereIn('id', explode(',', $request->id));
         if ($request->search)
             $locations = $locations->where('name', 'LIKE', '%' . $request->search . '%');
         if ($request->adm_level)

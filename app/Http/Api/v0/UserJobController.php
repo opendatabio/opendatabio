@@ -27,7 +27,7 @@ class UserJobController extends Controller
         if ($request->status)
             $jobs = $jobs->where('status', '=', $request->status);
         if ($request->id)
-            $jobs = $jobs->where('id', '=', $request->id);
+            $jobs = $jobs->whereIn('id', explode(',', $request->id));
         $jobs = $jobs->get();
 
         $fields = ($request->fields ? $request->fields : "simple");

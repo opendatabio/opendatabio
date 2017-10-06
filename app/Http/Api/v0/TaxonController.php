@@ -28,7 +28,7 @@ class TaxonController extends Controller
     {
         $taxons = Taxon::query()->with(['author_person','reference']);
         if ($request->id)
-            $taxons = $taxons->where('id', '=', $request->id);
+            $taxons = $taxons->whereIn('id', explode(',', $request->id));
         if ($request->search)
             $taxons = $taxons->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%' . $request->search . '%']);
         if ($request->level)
