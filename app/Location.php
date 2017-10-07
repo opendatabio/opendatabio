@@ -150,13 +150,13 @@ class Location extends Node
 	}
 
     public static function detectParent($geom, $max_level, $parent_uc) {
-        $possibles = Location::where('adm_level', '<', $max_level)
-            ->whereRaw('ST_Within(GeomFromText(?), geom)', [$geom])
+        $possibles = Location::whereRaw('ST_Within(GeomFromText(?), geom)', [$geom])
             ->orderBy('adm_level', 'desc');
         if ($parent_uc) # only looks for UCs
             $possibles = $possibles->where('adm_level', '=', Location::LEVEL_UC);
         else # only looks for NON-UCs
-            $possibles = $possibles->where('adm_level', '!=', Location::LEVEL_UC);
+            $possibles = $possibles->where('adm_level', '!=', Location::LEVEL_UC)
+            ->where('adm_level', '<', $max_level);
         $possibles = $possibles->get();
         if ($possibles->count())
             return $possibles->first()->id;
