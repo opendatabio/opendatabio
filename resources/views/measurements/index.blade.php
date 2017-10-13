@@ -77,7 +77,7 @@
 					{{ $measurement->odbtrait->unit}}
 					</td>
 					<td class="table-text">
-					{{ $measurement->date}}
+					{{ $measurement->formatDate}}
 					</td>
                                     </tr>
 				    @endforeach
