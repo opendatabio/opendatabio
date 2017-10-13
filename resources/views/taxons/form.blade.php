@@ -55,7 +55,7 @@
 </label>
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-    <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control"
+    <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control autocomplete"
     value="{{ old('parent_autocomplete', (isset($taxon) and $taxon->parent) ? $taxon->parent->fullname : null) }}">
     <input type="hidden" name="parent_id" id="parent_id"
     value="{{ old('parent_id', isset($taxon) ? $taxon->parent_id : null) }}">
@@ -74,7 +74,7 @@
 </label>
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-    <input type="text" name="senior_autocomplete" id="senior_autocomplete" class="form-control"
+    <input type="text" name="senior_autocomplete" id="senior_autocomplete" class="form-control autocomplete"
     value="{{ old('senior_autocomplete', (isset($taxon) and $taxon->senior) ? $taxon->senior->fullname : null) }}">
     <input type="hidden" name="senior_id" id="senior_id"
     value="{{ old('senior_id', isset($taxon) ? $taxon->senior_id : null) }}">
@@ -107,16 +107,10 @@
 	    <div class="col-sm-6 group-together">
 	<input type="text" name="author" id="author" class="form-control" value="{{ old('author', isset($taxon) ? $taxon->author : null) }}">
 <div style="text-align:center;">- or -</div>
-	<?php $selected = old('author_id', isset($taxon) ? $taxon->author_id : null); ?>
-
-	<select name="author_id" id="author_id" class="form-control" >
-        <option value=''></option>
-	@foreach ( $persons as $person )
-		<option value="{{$person->id}}" {{ $person->id == $selected ? 'selected' : '' }}>
-            {{ $person->full_name }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="author_autocomplete" id="author_autocomplete" class="form-control autocomplete"
+    value="{{ old('author_autocomplete', (isset($taxon) and $taxon->author) ? $taxon->author->fullname . "[" . $taxon->author->abbreviation . "]" : null) }}">
+    <input type="hidden" name="author_id" id="author_id"
+    value="{{ old('author_id', isset($taxon) ? $taxon->author_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint3" class="panel-collapse collapse">
@@ -134,16 +128,10 @@
 	    <div class="col-sm-6 group-together">
 	<input type="text" name="bibreference" id="bibreference" class="form-control" value="{{ old('bibreference', isset($taxon) ? $taxon->bibreference : null) }}">
 <div style="text-align:center;">- or -</div>
-	<?php $selected = old('bibreference_id', isset($taxon) ? $taxon->bibreference_id : null); ?>
-
-	<select name="bibreference_id" id="bibreference_id" class="form-control" >
-        <option value=''></option>
-	@foreach ( $references as $reference )
-		<option value="{{$reference->id}}" {{ $reference->id == $selected ? 'selected' : '' }}>
-            {{ $reference->bibkey }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="bibreference_autocomplete" id="bibreference_autocomplete" class="form-control autocomplete"
+    value="{{ old('bibreference_autocomplete', (isset($taxon) and $taxon->bibreference) ? $taxon->bibreference->bibkey : null) }}">
+    <input type="hidden" name="bibreference_id" id="bibreference_id"
+    value="{{ old('bibreference_id', isset($taxon) ? $taxon->bibreference_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint5" class="panel-collapse collapse">

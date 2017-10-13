@@ -11,9 +11,19 @@ use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Input;
 use App\DataTables\PersonsDataTable;
 use Log;
+use Response;
 
 class PersonController extends Controller
 {
+    // Functions for autocompleting person names, used in dropdowns. Expects a $request->query input
+    public function autocomplete(Request $request) {
+        $persons = Person::where('full_name', 'LIKE',['%'.$request->input('query').'%'])
+            ->orWhere('abbreviation', 'LIKE',['%'.$request->input('query').'%'])
+            ->selectRaw("id as data, CONCAT(full_name, ' [',abbreviation, ']') as value")
+            ->orderBy('value', 'ASC')
+            ->get();
+        return Response::json(['suggestions' => $persons]);
+    }
     /**
      * Display a listing of the resource.
      *

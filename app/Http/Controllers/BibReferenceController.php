@@ -10,9 +10,18 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
 use App\Jobs\ImportBibReferences;
+use Response;
 
 class BibReferenceController extends Controller
 {
+    // Functions for autocompleting bib references, used in dropdowns. Expects a $request->query input
+    public function autocomplete(Request $request) {
+        $references = BibReference::where('bibtex', 'LIKE',['%'.$request->input('query').'%'])
+            ->selectRaw("id as data, odb_bibkey(bibtex) as value")
+            ->orderBy('value', 'ASC')
+            ->get();
+        return Response::json(['suggestions' => $references]);
+    }
     /**
      * Display a listing of the resource.
      *

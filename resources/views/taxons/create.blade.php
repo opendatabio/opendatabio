@@ -82,5 +82,23 @@ $("#senior_autocomplete").devbridgeAutocomplete({
         $("#senior_id").val(null);
     }
     });
+$("#author_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('persons/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#author_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#author_id").val(null);
+    }
+    });
+$("#bibreference_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('references/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#bibreference_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#bibreference_id").val(null);
+    }
+    });
 </script>
 @endpush

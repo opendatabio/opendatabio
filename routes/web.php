@@ -29,14 +29,14 @@ Route::put('/selfupdate', 'Auth\SelfEditController@selfupdate')->name('selfupdat
 Route::get('/home', 'HomeController@index')->name('home');
 
 # Resources (with non-default BEFORE resources):
-Route::get('persons/getdata', 'PersonController@getdata');
+Route::get('persons/autocomplete', 'PersonController@autocomplete');
 Route::resource('persons', 'PersonController');
 
 Route::post('userjobs/{userjob}/retry', 'UserJobController@retry');
 Route::post('userjobs/{userjob}/cancel', 'UserJobController@cancel');
 Route::resource('userjobs', 'UserJobController', ['only' => ['index', 'show', 'destroy']]);
 
-Route::get('references/getdata', 'BibReferenceController@getdata');
+Route::get('references/autocomplete', 'BibReferenceController@autocomplete');
 Route::resource('references', 'BibReferenceController');
 
 Route::post('herbaria/checkih', 'HerbariumController@checkih')->name('checkih');
