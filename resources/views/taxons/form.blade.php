@@ -56,7 +56,7 @@
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
     <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control autocomplete"
-    value="{{ old('parent_autocomplete', (isset($taxon) and $taxon->parent) ? $taxon->parent->fullname : null) }}">
+    value="{{ old('parent_autocomplete', (isset($taxon) and $taxon->parent) ? ($taxon->parent->valid ? '' : '**' ) . $taxon->parent->fullname : null) }}">
     <input type="hidden" name="parent_id" id="parent_id"
     value="{{ old('parent_id', isset($taxon) ? $taxon->parent_id : null) }}">
             </div>

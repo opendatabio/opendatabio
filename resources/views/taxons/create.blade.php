@@ -66,6 +66,7 @@
 <script>
 $("#parent_autocomplete").devbridgeAutocomplete({
     serviceUrl: "{{url('taxons/autocomplete')}}",
+    params: {'full':  true},
     onSelect: function (suggestion) {
         $("#parent_id").val(suggestion.data);
     },

@@ -134,7 +134,7 @@
         @endif
         @if ($taxon->getAncestors()->count())
         @foreach ($taxon->getAncestors() as $ancestor)
-        <a href=" {{ url('taxons/'. $ancestor->id ) }} ">{{ $ancestor->fullname }} </a> &gt;
+        <a href=" {{ url('taxons/'. $ancestor->id ) }} ">{{ ($ancestor->valid ? '' : '**') . $ancestor->fullname }} </a> &gt;
         @endforeach
         @endif
         {{ $taxon->fullname }}

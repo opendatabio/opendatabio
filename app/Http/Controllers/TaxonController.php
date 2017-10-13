@@ -29,11 +29,14 @@ class TaxonController extends Controller
     }
 
     // Functions for autocompleting taxon names, used in dropdowns. Expects a $request->query input
+    // MAY receive optional "$request->full" to return all names; default is to return only valid names
     public function autocomplete(Request $request) {
         $taxons = Taxon::with('parent')->whereRaw('odb_txname(name, level, parent_id) LIKE ?',['%'.$request->input('query').'%'])
-            ->selectRaw('id as data, odb_txname(name, level, parent_id) as value, level')
-            ->orderBy('value', 'ASC')
-            ->get();
+            ->selectRaw('id as data, odb_txname(name, level, parent_id) as value, level, valid')
+            ->orderBy('value', 'ASC');
+        if (! $request->full)
+            $taxons = $taxons->valid();
+        $taxons = $taxons->get();
         $taxons = collect($taxons)->transform( function ($taxon) {
             if ($taxon->level >= 180) { // append family name to display 
                 $parent = $taxon->parent;
@@ -42,6 +45,8 @@ class TaxonController extends Controller
                 }
                 $taxon->value .= ' [' . $parent->name . ']';
             }
+            if (!$taxon->valid)
+                $taxon->value = "**" . $taxon->value;
             return $taxon;
         });
         return Response::json(['suggestions' => $taxons]);
