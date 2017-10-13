@@ -43,6 +43,7 @@ Route::post('herbaria/checkih', 'HerbariumController@checkih')->name('checkih');
 Route::resource('herbaria', 'HerbariumController', ['only' => ['index', 'show', 'store', 'destroy']]);
 
 Route::get('locations/autocomplete', 'LocationController@autocomplete');
+Route::post('locations/autodetect', 'LocationController@autodetect')->name('autodetect');
 Route::resource('locations', 'LocationController');
 
 Route::post('taxons/checkapis', 'TaxonController@checkapis')->name('checkapis');

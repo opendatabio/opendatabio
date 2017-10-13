@@ -107,9 +107,13 @@ class ImportLocations extends AppJob
         // Autoguess parent/UC
 	    if (is_null($parent)) {
             $parent = Location::detectParent($geom, $adm_level, false);
+            if ($parent)
+                $parent = $parent->id;
 	    }
 	    if (is_null($uc)) {
             $uc = Location::detectParent($geom, $adm_level, true);
+            if ($uc)
+                $uc = $uc->id;
 	    }
 
         $location = new Location([

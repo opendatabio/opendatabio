@@ -163,17 +163,20 @@ class Location extends Node
             ->where('adm_level', '<', $max_level);
         $possibles = $possibles->get();
         if ($possibles->count())
-            return $possibles->first()->id;
+            return $possibles->first();
         return null;
     }
 
-	public function setGeomFromParts($values) {
+    public function setGeomFromParts($values) {
+        $geom = Location::geomFromParts($values);
+        $this->attributes['geom'] = DB::raw("GeomFromText('$geom')");
+    }
+	public static function geomFromParts($values) {
 		$lat = $values['lat1'] + $values['lat2'] / 60 + $values['lat3'] / 3600;
 		$long = $values['long1'] + $values['long2'] / 60 + $values['long3'] / 3600;
 		if ( $values['longO'] == 0) $long *= -1;
 		if ( $values['latO'] == 0) $lat *= -1;
-		$geom = "POINT(" . $long . " " . $lat . ")";
-	        $this->attributes['geom'] = DB::raw("GeomFromText('$geom')");
+        return "POINT(" . $long . " " . $lat . ")";
 	}
     public function uc()
     {

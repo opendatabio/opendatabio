@@ -11,6 +11,9 @@
                 <div class="panel-body">
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
+<div id="ajax-error" class="collapse alert alert-danger">
+@lang('messages.whoops')
+</div>
 
 @if (isset($location))
 		    <form action="{{ url('locations/' . $location->id)}}" method="POST" class="form-horizontal">
@@ -132,28 +135,16 @@
 </div>
 </div>
 
-<div class="form-group">
-    <label for="altitude" class="col-sm-3 control-label">
-@lang('messages.altitude')
-</label>
-	    <div class="col-sm-6">
-	<input type="text" name="altitude" id="altitude" class="form-control" value="{{ old('altitude', isset($location) ? $location->altitude : null) }}">
-    </div>
-</div>
-<div class="form-group">
-        <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
-    <label for="datum" class="col-sm-3 control-label">
-@lang('messages.datum')
-</label>
-	    <div class="col-sm-6">
-	<input type="text" name="datum" id="datum" class="form-control" value="{{ old('datum', isset($location) ? $location->datum : null) }}">
-    </div>
-  <div class="col-sm-12">
-    <div id="hint3" class="panel-collapse collapse">
-	@lang('messages.datum_hint')
-    </div>
-  </div>
-</div>
+		        <div class="form-group">
+			    <div class="col-sm-offset-3 col-sm-6">
+            <input type="hidden" name="route-url" value="{{ route('autodetect') }}">
+				<button type="submit" class="btn btn-primary" id="autodetect">
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.autodetect')
+				</button>
+				<div class="spinner" id="spinner"> </div>
+			    </div>
+			</div>
 <div class="form-group">
     <label for="parent_id" class="col-sm-3 control-label">
 @lang('messages.location_parent')
@@ -185,6 +176,28 @@
   <div class="col-sm-12">
     <div id="hint4" class="panel-collapse collapse">
 	@lang('messages.location_uc_hint')
+    </div>
+  </div>
+</div>
+<div class="form-group">
+    <label for="altitude" class="col-sm-3 control-label">
+@lang('messages.altitude')
+</label>
+	    <div class="col-sm-6">
+	<input type="text" name="altitude" id="altitude" class="form-control" value="{{ old('altitude', isset($location) ? $location->altitude : null) }}">
+    </div>
+</div>
+<div class="form-group">
+        <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
+    <label for="datum" class="col-sm-3 control-label">
+@lang('messages.datum')
+</label>
+	    <div class="col-sm-6">
+	<input type="text" name="datum" id="datum" class="form-control" value="{{ old('datum', isset($location) ? $location->datum : null) }}">
+    </div>
+  <div class="col-sm-12">
+    <div id="hint3" class="panel-collapse collapse">
+	@lang('messages.datum_hint')
     </div>
   </div>
 </div>
