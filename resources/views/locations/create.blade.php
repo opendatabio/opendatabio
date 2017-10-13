@@ -3,20 +3,6 @@
 @section('content')
     <div class="container">
         <div class="col-sm-offset-2 col-sm-8">
-  <!--div class="panel panel-default">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">
-@lang('messages.help')
-</a>
-      </h4>
-    </div>
-    <div id="help" class="panel-collapse collapse">
-      <div class="panel-body">
-	@lang('messages.location_create_hint')
-      </div>
-    </div>
-  </div-->
             <div class="panel panel-default">
                 <div class="panel-heading">
       @lang('messages.new_location')
@@ -174,15 +160,10 @@
 </label>
         <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('parent_id', isset($location) ? $location->parent_id : -1); ?>
-
-	<select name="parent_id" id="parent_id" class="form-control" >
-		<option value='-1' {{ $selected == -1 ? 'selected' : '' }}>Autodetect</option>
-		<option value='' {{ $selected == 0 ? 'selected' : '' }} >None</option>
-	@foreach ($locations as $parentloc)
-		<option value="{{$parentloc->id}}" {{ $parentloc->id == $selected ? 'selected' : '' }}>{{ $parentloc->name }}</option>
-	@endforeach
-	</select>
+    <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control autocomplete"
+    value="{{ old('parent_autocomplete', (isset($location) and $location->parent) ? $location->parent->fullname : null) }}">
+    <input type="hidden" name="parent_id" id="parent_id"
+    value="{{ old('parent_id', isset($location) ? $location->parent_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
@@ -196,15 +177,10 @@
 </label>
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('uc_id', isset($location) ? $location->uc_id : -1); ?>
-
-	<select name="uc_id" id="uc_id" class="form-control" >
-		<option value='-1' {{ $selected == -1 ? 'selected' : '' }}>Autodetect</option>
-		<option value='' {{ $selected == 0 ? 'selected' : '' }} >None</option>
-	@foreach ($uc_list as $uc)
-		<option value="{{$uc->id}}" {{ $uc->id == $selected ? 'selected' : '' }}>{{ $uc->name }}</option>
-	@endforeach
-	</select>
+    <input type="text" name="uc_autocomplete" id="uc_autocomplete" class="form-control autocomplete"
+    value="{{ old('uc_autocomplete', (isset($location) and $location->uc) ? $location->uc->fullname : null) }}">
+    <input type="hidden" name="uc_id" id="uc_id"
+    value="{{ old('uc_id', isset($location) ? $location->uc_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint4" class="panel-collapse collapse">
@@ -257,3 +233,27 @@
         </div>
     </div>
 @endsection
+@push ('scripts')
+<script>
+$("#parent_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('locations/autocomplete')}}",
+    params: {'scope':  'exceptucs'},
+    onSelect: function (suggestion) {
+        $("#parent_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#parent_id").val(null);
+    }
+    });
+$("#uc_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('locations/autocomplete')}}",
+    params: {'scope':  'ucs'},
+    onSelect: function (suggestion) {
+        $("#uc_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#uc_id").val(null);
+    }
+    });
+</script>
+@endpush

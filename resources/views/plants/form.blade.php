@@ -20,15 +20,10 @@
 </label>
         <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('location_id', isset($plant) ? $plant->location_id : null); ?>
-
-	<select name="location_id" id="location_id" class="form-control" >
-	@foreach ($locations as $location)
-		<option value="{{$location->id}}" {{ $location->id == $selected ? 'selected' : '' }}>
-            {{ $location->name }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="location_autocomplete" id="location_autocomplete" class="form-control autocomplete"
+    value="{{ old('location_autocomplete', isset($plant) ? $plant->location->fullname : null) }}">
+    <input type="hidden" name="location_id" id="location_id"
+    value="{{ old('location_id', isset($plant) ? $plant->location_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
@@ -125,7 +120,7 @@
 </label>
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-    <input type="text" name="taxon_autocomplete" id="taxon_autocomplete" class="form-control"
+    <input type="text" name="taxon_autocomplete" id="taxon_autocomplete" class="form-control autocomplete"
     value="{{ old('taxon_autocomplete', (isset($plant) and $plant->identification) ? $plant->identification->taxon->fullname : null) }}">
     <input type="hidden" name="taxon_id" id="taxon_id"
     value="{{ old('taxon_id', (isset($plant) and $plant->identification) ? $plant->identification->taxon_id : null) }}">
@@ -165,17 +160,10 @@
 </label>
         <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('identifier_id', (isset($plant) and $plant->identification) ? $plant->identification->person_id : null); ?>
-
-	<select name="identifier_id" id="identifier_id" class="form-control" >
-		<option value='' >&nbsp;</option>
-
-	@foreach ($persons as $identifier)
-		<option value="{{$identifier->id}}" {{ $identifier->id == $selected ? 'selected' : '' }}>
-            {{ $identifier->abbreviation }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="identifier_autocomplete" id="identifier_autocomplete" class="form-control autocomplete"
+    value="{{ old('identifier_autocomplete', (isset($plant) and $plant->identification) ? $plant->identification->person->full_name . ' [' . $plant->identification->person->abbreviation . ']'  : null) }}">
+    <input type="hidden" name="identifier_id" id="identifier_id"
+    value="{{ old('identifier_id', (isset($plant) and $plant->identification) ? $plant->identification->person_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint7" class="panel-collapse collapse">

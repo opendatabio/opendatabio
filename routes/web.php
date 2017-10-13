@@ -42,6 +42,7 @@ Route::resource('references', 'BibReferenceController');
 Route::post('herbaria/checkih', 'HerbariumController@checkih')->name('checkih');
 Route::resource('herbaria', 'HerbariumController', ['only' => ['index', 'show', 'store', 'destroy']]);
 
+Route::get('locations/autocomplete', 'LocationController@autocomplete');
 Route::resource('locations', 'LocationController');
 
 Route::post('taxons/checkapis', 'TaxonController@checkapis')->name('checkapis');

@@ -74,5 +74,23 @@ $(document).ready(function() {
         }
 });
 });
+$("#identifier_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('persons/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#identifier_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#identifier_id").val(null);
+    }
+    });
+$("#location_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('locations/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#location_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#location_id").val(null);
+    }
+    });
 </script>
 @endpush

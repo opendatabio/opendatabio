@@ -10,9 +10,36 @@ use Validator;
 use DB;
 use Lang;
 use Log;
+use Response;
 
 class LocationController extends Controller
 {
+    // Functions for autocompleting location names, used in dropdowns. Expects a $request->query input
+    // MAY receive optional "$request->scope" to return only UCs; default is to return all locations?
+    public function autocomplete(Request $request) {
+        $locations = Location::where('name', 'LIKE',['%'.$request->input('query').'%'])
+                        ->orderBy('name', 'ASC');
+        if ($request->scope) {
+            switch ($request->scope) {
+            case "ucs":
+                $locations = $locations->ucs();
+                break;
+            case "exceptucs":
+                $locations = $locations->exceptUcs();
+                break;
+            default:
+                break;
+            }
+        }
+        $locations = $locations->get();
+        $locations = collect($locations)->transform( function ($location) {
+            $location->data = $location->id;
+            $location->value = $location->fullname;
+            return $location->only(['data', 'value']);
+        });
+        return Response::json(['suggestions' => $locations]);
+
+    }
     /**
      * Display a listing of the resource.
      *

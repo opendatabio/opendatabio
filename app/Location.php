@@ -57,6 +57,10 @@ class Location extends Node
 	public function scopeUcs($query) {
 		return $query->where('adm_level', Location::LEVEL_UC);
 	}
+	// query scope for all except conservation units
+	public function scopeExceptUcs($query) {
+		return $query->where('adm_level', '!=', Location::LEVEL_UC);
+	}
 
     public function getLevelNameAttribute() {
             return Lang::get('levels.adm.' . $this->adm_level);
