@@ -7,9 +7,23 @@ use Illuminate\Http\Request;
 use App\Language;
 use App\UserTranslation;
 use Lang;
+use Response;
 
 class TraitController extends Controller
 {
+    // Functions for autocompleting person names, used in dropdowns. Expects a $request->query input
+    public function autocomplete(Request $request) {
+        $traits = ODBTrait::whereHas('translations', function($query) use ($request) {
+            $query->where('translation', 'LIKE',['%'.$request->input('query').'%']);
+        })
+            ->get();
+        $traits = collect($traits)->transform( function ($odbtrait) {
+            $odbtrait->data = $odbtrait->id;
+            $odbtrait->value = $odbtrait->name;
+            return $odbtrait;
+        });
+        return Response::json(['suggestions' => $traits]);
+    }
     /**
      * Display a listing of the resource.
      *

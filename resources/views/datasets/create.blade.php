@@ -76,15 +76,10 @@
 </label>
         <a data-toggle="collapse" href="#hintr" class="btn btn-default">?</a>
 <div class="col-sm-6">
-	<?php $selected = old('bibreference_id', isset($dataset) ? $dataset->bibreference_id : null); ?>
-	<select name="bibreference_id" id="bibreference_id" class="form-control" >
-        <option value=''></option>
-	@foreach ( $references as $reference )
-		<option value="{{$reference->id}}" {{ $reference->id == $selected ? 'selected' : '' }}>
-            {{ $reference->bibkey }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="bibreference_autocomplete" id="bibreference_autocomplete" class="form-control autocomplete"
+    value="{{ old('bibreference_autocomplete', (isset($taxon) and $taxon->bibreference) ? $taxon->bibreference->bibkey : null) }}">
+    <input type="hidden" name="bibreference_id" id="bibreference_id"
+    value="{{ old('bibreference_id', isset($taxon) ? $taxon->bibreference_id : null) }}">
 </div>
   <div class="col-sm-12">
     <div id="hintr" class="panel-collapse collapse">
@@ -149,3 +144,16 @@
         </div>
     </div>
 @endsection
+@push ('scripts')
+<script>
+$("#bibreference_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('references/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#bibreference_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#bibreference_id").val(null);
+    }
+    });
+</script>
+@endpush

@@ -35,18 +35,11 @@
     <label for="trait_id" class="col-sm-3 control-label">
 @lang('messages.trait')
 </label>
-<? dd($traits); ?>
     <div class="col-sm-6">
-	<?php $selected = old('trait_id', isset($measurement) ? $measurement->trait_id : null); ?>
-
-	<select name="trait_id" id="trait_id" class="form-control" >
-        <option value="">&nbsp;</option>
-	@foreach ($traits as $odbtrait)
-        <option value="{{$odbtrait->id}}" {{ $odbtrait->id == $selected ? 'selected' : '' }}>
-        {{ $odbtrait->name }}
-        </option>
-	@endforeach
-	</select>
+    <input type="text" name="trait_autocomplete" id="trait_autocomplete" class="form-control autocomplete"
+    value="{{ old('trait_autocomplete', (isset($measurement) and $measurement->trait) ? $measurement->trait->bibkey : null) }}">
+    <input type="hidden" name="trait_id" id="trait_id"
+    value="{{ old('trait_id', isset($measurement) ? $measurement->trait_id : null) }}">
     </div>
 </div>
 <div class="form-group">
@@ -72,15 +65,10 @@
 </label>
         <a data-toggle="collapse" href="#hintr" class="btn btn-default">?</a>
 <div class="col-sm-6">
-	<?php $selected = old('bibreference_id', isset($measurement) ? $measurement->bibreference_id : null); ?>
-	<select name="bibreference_id" id="bibreference_id" class="form-control" >
-        <option value=''></option>
-	@foreach ( $references as $reference )
-		<option value="{{$reference->id}}" {{ $reference->id == $selected ? 'selected' : '' }}>
-            {{ $reference->bibkey }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="bibreference_autocomplete" id="bibreference_autocomplete" class="form-control autocomplete"
+    value="{{ old('bibreference_autocomplete', (isset($measurement) and $measurement->bibreference) ? $measurement->bibreference->bibkey : null) }}">
+    <input type="hidden" name="bibreference_id" id="bibreference_id"
+    value="{{ old('bibreference_id', isset($measurement) ? $measurement->bibreference_id : null) }}">
 </div>
   <div class="col-sm-12">
     <div id="hintr" class="panel-collapse collapse">
@@ -94,15 +82,10 @@
 </label>
         <a data-toggle="collapse" href="#hintp" class="btn btn-default">?</a>
 <div class="col-sm-6">
-	<?php $selected = old('person_id', isset($measurement) ? $measurement->person_id : null); ?>
-	<select name="person_id" id="person_id" class="form-control" >
-        <option value=''></option>
-	@foreach ( $persons as $person )
-		<option value="{{$person->id}}" {{ $person->id == $selected ? 'selected' : '' }}>
-            {{ $person->abbreviation }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="person_autocomplete" id="person_autocomplete" class="form-control autocomplete"
+    value="{{ old('person_autocomplete', (isset($measurement) and $measurement->person) ? $measurement->person->bibkey : null) }}">
+    <input type="hidden" name="person_id" id="person_id"
+    value="{{ old('person_id', isset($measurement) ? $measurement->person_id : null) }}">
 </div>
   <div class="col-sm-12">
     <div id="hintr" class="panel-collapse collapse">
@@ -156,3 +139,34 @@
         </div>
     </div>
 @endsection
+@push ('scripts')
+<script>
+$("#bibreference_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('references/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#bibreference_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#bibreference_id").val(null);
+    }
+    });
+$("#trait_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('traits/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#trait_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#trait_id").val(null);
+    }
+    });
+$("#person_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('persons/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#person_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#person_id").val(null);
+    }
+    });
+</script>
+@endpush
