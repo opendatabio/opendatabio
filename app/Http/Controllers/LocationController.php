@@ -192,7 +192,7 @@ class LocationController extends Controller
 	    if ($request->parent_id) {
 		    $newloc->parent_id = $request->parent_id;
 	    }
-	    if ($request->uc_id) {
+	    if ($request->uc_id and $request->adm_level > 99) {
 		    $newloc->uc_id = $request->uc_id;
 	    }
 	    $newloc->save();
@@ -299,7 +299,7 @@ class LocationController extends Controller
 			    $location->geom = $request->geom;
 		    }
 	    }
-	    if ($request->uc_id) {
+	    if ($request->uc_id and $request->adm_level > 99) {
 		    $location->uc_id = $request->uc_id;
 	    }
 

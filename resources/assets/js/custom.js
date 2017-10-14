@@ -143,16 +143,19 @@ $(document).ready(function(){
 				$("#super-geometry").hide(vel);
 				$("#super-points").show(vel);
 				$("#super-x").hide(vel);
+				$("#super-uc").show(vel);
 				break;
 			case "100": // plot
 				$("#super-geometry").hide(vel);
 				$("#super-points").show(vel);
 				$("#super-x").show(vel);
+				$("#super-uc").show(vel);
 				break;
 			default: // other
 				$("#super-geometry").show(vel);
 				$("#super-points").hide(vel);
 				$("#super-x").hide(vel);
+				$("#super-uc").hide(vel);
 		}
 	}
 	$("#adm_level").change(function() { setLocationFields(400); });

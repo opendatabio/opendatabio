@@ -162,7 +162,7 @@
     </div>
   </div>
 </div>
-<div class="form-group">
+<div class="form-group" id="super-uc">
     <label for="uc_id" class="col-sm-3 control-label">
 @lang('messages.location_uc')
 </label>
