@@ -31,6 +31,9 @@ class Taxon extends Node
         public function getLevelNameAttribute() {
             return Lang::get('levels.tax.' . $this->level);
         }
+        public function getQualifiedFullnameAttribute() {
+            return ($this->valid ? '' : '**') . $this->fullname;
+        }
     public function measurements()
     {
         return $this->morphMany(Measurement::class, 'measured');

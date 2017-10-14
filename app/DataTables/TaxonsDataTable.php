@@ -20,11 +20,9 @@ class TaxonsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
 	    ->editColumn('fullname', function ($taxon) {
-                $valid = ($taxon->valid) ? '' : '**';
 		    return '<a href="' . url('taxons/' . $taxon->id) . '">' . 
-                    $valid . 
-                    // Needs to escape special chars, as this will be passed RAW
-			    htmlspecialchars($taxon->fullname) . '</a>';
+                // Needs to escape special chars, as this will be passed RAW
+			    htmlspecialchars($taxon->qualifiedFullname) . '</a>';
 	    }) 
 	    ->editColumn('level', function($taxon) { return Lang::get('levels.tax.' . $taxon->level); })
         ->filterColumn('fullname', function($query, $keyword) {
