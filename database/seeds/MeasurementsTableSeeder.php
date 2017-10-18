@@ -52,7 +52,7 @@ class MeasurementsTableSeeder extends Seeder
                 case "App\Plant":
                     $object = $plants->random();
                     break;
-                case "App\Locations":
+                case "App\Location":
                     $object = $locations->random();
                     break;
                 case "App\Voucher":
