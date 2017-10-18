@@ -100,6 +100,21 @@ If you have any problems such as a blank page, error 500 or error 403, check the
 
 There are other countless possible ways to install the application, but they may involve more steps and configurations.
 
+### Installation Issues
+
+- If you receive the error "failed to open stream: Connection timed out" while running the installer, 
+this indicates a misconfiguration of your IPv6 routing. The easiest fix is to disable IPv6 routing on the server.
+
+- Many Linux distributions (most notably Ubuntu and Debian) have different php.ini files for the command line interface
+and the Apache plugin. It is recommended to use the configuration file for Apache when running the install script,
+so it will be able to correctly point out missing extensions or configurations. To do so, find the correct path
+to the ini file, and export it before using the php install command. For example,
+
+```bash
+$ export PHPRC=/etc/php/7.0/apache2/php.ini
+$ php install
+```
+
 ### Post-install configurations
 You can change several configuration variables for the 
 application. The most important of those are probably set
