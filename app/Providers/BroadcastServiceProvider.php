@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
@@ -9,8 +14,6 @@ class BroadcastServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
     public function boot()
     {

@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -26,14 +31,18 @@ class VoucherController extends Controller
      */
     public function index()
     {
-	    $vouchers = Voucher::with(['parent'])->paginate(10);
-	    return view('vouchers.index', compact('vouchers'));
+        $vouchers = Voucher::with(['parent'])->paginate(10);
+
+        return view('vouchers.index', compact('vouchers'));
     }
 
-    public function customValidate (Request $request, Voucher $voucher = null) {
+    public function customValidate(Request $request, Voucher $voucher = null)
+    {
         // for checking duplicates
         $voucherid = null;
-        if ($voucher) $voucherid = $voucher->id;
+        if ($voucher) {
+            $voucherid = $voucher->id;
+        }
 
         $rules = [
             'parent_type' => 'required|string',
@@ -42,7 +51,7 @@ class VoucherController extends Controller
             'number' => [ // collector / number must be unique
                 'required',
                 'string',
-                'max:191', 
+                'max:191',
                 Rule::unique('vouchers')->ignore($voucherid)
                 ->where(function ($query) use ($request) {
                     $query->where('person_id', $request->person_id);
@@ -51,28 +60,33 @@ class VoucherController extends Controller
         ];
         $validator = Validator::make($request->all(), $rules);
         // Some fields that may be required if the parent_type is right
-        $validator->sometimes('parent_plant_id', 'required', function($data) { return $data->parent_type == "App\Plant"; });
-        $validator->sometimes('parent_location_id', 'required', function($data) { return $data->parent_type == "App\Location"; });
-        $validator->sometimes('project_id', 'required', function($data) { return $data->parent_type == "App\Location"; });
-        $validator->sometimes('taxon_id', 'required', function($data) { return $data->parent_type == "App\Location"; });
-        $validator->sometimes('identifier_id', 'required', function($data) { return $data->parent_type == "App\Location"; });
-	    $validator->after(function ($validator) use ($request) {
+        $validator->sometimes('parent_plant_id', 'required', function ($data) { return "App\Plant" == $data->parent_type; });
+        $validator->sometimes('parent_location_id', 'required', function ($data) { return "App\Location" == $data->parent_type; });
+        $validator->sometimes('project_id', 'required', function ($data) { return "App\Location" == $data->parent_type; });
+        $validator->sometimes('taxon_id', 'required', function ($data) { return "App\Location" == $data->parent_type; });
+        $validator->sometimes('identifier_id', 'required', function ($data) { return "App\Location" == $data->parent_type; });
+        $validator->after(function ($validator) use ($request) {
             $colldate = [$request->date_month, $request->date_day, $request->date_year];
             $iddate = [$request->identification_date_month, $request->identification_date_day, $request->identification_date_year];
-            if (!Voucher::checkDate($colldate))
-                    $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
-            if ($request->parent_type == "App\Location" and !Voucher::checkDate($iddate))
+            if (!Voucher::checkDate($colldate)) {
+                $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
+            }
+            if ("App\Location" == $request->parent_type and !Voucher::checkDate($iddate)) {
                 $validator->errors()->add('identification_date_day', Lang::get('messages.invalid_identification_date_error'));
+            }
             // collection date must be in the past or today
-            if (! Voucher::beforeOrSimilar($colldate, date('Y-m-d')))
-                    $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
+            if (!Voucher::beforeOrSimilar($colldate, date('Y-m-d'))) {
+                $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
+            }
             // identification date must be in the past or today AND equal or after collection date
-            if ($request->parent_type == "App\Location" and !(
-                Voucher::beforeOrSimilar($iddate, date('Y-m-d')) and 
-                Voucher::beforeOrSimilar($colldate, $iddate)))
-                    $validator->errors()->add('identification_date_day', Lang::get('messages.identification_date_future_error'));
-	    });
-	    return $validator;
+            if ("App\Location" == $request->parent_type and !(
+                Voucher::beforeOrSimilar($iddate, date('Y-m-d')) and
+                Voucher::beforeOrSimilar($colldate, $iddate))) {
+                $validator->errors()->add('identification_date_day', Lang::get('messages.identification_date_future_error'));
+            }
+        });
+
+        return $validator;
     }
 
     /**
@@ -82,42 +96,45 @@ class VoucherController extends Controller
      */
     public function create()
     {
-        if (! Auth::user())
+        if (!Auth::user()) {
             return view('common.unauthorized');
-	    $taxons = Taxon::leaf()->valid()->get();
-	    $herbaria = Herbarium::all();
-	    $locations = Location::all();
-	    $persons = Person::all();
-	    $plants = Plant::with('location')->get();
-	    $projects = Auth::user()->projects;
+        }
+        $taxons = Taxon::leaf()->valid()->get();
+        $herbaria = Herbarium::all();
+        $locations = Location::all();
+        $persons = Person::all();
+        $plants = Plant::with('location')->get();
+        $projects = Auth::user()->projects;
         // TODO: better handling here
-        if (! $projects->count())
+        if (!$projects->count()) {
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-	    return view('vouchers.create', compact( 'taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants'));
-    }
+        }
 
+        return view('vouchers.create', compact('taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants'));
+    }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        if ($request->parent_type == "App\Location") {
+        if ("App\Location" == $request->parent_type) {
             $project = Project::findOrFail($request->project_id);
-        } else { 
+        } else {
             $project = Plant::findOrFail($request->parent_plant_id)->project;
         }
         $this->authorize('create', [Voucher::class, $project]);
-	    $validator = $this->customValidate($request);
-	    if ($validator->fails()) {
-		    return redirect()->back()
-			    ->withErrors($validator)
-			    ->withInput();
+        $validator = $this->customValidate($request);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
-        if ($request->parent_type == "App\Location") {
+        if ("App\Location" == $request->parent_type) {
             $voucher = new Voucher(array_merge(
                 $request->only(['person_id', 'number', 'notes', 'project_id', 'parent_type']), [
                     'parent_id' => $request->parent_location_id,
@@ -149,11 +166,12 @@ class VoucherController extends Controller
         }
 
         // common:
-        if ($request->collector)
-            foreach($request->collector as $collector){
+        if ($request->collector) {
+            foreach ($request->collector as $collector) {
                 Log::info('registering collector '.$collector);
                 $voucher->collectors()->create(['person_id' => $collector]);
             }
+        }
 
         $voucher->setHerbariaNumbers($request->herbarium);
 
@@ -163,7 +181,8 @@ class VoucherController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function show($id)
@@ -171,51 +190,56 @@ class VoucherController extends Controller
         $voucher = Voucher::findOrFail($id);
         $identification = $voucher->parent instanceof Plant ? $voucher->parent->identification : $voucher->identification;
         $collectors = $voucher->collectors;
+
         return view('vouchers.show', compact('voucher', 'identification', 'collectors'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
     {
-        if (! Auth::user())
+        if (!Auth::user()) {
             return view('common.unauthorized');
+        }
         $voucher = Voucher::findOrFail($id);
-	    $taxons = Taxon::leaf()->valid()->get();
-	    $herbaria = Herbarium::all();
-	    $locations = Location::all();
-	    $persons = Person::all();
-	    $plants = Plant::with('location')->get();
-	    $projects = Auth::user()->projects;
+        $taxons = Taxon::leaf()->valid()->get();
+        $herbaria = Herbarium::all();
+        $locations = Location::all();
+        $persons = Person::all();
+        $plants = Plant::with('location')->get();
+        $projects = Auth::user()->projects;
         // TODO: better handling here
-        if (! $projects->count())
+        if (!$projects->count()) {
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-	    return view('vouchers.create', compact('voucher', 'taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants'));
-        //
+        }
+
+        return view('vouchers.create', compact('voucher', 'taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int                      $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
         $voucher = Voucher::findOrFail($id);
         $this->authorize('update', $voucher);
-	    $validator = $this->customValidate($request, $voucher);
-	    if ($validator->fails()) {
-		    return redirect()->back()
-			    ->withErrors($validator)
-			    ->withInput();
+        $validator = $this->customValidate($request, $voucher);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
-        if ($request->parent_type == "App\Location") {
+        if ("App\Location" == $request->parent_type) {
             $voucher->update(array_merge(
                 $request->only(['person_id', 'number', 'notes', 'project_id', 'parent_type']), [
                     'parent_id' => $request->parent_location_id,
@@ -250,8 +274,9 @@ class VoucherController extends Controller
                 ]));
             $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
             $voucher->save();
-            if ($voucher->identification()->count())
+            if ($voucher->identification()->count()) {
                 $voucher->identification()->delete();
+            }
         }
 
         // common:
@@ -261,8 +286,9 @@ class VoucherController extends Controller
             $detach = $current->diff($request->collector)->all();
             $attach = collect($request->collector)->diff($current)->all();
             $voucher->collectors()->whereIn('person_id', $detach)->delete();
-            foreach($attach as $collector)
+            foreach ($attach as $collector) {
                 $voucher->collectors()->create(['person_id' => $collector]);
+            }
         }
 
         $voucher->setHerbariaNumbers($request->herbarium);
@@ -273,11 +299,11 @@ class VoucherController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        //
     }
 }

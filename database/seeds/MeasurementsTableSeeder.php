@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 use Illuminate\Database\Seeder;
 
 /// TODO: Seeds for color, categorical and links
@@ -8,13 +13,11 @@ class MeasurementsTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
     public function run()
     {
 //        if (\App\Measurement::count()) return;
-	    $faker = Faker\Factory::create();
+        $faker = Faker\Factory::create();
 
         $datasets = \App\Dataset::all();
         $persons = \App\Person::all();
@@ -25,9 +28,9 @@ class MeasurementsTableSeeder extends Seeder
         $locations = \App\Location::where('adm_level', \App\Location::LEVEL_PLOT)->orWhere('adm_level', \App\Location::LEVEL_POINT)->get();
         $odbtraits = \App\ODBTrait::with('object_types')->get();
 
-        foreach($odbtraits as $odbtrait) {
+        foreach ($odbtraits as $odbtrait) {
             unset($val);
-            for ($i = 0; $i < 800; $i++) {
+            for ($i = 0; $i < 800; ++$i) {
                 switch ($odbtrait->type) {
                     // TODO: here
                 case 0:
@@ -41,9 +44,11 @@ class MeasurementsTableSeeder extends Seeder
                 case 6:
                 case 7:
                 }
-                if (!isset($val)) continue;
+                if (!isset($val)) {
+                    continue;
+                }
                 $otype = collect($odbtrait->object_types)->random()->object_type;
-                switch($otype) {
+                switch ($otype) {
                 case "App\Plant":
                     $object = $plants->random();
                     break;

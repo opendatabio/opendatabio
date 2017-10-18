@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\DataTables;
 
 use App\Location;
@@ -7,7 +12,6 @@ use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
-use DB;
 
 class LocationsDataTable extends DataTable
 {
@@ -19,14 +23,14 @@ class LocationsDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-	    ->editColumn('name', function ($location) {
-		    return '<a href="' . url('locations/' . $location->id) . '">' . 
-			    // Needs to escape special chars, as this will be passed RAW
-			    htmlspecialchars($location->name) . '</a>';
-	    }) 
-	    ->editColumn('adm_level', function($location) { return Lang::get('levels.adm.' . $location->adm_level); })
-	    ->addColumn('full_name', function($location) {return $location->full_name;})
-	    ->rawColumns(['name']);
+        ->editColumn('name', function ($location) {
+            return '<a href="'.url('locations/'.$location->id).'">'.
+                // Needs to escape special chars, as this will be passed RAW
+                htmlspecialchars($location->name).'</a>';
+        })
+        ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm.'.$location->adm_level); })
+        ->addColumn('full_name', function ($location) {return $location->full_name; })
+        ->rawColumns(['name']);
     }
 
     /**
@@ -37,11 +41,11 @@ class LocationsDataTable extends DataTable
     public function query()
     {
         $query = Location::query()->select([
-            'locations.name', 
-            'locations.adm_level', 
-            'locations.rgt', 
-            'locations.lft', 
-            'locations.id', 
+            'locations.name',
+            'locations.adm_level',
+            'locations.rgt',
+            'locations.lft',
+            'locations.id',
         ]);
 
         return $this->applyScopes($query);
@@ -56,13 +60,13 @@ class LocationsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                ['data' => 'name', 'title' => 'Name', 'searchable' => true, 'orderable' => true], 
-                ['data' => 'adm_level', 'title' => 'Adm Level', 'searchable' => true, 'orderable' => true], 
-                ['data' => 'full_name', 'title' => 'Full Name', 'searchable' => false, 'orderable' => false], 
+                ['data' => 'name', 'title' => 'Name', 'searchable' => true, 'orderable' => true],
+                ['data' => 'adm_level', 'title' => 'Adm Level', 'searchable' => true, 'orderable' => true],
+                ['data' => 'full_name', 'title' => 'Full Name', 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
-                'dom'     => 'Bfrtip',
-                'order'   => [[0, 'asc']],
+                'dom' => 'Bfrtip',
+                'order' => [[0, 'asc']],
                 'buttons' => [
                     'csv',
                     'excel',
@@ -79,6 +83,6 @@ class LocationsDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_locations_' . time();
+        return 'odb_locations_'.time();
     }
 }

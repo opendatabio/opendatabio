@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +18,10 @@ class Plant extends Model
 
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
-    public function getTypenameAttribute() { return "plants"; }
+    public function getTypenameAttribute()
+    {
+        return 'plants';
+    }
 
     protected static function boot()
     {
@@ -26,7 +34,7 @@ class Plant extends Model
                     ->where('projects.privacy', '=', Project::PRIVACY_PUBLIC);
             }
             // superadmins see everything
-            if (Auth::user()->access_level == User::ADMIN) {
+            if (User::ADMIN == Auth::user()->access_level) {
                 return $builder;
             }
             // now the complex case: the regular user
@@ -38,70 +46,92 @@ UNION
 SELECT p1.id FROM plants AS p1
 JOIN projects ON (projects.id = p1.project_id)
 JOIN project_user ON (projects.id = project_user.project_id)
-WHERE projects.privacy = 0 AND project_user.user_id = ' . Auth::user()->id . '
+WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 )');
         });
     }
+
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
-	public function setRelativePosition($x, $y = null) {
-		if (is_null($x) and is_null($y)) {
-			$this->attributes['relative_position'] = null;
-			return;
-		}
-		// MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
-		$invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('POINT($y $x)')) as val")[0]->val;
-		if($invalid) { throw new \UnexpectedValueException('Invalid Geometry object'); }
-	        $this->attributes['relative_position'] = DB::raw("GeomFromText('POINT($y $x)')");
-	}
-    public function getFullnameAttribute() {
-        return $this->location->name . "-" . $this->tag;
+
+    public function setRelativePosition($x, $y = null)
+    {
+        if (is_null($x) and is_null($y)) {
+            $this->attributes['relative_position'] = null;
+
+            return;
+        }
+        // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
+        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('POINT($y $x)')) as val")[0]->val;
+        if ($invalid) {
+            throw new \UnexpectedValueException('Invalid Geometry object');
+        }
+        $this->attributes['relative_position'] = DB::raw("GeomFromText('POINT($y $x)')");
     }
+
+    public function getFullnameAttribute()
+    {
+        return $this->location->name.'-'.$this->tag;
+    }
+
     public function location()
     {
         return $this->belongsTo(Location::class);
     }
+
     public function project()
     {
         return $this->belongsTo(Project::class);
     }
+
     public function vouchers()
     {
         return $this->morphMany(Voucher::class, 'parent');
     }
+
     public function measurements()
     {
         return $this->morphMany(Measurement::class, 'measured');
     }
-    public function identification() 
+
+    public function identification()
     {
         return $this->morphOne(Identification::class, 'object');
     }
-    public function collectors() {
+
+    public function collectors()
+    {
         return $this->morphMany(Collector::class, 'object');
     }
-	public function newQuery($excludeDeleted = true)
-	{
+
+    public function newQuery($excludeDeleted = true)
+    {
         // This uses the explicit list to avoid conflict due to global scope
         // maybe check http://lyften.com/journal/user-settings-using-laravel-5-eloquent-global-scopes.html ???
-		return parent::newQuery($excludeDeleted)->addSelect(
-            'plants.id', 
+        return parent::newQuery($excludeDeleted)->addSelect(
+            'plants.id',
             'plants.tag',
             'plants.project_id',
-            'plants.date',    
+            'plants.date',
             'plants.notes',
             'plants.location_id',
-			DB::raw('AsText(relative_position) as relativePosition')
-		);
-	}
+            DB::raw('AsText(relative_position) as relativePosition')
+        );
+    }
+
     // getters for the Relative Position
-	public function getXAttribute() {
-		$point = substr($this->relativePosition, 6, -1);
-		$pos = strpos($point, ' ');
-		return substr($point, $pos+1);
-	}
-	public function getYAttribute() {
-		$point = substr($this->relativePosition, 6, -1);
-		$pos = strpos($point, ' ');
-		return substr($point,0, $pos);
-	}
+    public function getXAttribute()
+    {
+        $point = substr($this->relativePosition, 6, -1);
+        $pos = strpos($point, ' ');
+
+        return substr($point, $pos + 1);
+    }
+
+    public function getYAttribute()
+    {
+        $point = substr($this->relativePosition, 6, -1);
+        $pos = strpos($point, ' ');
+
+        return substr($point, 0, $pos);
+    }
 }

@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\DataTables;
 
 use App\Person;
@@ -17,12 +22,12 @@ class PersonsDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-	    ->editColumn('abbreviation', function ($person) {
-		    return '<a href="' . url('persons/' . $person->id) . '">' . 
-			    // Needs to escape special chars, as this will be passed RAW
-			    htmlspecialchars($person->abbreviation) . '</a>';
-	    }) 
-	    ->rawColumns(['abbreviation']);
+        ->editColumn('abbreviation', function ($person) {
+            return '<a href="'.url('persons/'.$person->id).'">'.
+                // Needs to escape special chars, as this will be passed RAW
+                htmlspecialchars($person->abbreviation).'</a>';
+        })
+        ->rawColumns(['abbreviation']);
     }
 
     /**
@@ -46,10 +51,10 @@ class PersonsDataTable extends DataTable
     {
         return $this->builder()
                     ->columns($this->getColumns())
-		    ->removeColumn('id') // need to remove it from showing HERE
+            ->removeColumn('id') // need to remove it from showing HERE
                     ->parameters([
-                        'dom'     => 'Bfrtip',
-                        'order'   => [[0, 'asc']],
+                        'dom' => 'Bfrtip',
+                        'order' => [[0, 'asc']],
                         'buttons' => [
                             'csv',
                             'excel',
@@ -70,7 +75,7 @@ class PersonsDataTable extends DataTable
             'id',
             'abbreviation',
             'full_name',
-            'email'
+            'email',
         ];
     }
 
@@ -81,6 +86,6 @@ class PersonsDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_persons_' . time();
+        return 'odb_persons_'.time();
     }
 }

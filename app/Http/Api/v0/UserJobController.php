@@ -1,16 +1,15 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Http\Api\v0;
 
-use App\Http\Api\v0\Controller;
 use Illuminate\Http\Request;
-use App\UserJob;
-use Lang;
-use Log;
-use Validator;
 use Response;
 use Auth;
-use Illuminate\Support\MessageBag;
 
 class UserJobController extends Controller
 {
@@ -21,17 +20,21 @@ class UserJobController extends Controller
      */
     public function index(Request $request)
     {
-        if (! Auth::user())
+        if (!Auth::user()) {
             return Response::json(['message' => 'Unauthenticated', 401]);
+        }
         $jobs = Auth::user()->userjobs();
-        if ($request->status)
+        if ($request->status) {
             $jobs = $jobs->where('status', '=', $request->status);
-        if ($request->id)
+        }
+        if ($request->id) {
             $jobs = $jobs->whereIn('id', explode(',', $request->id));
+        }
         $jobs = $jobs->get();
 
-        $fields = ($request->fields ? $request->fields : "simple");
+        $fields = ($request->fields ? $request->fields : 'simple');
         $jobs = $this->setFields($jobs, $fields, ['id', 'dispatcher', 'status', 'percentage', 'created_at', 'updated_at']);
+
         return $this->wrap_response($jobs);
     }
 }

@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
@@ -18,62 +23,66 @@ use Log;
 class AppJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    protected $userjob, $errors;
+    protected $userjob;
+    protected $errors;
 
     /**
      * Create a new job instance.
-     *
-     * @return void
      */
     public function __construct(UserJob $userjob)
     {
-	    $this->userjob = $userjob;
+        $this->userjob = $userjob;
         $this->userjob->log = json_encode([]);
         $this->userjob->save();
-	    $this->errors = false;
+        $this->errors = false;
     }
+
     /**
      * Execute the job.
-     *
-     * @return void
      */
-    public function inner_handle() {
-	    // Virtual method!! Should be implemented by all jobs
-        Log::info("Running inner handle");
-        Log::info("id: #" . $this->job->getJobId() . "#");
-        Log::info("queue: #" . $this->job->getQueue() . "#");
+    public function inner_handle()
+    {
+        // Virtual method!! Should be implemented by all jobs
+        Log::info('Running inner handle');
+        Log::info('id: #'.$this->job->getJobId().'#');
+        Log::info('queue: #'.$this->job->getQueue().'#');
     }
-    public function setError() {
-	    $this->errors = true;
+
+    public function setError()
+    {
+        $this->errors = true;
     }
-    public function appendLog($text) {
+
+    public function appendLog($text)
+    {
         $log = json_decode($this->userjob->fresh()->log, true);
         array_push($log, $text);
-	    $this->userjob->log = json_encode($log);
+        $this->userjob->log = json_encode($log);
         $this->userjob->save();
         Log::info($text);
     }
+
     public function handle()
     {
         // temporarily removing rollback capabilities:
-	    $this->userjob->setProcessing();
+        $this->userjob->setProcessing();
         $this->userjob->job_id = $this->job->getJobId();
         $this->userjob->save();
-//	    DB::beginTransaction();
-	    try {
-		    $this->inner_handle();
+        //	    DB::beginTransaction();
+        try {
+            $this->inner_handle();
             // mark jobs with reported errors as "Failed", EXCEPT if they have already been cancelled
-		    if ($this->errors and $this->userjob->fresh()->status != "Cancelled") {
-//			    DB::rollback();
-			    $this->userjob->setFailed();
-		    } else {
-//			    DB::commit();
-			    $this->userjob->setSuccess();
-		    }
-	    } catch (\Exception $e) {
-//			    DB::rollback();
-			    $this->appendLog("BLOCKING EXCEPTION " . $e->getMessage());
-			    $this->userjob->setFailed();
-	    }
+            if ($this->errors and 'Cancelled' != $this->userjob->fresh()->status) {
+                //			    DB::rollback();
+                $this->userjob->setFailed();
+            } else {
+                //			    DB::commit();
+                $this->userjob->setSuccess();
+            }
+        } catch (\Exception $e) {
+            //			    DB::rollback();
+            $this->appendLog('BLOCKING EXCEPTION '.$e->getMessage());
+            $this->userjob->setFailed();
+        }
     }
 }

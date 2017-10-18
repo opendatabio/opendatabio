@@ -1,23 +1,28 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Policies;
 
 use App\User;
 use App\Plant;
 use App\Project;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Log;
 
 class PlantPolicy
 {
     use HandlesAuthorization;
+
     /**
      * Determine whether the user can view the plant.
      */
     public function view(User $user, Plant $person)
     {
         // is handled by App\Plant::boot globalscope
-	    return true;
+        return true;
     }
 
     /**
@@ -25,11 +30,15 @@ class PlantPolicy
      */
     public function create(User $user, Project $project = null)
     {
-        if ($user->access_level == User::ADMIN) return true;
+        if (User::ADMIN == $user->access_level) {
+            return true;
+        }
         // this policy called with null project probably means that we're checking a @can
-        if (is_null($project)) return $user->access_level == User::USER;
-	    // for regular users, when actually creating a plant
-        return $user->access_level == User::USER and
+        if (is_null($project)) {
+            return User::USER == $user->access_level;
+        }
+        // for regular users, when actually creating a plant
+        return User::USER == $user->access_level and
             ($project->admins->contains($user) or $project->users->contains($user));
     }
 
@@ -38,10 +47,13 @@ class PlantPolicy
      */
     public function update(User $user, Plant $plant)
     {
-        if ($user->access_level == User::ADMIN) return true;
-	    // for regular users
+        if (User::ADMIN == $user->access_level) {
+            return true;
+        }
+        // for regular users
         $project = $plant->project;
-        return $user->access_level == User::USER and
+
+        return User::USER == $user->access_level and
             ($project->admins->contains($user) or $project->users->contains($user));
     }
 

@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
@@ -8,7 +13,8 @@ class TraitObject extends Model
 {
     protected $fillable = ['trait_id', 'object_type'];
 
-    public function odbtrait() {
+    public function odbtrait()
+    {
         return $this->belongsTo(ODBTrait::class, 'trait_id');
     }
 }

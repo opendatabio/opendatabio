@@ -1,19 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 use Illuminate\Database\Migrations\Migration;
 
 class CreateOdbTxname extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up()
     {
-        DB::unprepared("DROP FUNCTION IF EXISTS odb_txname");
+        DB::unprepared('DROP FUNCTION IF EXISTS odb_txname');
         DB::unprepared("
 CREATE FUNCTION odb_txname( name VARCHAR(191), level INT, parent_id INT)  
     RETURNS VARCHAR(191) DETERMINISTIC 
@@ -38,12 +39,9 @@ END;
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down()
     {
-	    DB::unprepared("DROP FUNCTION IF EXISTS odb_txname");
-        //
+        DB::unprepared('DROP FUNCTION IF EXISTS odb_txname');
     }
 }

@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -8,8 +13,6 @@ class CreateIdentificationsTable extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
     public function up()
     {
@@ -28,14 +31,11 @@ class CreateIdentificationsTable extends Migration
             $table->foreign('herbarium_id')->references('id')->on('herbaria');
             $table->text('notes')->nullable();
             $table->unique(['object_id', 'object_type']);
-
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
     public function down()
     {

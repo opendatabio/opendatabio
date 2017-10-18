@@ -1,9 +1,12 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Lang;
 use App\Plant;
 use App\Voucher;
 
@@ -11,8 +14,6 @@ class HomeController extends Controller
 {
     /**
      * Create a new controller instance.
-     *
-     * @return void
      */
     public function __construct()
     {
@@ -28,6 +29,7 @@ class HomeController extends Controller
     {
         $nplants = Plant::withoutGlobalScopes()->count();
         $nvouchers = Voucher::withoutGlobalScopes()->count();
+
         return view('home', compact('nplants', 'nvouchers'));
     }
 }

@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -24,10 +29,11 @@ class PlantController extends Controller
      */
     public function index()
     {
-	    $plants = Plant::with(['location','identification.taxon'])->paginate(10);
-	    return view('plants.index', [
-		    'plants' => $plants,
-	    ]);
+        $plants = Plant::with(['location', 'identification.taxon'])->paginate(10);
+
+        return view('plants.index', [
+            'plants' => $plants,
+        ]);
     }
 
     /**
@@ -37,32 +43,38 @@ class PlantController extends Controller
      */
     public function create()
     {
-        if (! Auth::user())
+        if (!Auth::user()) {
             return view('common.unauthorized');
-	    $taxons = Taxon::leaf()->valid()->get();
-	    $herbaria = Herbarium::all();
-	    $locations = Location::all();
-	    $persons = Person::all();
-	    $projects = Auth::user()->projects;
+        }
+        $taxons = Taxon::leaf()->valid()->get();
+        $herbaria = Herbarium::all();
+        $locations = Location::all();
+        $persons = Person::all();
+        $projects = Auth::user()->projects;
         // TODO: better handling here
-        if (! $projects->count())
+        if (!$projects->count()) {
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-	    return view('plants.create', [
-		    'taxons' => $taxons,
-		    'persons' => $persons,
-		    'locations' => $locations,
-		    'projects' => $projects,
-            'herbaria' =>$herbaria,
-	    ]);
+        }
+
+        return view('plants.create', [
+            'taxons' => $taxons,
+            'persons' => $persons,
+            'locations' => $locations,
+            'projects' => $projects,
+            'herbaria' => $herbaria,
+        ]);
     }
 
-    public function customValidate (Request $request, Plant $plant = null) {
+    public function customValidate(Request $request, Plant $plant = null)
+    {
         // for checking duplicates
         $plantid = null;
-        if ($plant) $plantid = $plant->id;
+        if ($plant) {
+            $plantid = $plant->id;
+        }
 
         $location = Location::findOrFail($request->location_id);
-	    $rules = [
+        $rules = [
             'location_id' => 'required|integer',
             'project_id' => 'required|integer',
             'collector' => 'required|array',
@@ -72,7 +84,7 @@ class PlantController extends Controller
             'tag' => [ // tag / location must be unique
                 'required',
                 'string',
-                'max:191', 
+                'max:191',
                 Rule::unique('plants')->ignore($plantid)
                 ->where(function ($query) use ($request) {
                     $query->where('location_id', $request->location_id);
@@ -81,49 +93,57 @@ class PlantController extends Controller
             'x' => 'nullable|numeric|min:0|max:'.$location->x,
             'y' => 'nullable|numeric|min:0|max:'.$location->y,
         ];
-	    $validator = Validator::make($request->all(), $rules);
-	    $validator->after(function ($validator) use ($request) {
+        $validator = Validator::make($request->all(), $rules);
+        $validator->after(function ($validator) use ($request) {
             $colldate = [$request->date_month, $request->date_day, $request->date_year];
             $iddate = [$request->identification_date_month, $request->identification_date_day, $request->identification_date_year];
-            if (!Plant::checkDate($colldate))
-                    $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
-            if (!Plant::checkDate($iddate))
+            if (!Plant::checkDate($colldate)) {
+                $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
+            }
+            if (!Plant::checkDate($iddate)) {
                 $validator->errors()->add('identification_date_day', Lang::get('messages.invalid_identification_date_error'));
+            }
             // collection date must be in the past or today
-            if (!Plant::beforeOrSimilar($colldate, date('Y-m-d')))
-                    $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
+            if (!Plant::beforeOrSimilar($colldate, date('Y-m-d'))) {
+                $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
+            }
             // identification date must be in the past or today AND equal or after collection date
-            if (!(Plant::beforeOrSimilar($iddate, date('Y-m-d')) and 
-                Plant::beforeOrSimilar($colldate, $iddate)))
-                    $validator->errors()->add('identification_date_day', Lang::get('messages.identification_date_future_error'));
-	    });
-	    return $validator;
+            if (!(Plant::beforeOrSimilar($iddate, date('Y-m-d')) and
+                Plant::beforeOrSimilar($colldate, $iddate))) {
+                $validator->errors()->add('identification_date_day', Lang::get('messages.identification_date_future_error'));
+            }
+        });
+
+        return $validator;
     }
+
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
         $project = Project::findOrFail($request->project_id);
         $this->authorize('create', [Plant::class, $project]);
-	    $validator = $this->customValidate($request);
-	    if ($validator->fails()) {
-		    return redirect()->back()
-			    ->withErrors($validator)
-			    ->withInput();
-	    }
+        $validator = $this->customValidate($request);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
         $plant = new Plant($request->only([
-            'tag', 'location_id', 'project_id', 'notes', 
+            'tag', 'location_id', 'project_id', 'notes',
         ]));
         $plant->setRelativePosition($request->x, $request->y);
         $plant->setDate($request->date_month, $request->date_day, $request->date_year);
         $plant->save();
 
-        foreach($request->collector as $collector)
+        foreach ($request->collector as $collector) {
             $plant->collectors()->create(['person_id' => $collector]);
+        }
         $plant->identification = new Identification([
             'object_id' => $plant->id,
             'object_type' => 'App\Plant',
@@ -137,13 +157,15 @@ class PlantController extends Controller
             $request->identification_date_day,
             $request->identification_date_year);
         $plant->identification->save();
-        return redirect('plants/' . $plant->id)->withStatus(Lang::get('messages.stored'));
+
+        return redirect('plants/'.$plant->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function show($id)
@@ -151,6 +173,7 @@ class PlantController extends Controller
         $plant = Plant::findOrFail($id);
         $identification = $plant->identification;
         $collectors = $plant->collectors;
+
         return view('plants.show', [
             'plant' => $plant,
             'identification' => $identification,
@@ -161,37 +184,42 @@ class PlantController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
     {
         $plant = Plant::findOrFail($id);
-        if (! Auth::user())
+        if (!Auth::user()) {
             return view('common.unauthorized');
+        }
         $taxons = Taxon::leaf()->valid()->get();
-	    $herbaria = Herbarium::all();
-	    $locations = Location::all();
-	    $persons = Person::all();
-	    $projects = Auth::user()->projects;
+        $herbaria = Herbarium::all();
+        $locations = Location::all();
+        $persons = Person::all();
+        $projects = Auth::user()->projects;
         // TODO: better handling here
-        if (! $projects->count())
+        if (!$projects->count()) {
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-	    return view('plants.create', [
+        }
+
+        return view('plants.create', [
             'plant' => $plant,
-		    'taxons' => $taxons,
-		    'persons' => $persons,
-		    'locations' => $locations,
-		    'projects' => $projects,
-            'herbaria' =>$herbaria,
-	    ]);
+            'taxons' => $taxons,
+            'persons' => $persons,
+            'locations' => $locations,
+            'projects' => $projects,
+            'herbaria' => $herbaria,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int                      $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
@@ -205,19 +233,20 @@ class PlantController extends Controller
                 ->withInput();
         }
         $plant->update($request->only([
-            'tag', 'location_id', 'project_id', 'notes', 
+            'tag', 'location_id', 'project_id', 'notes',
         ]));
         $plant->setRelativePosition($request->x, $request->y);
         $plant->setDate($request->date_month, $request->date_day, $request->date_year);
         $plant->save();
-        
+
         // "sync" collectors. See app/Project.php / setusers()
         $current = $plant->collectors->pluck('person_id');
         $detach = $current->diff($request->collector)->all();
         $attach = collect($request->collector)->diff($current)->all();
         $plant->collectors()->whereIn('person_id', $detach)->delete();
-        foreach($attach as $collector)
+        foreach ($attach as $collector) {
             $plant->collectors()->create(['person_id' => $collector]);
+        }
 
         $identifiers = [
             'person_id' => $request->identifier_id,
@@ -235,17 +264,18 @@ class PlantController extends Controller
             $request->identification_date_day,
             $request->identification_date_year);
         $plant->identification->save();
-        return redirect('plants/' . $id)->withStatus(Lang::get('messages.saved'));
+
+        return redirect('plants/'.$id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        //
     }
 }

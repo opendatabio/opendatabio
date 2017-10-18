@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 return [
 
     /*
@@ -12,7 +17,7 @@ return [
     | syntax for each one. Here you may set the default queue driver.
     |
     | Supported: "database"
-    | 
+    |
     | NOTICE: only the "database" driver is supported as UserJobs depends on
     | database functionality
     |

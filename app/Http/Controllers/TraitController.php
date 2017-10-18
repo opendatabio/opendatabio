@@ -1,29 +1,37 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Http\Controllers;
 
 use App\ODBTrait;
 use Illuminate\Http\Request;
 use App\Language;
-use App\UserTranslation;
 use Lang;
 use Response;
 
 class TraitController extends Controller
 {
     // Functions for autocompleting person names, used in dropdowns. Expects a $request->query input
-    public function autocomplete(Request $request) {
-        $traits = ODBTrait::whereHas('translations', function($query) use ($request) {
-            $query->where('translation', 'LIKE',['%'.$request->input('query').'%']);
+    public function autocomplete(Request $request)
+    {
+        $traits = ODBTrait::whereHas('translations', function ($query) use ($request) {
+            $query->where('translation', 'LIKE', ['%'.$request->input('query').'%']);
         })
             ->get();
-        $traits = collect($traits)->transform( function ($odbtrait) {
+        $traits = collect($traits)->transform(function ($odbtrait) {
             $odbtrait->data = $odbtrait->id;
             $odbtrait->value = $odbtrait->name;
+
             return $odbtrait;
         });
+
         return Response::json(['suggestions' => $traits]);
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -32,6 +40,7 @@ class TraitController extends Controller
     public function index()
     {
         $traits = ODBTrait::paginate(10);
+
         return view('traits.index', compact('traits'));
     }
 
@@ -43,13 +52,15 @@ class TraitController extends Controller
     public function create()
     {
         $languages = Language::all();
+
         return view('traits.create', compact('languages'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -58,7 +69,8 @@ class TraitController extends Controller
         $this->validate($request, ODBTrait::rules());
         $odbtrait = ODBTrait::create($request->only(['export_name', 'type']));
         $odbtrait->setFieldsFromRequest($request);
-        return redirect('traits/' . $odbtrait->id)->withStatus(Lang::get('messages.stored'));
+
+        return redirect('traits/'.$odbtrait->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -69,6 +81,7 @@ class TraitController extends Controller
     public function show($id)
     {
         $odbtrait = ODBTrait::findOrFail($id);
+
         return view('traits.show', compact('odbtrait'));
     }
 
@@ -81,13 +94,15 @@ class TraitController extends Controller
     {
         $languages = Language::all();
         $odbtrait = ODBTrait::findOrFail($id);
+
         return view('traits.create', compact('languages', 'odbtrait'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
@@ -97,7 +112,8 @@ class TraitController extends Controller
         $this->validate($request, ODBTrait::rules($id));
         $odbtrait->update($request->only(['export_name', 'type']));
         $odbtrait->setFieldsFromRequest($request);
-        return redirect('traits/' . $id)->withStatus(Lang::get('messages.stored'));
+
+        return redirect('traits/'.$id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -107,6 +123,5 @@ class TraitController extends Controller
      */
     public function destroy($id)
     {
-        //
     }
 }

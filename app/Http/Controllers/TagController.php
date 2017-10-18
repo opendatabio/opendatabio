@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -18,6 +23,7 @@ class TagController extends Controller
     public function index()
     {
         $tags = Tag::paginate(10);
+
         return view('tags.index', compact('tags'));
     }
 
@@ -29,13 +35,15 @@ class TagController extends Controller
     public function create()
     {
         $languages = Language::all();
+
         return view('tags.create', compact('languages'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -53,39 +61,45 @@ class TagController extends Controller
         foreach ($request->description as $key => $translation) {
             $tag->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
         }
-        return redirect('tags/' . $tag->id)->withStatus(Lang::get('messages.stored'));
+
+        return redirect('tags/'.$tag->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
         $tag = Tag::with('datasets')->findOrFail($id);
+
         return view('tags.show', compact('tag'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
     {
         $languages = Language::all();
         $tag = Tag::findOrFail($id);
+
         return view('tags.create', compact('languages', 'tag'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int                      $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
@@ -103,17 +117,18 @@ class TagController extends Controller
         foreach ($request->description as $key => $translation) {
             $tag->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
         }
-        return redirect('tags/' . $id)->withStatus(Lang::get('messages.saved'));
+
+        return redirect('tags/'.$id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        //
     }
 }

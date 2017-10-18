@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Policies;
 
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -10,13 +15,14 @@ use App\Dataset;
 class MeasurementPolicy
 {
     use HandlesAuthorization;
+
     /**
      * Determine whether the user can view the measurement.
      */
     public function view(User $user, Measurement $measurement)
     {
         // is handled by App\Measurement::boot globalscope
-	    return true;
+        return true;
     }
 
     /**
@@ -24,12 +30,17 @@ class MeasurementPolicy
      */
     public function create(User $user, Dataset $dataset = null)
     {
-        if ($user->access_level == User::ADMIN) return true;
+        if (User::ADMIN == $user->access_level) {
+            return true;
+        }
         // this policy called with null project probably means that we're checking a @can
-        if (is_null($dataset)) return $user->access_level == User::USER;
-	    // for regular users, when actually creating a plant
-        return $user->access_level == User::USER and
+        if (is_null($dataset)) {
+            return User::USER == $user->access_level;
+        }
+        // for regular users, when actually creating a plant
+        return User::USER == $user->access_level and
             ($dataset->admins->contains($user) or $dataset->users->contains($user));
+
         return true;
     }
 
@@ -38,11 +49,15 @@ class MeasurementPolicy
      */
     public function update(User $user, Measurement $measurement)
     {
-        if ($user->access_level == User::ADMIN) return true;
-	    // for regular users
+        if (User::ADMIN == $user->access_level) {
+            return true;
+        }
+        // for regular users
         $dataset = $measurement->dataset;
-        return $user->access_level == User::USER and
+
+        return User::USER == $user->access_level and
             ($dataset->admins->contains($user) or $dataset->users->contains($user));
+
         return true;
     }
 

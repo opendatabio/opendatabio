@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Policies;
 
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -9,12 +14,13 @@ use App\ODBTrait;
 class TraitPolicy
 {
     use HandlesAuthorization;
+
     /**
      * Determine whether the user can view the odbtrait.
      */
     public function view(User $user, ODBTrait $odbtrait)
     {
-	    return true;
+        return true;
     }
 
     /**
@@ -22,7 +28,7 @@ class TraitPolicy
      */
     public function create(User $user)
     {
-	    return $user->access_level >= User::USER;
+        return $user->access_level >= User::USER;
     }
 
     /**
@@ -30,10 +36,13 @@ class TraitPolicy
      */
     public function update(User $user, ODBTrait $odbtrait)
     {
-        if ($user->access_level == User::ADMIN)
+        if (User::ADMIN == $user->access_level) {
             return true;
-        if ($user->access_level == User::USER and $odbtrait->measurements()->count() == 0)
+        }
+        if (User::USER == $user->access_level and 0 == $odbtrait->measurements()->count()) {
             return true;
+        }
+
         return false;
     }
 

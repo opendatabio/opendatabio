@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Policies;
 
 use App\User;
@@ -12,21 +17,21 @@ class TagPolicy
 
     public function view(User $user, Tag $tag)
     {
-	return true;
+        return true;
     }
 
     public function create(User $user)
     {
-	    return $user->access_level == User::ADMIN;
+        return User::ADMIN == $user->access_level;
     }
 
     public function update(User $user, Tag $tag)
     {
-	    return $user->access_level == User::ADMIN;
+        return User::ADMIN == $user->access_level;
     }
 
     public function delete(User $user, Tag $tag)
     {
-	    return $user->access_level == User::ADMIN;
+        return User::ADMIN == $user->access_level;
     }
 }

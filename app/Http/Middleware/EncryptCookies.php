@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Http\Middleware;
 
 use Illuminate\Cookie\Middleware\EncryptCookies as BaseEncrypter;
@@ -12,6 +17,6 @@ class EncryptCookies extends BaseEncrypter
      * @var array
      */
     protected $except = [
-        //
+
     ];
 }

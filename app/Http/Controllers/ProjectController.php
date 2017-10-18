@@ -1,12 +1,16 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Project;
 use App\User;
 use Auth;
-use Validator;
 use Lang;
 
 class ProjectController extends Controller
@@ -20,8 +24,10 @@ class ProjectController extends Controller
     {
         $projects = Project::paginate(10);
         $myprojects = null;
-        if (Auth::user() and Auth::user()->projects()->count())
+        if (Auth::user() and Auth::user()->projects()->count()) {
             $myprojects = Auth::user()->projects;
+        }
+
         return view('projects.index', [
             'projects' => $projects,
             'myprojects' => $myprojects,
@@ -37,13 +43,15 @@ class ProjectController extends Controller
     {
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
+
         return view('projects.create', compact('fullusers', 'allusers'));
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
+     *
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -53,28 +61,31 @@ class ProjectController extends Controller
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
         $this->validate($request, [
-		    'name' => 'required|string|max:191',
-		    'privacy' => 'required|integer',
+            'name' => 'required|string|max:191',
+            'privacy' => 'required|integer',
             'admins' => 'required|array|min:1',
-            'admins.*' => 'numeric|in:' . $fullusers,
+            'admins.*' => 'numeric|in:'.$fullusers,
             'collabs' => 'nullable|array',
-            'collabs.*' => 'numeric|in:' . $fullusers,
-	    ]);
+            'collabs.*' => 'numeric|in:'.$fullusers,
+        ]);
         $project = new Project($request->only(['name', 'notes', 'privacy']));
         $project->save(); // needed to generate an id?
         $project->setusers($request->viewers, $request->collabs, $request->admins);
-        return redirect('projects/' . $project->id )->withStatus(Lang::get('messages.stored'));
+
+        return redirect('projects/'.$project->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function show($id)
     {
         $project = Project::findOrFail($id);
+
         return view('projects.show', [
             'project' => $project,
         ]);
@@ -83,7 +94,8 @@ class ProjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
@@ -91,14 +103,16 @@ class ProjectController extends Controller
         $project = Project::findOrFail($id);
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
+
         return view('projects.create', compact('project', 'fullusers', 'allusers'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int                      $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
@@ -109,26 +123,27 @@ class ProjectController extends Controller
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
         $this->validate($request, [
-		    'name' => 'required|string|max:191',
-		    'privacy' => 'required|integer',
+            'name' => 'required|string|max:191',
+            'privacy' => 'required|integer',
             'admins' => 'required|array|min:1',
-            'admins.*' => 'numeric|in:' . $fullusers,
+            'admins.*' => 'numeric|in:'.$fullusers,
             'collabs' => 'nullable|array',
-            'collabs.*' => 'numeric|in:' . $fullusers,
-	    ]);
+            'collabs.*' => 'numeric|in:'.$fullusers,
+        ]);
         $project->update($request->only(['name', 'notes', 'privacy']));
         $project->setusers($request->viewers, $request->collabs, $request->admins);
+
         return redirect('projects/'.$id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
-        //
     }
 }

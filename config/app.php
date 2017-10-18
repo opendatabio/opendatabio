@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 return [
 
     /*
@@ -21,13 +26,13 @@ return [
     |
     | This value is the version of your application. This should be incremented
     | according to Semantic Versioning. Git tags should be generated every time
-    | this number is incremented. Non-production releases should be marked as 
+    | this number is incremented. Non-production releases should be marked as
     | "alpha", such as 0.1.0-alpha1.
     */
 
-    'version' => '0.5.0-alpha4',
+    'version' => '0.5.0-alpha5',
 
-    /* 
+    /*
      * Proxy settings
      *
      * These settings are used to specify a proxy for outward connection,
@@ -91,17 +96,16 @@ return [
 
     'timezone' => 'UTC',
 
-
     /* Administrative levels: which administrative levels should be displayed
      * to users? Default is [0, 1, 2] which corresponds to country, state, municipality.
      * Note that other "administrative levels" such as plots, points and conservation units
-     * are always displayed. You can control the name for each adm level in the 
-     * resources/lang/[language]/levels.php file 
+     * are always displayed. You can control the name for each adm level in the
+     * resources/lang/[language]/levels.php file
      */
 
     'adm_levels' => [0, 1, 2],
 
-    /* 
+    /*
      * This string represents a regular expression describing what is a valid
      * value for the Abbreviation field in the Person entity. It may be overriden
      * in the .env file.
@@ -235,7 +239,6 @@ return [
         Fx3costa\LaravelChartJs\Providers\ChartjsServiceProvider::class,
         AndreChalom\LaravelMultiselect\MultiselectServiceProvider::class,
         Barryvdh\TranslationManager\ManagerServiceProvider::class,
-        
 
     ],
 

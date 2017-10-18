@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
@@ -13,14 +18,13 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+
     ];
 
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-     * @return void
+     * @param \Illuminate\Console\Scheduling\Schedule $schedule
      */
     protected function schedule(Schedule $schedule)
     {
@@ -30,8 +34,6 @@ class Kernel extends ConsoleKernel
 
     /**
      * Register the Closure based commands for the application.
-     *
-     * @return void
      */
     protected function commands()
     {

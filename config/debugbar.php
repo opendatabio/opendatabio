@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 return [
 
     /*
@@ -27,11 +32,11 @@ return [
      |
      */
     'storage' => [
-        'enabled'    => true,
-        'driver'     => 'file', // redis, file, pdo, custom
-        'path'       => storage_path('debugbar'), // For file driver
+        'enabled' => true,
+        'driver' => 'file', // redis, file, pdo, custom
+        'path' => storage_path('debugbar'), // For file driver
         'connection' => null,   // Leave null for default connection (Redis/PDO)
-        'provider'   => '' // Instance of StorageInterface for custom driver
+        'provider' => '', // Instance of StorageInterface for custom driver
     ],
 
     /*
@@ -74,7 +79,7 @@ return [
      |
      */
     'error_handler' => false,
-    
+
     /*
      |--------------------------------------------------------------------------
      | Clockwork integration
@@ -96,26 +101,26 @@ return [
      */
 
     'collectors' => [
-        'phpinfo'         => true,  // Php version
-        'messages'        => true,  // Messages
-        'time'            => true,  // Time Datalogger
-        'memory'          => true,  // Memory usage
-        'exceptions'      => true,  // Exception displayer
-        'log'             => true,  // Logs from Monolog (merged in messages if enabled)
-        'db'              => true,  // Show database (PDO) queries and bindings
-        'views'           => true,  // Views with their data
-        'route'           => true,  // Current route information
-        'auth'            => true, // Display Laravel authentication status
-        'gate'            => true, // Display Laravel Gate checks
-        'session'         => true,  // Display session data
+        'phpinfo' => true,  // Php version
+        'messages' => true,  // Messages
+        'time' => true,  // Time Datalogger
+        'memory' => true,  // Memory usage
+        'exceptions' => true,  // Exception displayer
+        'log' => true,  // Logs from Monolog (merged in messages if enabled)
+        'db' => true,  // Show database (PDO) queries and bindings
+        'views' => true,  // Views with their data
+        'route' => true,  // Current route information
+        'auth' => true, // Display Laravel authentication status
+        'gate' => true, // Display Laravel Gate checks
+        'session' => true,  // Display session data
         'symfony_request' => true,  // Only one can be enabled..
-        'mail'            => true,  // Catch mail messages
-        'laravel'         => false, // Laravel version and environment
-        'events'          => false, // All events fired
+        'mail' => true,  // Catch mail messages
+        'laravel' => false, // Laravel version and environment
+        'events' => false, // All events fired
         'default_request' => false, // Regular or special Symfony request logger
-        'logs'            => false, // Add the latest log messages
-        'files'           => false, // Show the included files
-        'config'          => false, // Display config settings
+        'logs' => false, // Add the latest log messages
+        'files' => false, // Show the included files
+        'config' => false, // Display config settings
     ],
 
     /*
@@ -132,26 +137,26 @@ return [
             'show_name' => true,   // Also show the users name/email in the debugbar
         ],
         'db' => [
-            'with_params'       => true,   // Render SQL with the parameters substituted
-            'backtrace'         => true,   // Use a backtrace to find the origin of the query in your files.
-            'timeline'          => true,  // Add the queries to the timeline
+            'with_params' => true,   // Render SQL with the parameters substituted
+            'backtrace' => true,   // Use a backtrace to find the origin of the query in your files.
+            'timeline' => true,  // Add the queries to the timeline
             'explain' => [                 // Show EXPLAIN output on queries
                 'enabled' => true,
                 'types' => ['SELECT', 'INSERT', 'UPDATE', 'DELETE'],
             ],
-            'hints'             => true,    // Show hints for common mistakes
+            'hints' => true,    // Show hints for common mistakes
         ],
         'mail' => [
-            'full_log' => false
+            'full_log' => false,
         ],
         'views' => [
             'data' => true,    //Note: Can slow down the application, because the data can be quite large..
         ],
         'route' => [
-            'label' => true  // show complete route on bar
+            'label' => true,  // show complete route on bar
         ],
         'logs' => [
-            'file' => null
+            'file' => null,
         ],
     ],
 

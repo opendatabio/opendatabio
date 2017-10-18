@@ -1,23 +1,28 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Policies;
 
 use App\User;
 use App\Voucher;
 use App\Project;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Log;
 
 class VoucherPolicy
 {
     use HandlesAuthorization;
+
     /**
      * Determine whether the user can view the voucher.
      */
     public function view(User $user, Voucher $voucher)
     {
         // is handled by App\Voucher::boot globalscope
-	    return true;
+        return true;
     }
 
     /**
@@ -25,11 +30,15 @@ class VoucherPolicy
      */
     public function create(User $user, Project $project = null)
     {
-        if ($user->access_level == User::ADMIN) return true;
+        if (User::ADMIN == $user->access_level) {
+            return true;
+        }
         // this policy called with null project probably means that we're checking a @can
-        if (is_null($project)) return $user->access_level == User::USER;
-	    // for regular users, when actually creating a voucher
-        return $user->access_level == User::USER and
+        if (is_null($project)) {
+            return User::USER == $user->access_level;
+        }
+        // for regular users, when actually creating a voucher
+        return User::USER == $user->access_level and
             ($project->admins->contains($user) or $project->users->contains($user));
     }
 
@@ -38,10 +47,13 @@ class VoucherPolicy
      */
     public function update(User $user, Voucher $voucher)
     {
-        if ($user->access_level == User::ADMIN) return true;
-	    // for regular users
+        if (User::ADMIN == $user->access_level) {
+            return true;
+        }
+        // for regular users
         $project = $voucher->project;
-        return $user->access_level == User::USER and
+
+        return User::USER == $user->access_level and
             ($project->admins->contains($user) or $project->users->contains($user));
     }
 

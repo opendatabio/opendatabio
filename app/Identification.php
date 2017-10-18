@@ -1,9 +1,13 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
-use App\IncompleteDate;
 
 class Identification extends Model
 {
@@ -17,25 +21,33 @@ class Identification extends Model
     const AFF = 4;
     const VEL_AFF = 5;
     const MODIFIERS = [
-        Identification::NONE,
-        Identification::SS,
-        Identification::SL,
-        Identification::CF,
-        Identification::AFF,
-        Identification::VEL_AFF,
+        self::NONE,
+        self::SS,
+        self::SL,
+        self::CF,
+        self::AFF,
+        self::VEL_AFF,
     ];
 
     protected $fillable = ['person_id', 'taxon_id', 'object_id', 'object_type', 'date', 'modifier', 'herbarium_id', 'notes'];
-    public function object() {
+
+    public function object()
+    {
         return $this->morphTo('object');
     }
-    public function person() {
+
+    public function person()
+    {
         return $this->belongsTo(Person::class);
     }
-    public function taxon() {
+
+    public function taxon()
+    {
         return $this->belongsTo(Taxon::class);
     }
-    public function herbarium() {
+
+    public function herbarium()
+    {
         return $this->belongsTo(Herbarium::class);
     }
 }

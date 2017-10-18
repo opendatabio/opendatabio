@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Policies;
 
 use App\User;
@@ -13,60 +18,65 @@ class BibReferencePolicy
     /**
      * Determine whether the user can view the bibReference.
      *
-     * @param  \App\User  $user
-     * @param  \App\BibReference  $bibReference
+     * @param \App\User         $user
+     * @param \App\BibReference $bibReference
+     *
      * @return mixed
      */
     public function view(User $user, BibReference $bibReference)
     {
-        //
     }
 
     /**
      * Determine whether the user can create bibReferences.
      *
-     * @param  \App\User  $user
+     * @param \App\User $user
+     *
      * @return mixed
      */
     public function create(User $user)
     {
-	    return $user->access_level >= User::USER;
+        return $user->access_level >= User::USER;
     }
 
     /**
      * Determine whether the user can update the bibReference.
      *
-     * @param  \App\User  $user
-     * @param  \App\BibReference  $bibReference
+     * @param \App\User         $user
+     * @param \App\BibReference $bibReference
+     *
      * @return mixed
      */
     public function update(User $user, BibReference $bibReference)
     {
-        if ($user->access_level == User::ADMIN) 
+        if (User::ADMIN == $user->access_level) {
             return true;
+        }
         // regular users can only update bibreferences that have no associates resources
-        if ($user->access_level == User::USER) 
-            return (
-                $bibReference->taxons()->count() + 
-                $bibReference->datasets()->count() + 
+        if (User::USER == $user->access_level) {
+            return 0 == (
+                $bibReference->taxons()->count() +
+                $bibReference->datasets()->count() +
                 $bibReference->measurements()->count()
-            ) == 0;
+            );
+        }
     }
 
     /**
      * Determine whether the user can delete the bibReference.
      *
-     * @param  \App\User  $user
-     * @param  \App\BibReference  $bibReference
+     * @param \App\User         $user
+     * @param \App\BibReference $bibReference
+     *
      * @return mixed
      */
     public function delete(User $user, BibReference $bibReference)
     {
         // ANY user can only remove bibreferences that have no associates resources
-        return (
-            $bibReference->taxons()->count() + 
-            $bibReference->datasets()->count() + 
+        return 0 == (
+            $bibReference->taxons()->count() +
+            $bibReference->datasets()->count() +
             $bibReference->measurements()->count()
-        ) == 0;
+        );
     }
 }

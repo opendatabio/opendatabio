@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Event;
@@ -20,13 +25,9 @@ class EventServiceProvider extends ServiceProvider
 
     /**
      * Register any events for your application.
-     *
-     * @return void
      */
     public function boot()
     {
         parent::boot();
-
-        //
     }
 }

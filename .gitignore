@@ -12,3 +12,4 @@ npm-debug.log
 composer.phar
 .env
 *.swp
+.php_cs.cache

@@ -1,5 +1,10 @@
 <?php
 
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\Exceptions;
 
 use Exception;
@@ -30,8 +35,7 @@ class Handler extends ExceptionHandler
      *
      * This is a great spot to send exceptions to Sentry, Bugsnag, etc.
      *
-     * @param  \Exception  $exception
-     * @return void
+     * @param \Exception $exception
      */
     public function report(Exception $exception)
     {
@@ -39,34 +43,39 @@ class Handler extends ExceptionHandler
     }
 
     /**
-     * Render an exception into an HTTP response. May return a JSON error depending on $request
+     * Render an exception into an HTTP response. May return a JSON error depending on $request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Exception  $exception
+     * @param \Illuminate\Http\Request $request
+     * @param \Exception               $exception
+     *
      * @return \Illuminate\Http\Response
      */
     public function render($request, Exception $exception)
     {
-	if ($exception instanceof ModelNotFoundException) {
-        if ($request->expectsJson()) {
-            return response()->json(['error' => 'Not found.'], 404);
+        if ($exception instanceof ModelNotFoundException) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Not found.'], 404);
+            }
+
+            return response()->view('common.notfound');
         }
-        	return response()->view('common.notfound');
-    	}
-	if ($exception instanceof AuthorizationException) { 
-        if ($request->expectsJson()) {
-            return response()->json(['error' => 'Unauthorized.'], 403);
+        if ($exception instanceof AuthorizationException) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Unauthorized.'], 403);
+            }
+
+            return response()->view('common.unauthorized');
         }
-      	return response()->view('common.unauthorized');
-    	}
+
         return parent::render($request, $exception);
     }
 
     /**
      * Convert an authentication exception into an unauthenticated response.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Illuminate\Auth\AuthenticationException  $exception
+     * @param \Illuminate\Http\Request                 $request
+     * @param \Illuminate\Auth\AuthenticationException $exception
+     *
      * @return \Illuminate\Http\Response
      */
     protected function unauthenticated($request, AuthenticationException $exception)
@@ -74,6 +83,7 @@ class Handler extends ExceptionHandler
         if ($request->expectsJson()) {
             return response()->json(['error' => 'Unauthenticated.'], 401);
         }
+
         return redirect()->guest(route('login'));
     }
 }
