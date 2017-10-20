@@ -77,11 +77,25 @@ class ODBTrait extends Model
                 'objects' => 'required|array|min:1',
                 'objects.*' => 'required|integer|min:0|max:'.(count(self::OBJECT_TYPES) - 1),
                 'unit' => 'required_if:type,0,1',
+                'cat_name' => 'array|required_if:type,2,3,4',
+                'cat_name.1.1' => 'required_if:type,2,3,4',
             ], $merge);
+    }
+
+    protected function makeCategory($rank, $names, $descriptions) {
+        $cat = $this->categories()->create(['rank' => $rank]);
+        foreach ($names as $key => $translation) {
+            $cat->setTranslation(UserTranslation::NAME, $key, $translation);
+        }
+        foreach ($descriptions as $key => $translation) {
+            $cat->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
+        }
+        return $cat;
     }
 
     public function setFieldsFromRequest($request)
     {
+        // Set fields from quantitative traits
         if (in_array($this->type, [self::QUANT_INTEGER, self::QUANT_REAL])) {
             $this->unit = $request->unit;
             $this->range_max = $request->range_max;
@@ -90,7 +104,17 @@ class ODBTrait extends Model
             $this->unit = null;
             $this->range_max = null;
             $this->range_min = null;
+        } 
+        // Set fields from categorical traits
+        $this->categories()->delete();
+        if (in_array($this->type, [self::CATEGORICAL, self::CATEGORICAL_MULTIPLE, self::ORDINAL])) {
+            $names = $request->cat_name;
+            $descriptions = $request->cat_description;
+            for ($i = 1; $i <= sizeof($names); $i++) {
+                $this->makeCategory($i, $names[$i], $descriptions[$i]);
+            }
         }
+        // Set object types
         $this->object_types()->delete();
         foreach ($request->objects as $key) {
             $this->object_types()->create(['object_type' => self::OBJECT_TYPES[$key]]);

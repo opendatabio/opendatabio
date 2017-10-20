@@ -37,22 +37,23 @@
 <div class="form-group">
     <div class="col-sm-12">
 <?php
+// TODO: should be moved to be PSR compliant
 function genInputTranslationTable($odbtrait, $type, $language, $order) {
     $text = "<td><input name='cat_" . $type . "[". $order . "][" . $language . "]' value='";
     if (is_numeric($order)) {
         if (isset($odbtrait)) {
-                $cat = $odbtrait->categories->where('rank', $order)->first();
-                if($cat) {
-            switch($type) {
-            case "name":
-                $get_old = $cat->translate(\App\UserTranslation::NAME, $language);
+            $cat = $odbtrait->categories->where('rank', $order)->first();
+            if($cat) {
+                switch($type) {
+                case "name":
+                    $get_old = $cat->translate(\App\UserTranslation::NAME, $language);
                     break;
-            case "description":
-                $get_old = $cat->translate(\App\UserTranslation::DESCRIPTION, $language);
-            }
+                case "description":
+                    $get_old = $cat->translate(\App\UserTranslation::DESCRIPTION, $language);
                 }
+            }
         }
-        $text .= old('cat_' . $type .'.' . $order . $language, isset($get_old) ? $get_old : null);
+        $text .= old('cat_' . $type .'.' . $order . '.' . $language, isset($get_old) ? $get_old : null);
     }
     $text .= "'></td>";
     return $text;
@@ -238,7 +239,6 @@ if (isset($odbtrait)) {
         }
     }
 } 
-
 ?>
 </div>
 <div class="col-sm-12">
@@ -310,7 +310,6 @@ $(document).ready(function() {
         $('#to_append_categories').append(text);
         setFields(0); 
     });
-
 });
 </script>
 @endpush
