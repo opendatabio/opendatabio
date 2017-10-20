@@ -97,7 +97,17 @@ class Measurement extends Model
         case ODBTrait::COLOR:
             $this->value_a = $value;
             break;
-            // TODO: Link & categories
+        case ODBTrait::CATEGORICAL:
+        case ODBTrait::ORDINAL:
+            $this->categories()->delete();
+            $this->categories()->create(['category_id' => $value]);
+            break;
+        case ODBTrait::CATEGORICAL_MULTIPLE:
+            $this->categories()->delete();
+            foreach($value as $v)
+                $this->categories()->create(['category_id' => $v]);
+            break;
+            // TODO: Link 
         }
     }
 

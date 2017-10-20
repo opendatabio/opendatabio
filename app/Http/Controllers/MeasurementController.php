@@ -145,6 +145,22 @@ class MeasurementController extends Controller
                 $validator->errors()->add('value', Lang::get('messages.value_out_of_range'));
             if (isset($odbtrait->range_max) and $request->value > $odbtrait->range_max)
                 $validator->errors()->add('value', Lang::get('messages.value_out_of_range'));
+            if (in_array($odbtrait->type, [ODBTrait::CATEGORICAL, ODBTrait::ORDINAL, ODBTrait::CATEGORICAL_MULTIPLE])) {
+                // validates that the chosen category is ACTUALLY from the trait
+                $valid = $odbtrait->categories->pluck('id')->all();
+                if (is_array($request->value)) {
+                    foreach ($request->value as $value) {
+                        if (!in_array($value, $valid)) {
+                            $validator->errors()->add('value', Lang::get('messages.trait_measurement_mismatch'));
+                        }
+                    }
+                } else {
+                    if (!in_array($request->value, $valid)) {
+                        $validator->errors()->add('value', Lang::get('messages.trait_measurement_mismatch'));
+                    }
+
+                }
+            }
         });
 
         return $validator;
