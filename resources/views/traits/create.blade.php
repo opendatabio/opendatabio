@@ -36,6 +36,48 @@
 		     {{ csrf_field() }}
 <div class="form-group">
     <div class="col-sm-12">
+<?php
+function genInputTranslationTable($odbtrait, $type, $language, $order = null) {
+    $text = "<td><input name='cat_" . $type . "[". $language. "][" . $order . "]' value='";
+    if ($order) {
+        if (isset($odbtrait)) {
+                $cat = $odbtrait->categories->where('rank', $order)->first();
+            switch($type) {
+            case "name":
+                $get_old = $cat->translate(\App\UserTranslation::NAME, $language);
+                    break;
+            case "description":
+                $get_old = $cat->translate(\App\UserTranslation::DESCRIPTION, $language);
+            }
+        }
+        Log::info($get_old);
+        $text .= old('cat_' . $type .'.' . $language . $order, isset($get_old) ? $get_old : null);
+    }
+    $text .= "'></td>";
+    return $text;
+}
+
+// call this function with order = int to use OLD values, order = null produces a blank category (for use in js)
+function genTraitCategoryTranslationTable($order = null, $odbtrait) {
+    $TH = "<table class='table table-striped'> <thead>
+        <th class='table-ordinal'>" . Lang::get('messages.category_order') . " </th>
+        <th>" . Lang::get('messages.language') . " </th>
+        <th>" . Lang::get('messages.name') . " </th>
+        <th>" . Lang::get('messages.description') . " </th>
+        </thead> <tbody>"; 
+    $TB = '';
+    $languages = \App\Language::all();
+    foreach ($languages as $language) {
+        $TB .= "<tr><td class='table-ordinal'>" . $order . "</td>" .
+            "<td>" .$language->name. "</td>";
+        $TB .= genInputTranslationTable($odbtrait, "name", $language->id, $order);
+        $TB .= genInputTranslationTable($odbtrait, "description", $language->id, $order);
+        $TB .="</tr>";
+    } 
+    $TF = "</tbody></table>";
+    return $TH . $TB . $TF;
+}
+?>
 <table class="table table-striped">
 <thead>
     <th>
@@ -108,7 +150,7 @@
 	    <div class="col-sm-6">
 {!! Multiselect::select(
     'objects', 
-    \App\ODBTrait::OBJECT_TYPES, 
+    \App\ODBTrait::getObjectTypeNames(), 
     isset($odbtrait) ? $odbtrait->getObjectKeys() : [],
     ['class' => 'multiselect form-control']
 ) !!}
@@ -161,6 +203,19 @@
     </div>
   </div>
 </div>
+<div class="form-group trait-category">
+<div class="col-sm-12">
+<?php 
+if (isset($odbtrait)) {
+    foreach($odbtrait->categories as $category) {
+        echo genTraitCategoryTranslationTable($category->rank, isset($odbtrait) ? $odbtrait : null); 
+    }
+}
+?>
+
+</div>
+</div>
+
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success" name="submit" value="submit">
@@ -191,12 +246,22 @@ $(document).ready(function() {
 			case "0": // numeric
 			case "1": // numeric FALL THROUGH
 				$(".trait-number").show(vel);
+				$(".trait-category").hide(vel);
 				break;
 			case "2": // categories
+			case "3": // categories FALL THROUGH
 				$(".trait-number").hide(vel);
+				$(".trait-category").show(vel);
+				$(".table-ordinal").hide(vel);
+				break;
+			case "4": // ordinal
+				$(".trait-number").hide(vel);
+				$(".trait-category").show(vel);
+				$(".table-ordinal").show(vel);
 				break;
 			default: // other
 				$(".trait-number").hide(vel);
+				$(".trait-category").hide(vel);
 		}
 	}
 	$("#type").change(function() { setFields(400); });

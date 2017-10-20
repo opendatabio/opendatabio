@@ -8,6 +8,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Lang;
 
 class TraitObject extends Model
 {
@@ -16,5 +17,8 @@ class TraitObject extends Model
     public function odbtrait()
     {
         return $this->belongsTo(ODBTrait::class, 'trait_id');
+    }
+    public function getNameAttribute() {
+        return Lang::get('classes.' . $this->object_type );
     }
 }

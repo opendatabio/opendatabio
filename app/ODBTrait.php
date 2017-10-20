@@ -8,6 +8,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Lang;
 
 // class name needs to be different as Trait is a PHP reserved word
 class ODBTrait extends Model
@@ -23,6 +24,16 @@ class ODBTrait extends Model
         Location::class,
         Taxon::class,
     ];
+    // for use in the trait edit dropdown
+    public static function getObjectTypeNames() {
+        // ugly, TODO refactor
+        return [
+            Lang::get('classes.' . Plant::class),
+            Lang::get('classes.' . Voucher::class),
+            Lang::get('classes.' . Location::class),
+            Lang::get('classes.' . Taxon::class),
+        ];
+    }
 
     public function getObjectKeys()
     {

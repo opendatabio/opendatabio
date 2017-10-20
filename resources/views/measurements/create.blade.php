@@ -37,7 +37,8 @@
 </label>
     <div class="col-sm-6">
     <input type="text" name="trait_autocomplete" id="trait_autocomplete" class="form-control autocomplete"
-    value="{{ old('trait_autocomplete', (isset($measurement) and $measurement->trait) ? $measurement->trait->bibkey : null) }}">
+    value="{{ old('trait_autocomplete', (isset($measurement) and $measurement->odbtrait) ? $measurement->odbtrait->name : null) }}">
+
     <input type="hidden" name="trait_id" id="trait_id"
     value="{{ old('trait_id', isset($measurement) ? $measurement->trait_id : null) }}">
     </div>
@@ -83,7 +84,7 @@
         <a data-toggle="collapse" href="#hintp" class="btn btn-default">?</a>
 <div class="col-sm-6">
     <input type="text" name="person_autocomplete" id="person_autocomplete" class="form-control autocomplete"
-    value="{{ old('person_autocomplete', (isset($measurement) and $measurement->person) ? $measurement->person->bibkey : null) }}">
+    value="{{ old('person_autocomplete', (isset($measurement) and $measurement->person) ? $measurement->person->full_name : null) }}">
     <input type="hidden" name="person_id" id="person_id"
     value="{{ old('person_id', isset($measurement) ? $measurement->person_id : null) }}">
 </div>

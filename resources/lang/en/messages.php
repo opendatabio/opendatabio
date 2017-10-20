@@ -375,4 +375,6 @@ remove the job information from the database.',
   'progress' => 'Progress',
   'autodetect' => 'Autodetect',
   'autodetect_error' => 'Unable to autodetect!',
+  'value_out_of_range' => 'The informed value is out of range for this trait!',
+  'category_order' => 'Category order',
 );

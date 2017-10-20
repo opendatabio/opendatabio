@@ -34,7 +34,7 @@
     @lang('messages.object_types')
 :</strong><ul>
 @foreach ($odbtrait->object_types as $obtype)
-    <li>@lang ('classes.' .  $obtype->object_type )</li>
+    <li>{{ $obtype->name }}</li>
 @endforeach
 </ul>
 @endif

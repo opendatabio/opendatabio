@@ -141,6 +141,10 @@ class MeasurementController extends Controller
             if (!Measurement::beforeOrSimilar($colldate, date('Y-m-d'))) {
                 $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
             }
+            if (isset($odbtrait->range_min) and $request->value < $odbtrait->range_min)
+                $validator->errors()->add('value', Lang::get('messages.value_out_of_range'));
+            if (isset($odbtrait->range_max) and $request->value > $odbtrait->range_max)
+                $validator->errors()->add('value', Lang::get('messages.value_out_of_range'));
         });
 
         return $validator;
