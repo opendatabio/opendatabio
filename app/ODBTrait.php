@@ -110,8 +110,15 @@ class ODBTrait extends Model
         if (in_array($this->type, [self::CATEGORICAL, self::CATEGORICAL_MULTIPLE, self::ORDINAL])) {
             $names = $request->cat_name;
             $descriptions = $request->cat_description;
+            // counts the number of skipped entries, so the ranks will be matched to the names/description
+            $skips = 0;
             for ($i = 1; $i <= sizeof($names); $i++) {
-                $this->makeCategory($i, $names[$i], $descriptions[$i]);
+                // checks to see if there's at least one name provided
+                if(!array_filter($names[$i])) {
+                    $skips++;
+                    continue;
+                }
+                $this->makeCategory($i - $skips, $names[$i], $descriptions[$i]);
             }
         }
         // Set object types

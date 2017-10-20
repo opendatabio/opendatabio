@@ -56,6 +56,7 @@ Route::resource('vouchers', 'VoucherController');
 Route::resource('tags', 'TagController');
 
 Route::get('traits/autocomplete', 'TraitController@autocomplete');
+Route::get('traits/getformelement', 'TraitController@getFormElement');
 Route::resource('traits', 'TraitController');
 
 // Users can be resources for the admin

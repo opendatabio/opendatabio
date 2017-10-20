@@ -31,6 +31,14 @@ class TraitController extends Controller
 
         return Response::json(['suggestions' => $traits]);
     }
+    // Returns the partial view for filling a given trait
+    public function getFormElement(Request $request)
+    {
+        $odbtrait = ODBTrait::findOrFail($request->id);
+        if ($request->measurement)
+            $measurement = Measurement::findOrFail($request->measurement);
+        return view('traits.elements.' . $odbtrait->type, compact('obdtrait', 'measurement'));
+    }
 
     /**
      * Display a listing of the resource.

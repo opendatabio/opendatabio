@@ -48,6 +48,10 @@ class Measurement extends Model
     {
         return $this->belongsTo(Dataset::class);
     }
+    public function categories()
+    {
+        return $this->hasMany(MeasurementCategory::class);
+    }
 
     // provides a common interface for getting/setting value for different types of measurements
     public function getValueActualAttribute()
@@ -63,7 +67,20 @@ class Measurement extends Model
         case ODBTrait::COLOR:
             return $this->value_a;
             break;
-            // TODO: Link & categories
+        case ODBTrait::CATEGORICAL:
+            return $this->categories()->first()->traitCategory->name;
+            break;
+        case ODBTrait::CATEGORICAL_MULTIPLE:
+            $cats = collect($this->categories)->map(function($newcat) {
+                return $newcat->traitCategory->name;
+            })->all();
+            return implode(', ', $cats);
+            break;
+        case ODBTrait::ORDINAL:
+            $tcat = $this->categories()->first()->traitCategory;
+            return $tcat->rank . " - " . $tcat->name;
+            break;
+            // TODO: Link 
         }
     }
 

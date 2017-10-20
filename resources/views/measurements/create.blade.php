@@ -11,6 +11,9 @@
                 <div class="panel-body">
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
+<div id="ajax-error" class="collapse alert alert-danger">
+@lang('messages.whoops')
+</div>
 
 @if (isset($measurement))
 		    <form action="{{ url('measurements/' . $measurement->id)}}" method="POST" class="form-horizontal">
@@ -35,10 +38,10 @@
     <label for="trait_id" class="col-sm-3 control-label">
 @lang('messages.trait')
 </label>
+    <div id="spinner"></div>
     <div class="col-sm-6">
     <input type="text" name="trait_autocomplete" id="trait_autocomplete" class="form-control autocomplete"
-    value="{{ old('trait_autocomplete', (isset($measurement) and $measurement->odbtrait) ? $measurement->odbtrait->name : null) }}">
-
+    value="{{ old('trait_autocomplete', (isset($measurement) and $measurement->odbtrait) ? $measurement->odbtrait->name : null) }}" {{ isset($measurement) ? 'disabled' : null }} >
     <input type="hidden" name="trait_id" id="trait_id"
     value="{{ old('trait_id', isset($measurement) ? $measurement->trait_id : null) }}">
     </div>
@@ -116,13 +119,22 @@
   </div>
 </div>
 
-<div class="form-group">
-<label for="value" class="col-sm-3 control-label">
-@lang('messages.value')
-</label>
-<div class="col-sm-6">
-<input name ="value" id="value" type="text" class="form-control" value="{{old('value', isset($measurement) ? $measurement->valueActual : null)}}">
-</div>
+<div class="form-group" id="append_value">
+<?php if (isset($measurement)) {
+echo View::make('traits.elements.' . $measurement->type, 
+[
+    'odbtrait' => $measurement->odbtrait,
+    'measurement' => $measurement,
+]);
+    } elseif (!empty(old())) {
+echo View::make('traits.elements.' . $measurement->type, 
+[
+    'odbtrait' => \App\ODBTrait::find(old('trait_id')),
+    'measurement' => null,
+]);
+
+    }
+?>
 </div>
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
@@ -155,6 +167,30 @@ $("#trait_autocomplete").devbridgeAutocomplete({
     serviceUrl: "{{url('traits/autocomplete')}}",
     onSelect: function (suggestion) {
         $("#trait_id").val(suggestion.data);
+		$( "#spinner" ).css('display', 'inline-block');
+		$.ajax({
+			type: "GET",
+			url: "{{url('traits/getformelement')}}",
+			dataType: 'json',
+			data: {'id': suggestion.data, 'measurement': {{isset($measurement) ? $measurement->id : null}}},
+			success: function (data) {
+				$( "#spinner" ).hide();
+				if ("error" in data) {
+					$( "#ajax-error" ).collapse("show");
+					$( "#ajax-error" ).text(data.error);
+				} else {
+					// ONLY removes the error if request is success
+					$( "#ajax-error" ).collapse("hide");
+					$("#irn").val(data.ihdata[0]);
+					$("#name").val(data.ihdata[1]);
+				}
+			},
+			error: function(e){ 
+				$( "#spinner" ).hide();
+				$( "#ajax-error" ).collapse("show");
+				$( "#ajax-error" ).text('Error sending AJAX request');
+			}
+		})
     },
     onInvalidateSelection: function() {
         $("#trait_id").val(null);
