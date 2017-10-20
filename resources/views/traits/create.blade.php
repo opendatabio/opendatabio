@@ -37,11 +37,12 @@
 <div class="form-group">
     <div class="col-sm-12">
 <?php
-function genInputTranslationTable($odbtrait, $type, $language, $order = null) {
-    $text = "<td><input name='cat_" . $type . "[". $language. "][" . $order . "]' value='";
-    if ($order) {
+function genInputTranslationTable($odbtrait, $type, $language, $order) {
+    $text = "<td><input name='cat_" . $type . "[". $order . "][" . $language . "]' value='";
+    if (is_numeric($order)) {
         if (isset($odbtrait)) {
                 $cat = $odbtrait->categories->where('rank', $order)->first();
+                if($cat) {
             switch($type) {
             case "name":
                 $get_old = $cat->translate(\App\UserTranslation::NAME, $language);
@@ -49,27 +50,34 @@ function genInputTranslationTable($odbtrait, $type, $language, $order = null) {
             case "description":
                 $get_old = $cat->translate(\App\UserTranslation::DESCRIPTION, $language);
             }
+                }
         }
-        Log::info($get_old);
-        $text .= old('cat_' . $type .'.' . $language . $order, isset($get_old) ? $get_old : null);
+        $text .= old('cat_' . $type .'.' . $order . $language, isset($get_old) ? $get_old : null);
     }
     $text .= "'></td>";
     return $text;
 }
 
 // call this function with order = int to use OLD values, order = null produces a blank category (for use in js)
-function genTraitCategoryTranslationTable($order = null, $odbtrait) {
-    $TH = "<table class='table table-striped'> <thead>
-        <th class='table-ordinal'>" . Lang::get('messages.category_order') . " </th>
-        <th>" . Lang::get('messages.language') . " </th>
-        <th>" . Lang::get('messages.name') . " </th>
-        <th>" . Lang::get('messages.description') . " </th>
-        </thead> <tbody>"; 
+function genTraitCategoryTranslationTable($order, $odbtrait) {
+    if (is_null($order)) $order = "__PLACEHOLDER__";
+    $TH = "<table class='table table-striped'> <thead>" .
+        "<th class='table-ordinal'>" . Lang::get('messages.category_order') . " </th>" .
+        "<th>" . Lang::get('messages.language') . " </th>" . 
+        "<th>" . Lang::get('messages.name') . " </th>" .
+        "<th>" . Lang::get('messages.description') . " </th>" . 
+        "</thead> <tbody>"; 
     $TB = '';
     $languages = \App\Language::all();
+    $first = true;
     foreach ($languages as $language) {
-        $TB .= "<tr><td class='table-ordinal'>" . $order . "</td>" .
-            "<td>" .$language->name. "</td>";
+        $TB .="<tr>";
+        if ($first) {
+            $TB .= "<td class='table-ordinal' rowspan=" . sizeof($languages) .  
+                " style='vertical-align: middle; text-align: center;'>" . $order . "</td>";
+            $first = false;
+        }
+        $TB .= "<td>" .$language->name. "</td>";
         $TB .= genInputTranslationTable($odbtrait, "name", $language->id, $order);
         $TB .= genInputTranslationTable($odbtrait, "description", $language->id, $order);
         $TB .="</tr>";
@@ -204,14 +212,40 @@ function genTraitCategoryTranslationTable($order = null, $odbtrait) {
   </div>
 </div>
 <div class="form-group trait-category">
-<div class="col-sm-12">
+<div class="col-sm-12" id="to_append_categories">
+<h3> @lang('messages.categories') </h3>
 <?php 
 if (isset($odbtrait)) {
-    foreach($odbtrait->categories as $category) {
-        echo genTraitCategoryTranslationTable($category->rank, isset($odbtrait) ? $odbtrait : null); 
+    // do we have "old" input?
+    if (empty(old())) {
+        foreach($odbtrait->categories as $category) {
+            echo genTraitCategoryTranslationTable($category->rank, $odbtrait); 
+        }
+    } else {
+        foreach(array_keys(old("cat_name")) as $rank) {
+            echo genTraitCategoryTranslationTable($rank, $odbtrait); 
+        }
     }
-}
+} else { // no odbtrait, so we're creating a new
+    // do we have "old" input?
+    if (empty(old())) {
+        foreach([1,2,3] as $rank) {
+            echo genTraitCategoryTranslationTable($rank, null); 
+        }
+    } else {
+        foreach(array_keys(old("cat_name")) as $rank) {
+            echo genTraitCategoryTranslationTable($rank, null); 
+        }
+    }
+} 
+
 ?>
+</div>
+<div class="col-sm-12">
+				<button type="submit" class="btn btn-default" id="add_category">
+				    <i class="glyphicon glyphicon-plus"></i>
+@lang('messages.add_category')
+				</button>
 
 </div>
 </div>
@@ -267,6 +301,16 @@ $(document).ready(function() {
 	$("#type").change(function() { setFields(400); });
     // trigger this on page load
 	setFields(0);
+    $("#add_category").click(function(event) {
+        event.preventDefault();
+        var text = "<?php echo genTraitCategoryTranslationTable(null, null); ?>";
+        // infers the number of categories already displayed by the number of table-ordinal headers
+        var newcat = $('th.table-ordinal').length + 1;
+        text = text.replace(/__PLACEHOLDER__/g, newcat);
+        $('#to_append_categories').append(text);
+        setFields(0); 
+    });
+
 });
 </script>
 @endpush
