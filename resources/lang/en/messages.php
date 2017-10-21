@@ -24,7 +24,7 @@ return array (
   'new_trait' => 'New / Edit Trait',
   'trait_type_hint' => 'There are currently seven types of traits available in OpenDataBio. Quantitative traits are measured as single numbers, which may be real valued or integer, depending on the type specified. Quantitative traits require the definition of the measuring unit, and may have an associated valid range. Qualitative traits are selected from a list of categories. Qualitative traits in which there is no ordering of categories are called "categorical" (ex: habitat might be "rain forest" or "mangroove"), and you may specificy if a single measurement may associate a single category or more than one. Ordinal traits are qualitative traits in which there is a natural ordering (the trophic class of a lake may be "oligotrophic", "mesotrophic" or "eutrophic"). Text traits may be freely entered by the user, and link traits have an associate object and number (see wiki page).',
   'trait_objects_hint' => 'List here the object types that may have this trait. For example, for a "Diameter" trait, select Plant; for a "Species Richness" trait, select Location. You may choose more than one object type.',
-  'range_min' => 'Range Minimum',
+  'range_min' => 'Range minimum',
   'range_max' => 'Range maximum',
   'trait_export_hint' => 'This name will be used as a label when exporting spreadsheets. It must be unique in the database. Please provide a name that is easy to identify.',
   'hint_trait_unit' => 'In what unit is this trait measured? Common values include day, year, meter, m², m³, individuals, etc.',

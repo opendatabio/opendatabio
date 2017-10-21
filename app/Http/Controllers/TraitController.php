@@ -37,7 +37,8 @@ class TraitController extends Controller
         $odbtrait = ODBTrait::findOrFail($request->id);
         if ($request->measurement)
             $measurement = Measurement::findOrFail($request->measurement);
-        return view('traits.elements.' . $odbtrait->type, compact('obdtrait', 'measurement'));
+        $html = view('traits.elements.' . $odbtrait->type, compact('odbtrait', 'measurement'))->render();
+        return Response::json(array('html'=>$html));
     }
 
     /**

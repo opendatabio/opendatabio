@@ -9,7 +9,7 @@
 		<option value="{{ $cat->id }}" {{ $cat->id == $selected ? 'selected' : '' }}>
 <?php
 // this file serves both CATEGORICAL and ORDINAL
-if ($measurement->type == 4) echo $cat->rank . " - ";
+if ($odbtrait->type == 4) echo $cat->rank . " - ";
 echo $cat->name;
 ?>
 		</option>

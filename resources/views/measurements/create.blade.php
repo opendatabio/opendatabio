@@ -127,11 +127,12 @@ echo View::make('traits.elements.' . $measurement->type,
     'measurement' => $measurement,
 ]);
     } elseif (!empty(old())) {
-echo View::make('traits.elements.' . $measurement->type, 
-[
-    'odbtrait' => \App\ODBTrait::find(old('trait_id')),
-    'measurement' => null,
-]);
+        $odbtrait = \App\ODBTrait::find(old('trait_id'));
+        echo View::make('traits.elements.' . $odbtrait->type, 
+            [
+                'odbtrait' => $odbtrait,
+                'measurement' => null,
+            ]);
 
     }
 ?>
@@ -172,23 +173,16 @@ $("#trait_autocomplete").devbridgeAutocomplete({
 			type: "GET",
 			url: "{{url('traits/getformelement')}}",
 			dataType: 'json',
-			data: {'id': suggestion.data, 'measurement': {{isset($measurement) ? $measurement->id : null}}},
+			data: {'id': suggestion.data, 'measurement': null},
 			success: function (data) {
-				$( "#spinner" ).hide();
-				if ("error" in data) {
-					$( "#ajax-error" ).collapse("show");
-					$( "#ajax-error" ).text(data.error);
-				} else {
-					// ONLY removes the error if request is success
-					$( "#ajax-error" ).collapse("hide");
-					$("#irn").val(data.ihdata[0]);
-					$("#name").val(data.ihdata[1]);
-				}
+                $("#spinner").hide();
+                $("#ajax-error").collapse("hide");
+                $("#append_value").html(data.html);
 			},
 			error: function(e){ 
-				$( "#spinner" ).hide();
-				$( "#ajax-error" ).collapse("show");
-				$( "#ajax-error" ).text('Error sending AJAX request');
+				$("#spinner").hide();
+				$("#ajax-error").collapse("show");
+				$("#ajax-error").text('Error sending AJAX request');
 			}
 		})
     },
