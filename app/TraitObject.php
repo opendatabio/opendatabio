@@ -18,7 +18,9 @@ class TraitObject extends Model
     {
         return $this->belongsTo(ODBTrait::class, 'trait_id');
     }
-    public function getNameAttribute() {
-        return Lang::get('classes.' . $this->object_type );
+
+    public function getNameAttribute()
+    {
+        return Lang::get('classes.'.$this->object_type);
     }
 }

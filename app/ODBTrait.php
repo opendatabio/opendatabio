@@ -24,14 +24,16 @@ class ODBTrait extends Model
         Location::class,
         Taxon::class,
     ];
+
     // for use in the trait edit dropdown
-    public static function getObjectTypeNames() {
+    public static function getObjectTypeNames()
+    {
         // ugly, TODO refactor
         return [
-            Lang::get('classes.' . Plant::class),
-            Lang::get('classes.' . Voucher::class),
-            Lang::get('classes.' . Location::class),
-            Lang::get('classes.' . Taxon::class),
+            Lang::get('classes.'.Plant::class),
+            Lang::get('classes.'.Voucher::class),
+            Lang::get('classes.'.Location::class),
+            Lang::get('classes.'.Taxon::class),
         ];
     }
 
@@ -82,7 +84,8 @@ class ODBTrait extends Model
             ], $merge);
     }
 
-    protected function makeCategory($rank, $names, $descriptions) {
+    protected function makeCategory($rank, $names, $descriptions)
+    {
         $cat = $this->categories()->create(['rank' => $rank]);
         foreach ($names as $key => $translation) {
             $cat->setTranslation(UserTranslation::NAME, $key, $translation);
@@ -90,6 +93,7 @@ class ODBTrait extends Model
         foreach ($descriptions as $key => $translation) {
             $cat->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
         }
+
         return $cat;
     }
 
@@ -104,7 +108,7 @@ class ODBTrait extends Model
             $this->unit = null;
             $this->range_max = null;
             $this->range_min = null;
-        } 
+        }
         // Set fields from categorical traits
         $this->categories()->delete();
         if (in_array($this->type, [self::CATEGORICAL, self::CATEGORICAL_MULTIPLE, self::ORDINAL])) {
@@ -112,10 +116,10 @@ class ODBTrait extends Model
             $descriptions = $request->cat_description;
             // counts the number of skipped entries, so the ranks will be matched to the names/description
             $skips = 0;
-            for ($i = 1; $i <= sizeof($names); $i++) {
+            for ($i = 1; $i <= sizeof($names); ++$i) {
                 // checks to see if there's at least one name provided
-                if(!array_filter($names[$i])) {
-                    $skips++;
+                if (!array_filter($names[$i])) {
+                    ++$skips;
                     continue;
                 }
                 $this->makeCategory($i - $skips, $names[$i], $descriptions[$i]);

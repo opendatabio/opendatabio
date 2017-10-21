@@ -31,14 +31,17 @@ class TraitController extends Controller
 
         return Response::json(['suggestions' => $traits]);
     }
+
     // Returns the partial view for filling a given trait
     public function getFormElement(Request $request)
     {
         $odbtrait = ODBTrait::findOrFail($request->id);
-        if ($request->measurement)
+        if ($request->measurement) {
             $measurement = Measurement::findOrFail($request->measurement);
-        $html = view('traits.elements.' . $odbtrait->type, compact('odbtrait', 'measurement'))->render();
-        return Response::json(array('html'=>$html));
+        }
+        $html = view('traits.elements.'.$odbtrait->type, compact('odbtrait', 'measurement'))->render();
+
+        return Response::json(array('html' => $html));
     }
 
     /**

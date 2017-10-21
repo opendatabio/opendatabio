@@ -14,6 +14,7 @@
         "wyndow/fuzzywuzzy": "^0.6.0",
         "yajra/laravel-datatables-buttons": "^3.0",
         "yajra/laravel-datatables-oracle": "^8.0",
+        "laravel/tinker": "~1.0",
         "andrechalom/laravel-multiselect": "dev-master"
     },
     "require-dev": {
@@ -23,7 +24,6 @@
         "filp/whoops": "~2.0",
         "friendsofphp/php-cs-fixer": "^2.7",
         "fzaninotto/faker": "~1.4",
-        "laravel/tinker": "~1.0",
         "maximebf/debugbar": "^1.14",
         "mockery/mockery": "0.9.*",
         "phpunit/phpunit": "~6.0"

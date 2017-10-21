@@ -639,7 +639,7 @@ class Installer
         echo $this->c('Running database migrations... This may take a while...', 'success');
         system('php artisan migrate', $status);
         if (0 != $status) {
-            exit(c("running 'php artisan migrate' failed!\n", 'danger'));
+            exit($this->c("running 'php artisan migrate' failed!\n", 'danger'));
         }
 
         echo 'Do you wish to seed the database with randomly generated test data? yes/[no] ';
@@ -647,7 +647,7 @@ class Installer
         if ('y' == $line or 'yes' == $line) {
             system('php artisan db:seed', $status);
             if (0 != $status) {
-                exit(c("running 'php artisan db:seed' failed!\n", 'danger'));
+                exit($this->c("running 'php artisan db:seed' failed!\n", 'danger'));
             }
         }
     }

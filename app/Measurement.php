@@ -48,6 +48,7 @@ class Measurement extends Model
     {
         return $this->belongsTo(Dataset::class);
     }
+
     public function categories()
     {
         return $this->hasMany(MeasurementCategory::class);
@@ -71,16 +72,18 @@ class Measurement extends Model
             return $this->categories()->first()->traitCategory->name;
             break;
         case ODBTrait::CATEGORICAL_MULTIPLE:
-            $cats = collect($this->categories)->map(function($newcat) {
+            $cats = collect($this->categories)->map(function ($newcat) {
                 return $newcat->traitCategory->name;
             })->all();
+
             return implode(', ', $cats);
             break;
         case ODBTrait::ORDINAL:
             $tcat = $this->categories()->first()->traitCategory;
-            return $tcat->rank . " - " . $tcat->name;
+
+            return $tcat->rank.' - '.$tcat->name;
             break;
-            // TODO: Link 
+            // TODO: Link
         }
     }
 
@@ -104,10 +107,11 @@ class Measurement extends Model
             break;
         case ODBTrait::CATEGORICAL_MULTIPLE:
             $this->categories()->delete();
-            foreach($value as $v)
+            foreach ($value as $v) {
                 $this->categories()->create(['category_id' => $v]);
+            }
             break;
-            // TODO: Link 
+            // TODO: Link
         }
     }
 
