@@ -187,9 +187,9 @@ class MeasurementController extends Controller
         $measurement = new Measurement($request->only([
             'trait_id', 'measured_id', 'measured_type', 'dataset_id', 'person_id', 'bibreference_id',
         ]));
+        $measurement->setDate($request->date_month, $request->date_day, $request->date_year);
         $measurement->save();
         $measurement->valueActual = $request->value;
-        $measurement->setDate($request->date_month, $request->date_day, $request->date_year);
         $measurement->save();
 
         return redirect('measurements/'.$measurement->id)->withStatus(Lang::get('messages.stored'));
