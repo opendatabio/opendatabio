@@ -80,7 +80,7 @@
 	    <div class="col-sm-6">
 	<?php $selected = old('parent_type', isset($voucher) ? $voucher->parent_type : null); ?>
 
-	<select name="parent_type" id="parent_type" class="form-control" >
+	<select name="parent_type" id="parent_type" class="form-control" {{ isset($voucher) ? 'disabled' : '' }}>
 	@foreach ([ ["id" => "App\Plant", "name" => "Plant"], ["id" => "App\Location", "name" => "Location"] ] as $vtype)
 		<option value="{{$vtype['id']}}" {{ $vtype['id'] == $selected ? 'selected' : '' }}>
             {{ $vtype['name'] }}
@@ -101,16 +101,10 @@
 </label>
         <a data-toggle="collapse" href="#hintpl" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('parent_location_id', isset($voucher) ? $voucher->parent_id : null); ?>
-
-	<select name="parent_location_id" id="parent_location_id" class="form-control" >
-        <option value=""> </option>
-	@foreach ($locations as $location)
-		<option value="{{$location->id}}" {{ $location->id == $selected ? 'selected' : '' }}>
-            {{ $location->name }}
-		</option>
-	@endforeach
-	</select>
+    <input type="text" name="location_autocomplete" id="location_autocomplete" class="form-control autocomplete"
+    value="{{ old('location_autocomplete', isset($voucher) ? $voucher->parent->fullname : null) }}">
+    <input type="hidden" name="parent_location_id" id="parent_location_id"
+    value="{{ old('parent_location_id', isset($voucher) ? $voucher->parent_id : null) }}">
             </div>
   <div class="col-sm-12">
     <div id="hintpl" class="panel-collapse collapse">
@@ -182,7 +176,7 @@
 </label>
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-    <input type="text" name="taxon_autocomplete" id="taxon_autocomplete" class="form-control"
+    <input type="text" name="taxon_autocomplete" id="taxon_autocomplete" class="form-control autocomplete"
     value="{{ old('taxon_autocomplete', (isset($voucher) and $voucher->identification) ? $voucher->identification->taxon->fullname : null) }}">
     <input type="hidden" name="taxon_id" id="taxon_id"
     value="{{ old('taxon_id', (isset($voucher) and $voucher->identification) ? $voucher->identification->taxon_id : null) }}">

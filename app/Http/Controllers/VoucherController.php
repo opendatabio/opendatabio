@@ -99,9 +99,7 @@ class VoucherController extends Controller
         if (!Auth::user()) {
             return view('common.unauthorized');
         }
-        $taxons = Taxon::leaf()->valid()->get();
         $herbaria = Herbarium::all();
-        $locations = Location::all();
         $persons = Person::all();
         $plants = Plant::with('location')->get();
         $projects = Auth::user()->projects;
@@ -110,7 +108,7 @@ class VoucherController extends Controller
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
         }
 
-        return view('vouchers.create', compact('taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants'));
+        return view('vouchers.create', compact('persons', 'projects', 'herbaria', 'plants'));
     }
 
     /**
@@ -207,9 +205,7 @@ class VoucherController extends Controller
             return view('common.unauthorized');
         }
         $voucher = Voucher::findOrFail($id);
-        $taxons = Taxon::leaf()->valid()->get();
         $herbaria = Herbarium::all();
-        $locations = Location::all();
         $persons = Person::all();
         $plants = Plant::with('location')->get();
         $projects = Auth::user()->projects;
@@ -218,7 +214,7 @@ class VoucherController extends Controller
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
         }
 
-        return view('vouchers.create', compact('voucher', 'taxons', 'persons', 'locations', 'projects', 'herbaria', 'plants'));
+        return view('vouchers.create', compact('voucher', 'persons', 'projects', 'herbaria', 'plants'));
     }
 
     /**

@@ -73,6 +73,15 @@ $(document).ready(function() {
             $("#identification_notes").val('');
         }
 });
+    $("#location_autocomplete").devbridgeAutocomplete({
+    serviceUrl: "{{url('locations/autocomplete')}}",
+        onSelect: function (suggestion) {
+            $("#parent_location_id").val(suggestion.data);
+        },
+        onInvalidateSelection: function() {
+            $("#parent_location_id").val(null);
+        }
+});
 });
 </script>
 @endpush
