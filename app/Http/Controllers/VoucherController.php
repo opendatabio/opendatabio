@@ -13,7 +13,6 @@ use Validator;
 use App\Plant;
 use App\Person;
 use App\Project;
-use App\Taxon;
 use App\Location;
 use App\Herbarium;
 use App\Identification;
@@ -166,7 +165,6 @@ class VoucherController extends Controller
         // common:
         if ($request->collector) {
             foreach ($request->collector as $collector) {
-                Log::info('registering collector '.$collector);
                 $voucher->collectors()->create(['person_id' => $collector]);
             }
         }

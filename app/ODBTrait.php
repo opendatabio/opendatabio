@@ -166,18 +166,21 @@ class ODBTrait extends Model
         });
     }
 
-    public function getRangeDisplayAttribute() {
-        if(isset($this->range_min)) 
+    public function getRangeDisplayAttribute()
+    {
+        if (isset($this->range_min)) {
             $ret = $this->range_min;
-        else 
-            $ret = "-" . "&#8734;";
+        } else {
+            $ret = '-'.'&#8734;';
+        }
 
-        $ret .= ' ' . '&#8212;' . ' ';
+        $ret .= ' '.'&#8212;'.' ';
 
-        if(isset($this->range_max)) 
+        if (isset($this->range_max)) {
             $ret .= $this->range_max;
-        else 
-            $ret .= "&#8734;";
+        } else {
+            $ret .= '&#8734;';
+        }
 
         return $ret;
     }
