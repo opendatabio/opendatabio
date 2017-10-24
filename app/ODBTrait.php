@@ -165,4 +165,20 @@ class ODBTrait extends Model
             return $q->where('object_type', '=', $class);
         });
     }
+
+    public function getRangeDisplayAttribute() {
+        if(isset($this->range_min)) 
+            $ret = $this->range_min;
+        else 
+            $ret = "-" . "&#8734;";
+
+        $ret .= ' ' . '&#8212;' . ' ';
+
+        if(isset($this->range_max)) 
+            $ret .= $this->range_max;
+        else 
+            $ret .= "&#8734;";
+
+        return $ret;
+    }
 }

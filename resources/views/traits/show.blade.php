@@ -51,7 +51,7 @@
     <p><strong>
     @lang('messages.range')
     : </strong>
-    {{ $odbtrait->range_min }} - {{ $odbtrait->range_max }}
+    {{ $odbtrait->rangeDisplay }}
     </p>
     @endif
 @endif

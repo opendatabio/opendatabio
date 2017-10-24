@@ -20,12 +20,14 @@
 @lang('messages.trait')
 : </strong>  
 <a href="{{url('traits/' . $measurement->trait_id)}}">{{$measurement->odbtrait->name}}</a>
+<br><em>  
+{{$measurement->odbtrait->description}}</em>
 </p>
 
 <p><strong>
 @lang('messages.value')
 : </strong>  
-{{$measurement->valueActual}}
+{{$measurement->valueActual}} {{ $measurement->odbtrait->unit }}
 </p>
 
 <p><strong>
