@@ -46,7 +46,7 @@ class PlantController extends Controller
         if (!Auth::user()) {
             return view('common.unauthorized');
         }
-        $taxons = Taxon::leaf()->valid()->get();
+//        $taxons = Taxon::leaf()->valid()->get();
         $herbaria = Herbarium::all();
         $locations = Location::all();
         $persons = Person::all();
@@ -57,7 +57,7 @@ class PlantController extends Controller
         }
 
         return view('plants.create', [
-            'taxons' => $taxons,
+//            'taxons' => $taxons,
             'persons' => $persons,
             'locations' => $locations,
             'projects' => $projects,
