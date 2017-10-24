@@ -21,7 +21,7 @@
 @can ('create', App\Measurement::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-      @lang('messages.new_measurement')
+      @lang('messages.create_measurement')
                 </div>
 
                 <div class="panel-body">

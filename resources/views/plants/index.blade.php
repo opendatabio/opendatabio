@@ -21,7 +21,7 @@
 @can ('create', App\Plant::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-      @lang('messages.new_plant')
+      @lang('messages.create_plant')
                 </div>
 
                 <div class="panel-body">

@@ -20,7 +20,7 @@
 @can ('create', App\Taxon::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-      @lang('messages.new_taxon')
+      @lang('messages.create_taxon')
                 </div>
 
                 <div class="panel-body">

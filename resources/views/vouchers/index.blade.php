@@ -21,7 +21,7 @@
 @can ('create', App\Voucher::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-      @lang('messages.new_voucher')
+      @lang('messages.create_voucher')
                 </div>
 
                 <div class="panel-body">

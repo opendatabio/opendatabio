@@ -20,7 +20,7 @@
 @can ('create', App\Location::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-      @lang('messages.new_location')
+      @lang('messages.create_location')
                 </div>
 
                 <div class="panel-body">
