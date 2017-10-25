@@ -86,8 +86,8 @@ class PlantController extends Controller
                     $query->where('location_id', $request->location_id);
                 }),
             ],
-            'x' => 'nullable|numeric|min:0|max:'. ( is_null($location) ? '' : $location->x),
-            'y' => 'nullable|numeric|min:0|max:'. ( is_null($location) ? '' : $location->y),
+            'x' => 'nullable|numeric|min:0|max:'.(is_null($location) ? '' : $location->x),
+            'y' => 'nullable|numeric|min:0|max:'.(is_null($location) ? '' : $location->y),
         ];
         $validator = Validator::make($request->all(), $rules);
         $validator->after(function ($validator) use ($request) {

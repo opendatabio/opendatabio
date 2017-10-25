@@ -213,6 +213,7 @@ class TaxonController extends Controller
     public function edit($id)
     {
         $taxon = Taxon::findOrFail($id);
+
         return view('taxons.create', [
             'taxon' => $taxon,
         ]);

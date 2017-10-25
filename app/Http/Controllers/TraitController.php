@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use App\Language;
 use Lang;
 use Response;
-use Log;
 
 class TraitController extends Controller
 {

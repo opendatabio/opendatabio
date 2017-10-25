@@ -19,7 +19,6 @@ use App\Identification;
 use App\Voucher;
 use Auth;
 use Lang;
-use Log;
 
 class VoucherController extends Controller
 {
@@ -93,14 +92,20 @@ class VoucherController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function createPlants($id) {
+    public function createPlants($id)
+    {
         $plant = Plant::findOrFail($id);
+
         return $this->create($plant);
     }
-    public function createLocations($id) {
+
+    public function createLocations($id)
+    {
         $location = Location::findOrFail($id);
+
         return $this->create($location);
     }
+
     protected function create($parent)
     {
         if (!Auth::user()) {

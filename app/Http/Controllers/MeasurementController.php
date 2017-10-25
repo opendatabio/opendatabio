@@ -70,30 +70,35 @@ class MeasurementController extends Controller
         if (!$datasets->count()) {
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_dataset_error')]);
         }
+
         return view('measurements.create', compact('object', 'references', 'datasets', 'persons'));
     }
 
     public function createPlants($id)
     {
         $object = Plant::findOrFail($id);
+
         return $this->create($object);
     }
 
     public function createVouchers($id)
     {
         $object = Voucher::findOrFail($id);
+
         return $this->create($object);
     }
 
     public function createLocations($id)
     {
         $object = Location::findOrFail($id);
+
         return $this->create($object);
     }
 
     public function createTaxons($id)
     {
         $object = Taxon::findOrFail($id);
+
         return $this->create($object);
     }
 
