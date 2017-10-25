@@ -72,7 +72,12 @@
     case 3:
     case 4:
         $cats = $mytrait->categories;
-        echo $cats[0]->name . ', ' . $cats[1]->name . ', ...';
+        $i = 0;
+        foreach ($cats as $cat) {
+            if ($i++ > 2) continue;
+            echo $cat->name . ', ';
+        } 
+        echo '...';
         break;
     }
 ?>

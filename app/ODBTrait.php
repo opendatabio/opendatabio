@@ -80,6 +80,7 @@ class ODBTrait extends Model
                 'objects.*' => 'required|integer|min:0|max:'.(count(self::OBJECT_TYPES) - 1),
                 'unit' => 'required_if:type,0,1',
                 'cat_name' => 'array|required_if:type,2,3,4',
+                'cat_name.1' => 'required_if:type,2,3,4',
                 'cat_name.1.1' => 'required_if:type,2,3,4',
             ], $merge);
     }

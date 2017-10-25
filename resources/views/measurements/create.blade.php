@@ -166,6 +166,8 @@ $("#bibreference_autocomplete").devbridgeAutocomplete({
     });
 $("#trait_autocomplete").devbridgeAutocomplete({
     serviceUrl: "{{url('traits/autocomplete')}}",
+    /* adds the object type to request; doubles the namespace back slashes */
+    params: {'type': '{{ str_replace('\\', '\\\\', get_class($object)) }}' },
     onSelect: function (suggestion) {
         $("#trait_id").val(suggestion.data);
 		$( "#spinner" ).css('display', 'inline-block');

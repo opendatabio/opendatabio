@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Language;
 use Lang;
 use Response;
+use Log;
 
 class TraitController extends Controller
 {
@@ -21,6 +22,7 @@ class TraitController extends Controller
         $traits = ODBTrait::whereHas('translations', function ($query) use ($request) {
             $query->where('translation', 'LIKE', ['%'.$request->input('query').'%']);
         })
+            ->appliesTo($request->type)
             ->get();
         $traits = collect($traits)->transform(function ($odbtrait) {
             $odbtrait->data = $odbtrait->id;

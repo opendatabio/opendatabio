@@ -218,7 +218,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 <?php 
 if (isset($odbtrait)) {
     // do we have "old" input?
-    if (empty(old())) {
+    if (empty(old()) or empty(old("cat_name"))) {
         foreach($odbtrait->categories as $category) {
             echo genTraitCategoryTranslationTable($category->rank, $odbtrait); 
         }
@@ -229,7 +229,7 @@ if (isset($odbtrait)) {
     }
 } else { // no odbtrait, so we're creating a new
     // do we have "old" input?
-    if (empty(old())) {
+    if (empty(old()) or empty(old("cat_name"))) {
         foreach([1,2,3] as $rank) {
             echo genTraitCategoryTranslationTable($rank, null); 
         }

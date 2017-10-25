@@ -61,7 +61,7 @@ class MeasurementController extends Controller
         return $this->index($taxon);
     }
 
-    protected function create($object, $traits)
+    protected function create($object)
     {
         $persons = Person::all();
         $references = BibReference::all();
@@ -70,43 +70,31 @@ class MeasurementController extends Controller
         if (!$datasets->count()) {
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_dataset_error')]);
         }
-        if (!$traits->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_trait_error')]);
-        }
-
-        return view('measurements.create', compact('object', 'traits', 'references', 'datasets', 'persons'));
+        return view('measurements.create', compact('object', 'references', 'datasets', 'persons'));
     }
 
     public function createPlants($id)
     {
         $object = Plant::findOrFail($id);
-        $traits = ODBTrait::appliesTo(Plant::class)->get();
-
-        return $this->create($object, $traits);
+        return $this->create($object);
     }
 
     public function createVouchers($id)
     {
         $object = Voucher::findOrFail($id);
-        $traits = ODBTrait::appliesTo(Voucher::class)->get();
-
-        return $this->create($object, $traits);
+        return $this->create($object);
     }
 
     public function createLocations($id)
     {
         $object = Location::findOrFail($id);
-        $traits = ODBTrait::appliesTo(Location::class)->get();
-
-        return $this->create($object, $traits);
+        return $this->create($object);
     }
 
     public function createTaxons($id)
     {
         $object = Taxon::findOrFail($id);
-        $traits = ODBTrait::appliesTo(Taxon::class)->get();
-
-        return $this->create($object, $traits);
+        return $this->create($object);
     }
 
     public function show($id)
