@@ -42,7 +42,7 @@
     <th>
 @lang('messages.language')
     </th>
-    <th>
+    <th class="mandatory">
 @lang('messages.tag_name')
     </th>
     <th>

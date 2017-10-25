@@ -65,7 +65,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     $TH = "<table class='table table-striped'> <thead>" .
         "<th class='table-ordinal'>" . Lang::get('messages.category_order') . " </th>" .
         "<th>" . Lang::get('messages.language') . " </th>" . 
-        "<th>" . Lang::get('messages.name') . " </th>" .
+        "<th class='mandatory'>" . Lang::get('messages.name') . " </th>" .
         "<th>" . Lang::get('messages.description') . " </th>" . 
         "</thead> <tbody>"; 
     $TB = '';
@@ -92,7 +92,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     <th>
 @lang('messages.language')
     </th>
-    <th>
+    <th class='mandatory'>
 @lang('messages.name')
     </th>
     <th>
@@ -114,7 +114,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 </div>
 
 <div class="form-group">
-    <label for="export_name" class="col-sm-3 control-label">
+    <label for="export_name" class="col-sm-3 control-label mandatory">
         @lang('messages.export_name')
     </label>
         <a data-toggle="collapse" href="#hinte" class="btn btn-default">?</a>
@@ -130,7 +130,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 </div>
     
 <div class="form-group">
-    <label for="type" class="col-sm-3 control-label">
+    <label for="type" class="col-sm-3 control-label mandatory">
 @lang('messages.type')
 </label>
         <a data-toggle="collapse" href="#hintp" class="btn btn-default">?</a>
@@ -152,7 +152,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
   </div>
 </div>
 <div class="form-group">
-    <label for="objects" class="col-sm-3 control-label">
+    <label for="objects" class="col-sm-3 control-label mandatory">
 @lang('messages.object_types')
 </label>
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
@@ -171,7 +171,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
   </div>
 </div>
 <div class="form-group trait-number">
-    <label for="unit" class="col-sm-3 control-label">
+    <label for="unit" class="col-sm-3 control-label mandatory">
 @lang('messages.unit')
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>

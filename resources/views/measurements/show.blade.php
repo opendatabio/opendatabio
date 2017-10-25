@@ -44,7 +44,7 @@
 
 @if ($measurement->person)
 <p><strong>
-@lang('messages.person')
+@lang('messages.measurement_measurer')
 :</strong>
 <a href="{{url('persons/' . $measurement->person_id)}}">{{$measurement->person->full_name}}</a>
 </p>

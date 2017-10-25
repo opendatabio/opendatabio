@@ -35,7 +35,7 @@
     <input type="hidden"  name="measured_type" value="{{get_class($object)}}">
 </div>
 <div class="form-group">
-    <label for="trait_id" class="col-sm-3 control-label">
+    <label for="trait_id" class="col-sm-3 control-label mandatory">
 @lang('messages.trait')
 </label>
     <div id="spinner"></div>
@@ -47,7 +47,7 @@
     </div>
 </div>
 <div class="form-group">
-    <label for="date" class="col-sm-3 control-label">
+    <label for="date" class="col-sm-3 control-label mandatory">
 @lang('messages.measurement_date')
 </label>
         <a data-toggle="collapse" href="#hintdate" class="btn btn-default">?</a>
@@ -81,8 +81,8 @@
   </div>
 </div>
 <div class="form-group">
-    <label for="person_id" class="col-sm-3 control-label">
-@lang('messages.measurement_person')
+    <label for="person_id" class="col-sm-3 control-label mandatory">
+@lang('messages.measurement_measurer')
 </label>
         <a data-toggle="collapse" href="#hintp" class="btn btn-default">?</a>
 <div class="col-sm-6">
@@ -98,7 +98,7 @@
   </div>
 </div>
 <div class="form-group">
-    <label for="dataset_id" class="col-sm-3 control-label">
+    <label for="dataset_id" class="col-sm-3 control-label mandatory">
 @lang('messages.measurement_dataset')
 </label>
         <a data-toggle="collapse" href="#hintr" class="btn btn-default">?</a>

@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="name" class="col-sm-3 control-label">
+    <label for="name" class="col-sm-3 control-label mandatory">
 @lang('messages.name')
 </label>
     <div class="col-sm-6">
@@ -15,7 +15,7 @@
             </div>
 </div>
 <div class="form-group">
-    <label for="privacy" class="col-sm-3 control-label">
+    <label for="privacy" class="col-sm-3 control-label mandatory">
 @lang('messages.privacy')
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
@@ -38,7 +38,7 @@
 </div>
 
 <div class="form-group">
-<label for="admins" class="col-sm-3 control-label">
+<label for="admins" class="col-sm-3 control-label mandatory">
 @lang('messages.admins')
 </label>
 <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>

@@ -1,6 +1,6 @@
 
 <div class="form-group">
-    <label for="acronym" class="col-sm-3 control-label">
+    <label for="acronym" class="col-sm-3 control-label mandatory">
 @lang('messages.acronym')
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
@@ -14,7 +14,7 @@
   </div>
 </div>
 <div class="form-group">
-    <label for="name" class="col-sm-3 control-label">
+    <label for="name" class="col-sm-3 control-label mandatory">
 @lang('messages.institution')
 </label>
     <div class="col-sm-6">
@@ -22,7 +22,7 @@
     </div>
 </div>
 <div class="form-group">
-    <label for="irn" class="col-sm-3 control-label">
+    <label for="irn" class="col-sm-3 control-label mandatory">
 @lang('messages.irn')
 </label>
 	    <div class="col-sm-6">

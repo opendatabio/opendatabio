@@ -383,4 +383,5 @@ remove the job information from the database.',
   'create_taxon' => 'Create taxon',
   'create_plant' => 'Create plant',
   'create_voucher' => 'Create herbarium sample',
+  'measurement_measurer' => 'Measurer',
 );

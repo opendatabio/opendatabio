@@ -69,7 +69,8 @@ class PlantController extends Controller
             $plantid = $plant->id;
         }
 
-        $location = Location::findOrFail($request->location_id);
+        // TODO: check if location_id is set, and fail gracefully
+        $location = Location::find($request->location_id);
         $rules = [
             'location_id' => 'required|integer',
             'project_id' => 'required|integer',
@@ -86,8 +87,8 @@ class PlantController extends Controller
                     $query->where('location_id', $request->location_id);
                 }),
             ],
-            'x' => 'nullable|numeric|min:0|max:'.$location->x,
-            'y' => 'nullable|numeric|min:0|max:'.$location->y,
+            'x' => 'nullable|numeric|min:0|max:'. ( is_null($location) ? '' : $location->x),
+            'y' => 'nullable|numeric|min:0|max:'. ( is_null($location) ? '' : $location->y),
         ];
         $validator = Validator::make($request->all(), $rules);
         $validator->after(function ($validator) use ($request) {

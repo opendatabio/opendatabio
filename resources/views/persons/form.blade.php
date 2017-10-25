@@ -1,5 +1,5 @@
 <div class="form-group">
-    <label for="full_name" class="col-sm-3 control-label">
+    <label for="full_name" class="col-sm-3 control-label mandatory">
 @lang('messages.full_name')
 </label>
     <div class="col-sm-6">
@@ -7,7 +7,7 @@
     </div>
 </div>
 <div class="form-group">
-    <label for="abbreviation" class="col-sm-3 control-label">
+    <label for="abbreviation" class="col-sm-3 control-label mandatory">
 @lang('messages.abbreviation')
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>

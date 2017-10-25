@@ -1,6 +1,6 @@
 <!-- name -->
 <div class="form-group">
-    <label for="tag" class="col-sm-3 control-label">
+    <label for="tag" class="col-sm-3 control-label mandatory">
 @lang('messages.plant_tag')
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
@@ -15,7 +15,7 @@
 </div>
 
 <div class="form-group">
-    <label for="location_id" class="col-sm-3 control-label">
+    <label for="location_id" class="col-sm-3 control-label mandatory">
 @lang('messages.location')
 </label>
         <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
@@ -33,7 +33,7 @@
 </div>
 
 <div class="form-group">
-    <label for="project" class="col-sm-3 control-label">
+    <label for="project" class="col-sm-3 control-label mandatory">
 @lang('messages.project')
 </label>
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
@@ -56,7 +56,7 @@
 </div>
 
 <div class="form-group">
-    <label for="date" class="col-sm-3 control-label">
+    <label for="date" class="col-sm-3 control-label mandatory">
 @lang('messages.tag_date')
 </label>
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
@@ -100,7 +100,7 @@
 
 <!-- collector -->
 <div class="form-group">
-    <label for="collectors" class="col-sm-3 control-label">
+    <label for="collectors" class="col-sm-3 control-label mandatory">
 @lang('messages.tag_team')
 </label>
         <a data-toggle="collapse" href="#hint5" class="btn btn-default">?</a>
@@ -115,7 +115,7 @@
 </div>
 
 <div class="form-group">
-    <label for="taxon_id" class="col-sm-3 control-label">
+    <label for="taxon_id" class="col-sm-3 control-label mandatory">
 @lang('messages.taxon')
 </label>
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
@@ -155,7 +155,7 @@
 </div>
 
 <div class="form-group">
-    <label for="identifier_id" class="col-sm-3 control-label">
+    <label for="identifier_id" class="col-sm-3 control-label mandatory">
 @lang('messages.identifier')
 </label>
         <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
@@ -173,7 +173,7 @@
 </div>
 
 <div class="form-group">
-    <label for="identification_date" class="col-sm-3 control-label">
+    <label for="identification_date" class="col-sm-3 control-label mandatory">
 @lang('messages.identification_date')
 </label>
         <a data-toggle="collapse" href="#hint8" class="btn btn-default">?</a>
