@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "dccabc84ed92373b158ae75db2c5195b",
+    "content-hash": "c5c2fc5f95356436020022d322d464f9",
     "packages": [
         {
             "name": "andrechalom/laravel-multiselect",
@@ -69,6 +69,60 @@
                 "select"
             ],
             "time": "2017-09-22T16:22:12+00:00"
+        },
+        {
+            "name": "barryvdh/laravel-translation-manager",
+            "version": "v0.4.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/barryvdh/laravel-translation-manager.git",
+                "reference": "c9939e6199e92d36301143f37a735fcf36d022f5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/barryvdh/laravel-translation-manager/zipball/c9939e6199e92d36301143f37a735fcf36d022f5",
+                "reference": "c9939e6199e92d36301143f37a735fcf36d022f5",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "5.0.x|5.1.x|5.2.x|5.3.x|5.4.x|5.5.x",
+                "illuminate/translation": "5.0.x|5.1.x|5.2.x|5.3.x|5.4.x|5.5.x",
+                "php": ">=5.4.0",
+                "symfony/finder": "~2.3|~3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "0.4-dev"
+                },
+                "laravel": {
+                    "providers": [
+                        "Barryvdh\\TranslationManager\\TranslationServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Barryvdh\\TranslationManager\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Barry vd. Heuvel",
+                    "email": "barryvdh@gmail.com"
+                }
+            ],
+            "description": "Manage Laravel Translations",
+            "keywords": [
+                "laravel",
+                "translations",
+                "translator"
+            ],
+            "time": "2017-09-02T16:02:44+00:00"
         },
         {
             "name": "baum/baum",
@@ -3130,16 +3184,16 @@
         },
         {
             "name": "yajra/laravel-datatables-oracle",
-            "version": "v8.1.1",
+            "version": "v8.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/yajra/laravel-datatables.git",
-                "reference": "70ea9184e00cc2e09a9c8772858c5fe04338b3fc"
+                "reference": "9bb45b445d3a9deb6a62e6974d2651bf15180d2f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yajra/laravel-datatables/zipball/70ea9184e00cc2e09a9c8772858c5fe04338b3fc",
-                "reference": "70ea9184e00cc2e09a9c8772858c5fe04338b3fc",
+                "url": "https://api.github.com/repos/yajra/laravel-datatables/zipball/9bb45b445d3a9deb6a62e6974d2651bf15180d2f",
+                "reference": "9bb45b445d3a9deb6a62e6974d2651bf15180d2f",
                 "shasum": ""
             },
             "require": {
@@ -3196,7 +3250,7 @@
                 "jquery",
                 "laravel"
             ],
-            "time": "2017-10-17T03:09:05+00:00"
+            "time": "2017-10-25T01:24:37+00:00"
         }
     ],
     "packages-dev": [
@@ -3267,60 +3321,6 @@
                 "webprofiler"
             ],
             "time": "2017-09-18T13:32:46+00:00"
-        },
-        {
-            "name": "barryvdh/laravel-translation-manager",
-            "version": "v0.4.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/barryvdh/laravel-translation-manager.git",
-                "reference": "c9939e6199e92d36301143f37a735fcf36d022f5"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/barryvdh/laravel-translation-manager/zipball/c9939e6199e92d36301143f37a735fcf36d022f5",
-                "reference": "c9939e6199e92d36301143f37a735fcf36d022f5",
-                "shasum": ""
-            },
-            "require": {
-                "illuminate/support": "5.0.x|5.1.x|5.2.x|5.3.x|5.4.x|5.5.x",
-                "illuminate/translation": "5.0.x|5.1.x|5.2.x|5.3.x|5.4.x|5.5.x",
-                "php": ">=5.4.0",
-                "symfony/finder": "~2.3|~3.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "0.4-dev"
-                },
-                "laravel": {
-                    "providers": [
-                        "Barryvdh\\TranslationManager\\TranslationServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Barryvdh\\TranslationManager\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Barry vd. Heuvel",
-                    "email": "barryvdh@gmail.com"
-                }
-            ],
-            "description": "Manage Laravel Translations",
-            "keywords": [
-                "laravel",
-                "translations",
-                "translator"
-            ],
-            "time": "2017-09-02T16:02:44+00:00"
         },
         {
             "name": "composer/semver",

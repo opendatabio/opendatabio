@@ -15,11 +15,11 @@
         "yajra/laravel-datatables-buttons": "^3.0",
         "yajra/laravel-datatables-oracle": "^8.0",
         "laravel/tinker": "~1.0",
+        "barryvdh/laravel-translation-manager": "^0.4.0",
         "andrechalom/laravel-multiselect": "dev-master"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "~3.0",
-        "barryvdh/laravel-translation-manager": "^0.4.0",
         "doctrine/instantiator": "1.0.5",
         "doctrine/annotations": "1.4",
         "filp/whoops": "~2.0",
