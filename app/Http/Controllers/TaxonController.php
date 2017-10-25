@@ -65,14 +65,7 @@ class TaxonController extends Controller
      */
     public function create()
     {
-        $taxons = Taxon::all();
-        $persons = Person::all();
-        $references = BibReference::all();
-
         return view('taxons.create', [
-            'taxons' => $taxons,
-            'persons' => $persons,
-            'references' => $references,
         ]);
     }
 
@@ -219,16 +212,9 @@ class TaxonController extends Controller
      */
     public function edit($id)
     {
-        $taxons = Taxon::all();
-        $persons = Person::all();
-        $references = BibReference::all();
         $taxon = Taxon::findOrFail($id);
-
         return view('taxons.create', [
             'taxon' => $taxon,
-            'taxons' => $taxons,
-            'persons' => $persons,
-            'references' => $references,
         ]);
     }
 

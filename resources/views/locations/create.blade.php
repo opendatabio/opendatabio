@@ -25,7 +25,7 @@
 
                      {{ csrf_field() }}
 <div class="form-group">
-    <label for="name" class="col-sm-3 control-label">
+    <label for="name" class="col-sm-3 control-label mandatory">
 @lang('messages.location_name')
 </label>
     <div class="col-sm-6">
@@ -33,7 +33,7 @@
     </div>
 </div>
 <div class="form-group">
-    <label for="adm_level" class="col-sm-3 control-label">
+    <label for="adm_level" class="col-sm-3 control-label mandatory">
 @lang('messages.adm_level')
 </label>
         <a data-toggle="collapse" href="#hint5" class="btn btn-default">?</a>
@@ -41,7 +41,6 @@
 	<?php $selected = old('adm_level', isset($location) ? $location->adm_level : null); ?>
 
 	<select name="adm_level" id="adm_level" class="form-control" >
-		<option value='' {{ is_null($selected) ? 'selected' : '' }} >&nbsp;</option>
 	@foreach (App\Location::AdmLevels() as $level)
 		<option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
 			@lang ('levels.adm.' . $level )
@@ -57,7 +56,7 @@
 </div>
 <div id="super-geometry">
 <div class="form-group">
-    <label for="geom" class="col-sm-3 control-label">
+    <label for="geom" class="col-sm-3 control-label mandatory">
 @lang('messages.geometry')
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
@@ -73,7 +72,7 @@
 </div>
 <div id="super-points">
 <div class="form-group">
-    <label for="lat1" class="col-sm-3 control-label">
+    <label for="lat1" class="col-sm-3 control-label mandatory">
 @lang('messages.latitude')
 </label>
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
@@ -88,7 +87,7 @@
 
             </div>
 <br>
-    <label for="lat1" class="col-sm-3 control-label">
+    <label for="lat1" class="col-sm-3 control-label mandatory">
 @lang('messages.longitude')
 </label>
 	    <div class="col-sm-6">
@@ -111,7 +110,7 @@
 
 <div id="super-x">
 <div class="form-group">
-    <label for="x" class="col-sm-3 control-label">
+    <label for="x" class="col-sm-3 control-label mandatory">
 @lang('messages.dimensions')
 </label>
         <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
