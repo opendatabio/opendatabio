@@ -18,23 +18,6 @@
     </div>
   </div>
 
-@can ('create', App\Voucher::class)
-            <div class="panel panel-default">
-                <div class="panel-heading">
-      @lang('messages.create_voucher')
-                </div>
-
-                <div class="panel-body">
-			    <div class="col-sm-6">
-				<a href="{{url ('vouchers/create')}}" class="btn btn-success">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.create')
-
-				</a>
-			</div>
-                </div>
-	    </div>
-@endcan
             <!-- Registered Vouchers -->
                 <div class="panel panel-default">
                     <div class="panel-heading">

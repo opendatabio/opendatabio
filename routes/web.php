@@ -51,7 +51,9 @@ Route::resource('datasets', 'DatasetController');
 
 Route::resource('plants', 'PlantController');
 
-Route::resource('vouchers', 'VoucherController');
+Route::get('plants/{id}/vouchers/create', 'VoucherController@createPlants');
+Route::get('locations/{id}/vouchers/create', 'VoucherController@createLocations');
+Route::resource('vouchers', 'VoucherController', ['except' => ['create']]);
 
 Route::resource('tags', 'TagController');
 

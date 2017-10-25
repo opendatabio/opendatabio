@@ -69,7 +69,6 @@ class PlantController extends Controller
             $plantid = $plant->id;
         }
 
-        // TODO: check if location_id is set, and fail gracefully
         $location = Location::find($request->location_id);
         $rules = [
             'location_id' => 'required|integer',

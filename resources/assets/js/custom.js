@@ -94,27 +94,6 @@ $(document).ready(function(){
     // trigger this on page load
 	setLocationFields(0);
 
-    // For setting the visibility of fields in the voucher create/edit screens. 
-    function setVoucherFields(vel) {
-        var selector = $("#parent_type");
-        switch (selector.val()) {
-            case 'App\\Plant':
-                $("#location_group").hide(vel);
-                $("#project_group").hide(vel);
-                $("#identification_group").hide(vel);
-                $("#plant_group").show(vel);
-                break;
-            case 'App\\Location':
-                $("#location_group").show(vel);
-                $("#project_group").show(vel);
-                $("#identification_group").show(vel);
-                $("#plant_group").hide(vel);
-                break;
-        }
-    }
-    $("#parent_type").change(function() { setVoucherFields(400); });
-    // trigger this on page load
-    setVoucherFields(0);
 	/** Ajax handling for autodetecting location */
 	$("#autodetect").click(function(e) {
 		$( "#spinner" ).css('display', 'inline-block');

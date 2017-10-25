@@ -93,21 +93,28 @@ class VoucherController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function createPlants($id) {
+        $plant = Plant::findOrFail($id);
+        return $this->create($plant);
+    }
+    public function createLocations($id) {
+        $location = Location::findOrFail($id);
+        return $this->create($location);
+    }
+    protected function create($parent)
     {
         if (!Auth::user()) {
             return view('common.unauthorized');
         }
         $herbaria = Herbarium::all();
         $persons = Person::all();
-        $plants = Plant::with('location')->get();
         $projects = Auth::user()->projects;
         // TODO: better handling here
         if (!$projects->count()) {
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
         }
 
-        return view('vouchers.create', compact('persons', 'projects', 'herbaria', 'plants'));
+        return view('vouchers.create', compact('persons', 'projects', 'herbaria', 'parent'));
     }
 
     /**

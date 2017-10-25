@@ -61,7 +61,7 @@
 @endif
 <br>
 @if ($location->measurements()->count())
-<div class="col-sm-6">
+<div class="col-sm-3">
     <a href="{{ url('locations/'. $location->id. '/measurements')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $location->measurements()->count() }}
@@ -69,15 +69,24 @@
     </a>
 </div>
 @else
-<div class="col-sm-6">
+<div class="col-sm-3">
     <a href="{{ url('locations/'. $location->id. '/measurements/create')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 @lang('messages.create_measurements')
     </a>
 </div>
 @endif
+@can ('create', App\Voucher::class)
+<div class="col-sm-4">
+<a href="{{url ('locations/' . $location->id . '/vouchers/create')}}" class="btn btn-success">
+    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.create_voucher')
+
+</a>
+</div>
+@endcan
 @can ('update', $location)
-			    <div class="col-sm-6">
+			    <div class="col-sm-3">
 				<a href="{{ url('locations/'. $location->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')
