@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Lang;
 use App\User;
 use App\Project;
+use App\Dataset;
 
 class UserController extends Controller
 {

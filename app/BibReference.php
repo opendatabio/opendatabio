@@ -74,18 +74,14 @@ class BibReference extends Model
         $parser = new Parser();
         $parser->addListener($listener);
         try {
-            Debugbar::measure('Parsing', function () use ($parser) {
                 $parser->parseString($this->bibtex);
-            });
         } catch (ParseException $e) {
             Log::error('Error handling bibtex:'.$e->getMessage());
             $this->entries[0] = ['author' => null, 'title' => null, 'year' => null, 'citation-key' => 'Invalid'];
 
             return;
         }
-        Debugbar::measure('Exporting', function () use ($listener) {
             $this->entries = $listener->export();
-        });
     }
 
     public function getAuthorAttribute()
