@@ -384,4 +384,5 @@ remove the job information from the database.',
   'create_plant' => 'Create plant',
   'create_voucher' => 'Create herbarium sample',
   'measurement_measurer' => 'Measurer',
+  'collector_and_number' => 'Collector and number',
 );

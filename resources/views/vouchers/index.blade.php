@@ -28,7 +28,7 @@
                         <table class="table table-striped" id="references-table">
                             <thead>
                                 <th>
-@lang('messages.location_and_tag')
+@lang('messages.collector_and_number')
 </th>
                                 <th>
 @lang('messages.identification')
