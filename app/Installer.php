@@ -642,12 +642,14 @@ class Installer
             exit($this->c("running 'php artisan migrate' failed!\n", 'danger'));
         }
 
-        echo 'Do you wish to seed the database with randomly generated test data? yes/[no] ';
-        $line = trim(fgets(STDIN));
-        if ('y' == $line or 'yes' == $line) {
-            system('php artisan db:seed', $status);
-            if (0 != $status) {
-                exit($this->c("running 'php artisan db:seed' failed!\n", 'danger'));
+        if ('local' == getenv('APP_ENV')) {
+            echo 'Do you wish to seed the database with randomly generated test data? yes/[no] ';
+            $line = trim(fgets(STDIN));
+            if ('y' == $line or 'yes' == $line) {
+                system('php artisan db:seed', $status);
+                if (0 != $status) {
+                    exit($this->c("running 'php artisan db:seed' failed!\n", 'danger'));
+                }
             }
         }
     }

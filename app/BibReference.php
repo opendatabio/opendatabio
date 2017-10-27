@@ -13,7 +13,6 @@ use RenanBr\BibTexParser\Parser;
 use RenanBr\BibTexParser\ParseException;
 use Pandoc\Pandoc;
 use Pandoc\PandocException;
-use Debugbar;
 use DB;
 
 use Illuminate\Support\Facades\Log;
@@ -74,14 +73,14 @@ class BibReference extends Model
         $parser = new Parser();
         $parser->addListener($listener);
         try {
-                $parser->parseString($this->bibtex);
+            $parser->parseString($this->bibtex);
         } catch (ParseException $e) {
             Log::error('Error handling bibtex:'.$e->getMessage());
             $this->entries[0] = ['author' => null, 'title' => null, 'year' => null, 'citation-key' => 'Invalid'];
 
             return;
         }
-            $this->entries = $listener->export();
+        $this->entries = $listener->export();
     }
 
     public function getAuthorAttribute()

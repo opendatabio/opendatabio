@@ -385,4 +385,5 @@ remove the job information from the database.',
   'create_voucher' => 'Create herbarium sample',
   'measurement_measurer' => 'Measurer',
   'collector_and_number' => 'Collector and number',
+  'voucher_parent_missing_error' => 'Error: parent missing from database!',
 );

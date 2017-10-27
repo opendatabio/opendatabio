@@ -56,11 +56,16 @@
 : </strong>  
     <a href="{{url('plants/' . $voucher->parent_id)}}">{{$voucher->parent->full_name}}</a>
     </p>
-@else
+@elseif ($voucher->parent instanceof App\Location)
     <p><strong>
     @lang('messages.location')
 : </strong>  
     <a href="{{url('locations/' . $voucher->parent_id)}}">{{$voucher->parent->name}}</a>
+    </p>
+@else
+    <p><strong>
+    @lang('messages.voucher_parent_missing_error')
+: </strong>  
     </p>
 @endif
 

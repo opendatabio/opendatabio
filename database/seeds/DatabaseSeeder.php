@@ -14,6 +14,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        if ('production' == config('app.env')) {
+            exit("Attempting to run db:seed on production is not allowed!\n");
+        }
+
         $this->call(PersonsTableSeeder::class); // depends on populated Herbaria
         $this->call(UsersTableSeeder::class); // depends on populated Persons
         $this->call(ProjectsTableSeeder::class); // depends on populated Users
