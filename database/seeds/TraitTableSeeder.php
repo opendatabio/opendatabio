@@ -51,7 +51,8 @@ class TraitsTableSeeder extends Seeder
                 }
             }
             if ($type > 1 and $type < 5) {
-                for ($j = 0; $j < 4; ++$j) {
+                $ncat = $faker->numberBetween(3, 10);
+                for ($j = 1; $j <= $ncat; ++$j) {
                     $cat = $t->categories()->create(['rank' => $j]);
                     UserTranslation::create(['translatable_id' => $cat->id,
                     'translatable_type' => 'App\\TraitCategory',
