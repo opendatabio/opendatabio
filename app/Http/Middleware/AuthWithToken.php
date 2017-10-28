@@ -8,7 +8,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Response;
 use Closure;
 use Auth;
 use App\User;

@@ -73,9 +73,11 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 
     public function getFullnameAttribute()
     {
-        if ($this->person)
+        if ($this->person) {
             return $this->person->abbreviation.'-'.$this->number;
-        return "Not registered-".$this->number;
+        }
+
+        return 'Not registered-'.$this->number;
     }
 
     public function person()

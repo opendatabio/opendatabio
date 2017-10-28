@@ -43,6 +43,14 @@ class Location extends Node
         ]);
     }
 
+    public static function scopeWithDistance($query, $geom)
+    {
+        // this query hangs if you attempt to run it on full geom objects, so we add
+        // a "where" to make sure we're only calculating distance from small objects
+        return $query->addSelect('*', DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
+            ->where('adm_level', '>', 99);
+    }
+
     public function measurements()
     {
         return $this->morphMany(Measurement::class, 'measured');

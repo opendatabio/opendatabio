@@ -49,7 +49,18 @@ class LocationPolicy
      */
     public function update(User $user, Location $location)
     {
-        return $user->access_level >= User::USER;
+        if (User::ADMIN == $user->access_level) {
+            return true;
+        }
+        if (User::USER == $user->access_level) {
+            $m = $location->measurements()->withoutGlobalScopes()->get()->count();
+            $p = $location->plants()->withoutGlobalScopes()->get()->count();
+            $v = $location->vouchers()->withoutGlobalScopes()->get()->count();
+
+            return 0 == $m + $p + $v;
+        }
+
+        return false;
     }
 
     /**
@@ -62,7 +73,13 @@ class LocationPolicy
      */
     public function delete(User $user, Location $location)
     {
-        return ($user->access_level >= User::USER) and
-           (Location::LEVEL_PLOT == $location->adm_level or Location::LEVEL_POINT == $location->adm_level);
+        if (($user->access_level >= User::USER) and
+            (Location::LEVEL_PLOT == $location->adm_level or Location::LEVEL_POINT == $location->adm_level)) {
+            $m = $location->measurements()->withoutGlobalScopes()->get()->count();
+            $p = $location->plants()->withoutGlobalScopes()->get()->count();
+            $v = $location->vouchers()->withoutGlobalScopes()->get()->count();
+
+            return 0 == $m + $p + $v;
+        }
     }
 }

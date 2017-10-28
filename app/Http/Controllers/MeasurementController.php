@@ -149,7 +149,7 @@ class MeasurementController extends Controller
                             $validator->errors()->add('value', Lang::get('messages.trait_measurement_mismatch'));
                         }
                     }
-                } else {
+                } elseif ($request->value) {
                     if (!in_array($request->value, $valid)) {
                         $validator->errors()->add('value', Lang::get('messages.trait_measurement_mismatch'));
                     }

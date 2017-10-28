@@ -70,7 +70,11 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 
     public function getFullnameAttribute()
     {
-        return $this->location->name.'-'.$this->tag;
+        if ($this->location) {
+            return $this->location->name.'-'.$this->tag;
+        }
+
+        return 'Unknown location-'.$this->tag;
     }
 
     public function location()

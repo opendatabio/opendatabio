@@ -43,7 +43,7 @@
                                         <td class="table-text">
                                             @if ($voucher->identification)
                                             <em>{{ $voucher->identification->taxon->fullname }}</em>
-                                            @elseif ($voucher->parent->identification)
+                                            @elseif ($voucher->parent and $voucher->parent->identification)
                                             <em>{{ $voucher->parent->identification->taxon->fullname }}</em>
                                             @else
                                             @lang('messages.unidentified')

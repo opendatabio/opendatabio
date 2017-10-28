@@ -107,8 +107,12 @@ class Measurement extends Model
             break;
         case ODBTrait::CATEGORICAL_MULTIPLE:
             $this->categories()->delete();
-            foreach ($value as $v) {
-                $this->categories()->create(['category_id' => $v]);
+            if (is_array($value)) {
+                foreach ($value as $v) {
+                    $this->categories()->create(['category_id' => $v]);
+                }
+            } else {
+                $this->categories()->create(['category_id' => $value]);
             }
             break;
             // TODO: Link

@@ -15,6 +15,7 @@ use Validator;
 use DB;
 use Lang;
 use Response;
+use Illuminate\Support\Facades\Input;
 
 class LocationController extends Controller
 {
@@ -147,6 +148,13 @@ class LocationController extends Controller
         // Now we check if the geometry received is valid, and if it falls inside the parent geometry
         $validator->after(function ($validator) use ($request) {
             if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_POINT == $request->adm_level) {
+                // we check if this exact geometry is already registered
+                $geom = Location::geomFromParts($request);
+                $exact = Location::whereRaw("geom=geomfromtext('$geom')")->get();
+                if (sizeof($exact)) {
+                    $validator->errors()->add('geom', Lang::get('messages.geom_duplicate'));
+                }
+
                 return;
             }
             // Dimension returns NULL for invalid geometries
@@ -191,6 +199,20 @@ class LocationController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+        // checks for duplicates, except if the request is already confirmed
+        if ($request->adm_level > 99 and !$request->confirm) {
+            $dupes = Location::withDistance(Location::geomFromParts($request))->get()
+                ->filter(function ($obj) {
+                    return $obj->distance < 0.001;
+                });
+            if (sizeof($dupes)) {
+                Input::flash();
+
+                return view('locations.confirm', [
+                    'dupes' => $dupes,
+                ]);
+            }
+        }
         if (Location::LEVEL_PLOT == $request->adm_level) { // plot
             $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
             $newloc->setGeomFromParts($request->only([
@@ -230,9 +252,10 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-        $location = Location::with(['plants.identification.taxon'])->withGeom()->findOrFail($id);
+        $location = Location::with(['plants.identification.taxon', 'children'])->withGeom()->findOrFail($id);
         $plants = $location->plants;
         $vouchers = $location->vouchers;
+        $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
         foreach ($plants as $plant) {
             $vouchers = $vouchers->merge($plant->vouchers);
         }
@@ -269,9 +292,9 @@ class LocationController extends Controller
                     'maintainAspectRatio' => true,
                 ]);
 
-            return view('locations.show', compact('chartjs', 'location', 'plants'));
+            return view('locations.show', compact('chartjs', 'location', 'plants', 'plot_children'));
         } // else
-        return view('locations.show', compact('location', 'plants'));
+        return view('locations.show', compact('location', 'plants', 'plot_children'));
     }
 
     /**

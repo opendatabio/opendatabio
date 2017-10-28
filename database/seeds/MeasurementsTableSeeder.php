@@ -40,7 +40,11 @@ class MeasurementsTableSeeder extends Seeder
                 case 2:
                 case 3:
                 case 4:
+                    $val = $odbtrait->categories->random()->id;
+                    break;
                 case 5:
+                    $val = $faker->sentence(5);
+                    break;
                 case 6:
                 case 7:
                 }
@@ -71,6 +75,7 @@ class MeasurementsTableSeeder extends Seeder
                     'bibreference_id' => $references->random()->id,
                     'dataset_id' => $datasets->random()->id,
                 ]);
+                $measurement->save();
                 $measurement->valueActual = $val;
                 $measurement->save();
             }

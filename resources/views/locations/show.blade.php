@@ -119,13 +119,8 @@
 @endforeach
 </ul>
 @endif
-
-    
-
                 </div>
             </div>
-
-
 	@if ($location->plants()->count())
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -214,6 +209,7 @@ function getZoomLevel($area) {
           zoom: {{ getZoomLevel($location->area) }},
           center: uluru
 	});
+        // display the main object
 @if (in_array($location->geomType, ['polygon', 'multipolygon'])) 
 @foreach ($location->geomArray as $polygon)
 	new google.maps.Polygon({
@@ -232,12 +228,22 @@ function getZoomLevel($area) {
 @endforeach
 @elseif ($location->geomType == "point")
 <?php $point = $location->geomArray; ?>
-  var marker = new google.maps.Marker({
+  new google.maps.Marker({
   position: {lat: {{$point['y']}}, lng: {{$point['x']}} },
     map: map,
     title: 'Plot'
   });
 @endif
+    // now we display children
+@foreach ($plot_children as $child)
+@if (!is_null($child) and $child->geomType == "point")
+  new google.maps.Marker({
+  position: {lat: {{$child->geomArray['y']}}, lng: {{$child->geomArray['x']}} },
+    map: map,
+    title: '{{$child->name}}'
+  });
+@endif
+@endforeach
       }
 </script>
 

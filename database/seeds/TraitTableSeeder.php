@@ -27,13 +27,15 @@ class TraitsTableSeeder extends Seeder
         for ($i = 0; $i < 30; ++$i) {
             $person = $faker->lastName();
             $trait = $basetraits->random();
+            // TODO: seeds for types 6/7
+            $type = $faker->numberBetween(0, 5);
             $t = ODBTrait::create([
-                'type' => $faker->numberBetween(0, 7),
+                'type' => $type,
                 'export_name' => strtolower($trait.'_'.$person),
-                'unit' => $units->random(),
-                'range_min' => $faker->numberBetween(-200, 200),
-                'range_max' => $faker->numberBetween(400, 1000),
-                'link_type' => collect(ODBTrait::OBJECT_TYPES)->random(),
+                'unit' => $type < 2 ? $units->random() : null,
+                'range_min' => $type < 2 ? $faker->numberBetween(-200, 200) : null,
+                'range_max' => $type < 2 ? $faker->numberBetween(400, 1000) : null,
+                'link_type' => 7 == $type ? collect(ODBTrait::OBJECT_TYPES)->random() : null,
             ]);
             UserTranslation::create(['translatable_id' => $t->id,
                 'translatable_type' => 'App\\ODBTrait',
@@ -48,14 +50,16 @@ class TraitsTableSeeder extends Seeder
                 } catch (Exception $e) {
                 }
             }
-            for ($j = 0; $j < 4; ++$j) {
-                $cat = $t->categories()->create(['rank' => $j]);
-                UserTranslation::create(['translatable_id' => $cat->id,
+            if ($type > 1 and $type < 5) {
+                for ($j = 0; $j < 4; ++$j) {
+                    $cat = $t->categories()->create(['rank' => $j]);
+                    UserTranslation::create(['translatable_id' => $cat->id,
                     'translatable_type' => 'App\\TraitCategory',
                     'language_id' => '1',
                     'translation_type' => '0',
                     'translation' => $trait.' category '.$j,
                 ]);
+                }
             }
         }
     }

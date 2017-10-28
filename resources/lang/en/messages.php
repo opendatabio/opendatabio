@@ -386,4 +386,8 @@ remove the job information from the database.',
   'measurement_measurer' => 'Measurer',
   'collector_and_number' => 'Collector and number',
   'voucher_parent_missing_error' => 'Error: parent missing from database!',
+  'geom_duplicate' => 'The exact latitude/longitude is already registered in the database',
+  'inserting' => 'Inserting',
+  'confirm_location' => 'Confirm location',
+  'confirm_location_message' => 'The informed position for this new location is too close to these other registered plots or points. Please check that this is indeed a different location',
 );
