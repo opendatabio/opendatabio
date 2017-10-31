@@ -178,10 +178,7 @@ return array (
   'confirm_person' => 'Confirm Person insertion',
   'acronym' => 'Acronym',
   'irn' => 'IRN',
-  'hint_herbaria_page' => 'This table contains the registered herbaria in which the herbarium sample can be stored. All herbaria should have
-        an identification number from the Index Herbariorum, which can be used to retrieve other details such as
-        address, phone, or e-mail. You can register herbarias using the acronym (also called Herbarium Code), which
-        normally consists on two to five letters. All other fields will be filled in automatically.',
+  'hint_herbaria_page' => 'This table contains the registered herbaria in which the herbarium sample can be stored. All herbaria should have an identification number from the Index Herbariorum, which can be used to retrieve other details such as address, phone, or e-mail. You can register herbarias using the acronym (also called Herbarium Code), which normally consists on two to five letters. All other fields will be filled in automatically.',
   'new_herbarium' => 'Register Herbarium',
   'checkih' => 'Check Index Herbariorum',
   'registered_herbaria' => 'Registered Herbaria',
@@ -225,7 +222,7 @@ remove the job information from the database.',
   'password_hint' => 'Use this field to change your password. Leave it blank if you don\'t want to edit it.',
   'default_person' => 'Default Person',
   'hint_default_person' => 'If you select a Person here, this will be used as the default Person on all relevant forms, such as when filling in herbarium samples or plants collected. You should probably set this to your own name.',
-  'hint_trait_create' => 'Here you can create a new trait that can be used to associate measurements to plants, herbarium samples, taxons or locations. The trait definition must be precise and include the measuring instrument or calculating method. In other words, instead of a trait named "Diversity", as there are several ways of estimating diversity, and use "Shannon Diversity", for instance. Note that after measures have been linked to a trait, it cannot be altered anymore!',
+  'hint_trait_create' => 'Here you can create a new trait that can be used to associate measurements to plants, herbarium samples, taxons or locations. The trait definition must be precise and include the measuring instrument or calculating method. In other words, instead of a trait named "Diversity", as there are several ways of estimating diversity, use "Shannon Diversity", for instance. Note that after measures have been linked to a trait, it cannot be altered anymore!',
   'new_trait' => 'New / Edit Trait',
   'language' => 'Language',
   'description' => 'Description',
