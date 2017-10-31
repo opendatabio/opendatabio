@@ -127,7 +127,7 @@ return array (
   'email' => 'E-mail address',
   'password' => 'Password',
   'password_change_hint' => 'Use this field to force the password for this user to be changed. Leave it blank if you don\'t want to edit it.',
-  'access_level_change_hint' => 'The access level of a user determines what he or she can do in the system. SuperAdmins have edit access to all data in the system. Full users can be collaborators or admins to projects and datasets, and registered users may only view data that is explicitly shared with them. When you promote a user to Full User or Superadmin, the system will automatically create a workspace for him or her. If you demote a user to Registered User, the system will automatically remove all admin and collaborator access he or she had in projects and datasets.',
+  'access_level_change_hint' => 'A user\'s access level determines what they can do in the system. SuperAdmins have edit access to all data in the system. Full users can be collaborators or admins to projects and datasets, and registered users may only view data that is explicitly shared with them. When you promote a user to Full User or Superadmin, the system will automatically create them a workspace. If you demote a user to Registered User, the system will automatically remove all admin and collaborator access they had in projects and datasets.',
   'save' => 'Save changes',
   'remove_user' => 'Remove User',
   'users_hint' => 'This table represent the system users. Each user has a valid e-mail and password, and an access level, which
@@ -161,12 +161,7 @@ return array (
   'remove_person' => 'Remove Person',
   'full_name' => 'Full Name',
   'abbreviation' => 'Abbreviation',
-  'abbreviation_hint' => 'The abbreviation field is the abbreviated name which the person uses in publications and other
-        catalogs. It must contain only uppercase letters, hyphens, periods, commas or spaces. A valid abbreviation for
-        the name "Charles Robert Darwin" would be "DARWIN, C. R.".
-        When registering a new person, the system suggests the name abbreviation, but the user is free to change
-        it to better adapt it to the usual abbreviation used by each person.
-        The abbreviation should be unique for each person.',
+  'abbreviation_hint' => 'The abbreviation field is the abbreviated name which the person uses in publications and other catalogs. It must contain only uppercase letters, hyphens, periods, commas or spaces. A valid abbreviation for the name "Charles Robert Darwin" would be "DARWIN, C. R.". When registering a new person, the system suggests the name abbreviation, but the user is free to change it to better adapt it to the usual abbreviation used by each person. The abbreviation should be unique for each person.',
   'institution' => 'Institution',
   'person_herbarium_hint' => 'Fill this if this person is associated with an herbarium. He or she will then be listed as specialist.',
   'specialist_in' => 'Specialist in',
