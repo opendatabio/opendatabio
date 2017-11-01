@@ -98,8 +98,15 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        'parent_id' => [
+            'required_unless' => 'O campo parent é obrigatório, exceto para países.',
+        ],
+        // these are for registering plants
+        'x' => [
+            'max' => 'Os campos x e y devem ser menores ou iguais às dimensões da parcela indicada.',
+        ],
+        'y' => [
+            'max' => 'Os campos x e y devem ser menores ou iguais às dimensões da parcela indicada.',
         ],
     ],
 
