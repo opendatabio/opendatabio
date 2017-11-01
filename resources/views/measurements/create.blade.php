@@ -87,9 +87,9 @@
         <a data-toggle="collapse" href="#hintp" class="btn btn-default">?</a>
 <div class="col-sm-6">
     <input type="text" name="person_autocomplete" id="person_autocomplete" class="form-control autocomplete"
-    value="{{ old('person_autocomplete', (isset($measurement) and $measurement->person) ? $measurement->person->full_name : null) }}">
+    value="{{ old('person_autocomplete', (isset($measurement) and $measurement->person) ? $measurement->person->full_name : (Auth::user()->person ? Auth::user()->person->full_name : null)) }}">
     <input type="hidden" name="person_id" id="person_id"
-    value="{{ old('person_id', isset($measurement) ? $measurement->person_id : null) }}">
+    value="{{ old('person_id', isset($measurement) ? $measurement->person_id : Auth::user()->person_id) }}">
 </div>
   <div class="col-sm-12">
     <div id="hintr" class="panel-collapse collapse">

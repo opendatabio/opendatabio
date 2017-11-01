@@ -93,9 +93,9 @@ if ($p->identification)
         <a data-toggle="collapse" href="#hintp" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
     <input type="text" name="person_autocomplete" id="person_autocomplete" class="form-control autocomplete"
-    value="{{ old('person_autocomplete', isset($voucher) ? $voucher->person->full_name : null) }}">
+    value="{{ old('person_autocomplete', isset($voucher) ? $voucher->person->full_name : (Auth::user()->person ? Auth::user()->person->full_name : null)) }}">
     <input type="hidden" name="person_id" id="person_id"
-    value="{{ old('person_id', isset($voucher)  ? $voucher->person_id : null) }}">
+    value="{{ old('person_id', isset($voucher)  ? $voucher->person_id : Auth::user()->person_id) }}">
             </div>
   <div class="col-sm-12">
     <div id="hintp" class="panel-collapse collapse">
@@ -237,9 +237,9 @@ if ($p->identification)
         <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
     <input type="text" name="identifier_autocomplete" id="identifier_autocomplete" class="form-control autocomplete"
-    value="{{ old('identifier_autocomplete', (isset($voucher) and $voucher->identification) ? $voucher->identification->person->full_name : null) }}">
+    value="{{ old('identifier_autocomplete', (isset($voucher) and $voucher->identification) ? $voucher->identification->person->full_name : (Auth::user()->person ? Auth::user()->person->full_name : null)) }}">
     <input type="hidden" name="identifier_id" id="identifier_id"
-    value="{{ old('identifier_id', (isset($voucher) and $voucher->identification) ? $voucher->identification->person_id : null) }}">
+    value="{{ old('identifier_id', (isset($voucher) and $voucher->identification) ? $voucher->identification->person_id : Auth::user()->person_id) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint7" class="panel-collapse collapse">

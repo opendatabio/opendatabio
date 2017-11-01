@@ -141,7 +141,11 @@
 </label>
         <a data-toggle="collapse" href="#hint5" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-{!! Multiselect::select('collector', $persons->pluck('abbreviation', 'id'), isset($plant) ? $plant->collectors->pluck('person_id') : [], ['class' => 'multiselect form-control']) !!}
+{!! Multiselect::select('collector', 
+    $persons->pluck('abbreviation', 'id'), 
+    isset($plant) ? $plant->collectors->pluck('person_id') : [Auth::user()->person_id], 
+    ['class' => 'multiselect form-control']) 
+!!}
             </div>
   <div class="col-sm-12">
     <div id="hint5" class="panel-collapse collapse">
@@ -197,9 +201,9 @@
         <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
     <input type="text" name="identifier_autocomplete" id="identifier_autocomplete" class="form-control autocomplete"
-    value="{{ old('identifier_autocomplete', (isset($plant) and $plant->identification) ? $plant->identification->person->full_name . ' [' . $plant->identification->person->abbreviation . ']'  : null) }}">
+    value="{{ old('identifier_autocomplete', (isset($plant) and $plant->identification) ? $plant->identification->person->full_name . ' [' . $plant->identification->person->abbreviation . ']'  : (Auth::user()->person ? Auth::user()->person->full_name : null)) }}">
     <input type="hidden" name="identifier_id" id="identifier_id"
-    value="{{ old('identifier_id', (isset($plant) and $plant->identification) ? $plant->identification->person_id : null) }}">
+    value="{{ old('identifier_id', (isset($plant) and $plant->identification) ? $plant->identification->person_id : Auth::user()->person_id) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint7" class="panel-collapse collapse">
