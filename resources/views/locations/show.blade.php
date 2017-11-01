@@ -68,13 +68,15 @@
 @lang('messages.measurements')
     </a>
 </div>
-@else
+@else 
+    @can ('create', App\Measurement::class)
 <div class="col-sm-3">
     <a href="{{ url('locations/'. $location->id. '/measurements/create')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 @lang('messages.create_measurements')
     </a>
 </div>
+    @endcan
 @endif
 @can ('create', App\Voucher::class)
 <div class="col-sm-4">

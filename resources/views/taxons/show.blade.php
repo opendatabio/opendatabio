@@ -91,12 +91,14 @@
     </a>
 </div>
 @else
+    @can ('create', App\Measurement::class)
 <div class="col-sm-6">
     <a href="{{ url('taxons/'. $taxon->id. '/measurements/create')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 @lang('messages.create_measurements')
     </a>
 </div>
+ @endcan
 @endif
 @can ('update', $taxon)
 			    <div class="col-sm-6">
