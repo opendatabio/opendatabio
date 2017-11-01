@@ -60,9 +60,9 @@ class LocationsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                ['data' => 'name', 'title' => 'Name', 'searchable' => true, 'orderable' => true],
-                ['data' => 'adm_level', 'title' => 'Adm Level', 'searchable' => true, 'orderable' => true],
-                ['data' => 'full_name', 'title' => 'Full Name', 'searchable' => false, 'orderable' => false],
+                'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
+                'adm_level' => ['title' => Lang::get('messages.adm_level'), 'searchable' => true, 'orderable' => true],
+                'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',

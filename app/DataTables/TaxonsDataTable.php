@@ -30,8 +30,12 @@ class TaxonsDataTable extends DataTable
                 htmlspecialchars($taxon->qualifiedFullname).'</a>';
         })
         ->editColumn('level', function ($taxon) { return Lang::get('levels.tax.'.$taxon->level); })
+        ->addColumn('authorSimple', function ($taxon) { return $taxon->authorSimple; })
         ->filterColumn('fullname', function ($query, $keyword) {
             $query->whereRaw('odb_txname(name, level, parent_id) like ?', ["%{$keyword}%"]);
+        })
+        ->filterColumn('authorSimple', function ($query, $keyword) {
+            $query->where('persons.full_name', 'like', ["%{$keyword}%"])->orWhere('author', 'like', ["%{$keyword}%"]);
         })
 //	    ->addColumn('full_name', function($location) {return $location->full_name;})
         ->rawColumns(['fullname']);
@@ -44,7 +48,7 @@ class TaxonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Taxon::query()->select($this->getColumns())->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'));
+        $query = Taxon::query()->select('*')->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'))->leftJoin('persons', 'taxons.author_id', '=', 'persons.id');
 
         return $this->applyScopes($query);
     }
@@ -58,8 +62,9 @@ class TaxonsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'fullname' => ['title' => 'Name'],
-                'level',
+                'fullname'     => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
+                'level'        => ['title' => Lang::get('messages.level'), 'searchable' => false, 'orderable' => true],
+                'authorSimple' => ['title' => Lang::get('messages.author'), 'searchable' => true, 'orderable' => true],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -85,6 +90,7 @@ class TaxonsDataTable extends DataTable
             'id',
             'name',
             'parent_id',
+            'author',
         'rgt',
         'lft',
         'level',
