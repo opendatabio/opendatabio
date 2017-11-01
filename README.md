@@ -127,6 +127,13 @@ Run `php artisan config:cache` after updating the config files.
 If your import/export jobs are not being processed, make sure Supervisor is running 
 (systemctl start supervisord && systemctl enable supervisord), and check the log files at storage/logs/supervisor.log.
 
+(Optional) In order to stop search engine crawlers from indexing your database, add the following to your "robots.txt"
+in your server root folder (in Debian, /var/www/html):
+```
+User-agent: *
+Disallow: /
+```
+
 ## Development
 
 The Laravel-Datatables library is incompatible with `php artisan serve`, so this command should not be used.
