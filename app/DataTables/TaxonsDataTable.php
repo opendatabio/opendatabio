@@ -50,14 +50,14 @@ class TaxonsDataTable extends DataTable
     {
         $query = Taxon::query()
             ->select([
-                'taxons.id', 
-                'name', 
-                'parent_id', 
+                'taxons.id',
+                'name',
+                'parent_id',
                 'author',
                 'rgt',
                 'lft',
                 'level',
-                'valid', 
+                'valid',
                 'full_name',
             ])->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'))
             ->leftJoin('persons', 'taxons.author_id', '=', 'persons.id');
@@ -74,8 +74,8 @@ class TaxonsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'fullname'     => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
-                'level'        => ['title' => Lang::get('messages.level'), 'searchable' => false, 'orderable' => true],
+                'fullname' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
+                'level' => ['title' => Lang::get('messages.level'), 'searchable' => false, 'orderable' => true],
                 'authorSimple' => ['title' => Lang::get('messages.author'), 'searchable' => true, 'orderable' => true],
             ])
             ->parameters([

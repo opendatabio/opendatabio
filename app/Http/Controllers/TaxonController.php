@@ -44,9 +44,9 @@ class TaxonController extends Controller
         $taxons = $taxons->get();
         $taxons = collect($taxons)->transform(function ($taxon) {
             $taxon->value = $taxon->qualifiedFullname;
-            if ($taxon->level >= 180) { // append family name to display
+            if ($taxon->level >= 180 and $taxon->parent) { // append family name to display
                 $parent = $taxon->parent;
-                while ($parent->level > 120) {
+                while ($parent->parent and $parent->level > 120) {
                     $parent = $parent->parent;
                 }
                 $taxon->value .= ' ['.$parent->name.']';

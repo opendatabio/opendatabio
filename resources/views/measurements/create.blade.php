@@ -192,8 +192,17 @@ $("#trait_autocomplete").devbridgeAutocomplete({
         $("#trait_id").val(null);
     }
     });
+$("#link_autocomplete").devbridgeAutocomplete({
+serviceUrl: "{{url('taxons/autocomplete')}}",
+    onSelect: function (suggestion) {
+        $("#link_id").val(suggestion.data);
+    },
+    onInvalidateSelection: function() {
+        $("#link_id").val(null);
+    }
+    });
 $("#person_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('persons/autocomplete')}}",
+serviceUrl: "{{url('persons/autocomplete')}}",
     onSelect: function (suggestion) {
         $("#person_id").val(suggestion.data);
     },

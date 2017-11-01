@@ -24,18 +24,21 @@ class TraitsTableSeeder extends Seeder
 
         $basetraits = collect(['Height', 'Volume', 'Diameter', 'Richness', 'Evenness', 'Abundance', 'Fertility']);
         $units = collect(['m', 'kg', 'cm²', 'm³', 'l', 'ø']);
-        for ($i = 0; $i < 30; ++$i) {
+        for ($i = 0; $i < 40; ++$i) {
             $person = $faker->lastName();
             $trait = $basetraits->random();
-            // TODO: seeds for types 6/7
-            $type = $faker->numberBetween(0, 5);
+            // TODO: seeds for color traits
+            $type = $faker->numberBetween(0, 6);
+            if (6 == $type) {
+                $type = 7;
+            }
             $t = ODBTrait::create([
                 'type' => $type,
                 'export_name' => strtolower($trait.'_'.$person),
                 'unit' => $type < 2 ? $units->random() : null,
                 'range_min' => $type < 2 ? $faker->numberBetween(-200, 200) : null,
                 'range_max' => $type < 2 ? $faker->numberBetween(400, 1000) : null,
-                'link_type' => 7 == $type ? collect(ODBTrait::OBJECT_TYPES)->random() : null,
+                'link_type' => 7 == $type ? collect(ODBTrait::LINK_TYPES)->random() : null,
             ]);
             UserTranslation::create(['translatable_id' => $t->id,
                 'translatable_type' => 'App\\ODBTrait',

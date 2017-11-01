@@ -366,4 +366,8 @@ return array (
   'inserting' => 'Inserting',
   'confirm_location' => 'Confirm location',
   'confirm_location_message' => 'The informed position for this new location is very close to these other registered plots or points. Please check that this is indeed a different location',
+  'link_type' => 'Link type',
+  'hint_trait_link_type' => 'What type of object should be linked in this measure? For instance, if the trait is "Herbivore species", the link type should be "Taxon"',
+  'link' => 'Link',
+  'optional' => 'Optional',
 );

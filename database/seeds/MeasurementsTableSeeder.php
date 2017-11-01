@@ -7,7 +7,7 @@
 
 use Illuminate\Database\Seeder;
 
-/// TODO: Seeds for color, categorical and links
+/// TODO: Seeds for color
 
 class MeasurementsTableSeeder extends Seeder
 {
@@ -16,7 +16,7 @@ class MeasurementsTableSeeder extends Seeder
      */
     public function run()
     {
-//        if (\App\Measurement::count()) return;
+//        if (\App\Measurement::count()) { return; }
         $faker = Faker\Factory::create();
 
         $datasets = \App\Dataset::all();
@@ -30,7 +30,7 @@ class MeasurementsTableSeeder extends Seeder
 
         foreach ($odbtraits as $odbtrait) {
             unset($val);
-            for ($i = 0; $i < 800; ++$i) {
+            for ($i = 0; $i < 200; ++$i) {
                 switch ($odbtrait->type) {
                     // TODO: here
                 case 0:
@@ -47,6 +47,7 @@ class MeasurementsTableSeeder extends Seeder
                     break;
                 case 6:
                 case 7:
+                    $val = 'FILLER'; // just to pass "isset" below, will be randomized later
                 }
                 if (!isset($val)) {
                     continue;
@@ -76,7 +77,16 @@ class MeasurementsTableSeeder extends Seeder
                     'dataset_id' => $datasets->random()->id,
                 ]);
                 $measurement->save();
-                $measurement->valueActual = $val;
+                if (7 == $odbtrait->type) {
+                    $measurement->value = $faker->randomNumber(2);
+                    switch ($odbtrait->link_type) {
+                    case "App\Taxon":
+                        $measurement->value_i = $taxons->random()->id;
+                        break;
+                    }
+                } else {
+                    $measurement->valueActual = $val;
+                }
                 $measurement->save();
             }
         }

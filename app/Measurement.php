@@ -24,6 +24,23 @@ class Measurement extends Model
         return $this->morphTo();
     }
 
+    // These functions use Laravel magic to create a "linked_id" and "linked_type"
+    // fields, used by the $measurement->linked() function below
+    public function getLinkedTypeAttribute()
+    {
+        return $this->odbtrait->link_type;
+    }
+
+    public function getLinkedIdAttribute()
+    {
+        return $this->value_i;
+    }
+
+    public function linked()
+    {
+        return $this->morphTo();
+    }
+
     public function odbtrait()
     {
         return $this->belongsTo(ODBTrait::class, 'trait_id');
@@ -83,7 +100,14 @@ class Measurement extends Model
 
             return $tcat->rank.' - '.$tcat->name;
             break;
-            // TODO: Link
+        case ODBTrait::LINK:
+            $val = '';
+            if (!empty($this->value)) {
+                $val = $this->value;
+            }
+
+            return $val.' '.$this->linked->fullname;
+            break;
         }
     }
 
@@ -115,7 +139,9 @@ class Measurement extends Model
                 $this->categories()->create(['category_id' => $value]);
             }
             break;
-            // TODO: Link
+        case ODBTrait::LINK:
+            // handled by MeasurementController, as it requires value AND value_i
+            break;
         }
     }
 

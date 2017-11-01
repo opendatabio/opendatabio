@@ -18,10 +18,16 @@ class ODBTrait extends Model
     protected $fillable = ['type', 'export_name', 'unit', 'range_min', 'range_max', 'link_type'];
     protected $table = 'traits';
 
+    // Types that can have measurements associated with
     const OBJECT_TYPES = [
         Plant::class,
         Voucher::class,
         Location::class,
+        Taxon::class,
+    ];
+    // Types that can receive database link traits
+    // NOTE: all link_types must support a "fullname" method
+    const LINK_TYPES = [
         Taxon::class,
     ];
 
@@ -82,6 +88,7 @@ class ODBTrait extends Model
                 'cat_name' => 'array|required_if:type,2,3,4',
                 'cat_name.1' => 'required_if:type,2,3,4',
                 'cat_name.1.1' => 'required_if:type,2,3,4',
+                'link_type' => 'required_if:type,7',
             ], $merge);
     }
 
@@ -126,6 +133,13 @@ class ODBTrait extends Model
                 $this->makeCategory($i - $skips, $names[$i], $descriptions[$i]);
             }
         }
+        // Set link type
+        if (in_array($this->type, [self::LINK])) {
+            $this->link_type = $request->link_type;
+        } else {
+            $this->link_type = null;
+        }
+
         // Set object types
         $this->object_types()->delete();
         foreach ($request->objects as $key) {

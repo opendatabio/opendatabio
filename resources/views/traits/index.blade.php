@@ -66,7 +66,7 @@
     switch ($mytrait->type) {
     case 0:
     case 1:
-        echo $mytrait->unit;
+        echo Lang::get('messages.unit') . ': ' . $mytrait->unit;
         break;
     case 2:
     case 3:
@@ -78,6 +78,9 @@
             echo $cat->name . ', ';
         } 
         echo '...';
+        break;
+    case 7:
+        echo Lang::get('messages.link_type') . ': ' . Lang::get('classes.' . $mytrait->link_type);
         break;
     }
 ?>

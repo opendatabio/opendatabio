@@ -118,9 +118,18 @@ class MeasurementController extends Controller
             'date_year' => 'required|integer',
             'dataset_id' => 'required|integer',
             'person_id' => 'required|integer',
-            'value' => 'required', // required IF trait type...
         ];
         $validator = Validator::make($request->all(), $rules);
+        $validator->sometimes('value', 'required', function ($request) {
+            $odbtrait = ODBTrait::findOrFail($request->trait_id);
+
+            return ODBTrait::LINK != $odbtrait->type;
+        });
+        $validator->sometimes('link_id', 'required', function ($request) {
+            $odbtrait = ODBTrait::findOrFail($request->trait_id);
+
+            return ODBTrait::LINK == $odbtrait->type;
+        });
         $validator->after(function ($validator) use ($request) {
             $odbtrait = ODBTrait::findOrFail($request->trait_id);
             if (!$odbtrait->valid_type($request->measured_type)) {
@@ -182,7 +191,12 @@ class MeasurementController extends Controller
         ]));
         $measurement->setDate($request->date_month, $request->date_day, $request->date_year);
         $measurement->save();
-        $measurement->valueActual = $request->value;
+        if (ODBTrait::LINK == $measurement->type) {
+            $measurement->value = $request->value;
+            $measurement->value_i = $request->link_id;
+        } else {
+            $measurement->valueActual = $request->value;
+        }
         $measurement->save();
 
         return redirect('measurements/'.$measurement->id)->withStatus(Lang::get('messages.stored'));
@@ -220,7 +234,12 @@ class MeasurementController extends Controller
         $measurement->update($request->only([
             'trait_id', 'dataset_id', 'person_id', 'bibreference_id',
         ]));
-        $measurement->valueActual = $request->value;
+        if (ODBTrait::LINK == $measurement->type) {
+            $measurement->value = $request->value;
+            $measurement->value_i = $request->link_id;
+        } else {
+            $measurement->valueActual = $request->value;
+        }
         $measurement->setDate($request->date_month, $request->date_day, $request->date_year);
         $measurement->save();
 

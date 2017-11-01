@@ -249,6 +249,27 @@ if (isset($odbtrait)) {
 
 </div>
 </div>
+<div class="form-group trait-link">
+    <label for="link_type" class="col-sm-3 control-label mandatory">
+@lang('messages.link_type')
+</label>
+        <a data-toggle="collapse" href="#hintlt" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+	<?php $selected = old('type', isset($odbtrait) ? $odbtrait->link_type : null); ?>
+	<select name="link_type" id="link_type" class="form-control" >
+	@foreach (\App\ODBTrait::LINK_TYPES as $ttype)
+		<option value="{{ $ttype }}" {{ $ttype == $selected ? 'selected' : '' }}>
+@lang('classes.' . $ttype)
+		</option>
+	@endforeach
+	</select>
+            </div>
+  <div class="col-sm-12">
+    <div id="hintlt" class="panel-collapse collapse">
+@lang('messages.hint_trait_link_type')
+    </div>
+  </div>
+</div>
 
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
@@ -281,21 +302,31 @@ $(document).ready(function() {
 			case "1": // numeric FALL THROUGH
 				$(".trait-number").show(vel);
 				$(".trait-category").hide(vel);
+				$(".trait-link").hide(vel);
 				break;
 			case "2": // categories
 			case "3": // categories FALL THROUGH
 				$(".trait-number").hide(vel);
 				$(".trait-category").show(vel);
 				$(".table-ordinal").hide(vel);
+				$(".trait-link").hide(vel);
 				break;
 			case "4": // ordinal
 				$(".trait-number").hide(vel);
 				$(".trait-category").show(vel);
 				$(".table-ordinal").show(vel);
+				$(".trait-link").hide(vel);
 				break;
+            case "7": // link
+				$(".trait-number").hide(vel);
+				$(".trait-category").hide(vel);
+				$(".table-ordinal").hide(vel);
+				$(".trait-link").show(vel);
+                break;
 			default: // other
 				$(".trait-number").hide(vel);
 				$(".trait-category").hide(vel);
+				$(".trait-link").hide(vel);
 		}
 	}
 	$("#type").change(function() { setFields(400); });

@@ -91,7 +91,7 @@ return array (
   'dispatched' => 'Job despachado! Veja os detalhes na aba Jobs.',
   'edit_reference' => 'Editar Referência',
   'edit_user' => 'Editar Usuário',
-  'export_name' => 'Exportar nome',
+  'export_name' => 'Nome para exportação',
   'fk_error' => 'Este recurso está associado com outros objetos e não pode ser removido',
   'full_name' => 'Nome completo',
   'geom_duplicate' => 'Esta latitude/longitude já está registrada no banco de dados',

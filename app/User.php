@@ -54,9 +54,11 @@ class User extends Authenticatable
         $this->save();
     }
 
-    public function person() {
+    public function person()
+    {
         return $this->belongsTo(Person::class);
     }
+
     public function userjobs()
     {
         return $this->hasMany(UserJob::class);
