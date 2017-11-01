@@ -92,7 +92,7 @@
     value="{{ old('person_id', isset($measurement) ? $measurement->person_id : Auth::user()->person_id) }}">
 </div>
   <div class="col-sm-12">
-    <div id="hintr" class="panel-collapse collapse">
+    <div id="hintp" class="panel-collapse collapse">
 	@lang('messages.measurement_person_hint')
     </div>
   </div>
@@ -101,7 +101,7 @@
     <label for="dataset_id" class="col-sm-3 control-label mandatory">
 @lang('messages.measurement_dataset')
 </label>
-        <a data-toggle="collapse" href="#hintr" class="btn btn-default">?</a>
+        <a data-toggle="collapse" href="#hintd" class="btn btn-default">?</a>
 <div class="col-sm-6">
 	<?php $selected = old('dataset_id', isset($measurement) ? $measurement->dataset_id : null); ?>
 	<select name="dataset_id" id="dataset_id" class="form-control" >
@@ -113,7 +113,7 @@
 	</select>
 </div>
   <div class="col-sm-12">
-    <div id="hintr" class="panel-collapse collapse">
+    <div id="hintd" class="panel-collapse collapse">
 	@lang('messages.measurement_dataset_hint')
     </div>
   </div>

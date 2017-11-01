@@ -48,7 +48,19 @@ class TaxonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Taxon::query()->select('*')->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'))->leftJoin('persons', 'taxons.author_id', '=', 'persons.id');
+        $query = Taxon::query()
+            ->select([
+                'taxons.id', 
+                'name', 
+                'parent_id', 
+                'author',
+                'rgt',
+                'lft',
+                'level',
+                'valid', 
+                'full_name',
+            ])->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'))
+            ->leftJoin('persons', 'taxons.author_id', '=', 'persons.id');
 
         return $this->applyScopes($query);
     }
@@ -76,26 +88,6 @@ class TaxonsDataTable extends DataTable
                     'reload',
                 ],
             ]);
-    }
-
-    /**
-     * Get columns.
-     *
-     * @return array
-     */
-    protected function getColumns()
-    {
-        // we need to ask for all of the columns that might be needed for other methods
-        return [
-            'id',
-            'name',
-            'parent_id',
-            'author',
-        'rgt',
-        'lft',
-        'level',
-        'valid',
-        ];
     }
 
     /**
