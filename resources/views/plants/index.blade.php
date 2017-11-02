@@ -18,59 +18,51 @@
     </div>
   </div>
 
-@can ('create', App\Plant::class)
-            <div class="panel panel-default">
-                <div class="panel-heading">
-      @lang('messages.create_plant')
-                </div>
+@if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+  @lang('messages.plant_list')
+            </div>
+            <div class="panel-body">
+    <p><strong>
+    @lang('messages.plant_list_for'):</strong>
+    {{ $object->fullname }}
+    </p>
+            </div>
+        </div>
 
-                <div class="panel-body">
-			    <div class="col-sm-6">
-				<a href="{{url ('plants/create')}}" class="btn btn-success">
-				    <i class="fa fa-btn fa-plus"></i>
+
+@else
+@can ('create', App\Plant::class)
+        <div class="panel panel-default">
+            <div class="panel-heading">
+  @lang('messages.create_plant')
+            </div>
+
+            <div class="panel-body">
+            <div class="col-sm-6">
+            <a href="{{url ('plants/create')}}" class="btn btn-success">
+                <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create')
 
-				</a>
-			</div>
-                </div>
-	    </div>
-@endcan
+            </a>
+        </div>
+            </div>
+    </div>
+    @endcan
+@endif
             <!-- Registered Plants -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         @lang('messages.plants')
                     </div>
-
                     <div class="panel-body">
-                        <table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.location_and_tag')
-</th>
-                                <th>
-@lang('messages.identification')
-</th>
-			    </thead>
-<tbody>
-                                @foreach ($plants as $plant)
-                                    <tr>
-					<td class="table-text">
-					<a href="{{ url('plants/'.$plant->id) }}">{{ $plant->fullname }}</a>
-					</td>
-                                        <td class="table-text">
-                                            @if ($plant->identification)
-                                            <em>{{ $plant->identification->taxon->fullname }}</em>
-                                            @else
-                                            @lang('messages.unidentified')
-                                            @endif
-                                        </td>
-                                    </tr>
-				    @endforeach
-				    </tbody>
-                        </table>
- {{ $plants->links() }}
-                    </div>
+{!! $dataTable->table() !!}
+                </div>
                 </div>
         </div>
     </div>
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

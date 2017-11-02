@@ -342,4 +342,8 @@ return array (
   'voucher_identification_date_hint' => 'Esta é a data de identificação da amostra de herbário. Se o dia ou mês são desconhecidos, utilize pontos de interrogação.',
   'voucher_identifier_id_hint' => 'Registre aqui a pessoa responsável por identificar esta amostra de herbário.',
   'trait_type_hint' => 'No momento há sete tipos de variáveis disponíveis no OpenDataBio. Variáveis quantitativas são medidas em números, podendo estes serem reais ou inteiros, de acordo com o tipo especificado. Variáveis quantitativas requerem que a unidade de medida seja definida e podem ter um intervalo de valores válidos. Variáveis qualitativas são selecionadas de uma lista de categorias. Variáveis qualitativas em que não há uma ordenação das categorias são chamadas "categóricas" (ex: habitat pode ser "floresta tropical" ou "mangrove"), e você deve especificar se uma unica medida pode associar apenas uma categoria ou mais de uma. Variáveis ordinais são variáveis qualitativas em que há uma ordenação natural (ex: a classe trófica de um lago pode ser "oligotrófica", "mesotrófica" ou "eutrófica"). Variáveis de texto podem ser inseridas livremente pelo usuário, e variáveis de links possuem um objeto e número associados (veja a wiki).',
+  'voucher_list' => 'Lista de amostras de herbário',
+  'plant_list' => 'Lista de plantas marcadas',
+  'voucher_list_for' => 'Lista de amostras para',
+  'plant_list_for' => 'Lista de plantas para',
 );

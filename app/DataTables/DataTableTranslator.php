@@ -1,11 +1,19 @@
 <?php
+
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
+
 namespace App\DataTables;
 
 use Illuminate\Support\Facades\Lang;
 
-class DataTableTranslator {
-    static function language() {
-       return 
+class DataTableTranslator
+{
+    public static function language()
+    {
+        return
         [
             'search' => Lang::get('datatables.search'),
             'processing' => Lang::get('datatables.processing'),

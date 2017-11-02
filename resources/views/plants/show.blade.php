@@ -121,6 +121,15 @@
 </div>
 @endcan
 @endif
+@if ($plant->vouchers()->count())
+<div class="col-sm-3">
+    <a href="{{ url('plants/'. $plant->id. '/vouchers')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $plant->vouchers()->count() }}
+@lang('messages.vouchers')
+    </a>
+</div>
+@else
 @can ('create', App\Voucher::class)
 <div class="col-sm-4">
 <a href="{{url ('plants/' . $plant->id . '/vouchers/create')}}" class="btn btn-success">
@@ -130,6 +139,7 @@
 </a>
 </div>
 @endcan
+@endif
 @can ('update', $plant)
 			    <div class="col-sm-3">
 				<a href="{{ url('plants/'. $plant->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
@@ -141,22 +151,5 @@
 @endcan
                 </div>
             </div>
-
-            @if ($plant->vouchers->count())
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.vouchers')
-                </div>
-		<div class="panel-body">
-        <ul>
-        @foreach ($plant->vouchers as $voucher) 
-            <li><a href="{{url('vouchers/'. $voucher->id)}}">{{$voucher->fullname}}</a></li>
-        @endforeach
-        </ul>
-        </div>
-            </div>
-            @endif
-
-<!-- Other details (specialist, herbarium, collects, etc?) -->
     </div>
 @endsection

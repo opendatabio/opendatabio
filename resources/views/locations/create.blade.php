@@ -267,5 +267,82 @@ $("#uc_autocomplete").devbridgeAutocomplete({
         $("#uc_id").val(null);
     }
     });
+	/** For Location create and edit pages. The available fields change with changes on adm_level.
+	 * The "vel" parameter determines the velocity in which the animation is made. **/
+	function setLocationFields(vel) {
+		var adm = $('#adm_level option:selected').val();
+		if ("undefined" === typeof adm) {
+			return; // nothing to do here...
+		}
+		switch (adm) {
+			case "999": // point
+				$("#super-geometry").hide(vel);
+				$("#super-points").show(vel);
+				$("#super-x").hide(vel);
+				$("#super-uc").show(vel);
+				break;
+			case "100": // plot
+				$("#super-geometry").hide(vel);
+				$("#super-points").show(vel);
+				$("#super-x").show(vel);
+				$("#super-uc").show(vel);
+				break;
+			default: // other
+				$("#super-geometry").show(vel);
+				$("#super-points").hide(vel);
+				$("#super-x").hide(vel);
+				$("#super-uc").hide(vel);
+		}
+	}
+	$("#adm_level").change(function() { setLocationFields(400); });
+    // trigger this on page load
+	setLocationFields(0);
+
+	/** Ajax handling for autodetecting location */
+	$("#autodetect").click(function(e) {
+		$( "#spinner" ).css('display', 'inline-block');
+		$.ajaxSetup({ // sends the cross-forgery token!
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			}
+		})
+		e.preventDefault(); // does not allow the form to submit
+		$.ajax({
+			type: "POST",
+			url: $('input[name="route-url"]').val(),
+			dataType: 'json',
+            data: {
+                'adm_level': $('#adm_level option:selected').val(),
+                'geom': $('input[name="geom"]').val(),
+                'lat1': $('input[name="lat1"]').val(),
+                'lat2': $('input[name="lat2"]').val(),
+                'lat3': $('input[name="lat3"]').val(),
+                'latO': $('#latO checked').val(),
+                'long1': $('input[name="long1"]').val(),
+                'long2': $('input[name="long2"]').val(),
+                'long3': $('input[name="long3"]').val(),
+                'longO': $('#longO checked').val()
+            },
+			success: function (data) {
+				$( "#spinner" ).hide();
+				if ("error" in data) {
+					$( "#ajax-error" ).collapse("show");
+					$( "#ajax-error" ).text(data.error);
+				} else {
+					// ONLY removes the error if request is success
+					$( "#ajax-error" ).collapse("hide");
+					$("#parent_autocomplete").val(data.detectdata[0]);
+					$("#parent_id").val(data.detectdata[1]);
+					$("#uc_autocomplete").val(data.detectdata[2]);
+					$("#uc_id").val(data.detectdata[3]);
+				}
+			},
+			error: function(e){ 
+				$( "#spinner" ).hide();
+				$( "#ajax-error" ).collapse("show");
+				$( "#ajax-error" ).text('Error sending AJAX request');
+			}
+		})
+	});
 </script>
 @endpush

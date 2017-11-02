@@ -78,15 +78,36 @@
 </div>
     @endcan
 @endif
+
+@if ($location->vouchers()->count())
+<div class="col-sm-3">
+    <a href="{{ url('locations/'. $location->id. '/vouchers')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $location->vouchers()->count() }}
+@lang('messages.vouchers')
+    </a>
+</div>
+@else
 @can ('create', App\Voucher::class)
 <div class="col-sm-4">
-<a href="{{url ('locations/' . $location->id . '/vouchers/create')}}" class="btn btn-success">
+<a href="{{url ('locations/' . $location->id . '/vouchers/create')}}" class="btn btn-default">
     <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_voucher')
-
 </a>
 </div>
 @endcan
+@endif
+
+@if ($location->plants()->count())
+<div class="col-sm-3">
+    <a href="{{ url('locations/'. $location->id. '/plants')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $location->plants()->count() }}
+@lang('messages.plants')
+    </a>
+</div>
+@endif
+
 @can ('update', $location)
 			    <div class="col-sm-3">
 				<a href="{{ url('locations/'. $location->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
@@ -123,27 +144,12 @@
 @endif
                 </div>
             </div>
-	@if ($location->plants()->count())
+	@if ($location->plants()->count() and isset($chartjs))
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    @lang('messages.plants_and_vouchers')
+                    @lang('messages.plants')
                 </div>
-
                 <div class="panel-body">
-<ul>
-@foreach ($plants as $plant)
-<li> <a href="{{url($plant->typename . '/' . $plant->id)}}">{{ $plant->fullname }} </a>
-@if ($plant->identification)
-    (<em>{{$plant->identification->taxon->fullname}}</em>)
-    @elseif ($plant->parent and $plant->parent->identification)
-    (<em>{{$plant->parent->identification->taxon->fullname}}</em>)
-@else
-    (@lang ('messages.unidentified'))
-@endif
-</li>
-@endforeach
-</ul>
-
 @if (isset($chartjs))
 <div style = "width:100%; height:400px; overflow:auto;">
 {!! $chartjs->render() !!}
@@ -152,10 +158,6 @@
                 </div>
             </div>
 	@endif
-
-
-
-
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang ('messages.location_map')
@@ -250,7 +252,5 @@ function getZoomLevel($area) {
 </script>
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config('app.gmaps_api_key') }}&callback=initMap">
-    </script>
-
-
+</script>
 @endsection

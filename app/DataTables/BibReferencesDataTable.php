@@ -50,6 +50,7 @@ class BibReferenceDataTable extends DataTable
                 'id',
                 'bibtex',
             ])->addSelect(DB::raw('odb_bibkey(bibtex) as bibkey'));
+
         return $this->applyScopes($query);
     }
 

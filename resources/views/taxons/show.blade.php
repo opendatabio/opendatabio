@@ -100,6 +100,24 @@
 </div>
  @endcan
 @endif
+@if ($plants->count())
+<div class="col-sm-6">
+    <a href="{{ url('taxons/'. $taxon->id. '/plants')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $plants->count() }}
+@lang('messages.plants')
+    </a>
+</div>
+@endif
+@if ($vouchers->count())
+<div class="col-sm-6">
+    <a href="{{ url('taxons/'. $taxon->id. '/vouchers')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $vouchers->count() }}
+@lang('messages.vouchers')
+    </a>
+</div>
+@endif
 @can ('update', $taxon)
 			    <div class="col-sm-6">
 				<a href="{{ url('taxons/'. $taxon->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
@@ -151,39 +169,5 @@
         @endif
                 </div>
             </div>
-<!-- TODO!!! FIX FOR VOUCHERS -->
-@if ($taxon->identifications()->count()) 
-
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.plants_and_vouchers')
-                </div>
-
-                <div class="panel-body">
-<!-- TODO paginate?? -->
-<table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.tag_or_number')
-</th>
-                </thead>
-<tbody>
-                                @foreach ($taxon->identifications as $id)
-                                @if ($id->object)
-                                    <tr>
-                    <td class="table-text">
-                    <a href="{{ url($id->object->typename . '/'.$id->object->id) }}">{{ $id->object->fullname }}</a>
-                    </td>
-                                    </tr>
-                                @endif
-                    @endforeach
-                    </tbody>
-                        </table>
-
-
-                </div>
-            </div>
-@endif
-
     </div>
 @endsection

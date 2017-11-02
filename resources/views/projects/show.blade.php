@@ -54,6 +54,36 @@
 </p>
 @endif
 
+
+@if ($project->vouchers()->count())
+<div class="col-sm-3">
+    <a href="{{ url('projects/'. $project->id. '/vouchers')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $project->vouchers()->count() }}
+@lang('messages.vouchers')
+    </a>
+</div>
+@else
+@can ('create', App\Voucher::class)
+<div class="col-sm-4">
+<a href="{{url ('projects/' . $project->id . '/vouchers/create')}}" class="btn btn-default">
+    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.create_voucher')
+</a>
+</div>
+@endcan
+@endif
+
+@if ($project->plants()->count())
+<div class="col-sm-3">
+    <a href="{{ url('projects/'. $project->id. '/plants')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $project->plants()->count() }}
+@lang('messages.plants')
+    </a>
+</div>
+@endif
+
 @can ('update', $project)
 			    <div class="col-sm-6">
 				<a href="{{ url('projects/'. $project->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
@@ -65,50 +95,6 @@
 @endcan
                 </div>
             </div>
-	@if ($project->plants()->count())
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.plants')
-                </div>
-
-                <div class="panel-body">
-<ul>
-@foreach ($project->plants as $plant)
-<li> <a href="{{url('plants/' . $plant->id)}}">{{ $plant->fullname }} </a>
-@if ($plant->identification)
-(<em>{{$plant->identification->taxon->fullname}}</em>)
-@else
-    @lang ('messages.unidentified')
-@endif
-</li>
-@endforeach
-</ul>
-                </div>
-            </div>
-	@endif
-	@if ($project->vouchers()->count())
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.vouchers')
-                </div>
-
-                <div class="panel-body">
-<ul>
-@foreach ($project->vouchers as $voucher)
-<li> <a href="{{url('vouchers/' . $voucher->id)}}">{{ $voucher->fullname }} </a>
-@if ($voucher->identification)
-(<em>{{$voucher->identification->taxon->fullname}}</em>)
-@elseif (($voucher->parent instanceof App\Plant) and $voucher->parent->identification)
-(<em>{{$voucher->parent->identification->taxon->fullname}}</em>)
-@else
-    @lang ('messages.unidentified')
-@endif
-</li>
-@endforeach
-</ul>
-                </div>
-            </div>
-	@endif
 <!-- Other details (specialist, herbarium, collects, etc?) -->
     </div>
 @endsection

@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 use App\BibReference;
 use App\UserJob;
 use Validator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
 use App\Jobs\ImportBibReferences;
 use App\DataTables\BibReferenceDataTable;

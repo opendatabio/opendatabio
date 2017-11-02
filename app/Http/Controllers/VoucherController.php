@@ -9,6 +9,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\DataTables\VouchersDataTable;
 use Validator;
 use App\Plant;
 use App\Person;
@@ -17,6 +18,7 @@ use App\Location;
 use App\Herbarium;
 use App\Identification;
 use App\Voucher;
+use App\Taxon;
 use Auth;
 use Lang;
 
@@ -27,11 +29,44 @@ class VoucherController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(VouchersDataTable $dataTable)
     {
-        $vouchers = Voucher::with(['parent'])->paginate(10);
+        return $dataTable->render('vouchers.index', []);
+    }
 
-        return view('vouchers.index', compact('vouchers'));
+    public function indexTaxons($id, VouchersDataTable $dataTable)
+    {
+        $object = Taxon::findOrFail($id);
+
+        return $dataTable->with('taxon', $id)->render('vouchers.index', compact('object'));
+    }
+
+    public function indexProjects($id, VouchersDataTable $dataTable)
+    {
+        $object = Project::findOrFail($id);
+
+        return $dataTable->with('project', $id)->render('vouchers.index', compact('object'));
+    }
+
+    public function indexPersons($id, VouchersDataTable $dataTable)
+    {
+        $object = Person::findOrFail($id);
+
+        return $dataTable->with('person', $id)->render('vouchers.index', compact('object'));
+    }
+
+    public function indexLocations($id, VouchersDataTable $dataTable)
+    {
+        $object = Location::findOrFail($id);
+
+        return $dataTable->with('location', $id)->render('vouchers.index', compact('object'));
+    }
+
+    public function indexPlants($id, VouchersDataTable $dataTable)
+    {
+        $object = Plant::findOrFail($id);
+
+        return $dataTable->with('plant', $id)->render('vouchers.index', compact('object'));
     }
 
     public function customValidate(Request $request, Voucher $voucher = null)

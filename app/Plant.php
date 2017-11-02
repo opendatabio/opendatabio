@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use DB;
 use Auth;
+use Lang;
 
 class Plant extends Model
 {
@@ -75,6 +76,15 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         }
 
         return 'Unknown location-'.$this->tag;
+    }
+
+    public function getTaxonNameAttribute()
+    {
+        if ($this->identification and $this->identification->taxon) {
+            return $this->identification->taxon->fullname;
+        }
+
+        return Lang::get('messages.unidentified');
     }
 
     public function location()

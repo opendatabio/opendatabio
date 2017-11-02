@@ -33,4 +33,10 @@ class Project extends Model
     {
         return $this->hasMany(Voucher::class);
     }
+
+    // for compatibity with $object->fullname calls
+    public function getFullnameAttribute()
+    {
+        return $this->name;
+    }
 }

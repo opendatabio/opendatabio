@@ -17,6 +17,7 @@ use App\Taxon;
 use App\Location;
 use App\Herbarium;
 use App\Identification;
+use App\DataTables\PlantsDataTable;
 use Auth;
 use Lang;
 
@@ -27,13 +28,42 @@ class PlantController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(PlantsDataTable $dataTable)
     {
-        $plants = Plant::with(['location', 'identification.taxon'])->paginate(10);
+        return $dataTable->render('plants.index', []);
+    }
 
-        return view('plants.index', [
-            'plants' => $plants,
-        ]);
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function indexLocations($id, PlantsDataTable $dataTable)
+    {
+        $object = Location::findOrFail($id);
+
+        return $dataTable->with('location', $id)->render('plants.index', compact('object'));
+    }
+
+    public function indexTaxons($id, PlantsDataTable $dataTable)
+    {
+        $object = Taxon::findOrFail($id);
+
+        return $dataTable->with('taxon', $id)->render('plants.index', compact('object'));
+    }
+
+    public function indexProjects($id, PlantsDataTable $dataTable)
+    {
+        $object = Project::findOrFail($id);
+
+        return $dataTable->with('project', $id)->render('plants.index', compact('object'));
+    }
+
+    public function indexPersons($id, PlantsDataTable $dataTable)
+    {
+        $object = Person::findOrFail($id);
+
+        return $dataTable->with('person', $id)->render('plants.index', compact('object'));
     }
 
     /**
@@ -54,11 +84,7 @@ class PlantController extends Controller
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
         }
 
-        return view('plants.create', [
-            'persons' => $persons,
-            'projects' => $projects,
-            'herbaria' => $herbaria,
-        ]);
+        return view('plants.create', compact('persons', 'projects', 'herbaria'));
     }
 
     public function customValidate(Request $request, Plant $plant = null)
