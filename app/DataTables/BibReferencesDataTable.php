@@ -7,13 +7,14 @@
 
 namespace App\DataTables;
 
-use App\Person;
+use App\BibReference;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
+use DB;
 
-class PersonsDataTable extends DataTable
+class BibReferenceDataTable extends DataTable
 {
     /**
      * Build DataTable class.
@@ -23,12 +24,18 @@ class PersonsDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-        ->editColumn('abbreviation', function ($person) {
-            return '<a href="'.url('persons/'.$person->id).'">'.
+        ->editColumn('bibkey', function ($reference) {
+            return '<a href="'.url('references/'.$reference->id).'">'.
                 // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($person->abbreviation).'</a>';
+                htmlspecialchars($reference->bibkey).'</a>';
         })
-        ->rawColumns(['abbreviation']);
+        ->addColumn('author', function ($reference) { return $reference->author; })
+        ->addColumn('year', function ($reference) { return $reference->year; })
+        ->addColumn('title', function ($reference) { return $reference->title; })
+        ->filterColumn('title', function ($query, $keyword) {
+            $query->where('bibtex', 'like', ["%{$keyword}%"]);
+        })
+        ->rawColumns(['bibkey']);
     }
 
     /**
@@ -38,8 +45,11 @@ class PersonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Person::query()->select(['id', 'full_name', 'abbreviation', 'email']);
-
+        $query = BibReference::query()
+            ->select([
+                'id',
+                'bibtex',
+            ])->addSelect(DB::raw('odb_bibkey(bibtex) as bibkey'));
         return $this->applyScopes($query);
     }
 
@@ -52,9 +62,10 @@ class PersonsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'abbreviation' => ['title' => Lang::get('messages.abbreviation'), 'searchable' => true, 'orderable' => true],
-                'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => true, 'orderable' => true],
-                'email' => ['title' => Lang::get('messages.email'), 'searchable' => true, 'orderable' => true],
+                'bibkey' => ['title' => Lang::get('messages.bibtex_key'), 'searchable' => false, 'orderable' => true],
+                'author' => ['title' => Lang::get('messages.authors'), 'searchable' => false, 'orderable' => false],
+                'year' => ['title' => Lang::get('messages.year'), 'searchable' => false, 'orderable' => false],
+                'title' => ['title' => Lang::get('messages.title'), 'searchable' => true, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -75,6 +86,6 @@ class PersonsDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_persons_'.time();
+        return 'odb_references_'.time();
     }
 }

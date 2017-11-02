@@ -14,6 +14,7 @@ use Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Lang;
 use App\Jobs\ImportBibReferences;
+use App\DataTables\BibReferenceDataTable;
 use Response;
 
 class BibReferenceController extends Controller
@@ -34,13 +35,9 @@ class BibReferenceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(BibReferenceDataTable $dataTable)
     {
-        $references = BibReference::orderBy(DB::raw('odb_bibkey(bibtex)'))->paginate(10);
-
-        return view('references.index', [
-            'references' => $references,
-        ]);
+        return $dataTable->render('references.index', []);
     }
 
     /**

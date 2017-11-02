@@ -62,39 +62,13 @@
                     <div class="panel-heading">
                         @lang('messages.bibliographic_references')
                     </div>
-
                     <div class="panel-body">
-                        <table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.bibtex_key')
-</th>
-                                <th>
-@lang('messages.authors')
-</th>
-                                <th>
-@lang('messages.year')
-</th>
-                                <th>
-@lang('messages.title')
-</th>
-			    </thead>
-<tbody>
-                                @foreach ($references as $reference)
-                                    <tr>
-					<td class="table-text">
-					<a href="{{ url('references/'.$reference->id) }}">{{ $reference->bibkey }}</a>
-					</td>
-                                        <td class="table-text">{{ $reference->author }}</td>
-                                        <td class="table-text">{{ $reference->year }}</td>
-                                        <td class="table-text">{{ $reference->title }}</td>
-                                    </tr>
-				    @endforeach
-				    </tbody>
-                        </table>
- {{ $references->links() }}
-                    </div>
+{!! $dataTable->table() !!}
+                </div>
                 </div>
         </div>
     </div>
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

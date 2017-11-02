@@ -37,7 +37,6 @@ class TaxonsDataTable extends DataTable
         ->filterColumn('authorSimple', function ($query, $keyword) {
             $query->where('persons.full_name', 'like', ["%{$keyword}%"])->orWhere('author', 'like', ["%{$keyword}%"]);
         })
-//	    ->addColumn('full_name', function($location) {return $location->full_name;})
         ->rawColumns(['fullname']);
     }
 
@@ -80,7 +79,7 @@ class TaxonsDataTable extends DataTable
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
-                'order' => [[0, 'desc']],
+                'order' => [[0, 'asc']],
                 'buttons' => [
                     'csv',
                     'excel',

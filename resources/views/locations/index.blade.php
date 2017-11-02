@@ -40,15 +40,13 @@
                     <div class="panel-heading">
 @lang('messages.registered_locations')
                     </div>
-
-
+                <div class="panel-body">
 {!! $dataTable->table() !!}
+                </div>
                 </div>
         </div>
     </div>
 @endsection
-
-
-@push('scripts')
+@push ('scripts')
 {!! $dataTable->scripts() !!}
 @endpush

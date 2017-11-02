@@ -35,20 +35,18 @@
 	    </div>
 @endcan
 
-            <!-- Registered Locations -->
+            <!-- Registered Taxons -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
 @lang('messages.registered_taxons')
                     </div>
-
-
+                <div class="panel-body">
 {!! $dataTable->table() !!}
+                </div>
                 </div>
         </div>
     </div>
 @endsection
-
-
-@push('scripts')
+@push ('scripts')
 {!! $dataTable->scripts() !!}
 @endpush

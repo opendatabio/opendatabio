@@ -21,7 +21,6 @@ class BibReference extends Model
 {
     // "cached" entries, so we don't need to parse the bibtex for every call
     protected $entries = null;
-    //	protected $appends = ['author', 'title', 'year', 'bibkey'];
     protected $fillable = ['bibtex'];
 
     public function datasets()
