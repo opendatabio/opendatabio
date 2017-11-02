@@ -69,6 +69,7 @@ class BibReferenceDataTable extends DataTable
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
+                'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
                 'buttons' => [
                     'csv',
