@@ -153,7 +153,7 @@ c.f. = "confer", meaning that the identification is believed to be correct, but 
 aff. = "affinis", meaning there is evidence that this is a new species, still undescribed, but related to the given taxon;
 "vel aff." means "or affinis", which indicates that the plant may be from the indicated taxon or from a related, undescribed species.',
   'plant_identifier_id_hint' => 'Register here the person responsible for the plant identification. This may be one of the collectors, or not.',
-  'plant_identification_date_hint' => 'Register here when the plant was identified with the current taxonomic name.',
+  'plant_identification_date_hint' => 'Register here the date when the plant was identified with the current taxonomic name.',
   'plant_herbarium_id_hint' => 'Indicate here if the identification was done based on a herbarium sample. If you do so, use the "Identification notes" field to indicate the herbarium sample number.',
   'hint_plant_create' => 'Use this form to register a new marked plant.',
   'new_plant' => 'New / Edit Plant',
