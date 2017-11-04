@@ -39,7 +39,7 @@ return array (
   'geom_error' => 'The geometry informed is invalid. Check for missing parentheses, extra commas, and verify that the last position in a polygon is equal to the first.',
   'geom_parent_error' => 'The coordinates for this location do not fall within the specified parent\'s coordinates, please check!',
   'unable_autodetect' => 'Unable to autodetect parent!',
-  'movenotpossible' => 'Impossible to move node to this parent.',
+  'movenotpossible' => 'Impossible to move to this parent!',
   'no_valid_dataset_error' => 'The logged in user has no valid datasets!',
   'no_valid_trait_error' => 'There is no trait available for creating measurements. Create a new trait in the Traits menu.',
   'invalid_trait_type_error' => 'The allowed object types for this trait are not compatible with the referenced object.',
@@ -146,7 +146,12 @@ return array (
   'tag_team' => 'Tagging team',
   'plant_collectors_hint' => 'Register here all people responsible for tagging for this plant. You can choose more than one.',
   'plant_taxon_hint' => 'Indicate the taxon to which this plant was identified.',
-  'plant_modifier_hint' => 'Register here the identification modifier used. s.s. = "sensu strictu", meaning strictly speaking; s.l. = "sensu lato", meaning "broadly"; c.f. = "confer", meaning that the identification is believed to be correct, but is not certain; aff. = "affinis", meaning there is evidence that this is a new species, still undescribed, but related to the given taxon; "vel aff." means "or affinis", which indicates that the plant may be from the indicated taxon or from a related, undescribed species.',
+  'plant_modifier_hint' => 'Register here the identification modifier used.
+s.s. = "sensu strictu", meaning strictly speaking;
+s.l. = "sensu lato", meaning "broadly";
+c.f. = "confer", meaning that the identification is believed to be correct, but is not certain;
+aff. = "affinis", meaning there is evidence that this is a new species, still undescribed, but related to the given taxon;
+"vel aff." means "or affinis", which indicates that the plant may be from the indicated taxon or from a related, undescribed species.',
   'plant_identifier_id_hint' => 'Register here the person responsible for the plant identification. This may be one of the collectors, or not.',
   'plant_identification_date_hint' => 'Register here when the plant was identified with the current taxonomic name.',
   'plant_herbarium_id_hint' => 'Indicate here if the identification was done based on a herbarium sample. If you do so, use the "Identification notes" field to indicate the herbarium sample number.',
@@ -255,7 +260,7 @@ return array (
   'adm_level' => 'Administrative level',
   'location_adm_level_hint' => 'Stores the type of the location. Some types are actual administrative levels, related to the legal status of the location (countries, states, provinces, etc). Some are related to the nature of the location (such as a GPS point, or a plot).',
   'geometry' => 'Geometry',
-  'geom_hint' => 'Store here the geometry of the location. This field accepts a Well Known Text of a Point, LineString, Polygon or MultiPolygon (such as the WKT that may be exported from a GIS system). NOTE that longitudes should be inserted before latitudes. Thus the WKT \'POINT(-44.0 -22.5 )\' refers to a point at 22 degrees and 30 minutes of latitude south and 44 degrees of longitude west).',
+  'geom_hint' => 'Store here the geometry of the location. This field accepts a Well Known Text of a Point, LineString, Polygon or MultiPolygon (such as the WKT that may be exported from a GIS system). NOTE that longitudes should be inserted before latitudes. Thus the WKT \'POINT(-44.0 -22.5 )\' refers to a point at 44 degrees of longitude west and 22 degrees and 30 minutes of latitude south.',
   'latitude' => 'Latitude',
   'longitude' => 'Longitude',
   'latlong_hint' => 'Enter here the latitude and longitude of the point or plot. If the latitude or longitude is expressed as decimal degrees, enter the degrees with a decimal point in the degree field (such as 22.5 degrees). If the latitude or longitude is expressed as decimal minutes, enter it with a decimal point in the minutes field (such as 22 degrees and 50.980 minutes).',
