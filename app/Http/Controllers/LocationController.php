@@ -252,15 +252,8 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-        $location = Location::with(['plants.identification.taxon', 'children'])->withGeom()->findOrFail($id);
-        $plants = $location->plants;
-        $vouchers = $location->vouchers;
+        $location = Location::with('children')->withGeom()->findOrFail($id);
         $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
-        foreach ($plants as $plant) {
-            $vouchers = $vouchers->merge($plant->vouchers);
-        }
-        $plants = $plants->merge($vouchers);
-
         if ($location->x) {
             if ($location->x > $location->y) {
                 $width = 400;
@@ -274,7 +267,7 @@ class LocationController extends Controller
                 ->name('LocationPlants')
                 ->type('scatter')
                 ->size(['width' => $width, 'height' => $height])
-                ->labels($plants->map(function ($x) {return $x->tag; })->all())
+                ->labels($location->plants->map(function ($x) {return $x->tag; })->all())
                 ->datasets([
                     [
                         'label' => 'Plants in location',
@@ -285,16 +278,16 @@ class LocationController extends Controller
                         'pointBackgroundColor' => 'rgba(38, 185, 154, 0.7)',
                         'pointHoverBackgroundColor' => 'rgba(220,220,20,0.7)',
                         'pointHoverBorderColor' => 'rgba(220,220,20,1)',
-                        'data' => $plants->map(function ($x) {return ['x' => $x->x, 'y' => $x->y]; })->all(),
+                        'data' => $location->plants->map(function ($x) {return ['x' => $x->x, 'y' => $x->y]; })->all(),
                     ],
                 ])
                 ->options([
                     'maintainAspectRatio' => true,
                 ]);
 
-            return view('locations.show', compact('chartjs', 'location', 'plants', 'plot_children'));
+            return view('locations.show', compact('chartjs', 'location', 'plot_children'));
         } // else
-        return view('locations.show', compact('location', 'plants', 'plot_children'));
+        return view('locations.show', compact('location', 'plot_children'));
     }
 
     /**

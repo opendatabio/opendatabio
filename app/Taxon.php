@@ -233,6 +233,20 @@ class Taxon extends Node
         }
     }
 
+    public function getPlants()
+    {
+        $p = $this->identifications()->where('object_type', 'App\Plant')->get()->all();
+
+        return collect($p)->map(function ($q) {return $q->object; });
+    }
+
+    public function getVouchers()
+    {
+        $p = $this->identifications()->where('object_type', 'App\Voucher')->get()->all();
+
+        return collect($p)->map(function ($q) {return $q->object; });
+    }
+
     public function identifications()
     {
         return $this->hasMany(Identification::class);

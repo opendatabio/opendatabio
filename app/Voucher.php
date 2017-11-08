@@ -10,6 +10,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Auth;
+use Lang;
 
 class Voucher extends Model
 {
@@ -49,6 +50,15 @@ JOIN project_user ON (projects.id = project_user.project_id)
 WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 )');
         });
+    }
+
+    public function getTaxonNameAttribute()
+    {
+        if ($this->identification and $this->identification->taxon) {
+            return $this->identification->taxon->fullname;
+        }
+
+        return Lang::get('messages.unidentified');
     }
 
     public function newQuery($excludeDeleted = true)
@@ -125,5 +135,17 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     public function collectors()
     {
         return $this->morphMany(Collector::class, 'object');
+    }
+
+    public function getLocation()
+    {
+        if (is_null($this->parent)) {
+            return null;
+        }
+        if ($this->parent instanceof Location) {
+            return $this->parent;
+        }
+
+        return $this->parent->location;
     }
 }

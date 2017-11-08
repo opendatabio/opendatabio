@@ -82,4 +82,10 @@ class Person extends Model
     {
         return $this->hasMany(Measurements::class);
     }
+
+    // convenience alias
+    public function getFullnameAttribute()
+    {
+        return $this->attributes['full_name'];
+    }
 }

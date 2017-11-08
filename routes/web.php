@@ -49,10 +49,19 @@ Route::resource('projects', 'ProjectController');
 
 Route::resource('datasets', 'DatasetController');
 
+Route::get('locations/{id}/plants', 'PlantController@indexLocations');
+Route::get('taxons/{id}/plants', 'PlantController@indexTaxons');
+Route::get('projects/{id}/plants', 'PlantController@indexProjects');
+Route::get('persons/{id}/plants', 'PlantController@indexPersons');
 Route::resource('plants', 'PlantController');
 
 Route::get('plants/{id}/vouchers/create', 'VoucherController@createPlants');
 Route::get('locations/{id}/vouchers/create', 'VoucherController@createLocations');
+Route::get('locations/{id}/vouchers', 'VoucherController@indexLocations');
+Route::get('plants/{id}/vouchers', 'VoucherController@indexPlants');
+Route::get('taxons/{id}/vouchers', 'VoucherController@indexTaxons');
+Route::get('projects/{id}/vouchers', 'VoucherController@indexProjects');
+Route::get('persons/{id}/vouchers', 'VoucherController@indexPersons');
 Route::resource('vouchers', 'VoucherController', ['except' => ['create']]);
 
 Route::resource('tags', 'TagController');

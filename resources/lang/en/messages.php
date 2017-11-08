@@ -375,4 +375,8 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'hint_trait_link_type' => 'What type of object should be linked in this measure? For instance, if the trait is "Herbivore species", the link type should be "Taxon"',
   'link' => 'Link',
   'optional' => 'Optional',
+  'voucher_list' => 'Herbarium samples list',
+  'plant_list' => 'Marked plants list',
+  'voucher_list_for' => 'Samples list for',
+  'plant_list_for' => 'Plants list for',
 );

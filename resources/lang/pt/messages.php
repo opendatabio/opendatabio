@@ -380,4 +380,8 @@ s.l. = "sensu lato", sentido amplo, em geral;
 c.f. = "confer", confira, significando que acredita-se que a identificação esteja correta, mas não se tem certeza;
 aff. = "affinis", significando que há evidências de que esta é uma nova espécie ainda não descrita, mas relacionada ao táxon indicado;
 vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado ou de outra espécie relacionada ainda não descrita.',
+  'voucher_list' => 'Lista de amostras de herbário',
+  'plant_list' => 'Lista de plantas marcadas',
+  'voucher_list_for' => 'Lista de amostras para',
+  'plant_list_for' => 'Lista de plantas para',
 );

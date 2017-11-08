@@ -185,6 +185,8 @@ class TaxonController extends Controller
     public function show($id)
     {
         $taxon = Taxon::with('identifications.object')->findOrFail($id);
+        $plants = $taxon->getPlants();
+        $vouchers = $taxon->getVouchers();
         if ($taxon->author_id) {
             $author = Person::findOrFail($taxon->author_id);
         } else {
@@ -196,11 +198,13 @@ class TaxonController extends Controller
             $bibref = null;
         }
 
-        return view('taxons.show', [
-                'taxon' => $taxon,
-                'author' => $author,
-                'bibref' => $bibref,
-        ]);
+        return view('taxons.show', compact(
+                'taxon',
+                'author',
+                'bibref',
+                'plants',
+                'vouchers'
+            ));
     }
 
     /**

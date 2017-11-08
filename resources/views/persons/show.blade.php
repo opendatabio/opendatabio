@@ -56,6 +56,18 @@
 </ul>
 </p>
 @endif
+<div class="col-sm-3">
+    <a href="{{ url('persons/'. $person->id. '/plants')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.plants')
+    </a>
+</div>
+<div class="col-sm-3">
+    <a href="{{ url('persons/'. $person->id. '/vouchers')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.vouchers')
+    </a>
+</div>
 @can ('update', $person)
 				<a class="btn btn-success" href="{{url ('persons/' . $person->id . '/edit')}}">
 				    <i class="fa fa-btn fa-plus"></i>
@@ -64,28 +76,5 @@
 @endcan
             </div>
 </div>
-@if ($collected->count())
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.tagged_or_collected')
-                </div>
-
-		<div class="panel-body">
-<p>
-<ul>
-@foreach ($collected as $scollected)
-<li><a href="{{url($scollected->typename . '/' . $scollected->id)}}">{{$scollected->fullname}}</a>
-@if ($scollected->identification)
-    (<em>{{$scollected->identification->taxon->fullname}}</em>)
-@elseif ($scollected->parent and $scollected->parent->identification)
-    (<em>{{$scollected->parent->identification->taxon->fullname}}</em>)
-@else
-    @lang ('messages.unidentified')        
-@endif
-</li>
-@endforeach
-</ul>
-            </div>
-@endif
     </div>
 @endsection

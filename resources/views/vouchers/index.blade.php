@@ -18,44 +18,31 @@
     </div>
   </div>
 
+@if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+  @lang('messages.voucher_list')
+            </div>
+            <div class="panel-body">
+    <p><strong>
+    @lang('messages.voucher_list_for'):</strong>
+    {{ $object->fullname }}
+    </p>
+            </div>
+        </div>
+@endif
             <!-- Registered Vouchers -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         @lang('messages.vouchers')
                     </div>
-
+{!! $dataTable->table() !!}
                     <div class="panel-body">
-                        <table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.collector_and_number')
-</th>
-                                <th>
-@lang('messages.identification')
-</th>
-			    </thead>
-<tbody>
-                                @foreach ($vouchers as $voucher)
-                                    <tr>
-					<td class="table-text">
-					<a href="{{ url('vouchers/'.$voucher->id) }}">{{ $voucher->fullname }}</a>
-					</td>
-                                        <td class="table-text">
-                                            @if ($voucher->identification)
-                                            <em>{{ $voucher->identification->taxon->fullname }}</em>
-                                            @elseif ($voucher->parent and $voucher->parent->identification)
-                                            <em>{{ $voucher->parent->identification->taxon->fullname }}</em>
-                                            @else
-                                            @lang('messages.unidentified')
-                                            @endif
-                                        </td>
-                                    </tr>
-				    @endforeach
-				    </tbody>
-                        </table>
- {{ $vouchers->links() }}
                     </div>
                 </div>
         </div>
     </div>
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush
