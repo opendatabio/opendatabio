@@ -14,4 +14,5 @@ return array (
   'reload' => 'Reload',
   'search' => 'Search',
   'zero_records' => 'No records to show',
+  'colvis' => 'Toggle columns',
 );

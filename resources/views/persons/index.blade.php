@@ -51,6 +51,7 @@
                     </div>
 
 
+                    <div class="panel-body">
 {!! $dataTable->table() !!}
                 </div>
         </div>

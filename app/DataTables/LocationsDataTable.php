@@ -30,6 +30,9 @@ class LocationsDataTable extends DataTable
         })
         ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm.'.$location->adm_level); })
         ->addColumn('full_name', function ($location) {return $location->full_name; })
+        ->addColumn('parent', function ($location) {
+            return empty($location->parent) ? '' : $location->parent->name;
+        })
         ->rawColumns(['name']);
     }
 
@@ -45,6 +48,7 @@ class LocationsDataTable extends DataTable
             'locations.adm_level',
             'locations.rgt',
             'locations.lft',
+            'locations.parent_id',
             'locations.id',
         ]);
 
@@ -61,7 +65,9 @@ class LocationsDataTable extends DataTable
         return $this->builder()
             ->columns([
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
+                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'adm_level' => ['title' => Lang::get('messages.adm_level'), 'searchable' => true, 'orderable' => true],
+                'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
                 'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
@@ -73,7 +79,12 @@ class LocationsDataTable extends DataTable
                     'excel',
                     'print',
                     'reload',
+                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
+                'columnDefs' => [[
+                    'targets' => [1, 3],
+                    'visible' => false,
+                ]],
             ]);
     }
 

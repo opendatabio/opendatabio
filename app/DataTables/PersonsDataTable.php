@@ -28,6 +28,9 @@ class PersonsDataTable extends DataTable
                 // Needs to escape special chars, as this will be passed RAW
                 htmlspecialchars($person->abbreviation).'</a>';
         })
+        ->addColumn('herbarium', function ($person) {
+            return empty($person->herbarium) ? '' : $person->herbarium->name;
+        })
         ->rawColumns(['abbreviation']);
     }
 
@@ -38,7 +41,7 @@ class PersonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Person::query()->select(['id', 'full_name', 'abbreviation', 'email']);
+        $query = Person::query()->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id']);
 
         return $this->applyScopes($query);
     }
@@ -55,6 +58,8 @@ class PersonsDataTable extends DataTable
                 'abbreviation' => ['title' => Lang::get('messages.abbreviation'), 'searchable' => true, 'orderable' => true],
                 'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => true, 'orderable' => true],
                 'email' => ['title' => Lang::get('messages.email'), 'searchable' => true, 'orderable' => true],
+                'institution' => ['title' => Lang::get('messages.institution'), 'searchable' => true, 'orderable' => true],
+                'herbarium' => ['title' => Lang::get('messages.herbarium'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -65,7 +70,12 @@ class PersonsDataTable extends DataTable
                     'excel',
                     'print',
                     'reload',
+                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
+                'columnDefs' => [[
+                    'targets' => [3, 4],
+                    'visible' => false,
+                ]],
             ]);
     }
 

@@ -29,11 +29,22 @@ class VouchersDataTable extends DataTable
                 htmlspecialchars($voucher->fullname).'</a>';
         })
         ->addColumn('project', function ($voucher) { return $voucher->project->name; })
-        ->addColumn('identification', function ($voucher) { return $voucher->taxonName; })
+        ->addColumn('identification', function ($plant) {
+            return $plant->taxonName == Lang::get('messages.unidentified') ?
+                   $plant->taxonName : '<em>'.htmlspecialchars($plant->taxonName).'</em>';
+        })
+        ->addColumn('collectors', function ($voucher) {
+            $col = $voucher->collectors;
+
+            return implode(', ', array_merge([$voucher->person->fullname],
+                $col->map(function ($c) {return $c->person->fullname; })->all()
+            ));
+        })
+        ->editColumn('date', function ($voucher) { return $voucher->formatDate; })
 //        ->filterColumn('title', function ($query, $keyword) {
 //            $query->where('bibtex', 'like', ["%{$keyword}%"]);
 //        })
-        ->rawColumns(['number']);
+        ->rawColumns(['number', 'identification']);
     }
 
     /**
@@ -43,13 +54,14 @@ class VouchersDataTable extends DataTable
      */
     public function query()
     {
-        $query = Voucher::query()->with(['identification.taxon', 'project', 'parent'])
+        $query = Voucher::query()->with(['identification.taxon', 'person', 'collectors.person', 'project', 'parent'])
             ->select([
                 'vouchers.id',
                 'number',
                 'person_id',
                 'project_id',
                 'parent_id',
+                'date',
             ]);
         // customizes the datatable query
         if ($this->location) {
@@ -94,6 +106,8 @@ class VouchersDataTable extends DataTable
                 'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
+                'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => false, 'orderable' => false],
+                'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
             ])
             ->parameters([
                 'dom' => 'Brtip',
@@ -104,7 +118,12 @@ class VouchersDataTable extends DataTable
                     'excel',
                     'print',
                     'reload',
+                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
+                'columnDefs' => [[
+                    'targets' => [3, 4],
+                    'visible' => false,
+                ]],
             ]);
     }
 

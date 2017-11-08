@@ -29,11 +29,20 @@ class PlantsDataTable extends DataTable
                 htmlspecialchars($plant->fullname).'</a>';
         })
         ->addColumn('project', function ($plant) { return $plant->project->name; })
-        ->addColumn('identification', function ($plant) { return $plant->taxonName; })
+        ->addColumn('identification', function ($plant) {
+            return $plant->taxonName == Lang::get('messages.unidentified') ?
+                   $plant->taxonName : '<em>'.htmlspecialchars($plant->taxonName).'</em>';
+        })
+        ->addColumn('tag_team', function ($plant) {
+            $col = $plant->collectors;
+
+            return implode(', ', $col->map(function ($c) {return $c->person->fullname; })->all());
+        })
+        ->editColumn('date', function ($plant) { return $plant->formatDate; })
 //        ->filterColumn('title', function ($query, $keyword) {
 //            $query->where('bibtex', 'like', ["%{$keyword}%"]);
 //        })
-        ->rawColumns(['tag']);
+        ->rawColumns(['tag', 'identification']);
     }
 
     /**
@@ -49,6 +58,7 @@ class PlantsDataTable extends DataTable
                 'tag',
                 'location_id',
                 'project_id',
+                'plants.date',
             ]);
         // customizes the datatable query
         if ($this->location) {
@@ -81,6 +91,8 @@ class PlantsDataTable extends DataTable
                 'tag' => ['title' => Lang::get('messages.location_and_tag'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
+                'tag_team' => ['title' => Lang::get('messages.tag_team'), 'searchable' => false, 'orderable' => false],
+                'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
             ])
             ->parameters([
                 'dom' => 'Brtip',
@@ -91,7 +103,12 @@ class PlantsDataTable extends DataTable
                     'excel',
                     'print',
                     'reload',
+                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
+                'columnDefs' => [[
+                    'targets' => [3, 4],
+                    'visible' => false,
+                ]],
             ]);
     }
 

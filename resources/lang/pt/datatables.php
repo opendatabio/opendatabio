@@ -14,4 +14,5 @@ return array (
   'empty_table' => 'Não há registros disponíveis',
   'previous' => 'Anterior',
   'next' => 'Próximo',
+  'colvis' => 'Alternar colunas',
 );

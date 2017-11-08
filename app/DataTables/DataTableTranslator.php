@@ -31,6 +31,7 @@ class DataTableTranslator
                 'csv' => Lang::get('datatables.csv'),
                 'excel' => Lang::get('datatables.excel'),
                 'print' => Lang::get('datatables.print'),
+                'colvis' => Lang::get('datatables.colvis'),
             ],
         ];
     }

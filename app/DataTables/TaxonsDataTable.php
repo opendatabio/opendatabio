@@ -86,6 +86,7 @@ class TaxonsDataTable extends DataTable
                     'excel',
                     'print',
                     'reload',
+                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
             ]);
     }
