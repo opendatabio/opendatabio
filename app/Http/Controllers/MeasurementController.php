@@ -8,6 +8,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\DataTables\MeasurementsDataTable;
 use App\Measurement;
 use App\Plant;
 use App\Voucher;
@@ -25,40 +26,62 @@ class MeasurementController extends Controller
 {
     // The usual index method is hidden to provide a common interface to all requests
     // coming from different nested routes
-    protected function index($object)
+    public function indexPlants($id, MeasurementsDataTable $dataTable)
     {
-        $measurements = $object->measurements()->orderBy('date', 'asc')->paginate(10);
-        $measurements->load('odbtrait');
+        $object = Plant::findOrFail($id);
 
-        return view('measurements.index', compact('object', 'measurements'));
+        return $dataTable->with([
+            'measured_type' => 'App\Plant',
+            'measured' => $id,
+        ])->render('measurements.index', compact('object'));
     }
 
-    public function indexPlants($id)
+    public function indexLocations($id, MeasurementsDataTable $dataTable)
     {
-        $plant = Plant::findOrFail($id);
+        $object = Location::findOrFail($id);
 
-        return $this->index($plant);
+        return $dataTable->with([
+            'measured_type' => 'App\Location',
+            'measured' => $id,
+        ])->render('measurements.index', compact('object'));
     }
 
-    public function indexLocations($id)
+    public function indexVouchers($id, MeasurementsDataTable $dataTable)
     {
-        $location = Location::findOrFail($id);
+        $object = Voucher::findOrFail($id);
 
-        return $this->index($location);
+        return $dataTable->with([
+            'measured_type' => 'App\Voucher',
+            'measured' => $id,
+        ])->render('measurements.index', compact('object'));
     }
 
-    public function indexVouchers($id)
+    public function indexTaxons($id, MeasurementsDataTable $dataTable)
     {
-        $voucher = Voucher::findOrFail($id);
+        $object = Taxon::findOrFail($id);
 
-        return $this->index($voucher);
+        return $dataTable->with([
+            'measured_type' => 'App\Taxon',
+            'measured' => $id,
+        ])->render('measurements.index', compact('object'));
     }
 
-    public function indexTaxons($id)
+    public function indexDatasets($id, MeasurementsDataTable $dataTable)
     {
-        $taxon = Taxon::findOrFail($id);
+        $dataset = Dataset::findOrFail($id);
 
-        return $this->index($taxon);
+        return $dataTable->with([
+            'dataset' => $id,
+        ])->render('measurements.index', compact('dataset'));
+    }
+
+    public function indexTraits($id, MeasurementsDataTable $dataTable)
+    {
+        $odbtrait = ODBTrait::findOrFail($id);
+
+        return $dataTable->with([
+            'odbtrait' => $id,
+        ])->render('measurements.index', compact('odbtrait'));
     }
 
     protected function create($object)

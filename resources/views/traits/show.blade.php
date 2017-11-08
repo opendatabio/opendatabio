@@ -93,6 +93,15 @@
 </p>
 @endif
 
+@if ($odbtrait->measurements()->count())
+			    <div class="col-sm-6">
+				<a href="{{ url('traits/'. $odbtrait->id. '/measurements')  }}" class="btn btn-success" name="submit" value="submit">
+                    <i class="fa fa-btn fa-plus"></i>
+{{ $odbtrait->measurements()->count() }}
+@lang('messages.measurements')
+				</a>
+			    </div>
+@endif
 @can ('update', $odbtrait)
 			    <div class="col-sm-6">
 				<a href="{{ url('traits/'. $odbtrait->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
@@ -104,36 +113,5 @@
 @endcan
                 </div>
             </div>
-@if ($odbtrait->measurements->count())
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.measurements')
-                </div>
-        <div class="panel-body">
-            <table class="table table-striped">
-            <thead>
-                <th>
-            @lang('messages.object')
-                </th>
-                <th>
-            @lang('messages.value')
-                </th>
-            </thead>
-            <tbody>
-                @foreach ($odbtrait->measurements as $measurement)
-                <tr>
-                    <td>
-<?php try{ ?>
-                    {{$measurement->measured->fullname}}</td>
-<?php } catch (Exception $e) {echo "Undefined: id $measurement->id</td>";} ?>
-                    <td>{{$measurement->valueActual}}</td>
-                </tr>
-                @endforeach
-            </tbody>
-            </table>
-        </div>
-            </div>
-@endif
-<!-- Other details (specialist, herbarium, collects, etc?) -->
     </div>
 @endsection

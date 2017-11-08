@@ -18,6 +18,7 @@
     </div>
   </div>
 
+@if (isset($object))
 @can ('create', App\Measurement::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -34,6 +35,7 @@
                 </div>
 	    </div>
 @endcan
+@endif
             <!-- Registered Vouchers -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -42,50 +44,23 @@
 
                     <div class="panel-body">
 <p><strong>
-@lang('messages.object')
+@lang('messages.measurements_for')
 :</strong>
+@if (isset($object))
 {{ $object->fullname }}
-@if ($object->identification)
-    (<em>{{ $object->identification->taxon->fullname }}</em>)
+    @if ($object->taxonName)
+    (<em>{{ $object->taxonName }}</em>)
+    @endif
+@elseif (isset($dataset))
+{{ $dataset->name }}
+@else <!-- the only left object is trait -->
+{{ $odbtrait->name }}
 @endif
 </p>
-                        <table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.trait')
-</th>
-                                <th>
-@lang('messages.value')
-</th>
-                                <th>
-@lang('messages.unit')
-</th>
-                                <th>
-@lang('messages.date')
-</th>
-			    </thead>
-<tbody>
-                                @foreach ($measurements as $measurement)
-                                    <tr>
-					<td class="table-text">
-					<a href="{{ url('traits/' . $measurement->trait_id) }}">{{ $measurement->odbtrait->name }}</a>
-					</td>
-					<td class="table-text">
-					<a href="{{ url('measurements/'.$measurement->id) }}">{{ $measurement->valueActual }}</a>
-					</td>
-					<td class="table-text">
-					{{ $measurement->odbtrait->unit}}
-					</td>
-					<td class="table-text">
-					{{ $measurement->formatDate}}
-					</td>
-                                    </tr>
-				    @endforeach
-				    </tbody>
-                        </table>
- {{ $measurements->links() }}
-                    </div>
-                </div>
+{!! $dataTable->table() !!}
         </div>
     </div>
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

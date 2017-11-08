@@ -384,4 +384,5 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'plant_list' => 'Lista de plantas marcadas',
   'voucher_list_for' => 'Lista de amostras para',
   'plant_list_for' => 'Lista de plantas para',
+  'measurements_for' => 'Medidas para',
 );

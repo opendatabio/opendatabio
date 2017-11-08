@@ -62,6 +62,15 @@
 </p>
 @endif
 
+@if ($dataset->measurements()->count())
+			    <div class="col-sm-6">
+				<a href="{{ url('datasets/'. $dataset->id. '/measurements')  }}" class="btn btn-success" name="submit" value="submit">
+                    <i class="fa fa-btn fa-plus"></i>
+{{ $dataset->measurements()->count() }}
+@lang('messages.measurements')
+				</a>
+			    </div>
+@endif
 @can ('update', $dataset)
 			    <div class="col-sm-6">
 				<a href="{{ url('datasets/'. $dataset->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
@@ -73,41 +82,6 @@
 @endcan
                 </div>
             </div>
-@if ($dataset->measurements()->count())
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.measurements')
-                </div>
-		<div class="panel-body">
-            <table class="table table-striped">
-            <thead>
-                <th>
-            @lang('messages.object')
-                </th>
-                <th>
-            @lang('messages.trait')
-                </th>
-                <th>
-            @lang('messages.value')
-                </th>
-            </thead>
-            <tbody>
-                @foreach ($dataset->measurements as $measurement)
-                <tr>
-                    <td>
-<?php try{ ?>
-                    {{$measurement->measured->fullname}}</td>
-<?php } catch (Exception $e) {echo "Undefined: id $measurement->id</td>";} ?>
-                    <td>{{$measurement->odbtrait->name}}</td>
-                    <td>{{$measurement->valueActual}}</td>
-                </tr>
-                @endforeach
-            </tbody>
-            </table>
-        </div>
-            </div>
-
-@endif
 </div>
     </div>
 @endsection
