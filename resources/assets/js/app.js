@@ -8,7 +8,7 @@ try {
 	require('bootstrap-sass');
 	require('datatables');
 	require('datatables.net-buttons');
-    require('datatables.net-buttons/js/buttons.colVis.js')();
+    require('datatables.net-buttons/js/buttons.colVis.js');
     require('devbridge-autocomplete');
 } catch (e) {}
 
