@@ -7,13 +7,13 @@
 
 namespace App\DataTables;
 
-use App\Location;
+use App\Project;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
 
-class LocationsDataTable extends DataTable
+class ProjectsDataTable extends DataTable
 {
     /**
      * Build DataTable class.
@@ -23,20 +23,25 @@ class LocationsDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-        ->editColumn('name', function ($location) {
-            return '<a href="'.url('locations/'.$location->id).'">'.
+        ->editColumn('name', function ($project) {
+            return '<a href="'.url('projects/'.$project->id).'">'.
                 // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($location->name).'</a>';
+                htmlspecialchars($project->name).'</a>';
         })
-        ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm.'.$location->adm_level); })
-        ->addColumn('full_name', function ($location) {return $location->full_name; })
-        ->addColumn('plants', function ($location) {return $location->plants_count; })
-        ->addColumn('vouchers', function ($location) {return $location->vouchers_count; })
-        ->addColumn('measurements', function ($location) {return $location->measurements_count; })
-        ->addColumn('parent', function ($location) {
-            return empty($location->parent) ? '' : $location->parent->name;
+        ->editColumn('privacy', function ($project) { return Lang::get('levels.privacy.'.$project->privacy); })
+        ->addColumn('full_name', function ($project) {return $project->full_name; })
+        ->addColumn('plants', function ($project) {return $project->plants_count; })
+        ->addColumn('vouchers', function ($project) {return $project->vouchers_count; })
+        ->addColumn('measurements', function ($project) {return $project->measurements_count; })
+        ->addColumn('members', function ($project) {
+            if (empty($project->users))
+                return '';
+            $ret = "";
+            foreach ($project->users as $user) 
+                $ret .= htmlspecialchars($user->email). "<br>";
+            return $ret;
         })
-        ->rawColumns(['name']);
+        ->rawColumns(['name','members']);
     }
 
     /**
@@ -46,13 +51,10 @@ class LocationsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Location::withCount(['plants', 'vouchers', 'measurements'])->addSelect([
-            'locations.name',
-            'locations.adm_level',
-            'locations.rgt',
-            'locations.lft',
-            'locations.parent_id',
-            'locations.id',
+        $query = Project::withCount(['plants', 'vouchers'])->with('users')->addSelect([
+            'projects.name',
+            'projects.privacy',
+            'projects.id',
         ]);
 
         return $this->applyScopes($query);
@@ -69,12 +71,10 @@ class LocationsDataTable extends DataTable
             ->columns([
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
-                'adm_level' => ['title' => Lang::get('messages.adm_level'), 'searchable' => true, 'orderable' => true],
-                'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
-                'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => false, 'orderable' => false],
+                'privacy' => ['title' => Lang::get('messages.privacy'), 'searchable' => false, 'orderable' => true],
+                'members' => ['title' => Lang::get('messages.members'), 'searchable' => false, 'orderable' => false],
                 'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
-                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -101,6 +101,6 @@ class LocationsDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_locations_'.time();
+        return 'odb_projects_'.time();
     }
 }

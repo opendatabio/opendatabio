@@ -59,48 +59,12 @@
                     </div>
 
                     <div class="panel-body">
-                        <table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.name')
-</th>
-                                <th>
-@lang('messages.members')
-</th>
-                                <th>
-@lang('messages.data_privacy')
-</th>
-                                <th>
-@lang('messages.tags')
-</th>
-			    </thead>
-<tbody>
-                                @foreach ($datasets as $dataset)
-                                    <tr>
-					<td class="table-text">
-					<a href="{{ url('datasets/'.$dataset->id) }}">{{ $dataset->name }}</a>
-					</td>
-                                        <td class="table-text">
-                                        @foreach ($dataset->users as $user)
-                                        {{ $user->email }} <br/>
-                                        @endforeach
-                                        </td>
-<td>
-@lang ('levels.privacy.' . $dataset->privacy)
-</td>
-                                        <td class="table-text">
-                                        @foreach ($dataset->tags as $tag)
-                                        <a href="{{url('tags/'. $tag->id)}}">{{ $tag->name }}</a>
-<br/>
-                                        @endforeach
-                                        </td>
-                                    </tr>
-				    @endforeach
-				    </tbody>
-                        </table>
- {{ $datasets->links() }}
+{!! $dataTable->table() !!}
                     </div>
                 </div>
         </div>
     </div>
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

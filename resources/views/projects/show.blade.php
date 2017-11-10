@@ -63,15 +63,6 @@
 @lang('messages.vouchers')
     </a>
 </div>
-@else
-@can ('create', App\Voucher::class)
-<div class="col-sm-4">
-<a href="{{url ('projects/' . $project->id . '/vouchers/create')}}" class="btn btn-default">
-    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.create_voucher')
-</a>
-</div>
-@endcan
 @endif
 
 @if ($project->plants()->count())

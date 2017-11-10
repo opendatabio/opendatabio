@@ -64,6 +64,7 @@ class BibReferenceDataTable extends DataTable
         return $this->builder()
             ->columns([
                 'bibkey' => ['title' => Lang::get('messages.bibtex_key'), 'searchable' => false, 'orderable' => true],
+                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'author' => ['title' => Lang::get('messages.authors'), 'searchable' => false, 'orderable' => false],
                 'year' => ['title' => Lang::get('messages.year'), 'searchable' => false, 'orderable' => false],
                 'title' => ['title' => Lang::get('messages.title'), 'searchable' => true, 'orderable' => false],
@@ -79,6 +80,10 @@ class BibReferenceDataTable extends DataTable
                     'reload',
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
+                'columnDefs' => [[
+                    'targets' => [1],
+                    'visible' => false,
+                ]],
             ]);
     }
 

@@ -51,7 +51,6 @@
                 </div>
             </div>
 @endif
-
             <!-- Registered Projects -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -59,39 +58,13 @@
                     </div>
 
                     <div class="panel-body">
-                        <table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.name')
-</th>
-                                <th>
-@lang('messages.members')
-</th>
-                                <th>
-@lang('messages.data_privacy')
-</th>
-			    </thead>
-<tbody>
-                                @foreach ($projects as $project)
-                                    <tr>
-					<td class="table-text">
-					<a href="{{ url('projects/'.$project->id) }}">{{ $project->name }}</a>
-					</td>
-                                        <td class="table-text">
-                                        @foreach ($project->users as $user)
-                                        {{ $user->email }} <br/>
-                                        @endforeach
-                                        </td>
-<td>
-@lang ('levels.privacy.' . $project->privacy)
-</td>
-                                    </tr>
-				    @endforeach
-				    </tbody>
-                        </table>
- {{ $projects->links() }}
+{!! $dataTable->table() !!}
                     </div>
                 </div>
         </div>
     </div>
 @endsection
+
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

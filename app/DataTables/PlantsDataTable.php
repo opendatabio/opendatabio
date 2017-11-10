@@ -89,6 +89,7 @@ class PlantsDataTable extends DataTable
         return $this->builder()
             ->columns([
                 'tag' => ['title' => Lang::get('messages.location_and_tag'), 'searchable' => false, 'orderable' => true],
+                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
                 'tag_team' => ['title' => Lang::get('messages.tag_team'), 'searchable' => false, 'orderable' => false],
@@ -106,7 +107,7 @@ class PlantsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [3, 4],
+                    'targets' => [1, 4, 5],
                     'visible' => false,
                 ]],
             ]);

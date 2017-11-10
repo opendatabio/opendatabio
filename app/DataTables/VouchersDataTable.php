@@ -104,6 +104,7 @@ class VouchersDataTable extends DataTable
         return $this->builder()
             ->columns([
                 'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => false, 'orderable' => true],
+                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
                 'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => false, 'orderable' => false],
@@ -121,7 +122,7 @@ class VouchersDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [3, 4],
+                    'targets' => [1, 4, 5],
                     'visible' => false,
                 ]],
             ]);

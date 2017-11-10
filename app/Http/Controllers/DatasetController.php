@@ -7,6 +7,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\DatasetsDataTable;
 use Illuminate\Http\Request;
 use App\Tag;
 use App\BibReference;
@@ -22,15 +23,14 @@ class DatasetController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(DatasetsDataTable $dataTable)
     {
-        $datasets = Dataset::paginate(10);
         $mydatasets = null;
         if (Auth::user() and Auth::user()->datasets()->count()) {
             $mydatasets = Auth::user()->datasets;
         }
 
-        return view('datasets.index', compact('datasets', 'mydatasets'));
+        return $dataTable->render('datasets.index', compact('mydatasets'));
     }
 
     /**

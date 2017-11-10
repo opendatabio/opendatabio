@@ -56,6 +56,7 @@ class PersonsDataTable extends DataTable
         return $this->builder()
             ->columns([
                 'abbreviation' => ['title' => Lang::get('messages.abbreviation'), 'searchable' => true, 'orderable' => true],
+                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => true, 'orderable' => true],
                 'email' => ['title' => Lang::get('messages.email'), 'searchable' => true, 'orderable' => true],
                 'institution' => ['title' => Lang::get('messages.institution'), 'searchable' => true, 'orderable' => true],
@@ -73,7 +74,7 @@ class PersonsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [3, 4],
+                    'targets' => [1 ,4, 5],
                     'visible' => false,
                 ]],
             ]);

@@ -74,6 +74,7 @@ class TaxonsDataTable extends DataTable
         return $this->builder()
             ->columns([
                 'fullname' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
+                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'level' => ['title' => Lang::get('messages.level'), 'searchable' => false, 'orderable' => true],
                 'authorSimple' => ['title' => Lang::get('messages.author'), 'searchable' => true, 'orderable' => true],
             ])
@@ -88,6 +89,10 @@ class TaxonsDataTable extends DataTable
                     'reload',
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
+                'columnDefs' => [[
+                    'targets' => [1],
+                    'visible' => false,
+                ]],
             ]);
     }
 

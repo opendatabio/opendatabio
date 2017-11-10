@@ -7,6 +7,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\ProjectsDataTable;
 use Illuminate\Http\Request;
 use App\Project;
 use App\User;
@@ -20,18 +21,14 @@ class ProjectController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(ProjectsDataTable $dataTable)
     {
-        $projects = Project::paginate(10);
         $myprojects = null;
         if (Auth::user() and Auth::user()->projects()->count()) {
             $myprojects = Auth::user()->projects;
         }
 
-        return view('projects.index', [
-            'projects' => $projects,
-            'myprojects' => $myprojects,
-        ]);
+        return $dataTable->render('projects.index', compact('myprojects'));
     }
 
     /**

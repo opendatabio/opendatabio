@@ -7,13 +7,13 @@
 
 namespace App\DataTables;
 
-use App\Location;
+use App\Dataset;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
 
-class LocationsDataTable extends DataTable
+class DatasetsDataTable extends DataTable
 {
     /**
      * Build DataTable class.
@@ -23,20 +23,33 @@ class LocationsDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-        ->editColumn('name', function ($location) {
-            return '<a href="'.url('locations/'.$location->id).'">'.
+        ->editColumn('name', function ($dataset) {
+            return '<a href="'.url('datasets/'.$dataset->id).'">'.
                 // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($location->name).'</a>';
+                htmlspecialchars($dataset->name).'</a>';
         })
-        ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm.'.$location->adm_level); })
-        ->addColumn('full_name', function ($location) {return $location->full_name; })
-        ->addColumn('plants', function ($location) {return $location->plants_count; })
-        ->addColumn('vouchers', function ($location) {return $location->vouchers_count; })
-        ->addColumn('measurements', function ($location) {return $location->measurements_count; })
-        ->addColumn('parent', function ($location) {
-            return empty($location->parent) ? '' : $location->parent->name;
+        ->editColumn('privacy', function ($dataset) { return Lang::get('levels.privacy.'.$dataset->privacy); })
+        ->addColumn('full_name', function ($dataset) {return $dataset->full_name; })
+        ->addColumn('plants', function ($dataset) {return $dataset->plants_count; })
+        ->addColumn('vouchers', function ($dataset) {return $dataset->vouchers_count; })
+        ->addColumn('measurements', function ($dataset) {return $dataset->measurements_count; })
+        ->addColumn('members', function ($dataset) {
+            if (empty($dataset->users))
+                return '';
+            $ret = "";
+            foreach ($dataset->users as $user) 
+                $ret .= htmlspecialchars($user->email). "<br>";
+            return $ret;
         })
-        ->rawColumns(['name']);
+        ->addColumn('tags', function ($dataset) {
+            if (empty($dataset->tags))
+                return '';
+            $ret = "";
+            foreach ($dataset->tags as $tag) 
+                $ret .= "<a href='" . url('tags/'. $tag->id) . "'>" . htmlspecialchars($tag->name) . "</a><br>";
+            return $ret;
+        })
+        ->rawColumns(['name','members','tags']);
     }
 
     /**
@@ -46,13 +59,10 @@ class LocationsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Location::withCount(['plants', 'vouchers', 'measurements'])->addSelect([
-            'locations.name',
-            'locations.adm_level',
-            'locations.rgt',
-            'locations.lft',
-            'locations.parent_id',
-            'locations.id',
+        $query = Dataset::withCount(['measurements'])->with(['users','tags'])->addSelect([
+            'datasets.name',
+            'datasets.privacy',
+            'datasets.id',
         ]);
 
         return $this->applyScopes($query);
@@ -69,11 +79,9 @@ class LocationsDataTable extends DataTable
             ->columns([
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
-                'adm_level' => ['title' => Lang::get('messages.adm_level'), 'searchable' => true, 'orderable' => true],
-                'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
-                'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => false, 'orderable' => false],
-                'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
-                'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
+                'privacy' => ['title' => Lang::get('messages.privacy'), 'searchable' => false, 'orderable' => true],
+                'members' => ['title' => Lang::get('messages.members'), 'searchable' => false, 'orderable' => false],
+                'tags' => ['title' => Lang::get('messages.tags'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
@@ -101,6 +109,6 @@ class LocationsDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_locations_'.time();
+        return 'odb_datasets_'.time();
     }
 }
