@@ -40,59 +40,13 @@
                     </div>
 
                     <div class="panel-body">
-                        <table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.name')
-</th>
-                                <th>
-@lang('messages.type')
-</th>
-                                <th>
-@lang('messages.detail')
-</th>
-			    </thead>
-<tbody>
-                                @foreach ($traits as $mytrait)
-                                    <tr>
-					<td class="table-text">
-					<a href="{{ url('traits/'.$mytrait->id) }}">{{ $mytrait->name }}</a>
-					</td>
-                                        <td class="table-text">
-@lang('levels.traittype.' . $mytrait->type)
-                                        </td>
-<td>
-<?php
-    switch ($mytrait->type) {
-    case 0:
-    case 1:
-        echo Lang::get('messages.unit') . ': ' . $mytrait->unit;
-        break;
-    case 2:
-    case 3:
-    case 4:
-        $cats = $mytrait->categories;
-        $i = 0;
-        foreach ($cats as $cat) {
-            if ($i++ > 2) continue;
-            echo $cat->name . ', ';
-        } 
-        echo '...';
-        break;
-    case 7:
-        echo Lang::get('messages.link_type') . ': ' . Lang::get('classes.' . $mytrait->link_type);
-        break;
-    }
-?>
-
-</td>
-                                    </tr>
-				    @endforeach
-				    </tbody>
-                        </table>
- {{ $traits->links() }}
+{!! $dataTable->table() !!}
                     </div>
                 </div>
         </div>
     </div>
+    
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

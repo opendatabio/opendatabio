@@ -7,6 +7,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DataTables\TraitsDataTable;
 use App\ODBTrait;
 use Illuminate\Http\Request;
 use App\Language;
@@ -50,11 +51,9 @@ class TraitController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(TraitsDataTable $dataTable)
     {
-        $traits = ODBTrait::paginate(10);
-
-        return view('traits.index', compact('traits'));
+        return $dataTable->render('traits.index');
     }
 
     /**

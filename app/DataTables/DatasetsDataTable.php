@@ -34,22 +34,28 @@ class DatasetsDataTable extends DataTable
         ->addColumn('vouchers', function ($dataset) {return $dataset->vouchers_count; })
         ->addColumn('measurements', function ($dataset) {return $dataset->measurements_count; })
         ->addColumn('members', function ($dataset) {
-            if (empty($dataset->users))
+            if (empty($dataset->users)) {
                 return '';
-            $ret = "";
-            foreach ($dataset->users as $user) 
-                $ret .= htmlspecialchars($user->email). "<br>";
+            }
+            $ret = '';
+            foreach ($dataset->users as $user) {
+                $ret .= htmlspecialchars($user->email).'<br>';
+            }
+
             return $ret;
         })
         ->addColumn('tags', function ($dataset) {
-            if (empty($dataset->tags))
+            if (empty($dataset->tags)) {
                 return '';
-            $ret = "";
-            foreach ($dataset->tags as $tag) 
-                $ret .= "<a href='" . url('tags/'. $tag->id) . "'>" . htmlspecialchars($tag->name) . "</a><br>";
+            }
+            $ret = '';
+            foreach ($dataset->tags as $tag) {
+                $ret .= "<a href='".url('tags/'.$tag->id)."'>".htmlspecialchars($tag->name).'</a><br>';
+            }
+
             return $ret;
         })
-        ->rawColumns(['name','members','tags']);
+        ->rawColumns(['name', 'members', 'tags']);
     }
 
     /**
@@ -59,7 +65,7 @@ class DatasetsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Dataset::withCount(['measurements'])->with(['users','tags'])->addSelect([
+        $query = Dataset::withCount(['measurements'])->with(['users', 'tags'])->addSelect([
             'datasets.name',
             'datasets.privacy',
             'datasets.id',

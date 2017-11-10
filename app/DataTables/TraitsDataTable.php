@@ -7,13 +7,13 @@
 
 namespace App\DataTables;
 
-use App\Person;
+use App\ODBTrait;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
 
-class PersonsDataTable extends DataTable
+class TraitsDataTable extends DataTable
 {
     /**
      * Build DataTable class.
@@ -23,15 +23,15 @@ class PersonsDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-        ->editColumn('abbreviation', function ($person) {
-            return '<a href="'.url('persons/'.$person->id).'">'.
+        ->editColumn('name', function ($odbtrait) {
+            return '<a href="'.url('traits/'.$odbtrait->id).'">'.
                 // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($person->abbreviation).'</a>';
+                htmlspecialchars($odbtrait->name).'</a>';
         })
-        ->addColumn('herbarium', function ($person) {
-            return empty($person->herbarium) ? '' : $person->herbarium->name;
-        })
-        ->rawColumns(['abbreviation']);
+        ->editColumn('type', function ($odbtrait) { return Lang::get('levels.traittype.'.$odbtrait->type); })
+        ->addColumn('details', function ($odbtrait) {return $odbtrait->details(); })
+        ->addColumn('measurements', function ($odbtrait) {return $odbtrait->measurements_count; })
+        ->rawColumns(['name']);
     }
 
     /**
@@ -41,7 +41,7 @@ class PersonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Person::query()->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id']);
+        $query = ODBTrait::withCount(['measurements'])->with(['categories']);
 
         return $this->applyScopes($query);
     }
@@ -55,12 +55,11 @@ class PersonsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'abbreviation' => ['title' => Lang::get('messages.abbreviation'), 'searchable' => true, 'orderable' => true],
+                'name' => ['title' => Lang::get('messages.name'), 'searchable' => false, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
-                'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => true, 'orderable' => true],
-                'email' => ['title' => Lang::get('messages.email'), 'searchable' => true, 'orderable' => true],
-                'institution' => ['title' => Lang::get('messages.institution'), 'searchable' => true, 'orderable' => true],
-                'herbarium' => ['title' => Lang::get('messages.herbarium'), 'searchable' => false, 'orderable' => false],
+                'type' => ['title' => Lang::get('messages.type'), 'searchable' => false, 'orderable' => true],
+                'details' => ['title' => Lang::get('messages.details'), 'searchable' => false, 'orderable' => false],
+                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -74,7 +73,7 @@ class PersonsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1, 4, 5],
+                    'targets' => [1],
                     'visible' => false,
                 ]],
             ]);
@@ -87,6 +86,6 @@ class PersonsDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_persons_'.time();
+        return 'odb_odbtraits_'.time();
     }
 }

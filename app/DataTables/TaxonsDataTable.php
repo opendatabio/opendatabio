@@ -31,12 +31,16 @@ class TaxonsDataTable extends DataTable
         })
         ->editColumn('level', function ($taxon) { return Lang::get('levels.tax.'.$taxon->level); })
         ->addColumn('authorSimple', function ($taxon) { return $taxon->authorSimple; })
+
         ->filterColumn('fullname', function ($query, $keyword) {
             $query->whereRaw('odb_txname(name, level, parent_id) like ?', ["%{$keyword}%"]);
         })
         ->filterColumn('authorSimple', function ($query, $keyword) {
             $query->where('persons.full_name', 'like', ["%{$keyword}%"])->orWhere('author', 'like', ["%{$keyword}%"]);
         })
+        ->addColumn('plants', function ($taxon) {return $taxon->identified_plants_count; })
+        ->addColumn('vouchers', function ($taxon) {return $taxon->identified_vouchers_count; })
+        ->addColumn('measurements', function ($taxon) {return $taxon->measurements_count; })
         ->rawColumns(['fullname']);
     }
 
@@ -59,7 +63,8 @@ class TaxonsDataTable extends DataTable
                 'valid',
                 'full_name',
             ])->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'))
-            ->leftJoin('persons', 'taxons.author_id', '=', 'persons.id');
+            ->leftJoin('persons', 'taxons.author_id', '=', 'persons.id')
+            ->withCount(['identified_plants', 'identified_vouchers', 'measurements']);
 
         return $this->applyScopes($query);
     }
@@ -77,6 +82,9 @@ class TaxonsDataTable extends DataTable
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'level' => ['title' => Lang::get('messages.level'), 'searchable' => false, 'orderable' => true],
                 'authorSimple' => ['title' => Lang::get('messages.author'), 'searchable' => true, 'orderable' => true],
+                'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
+                'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
+                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',

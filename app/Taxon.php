@@ -163,6 +163,16 @@ class Taxon extends Node
         return $this->hasMany('App\Taxon', 'senior_id');
     }
 
+    public function identified_plants()
+    {
+        return $this->hasMany('App\Identification')->where('object_type', 'App\Plant');
+    }
+
+    public function identified_vouchers()
+    {
+        return $this->hasMany('App\Identification')->where('object_type', 'App\Voucher');
+    }
+
     // For specialists
     public function persons()
     {

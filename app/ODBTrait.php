@@ -159,6 +159,34 @@ class ODBTrait extends Model
         return $this->hasMany(TraitObject::class, 'trait_id');
     }
 
+    public function details()
+    {
+        switch ($this->type) {
+        case 0:
+        case 1:
+            return Lang::get('messages.unit').': '.$this->unit;
+            break;
+        case 2:
+        case 3:
+        case 4:
+            $ret = '';
+            $cats = $this->categories;
+            $i = 0;
+            foreach ($cats as $cat) {
+                if ($i++ > 2) {
+                    continue;
+                }
+                $ret .= $cat->name.', ';
+            }
+
+            return $ret.'...';
+            break;
+        case 7:
+            return Lang::get('messages.link_type').': '.Lang::get('classes.'.$this->link_type);
+            break;
+        }
+    }
+
     public function valid_type($type)
     {
         return in_array($type, $this->object_types->pluck('object_type')->all());

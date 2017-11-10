@@ -34,14 +34,17 @@ class ProjectsDataTable extends DataTable
         ->addColumn('vouchers', function ($project) {return $project->vouchers_count; })
         ->addColumn('measurements', function ($project) {return $project->measurements_count; })
         ->addColumn('members', function ($project) {
-            if (empty($project->users))
+            if (empty($project->users)) {
                 return '';
-            $ret = "";
-            foreach ($project->users as $user) 
-                $ret .= htmlspecialchars($user->email). "<br>";
+            }
+            $ret = '';
+            foreach ($project->users as $user) {
+                $ret .= htmlspecialchars($user->email).'<br>';
+            }
+
             return $ret;
         })
-        ->rawColumns(['name','members']);
+        ->rawColumns(['name', 'members']);
     }
 
     /**
