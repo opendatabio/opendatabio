@@ -80,8 +80,7 @@ class LocationController extends Controller
      */
     public function index(LocationsDataTable $dataTable)
     {
-        return $dataTable->render('locations.index', [
-    ]);
+        return $dataTable->render('locations.index');
     }
 
     /**
@@ -252,7 +251,7 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-        $location = Location::with('children')->withGeom()->findOrFail($id);
+        $location = Location::select('*')->with('children')->withGeom()->findOrFail($id);
         $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
         if ($location->x) {
             if ($location->x > $location->y) {
@@ -301,7 +300,7 @@ class LocationController extends Controller
     {
         $locations = Location::all();
         $uc_list = Location::ucs()->get();
-        $location = Location::withGeom()->findOrFail($id);
+        $location = Location::select('*')->withGeom()->findOrFail($id);
 
         return view('locations.create', compact('locations', 'location', 'uc_list'));
     }

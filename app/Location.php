@@ -77,6 +77,20 @@ class Location extends Node
         return ['x' => substr($point, 0, $pos), 'y' => substr($point, $pos + 1)];
     }
 
+    public function getLatitudeSimpleAttribute()
+    {
+        $coord = $this->centroid['y'];
+
+        return abs($coord).($coord > 0 ? ' N' : ' S');
+    }
+
+    public function getLongitudeSimpleAttribute()
+    {
+        $coord = $this->centroid['x'];
+
+        return abs($coord).($coord > 0 ? ' E' : ' W');
+    }
+
     // query scope for conservation units
     public function scopeUcs($query)
     {
@@ -314,7 +328,7 @@ class Location extends Node
 
     public function scopeWithGeom($query)
     {
-        return $query->addSelect('*',
+        return $query->addSelect(
             DB::raw('AsText(geom) as geom'),
             DB::raw('Area(geom) as area'),
             DB::raw('AsText(Centroid(geom)) as centroid_raw')

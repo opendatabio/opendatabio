@@ -27,7 +27,7 @@ return array (
   'authors' => 'Autores',
   'apis_not_found' => 'Nome não encontrado nos servidores da API. Cheque os links no topo da página para procurar diretamente neles.',
   'api_token' => 'Token da API',
-  'autodetect' => 'Detectar automaticamente',
+  'autodetect' => 'Detectar localidade pai',
   'bibreference' => 'Referência bibliográfica',
   'bibtex_at_error' => 'A entrada BibTeX deve começar com @',
   'auxiliary' => 'Outros',

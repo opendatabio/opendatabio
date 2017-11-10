@@ -33,6 +33,8 @@ class LocationsDataTable extends DataTable
         ->addColumn('plants', function ($location) {return $location->plants_count; })
         ->addColumn('vouchers', function ($location) {return $location->vouchers_count; })
         ->addColumn('measurements', function ($location) {return $location->measurements_count; })
+        ->addColumn('latitude', function ($location) {return $location->latitudeSimple; })
+        ->addColumn('longitude', function ($location) {return $location->longitudeSimple; })
         ->addColumn('parent', function ($location) {
             return empty($location->parent) ? '' : $location->parent->name;
         })
@@ -46,14 +48,7 @@ class LocationsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Location::withCount(['plants', 'vouchers', 'measurements'])->addSelect([
-            'locations.name',
-            'locations.adm_level',
-            'locations.rgt',
-            'locations.lft',
-            'locations.parent_id',
-            'locations.id',
-        ]);
+        $query = Location::withCount(['plants', 'vouchers', 'measurements'])->withGeom();
 
         return $this->applyScopes($query);
     }
@@ -75,6 +70,13 @@ class LocationsDataTable extends DataTable
                 'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
+                'latitude' => ['title' => Lang::get('messages.latitude'), 'searchable' => false, 'orderable' => false],
+                'longitude' => ['title' => Lang::get('messages.longitude'), 'searchable' => false, 'orderable' => false],
+                'altitude' => ['title' => Lang::get('messages.altitude'), 'searchable' => false, 'orderable' => false],
+                'x' => ['title' => Lang::get('messages.dimensions').' X', 'searchable' => false, 'orderable' => false],
+                'y' => ['title' => Lang::get('messages.dimensions').' Y', 'searchable' => false, 'orderable' => false],
+                'startx' => ['title' => Lang::get('messages.start').' X', 'searchable' => false, 'orderable' => false],
+                'starty' => ['title' => Lang::get('messages.start').' Y', 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -88,7 +90,7 @@ class LocationsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1, 3],
+                    'targets' => [1, 3, 8, 9, 10, 11, 12, 13, 14],
                     'visible' => false,
                 ]],
             ]);

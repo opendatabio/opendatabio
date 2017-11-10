@@ -106,7 +106,7 @@ class Measurement extends Model
                 $val = $this->value;
             }
 
-            return $val . ' ' . (empty($this->linked) ? 'ERROR' : $this->linked->fullname);
+            return $val.' '.(empty($this->linked) ? 'ERROR' : $this->linked->fullname);
             break;
         }
     }
