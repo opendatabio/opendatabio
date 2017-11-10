@@ -72,9 +72,7 @@ class PersonController extends Controller
             if (sizeof($dupes)) {
                 Input::flash();
 
-                return view('persons.confirm', [
-                    'dupes' => $dupes,
-                ]);
+                return view('persons.confirm', compact('dupes'));
             }
         }
         $person = Person::create($request->all());
@@ -123,11 +121,7 @@ class PersonController extends Controller
         $herbaria = Herbarium::all();
         $taxons = Taxon::all();
 
-        return view('persons.edit', [
-            'person' => $person,
-            'herbaria' => $herbaria,
-            'taxons' => $taxons,
-        ]);
+        return view('persons.edit', compact('person', 'herbaria', 'taxons'));
     }
 
     /**

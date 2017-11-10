@@ -77,9 +77,7 @@ class BibReferenceController extends Controller
     {
         $reference = BibReference::findOrFail($id);
 
-        return view('references.show', [
-            'reference' => $reference,
-        ]);
+        return view('references.show', compact('reference'));
     }
 
     /**
@@ -93,9 +91,7 @@ class BibReferenceController extends Controller
     {
         $reference = BibReference::findOrFail($id);
 
-        return view('references.edit', [
-            'reference' => $reference,
-        ]);
+        return view('references.edit', compact('reference'));
     }
 
     /**

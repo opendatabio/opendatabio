@@ -24,9 +24,7 @@ class HerbariumController extends Controller
     {
         $herbaria = Herbarium::orderBy('acronym')->paginate(10);
 
-        return view('herbaria.index', [
-        'herbaria' => $herbaria,
-    ]);
+        return view('herbaria.index', compact('herbaria'));
     }
 
     public function checkih(Request $request)

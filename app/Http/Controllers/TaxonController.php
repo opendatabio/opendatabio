@@ -65,8 +65,7 @@ class TaxonController extends Controller
      */
     public function create()
     {
-        return view('taxons.create', [
-        ]);
+        return view('taxons.create');
     }
 
     public function customValidate(Request $request)
@@ -198,13 +197,7 @@ class TaxonController extends Controller
             $bibref = null;
         }
 
-        return view('taxons.show', compact(
-                'taxon',
-                'author',
-                'bibref',
-                'plants',
-                'vouchers'
-            ));
+        return view('taxons.show', compact('taxon', 'author', 'bibref', 'plants', 'vouchers'));
     }
 
     /**
@@ -218,9 +211,7 @@ class TaxonController extends Controller
     {
         $taxon = Taxon::findOrFail($id);
 
-        return view('taxons.create', [
-            'taxon' => $taxon,
-        ]);
+        return view('taxons.create', compact('taxon'));
     }
 
     /**

@@ -93,10 +93,7 @@ class LocationController extends Controller
         $locations = Location::all();
         $uc_list = Location::ucs()->get();
 
-        return view('locations.create', [
-            'locations' => $locations,
-            'uc_list' => $uc_list,
-        ]);
+        return view('locations.create', compact('locations', 'uc_list'));
     }
 
     // Validates the user input for CREATE or UPDATE requests
@@ -207,9 +204,7 @@ class LocationController extends Controller
             if (sizeof($dupes)) {
                 Input::flash();
 
-                return view('locations.confirm', [
-                    'dupes' => $dupes,
-                ]);
+                return view('locations.confirm', compact('dupes'));
             }
         }
         if (Location::LEVEL_PLOT == $request->adm_level) { // plot

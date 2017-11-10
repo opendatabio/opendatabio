@@ -24,9 +24,7 @@ class UserJobController extends Controller
     {
         $jobs = Auth::user()->userjobs()->paginate(20);
 
-        return view('userjobs.index', [
-            'jobs' => $jobs,
-    ]);
+        return view('userjobs.index', compact('jobs'));
     }
 
     public function destroy($id)
@@ -76,8 +74,6 @@ class UserJobController extends Controller
         $job = UserJob::findOrFail($id);
         $this->authorize('view', $job);
 
-        return view('userjobs.show', [
-            'job' => $job,
-        ]);
+        return view('userjobs.show', compact('job'));
     }
 }

@@ -196,11 +196,7 @@ class PlantController extends Controller
         $identification = $plant->identification;
         $collectors = $plant->collectors;
 
-        return view('plants.show', [
-            'plant' => $plant,
-            'identification' => $identification,
-            'collectors' => $collectors,
-        ]);
+        return view('plants.show', compact('plant', 'identification', 'collectors'));
     }
 
     /**
@@ -224,12 +220,7 @@ class PlantController extends Controller
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
         }
 
-        return view('plants.create', [
-            'plant' => $plant,
-            'persons' => $persons,
-            'projects' => $projects,
-            'herbaria' => $herbaria,
-        ]);
+        return view('plants.create', compact('plant', 'persons', 'projects', 'herbaria'));
     }
 
     /**
