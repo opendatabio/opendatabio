@@ -76,4 +76,31 @@ class TranslatableTest extends TestCase
         $this->assertEquals($tr->name, 'Lorem ipsum fallback');
         $this->assertEquals($tr->description, 'Ipsum lorem fallback');
     }
+
+    public function testMutators()
+    {
+        // Creates, updates, deletes a key
+        $lang = Language::first();
+        $lang2 = Language::all()[1];
+        $tr = TranslatableClass::create();
+        $tr->setTranslation(UserTranslation::NAME, $lang->id, 'PRESERVE');
+        $tr->setTranslation(UserTranslation::DESCRIPTION, $lang2->id, 'PRESERVE');
+        $tr->setTranslation(UserTranslation::DESCRIPTION, $lang->id, 'To be changed');
+
+        // just for sanity...
+        $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang->id), 'To be changed');
+
+        // updates a single translation
+        $tr->setTranslation(UserTranslation::DESCRIPTION, $lang->id, 'Updated');
+        $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang->id), 'Updated');
+        $this->assertEquals($tr->translate(UserTranslation::NAME, $lang->id), 'PRESERVE');
+        $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang2->id), 'PRESERVE');
+
+        // removes a single translation
+        $tr->setTranslation(UserTranslation::DESCRIPTION, $lang->id, null);
+        $this->assertNull($tr->translate(UserTranslation::DESCRIPTION, $lang->id));
+        $this->assertEquals($tr->translate(UserTranslation::NAME, $lang->id), 'PRESERVE');
+        $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang2->id), 'PRESERVE');
+
+    }
 }
