@@ -8,13 +8,12 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-
 use Tests\IncompleteDateClass;
 
 class IncompleteDateTest extends TestCase
 {
     /**
-     * A basic test example.
+     * Tests basic Incomplete Date functionality.
      */
     public function testBasic()
     {

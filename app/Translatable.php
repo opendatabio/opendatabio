@@ -7,7 +7,7 @@
 
 namespace App;
 
-use App;
+use Illuminate\Support\Facades\App;
 
 trait Translatable
 {
@@ -17,6 +17,7 @@ trait Translatable
     }
 
     // For usual access, use $obj->name or $obj->description
+    // NOTE: as this is used in displays, returns a warning if no translation is found
     protected function findAttribute($which)
     {
         // tries to get the translation name in the current locale.
@@ -50,6 +51,7 @@ trait Translatable
     }
 
     // for use in forms, get the translation in a specified language
+    // NOTE: as this is used in forms, missing translations return blank (null)
     public function translate($which, $lang)
     {
         $ret = $this->translations()
