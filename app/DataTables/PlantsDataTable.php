@@ -52,7 +52,7 @@ class PlantsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Plant::query()->with(['identification.taxon', 'project', 'location'])
+        $query = Plant::query()->with(['identification.taxon', 'project', 'location', 'collectors.person'])
             ->select([
                 'plants.id',
                 'tag',

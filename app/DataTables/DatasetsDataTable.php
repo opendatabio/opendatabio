@@ -65,7 +65,7 @@ class DatasetsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Dataset::withCount(['measurements'])->with(['users', 'tags'])->addSelect([
+        $query = Dataset::withCount(['measurements'])->with(['users', 'tags.translations'])->addSelect([
             'datasets.name',
             'datasets.privacy',
             'datasets.id',

@@ -41,7 +41,7 @@ class PersonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Person::query()->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id']);
+        $query = Person::with('herbarium')->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id']);
 
         return $this->applyScopes($query);
     }

@@ -58,7 +58,7 @@ class MeasurementsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Measurement::query()->with(['odbtrait', 'person', 'dataset', 'measured'])
+        $query = Measurement::query()->with(['categories', 'odbtrait.translations', 'person', 'dataset', 'measured'])
             ->select([
                 'measurements.id',
                 'value',
