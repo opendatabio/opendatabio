@@ -30,7 +30,7 @@ return [
     | "alpha", such as 0.1.0-alpha1.
     */
 
-    'version' => '0.6.8',
+    'version' => '0.6.9',
 
     /*
      * Proxy settings
@@ -231,13 +231,11 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
         Baum\Providers\BaumServiceProvider::class,
         Fx3costa\LaravelChartJs\Providers\ChartjsServiceProvider::class,
-        AndreChalom\LaravelMultiselect\MultiselectServiceProvider::class,
         Barryvdh\TranslationManager\ManagerServiceProvider::class,
 
     ],
@@ -288,7 +286,6 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-        'Multiselect' => AndreChalom\LaravelMultiselect\MultiselectFacade::class,
     ],
 
 ];

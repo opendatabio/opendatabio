@@ -368,6 +368,8 @@ class Installer
         if (!$this->composercmd) {
             $this->getComposerCmd();
         }
+        // fixes old vendor/autoload (ref laravel-multiselect)
+        exec('php artisan clear', $result, $status);
 
         if (empty(getenv('APP_ENV')) or 'production' == getenv('APP_ENV')) {
             exec($this->composercmd.' install --no-dev', $result, $status);
