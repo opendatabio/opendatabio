@@ -49,6 +49,7 @@ class TranslatableTest extends TestCase
         $tr->setTranslation(UserTranslation::NAME, $lang2->id, 'Dolorem ipsum');
         $tr->setTranslation(UserTranslation::DESCRIPTION, $lang2->id, 'Ipsum dolorem');
 
+        $tr = $tr->fresh();
         $this->assertEquals($tr->translate(UserTranslation::NAME, $lang->id), 'Lorem ipsum');
         $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang->id), 'Ipsum lorem');
         $this->assertEquals($tr->translate(UserTranslation::NAME, $lang2->id), 'Dolorem ipsum');
@@ -72,6 +73,7 @@ class TranslatableTest extends TestCase
         $tr->setTranslation(UserTranslation::NAME, $lang->id, 'Lorem ipsum fallback');
         $tr->setTranslation(UserTranslation::DESCRIPTION, $lang->id, 'Ipsum lorem fallback');
 
+        $tr = $tr->fresh();
         App::setLocale($lang2->code);
         $this->assertEquals($tr->name, 'Lorem ipsum fallback');
         $this->assertEquals($tr->description, 'Ipsum lorem fallback');
@@ -88,19 +90,34 @@ class TranslatableTest extends TestCase
         $tr->setTranslation(UserTranslation::DESCRIPTION, $lang->id, 'To be changed');
 
         // just for sanity...
+        $tr = $tr->fresh();
         $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang->id), 'To be changed');
 
         // updates a single translation
         $tr->setTranslation(UserTranslation::DESCRIPTION, $lang->id, 'Updated');
+        $tr = $tr->fresh();
         $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang->id), 'Updated');
         $this->assertEquals($tr->translate(UserTranslation::NAME, $lang->id), 'PRESERVE');
         $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang2->id), 'PRESERVE');
 
         // removes a single translation
         $tr->setTranslation(UserTranslation::DESCRIPTION, $lang->id, null);
+        $tr = $tr->fresh();
         $this->assertNull($tr->translate(UserTranslation::DESCRIPTION, $lang->id));
         $this->assertEquals($tr->translate(UserTranslation::NAME, $lang->id), 'PRESERVE');
         $this->assertEquals($tr->translate(UserTranslation::DESCRIPTION, $lang2->id), 'PRESERVE');
+    }
 
+    public function testEagerLoadLanguage()
+    {
+        // core functionality of the Translatable trait only work if "Language" is
+        // always eager loaded by UserTranslation
+
+        $lang = Language::first();
+        $tr = TranslatableClass::create();
+        $tr->setTranslation(UserTranslation::NAME, $lang->id, 'Lorem Ipsum');
+
+        $tr = TranslatableClass::with('translations')->first();
+        $this->assertTrue($tr->translations[0]->relationLoaded('language'));
     }
 }

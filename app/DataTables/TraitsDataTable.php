@@ -41,7 +41,7 @@ class TraitsDataTable extends DataTable
      */
     public function query()
     {
-        $query = ODBTrait::withCount(['measurements'])->with(['categories']);
+        $query = ODBTrait::withCount(['measurements'])->with(['categories.translations', 'translations']);
 
         return $this->applyScopes($query);
     }

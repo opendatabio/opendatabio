@@ -23,16 +23,15 @@ trait Translatable
         // tries to get the translation name in the current locale.
         // if none is found, tries to find the translation name in any language,
         // ordered by language id.
-        $tr = $this->translations()
-            ->join('languages', 'languages.id', '=', 'user_translations.language_id')
-            ->where('languages.code', '=', App::getLocale())
-            ->where('translation_type', '=', $which);
+        $tr = $this->translations->filter(function ($tr) use ($which) {
+            return $tr->translation_type == $which and $tr->language->code == App::getLocale();
+        });
         if ($tr->count()) {
             return $tr->first()->translation;
         }
-        $tr = $this->translations()
-            ->where('translation_type', '=', $which)
-            ->orderBy('language_id', 'asc');
+        $tr = $this->translations->filter(function ($tr) use ($which) {
+            return $tr->translation_type == $which;
+        })->sortBy('language_id');
         if ($tr->count()) {
             return $tr->first()->translation;
         }
@@ -54,9 +53,9 @@ trait Translatable
     // NOTE: as this is used in forms, missing translations return blank (null)
     public function translate($which, $lang)
     {
-        $ret = $this->translations()
-            ->where('language_id', '=', $lang)
-            ->where('translation_type', '=', $which);
+        $ret = $this->translations->filter(function ($tr) use ($which, $lang) {
+            return $tr->language_id == $lang and $tr->translation_type == $which;
+        });
         if ($ret->count()) {
             return $ret->first()->translation;
         }

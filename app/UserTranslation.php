@@ -16,6 +16,9 @@ class UserTranslation extends Model
 
     protected $fillable = ['translatable_type', 'translatable_id', 'language_id', 'translation', 'translation_type'];
 
+    // Always eager loads the "language" relation
+    protected $with = ['language'];
+
     public function language()
     {
         return $this->belongsTo(Language::class);
