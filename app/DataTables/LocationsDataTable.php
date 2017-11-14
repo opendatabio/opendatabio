@@ -48,7 +48,19 @@ class LocationsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Location::withCount(['plants', 'vouchers', 'measurements'])->withGeom();
+        $query = Location::select([
+            'locations.name',
+            'locations.adm_level',
+            'locations.rgt',
+            'locations.lft',
+            'locations.parent_id',
+            'locations.id',
+            'locations.altitude',
+            'locations.x',
+            'locations.y',
+            'locations.startx',
+            'locations.starty',
+        ])->withCount(['plants', 'vouchers', 'measurements'])->withGeom();
 
         return $this->applyScopes($query);
     }

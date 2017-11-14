@@ -143,7 +143,9 @@
 	    <div class="col-sm-6">
 {!! Multiselect::select('collector', 
     $persons->pluck('abbreviation', 'id'), 
-    isset($plant) ? $plant->collectors->pluck('person_id') : [Auth::user()->person_id], 
+    isset($plant) ? $plant->collectors->pluck('person_id') : 
+    (empty(Auth::user()->person_id) ? '' : [Auth::user()->person_id] )
+, 
     ['class' => 'multiselect form-control']) 
 !!}
             </div>

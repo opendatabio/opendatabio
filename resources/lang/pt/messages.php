@@ -124,7 +124,7 @@ return array (
   'location' => 'Localidade',
   'location_ancestors_and_children' => 'Localidades relacionadas',
   'location_and_tag' => 'Localidade e tag',
-  'location_hint' => 'Esta tabela armazena as localidades nas quais plantas são coletadas e amostras são tomadas.',
+  'location_hint' => 'Esta tabela armazena as localidades nas quais plantas são coletadas e amostras são tomadas. Note que a latitude e longitude reportadas aqui podem ser o centróide da localidade.',
   'location_map' => 'Posição da localidade',
   'location_map_error' => 'Erro ao carregar o mapa para esta localidade...',
   'location_name' => 'Nome da Localidade',
@@ -385,4 +385,5 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'voucher_list_for' => 'Lista de amostras para',
   'plant_list_for' => 'Lista de plantas para',
   'measurements_for' => 'Medidas para',
+  'access_level' => 'Nível de acesso',
 );

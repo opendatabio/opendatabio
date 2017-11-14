@@ -275,7 +275,7 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'location_uc' => 'Conservation Unit',
   'location_uc_hint' => 'If this is a plot or point inside a conservation unit, store this information here.',
   'remove_location' => 'Remove Location',
-  'location_hint' => 'This table stores the geographical locations in which plants are collected, and samples are taken.',
+  'location_hint' => 'This table stores the geographical locations in which plants are collected, and samples are taken. Note that the latitude and longitude reported may be that of the location\'s centroid',
   'registered_locations' => 'Registered Locations',
   'position' => 'Position',
   'uc' => 'Conservation Unit',
@@ -380,4 +380,5 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'voucher_list_for' => 'Samples list for',
   'plant_list_for' => 'Plants list for',
   'measurements_for' => 'Measurements for',
+  'access_level' => 'Access Level',
 );

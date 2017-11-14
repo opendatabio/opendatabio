@@ -40,7 +40,7 @@
   </div>
 </div>
 <div class="form-group">
-    <label for="access" class="col-sm-3 control-label">Access Level</label>
+    <label for="access" class="col-sm-3 control-label">@lang('messages.access_level')</label>
         <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
     <div class="col-sm-6">
 	<?php $selected = old('access_level', $user->access_level); ?>

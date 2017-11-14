@@ -25,32 +25,13 @@
                     </div>
 
                     <div class="panel-body">
-                        <table class="table table-striped user-table">
-                            <thead>
-                                <th>
-@lang('messages.email')
-</th>
-                                <th>Access level</th>
-                            </thead>
-                            <tbody>
-                                @foreach ($users as $user)
-                                    <tr>
-					<td class="table-text"><div>
-@can ('update', $user)
-					<a href="{{ url('users/'.$user->id) }}">{{ $user->email }}</a>
-@else
-					{{ $user->email }}
-@endcan
-					</div></td>
-                                        <!--td class="table-text">{{ $user->full_name }}</td-->
-                                        <td class="table-text">{{ $user->textAccess }}</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-			 {{ $users->links() }} 
+{!! $dataTable->table() !!}
                     </div>
                 </div>
         </div>
     </div>
 @endsection
+
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

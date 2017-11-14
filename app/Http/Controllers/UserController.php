@@ -8,6 +8,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\DataTables\UsersDataTable;
 use Illuminate\Support\Facades\Lang;
 use App\User;
 use App\Project;
@@ -15,12 +16,10 @@ use App\Dataset;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(UsersDataTable $dataTable)
     {
         $this->authorize('show', User::class);
-        $users = User::orderBy('email')->paginate(10);
-
-        return view('users.index', compact('users'));
+        return $dataTable->render('users.index');
     }
 
     public function edit($id)
