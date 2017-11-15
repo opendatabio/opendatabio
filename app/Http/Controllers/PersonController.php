@@ -15,6 +15,7 @@ use App\Taxon;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Input;
 use App\DataTables\PersonsDataTable;
+use App\DataTables\HistoryDataTable;
 use Response;
 
 class PersonController extends Controller
@@ -43,6 +44,10 @@ class PersonController extends Controller
         return $dataTable->render('persons.index', [
             'herbaria' => $herbaria,
     ]);
+    }
+    public function history($id, HistoryDataTable $dataTable)
+    {
+        return $dataTable->with('person', $id)->render('history.index');
     }
 
     /**

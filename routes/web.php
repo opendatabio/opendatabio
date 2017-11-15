@@ -25,6 +25,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 // Resources (with non-default BEFORE resources):
 Route::get('persons/autocomplete', 'PersonController@autocomplete');
+Route::get('persons/{id}/history', 'PersonController@history');
 Route::resource('persons', 'PersonController');
 
 Route::post('userjobs/{userjob}/retry', 'UserJobController@retry');
