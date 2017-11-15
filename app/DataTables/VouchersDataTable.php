@@ -87,6 +87,7 @@ class VouchersDataTable extends DataTable
                     'person_id',
                     'project_id',
                     'parent_id',
+                    'date',
                 ]);
             $query = $query2->where('person_id', $person)->union($q1);
         }
