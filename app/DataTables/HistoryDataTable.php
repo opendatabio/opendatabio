@@ -35,15 +35,6 @@ class HistoryDataTable extends DataTable
             ->addColumn('new_value', function ($history) { 
                 return $history->fieldName() == "created_at" ? '' :  $history->newValue(); 
             });
-/*        ->editColumn('abbreviation', function ($person) {
-            return '<a href="'.url('persons/'.$person->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($person->abbreviation).'</a>';
-        })
-        ->addColumn('herbarium', function ($person) {
-            return empty($person->herbarium) ? '' : $person->herbarium->name;
-        })
-        ->rawColumns(['abbreviation']);*/
     }
 
     /**

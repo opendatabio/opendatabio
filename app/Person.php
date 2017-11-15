@@ -10,11 +10,11 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use FuzzyWuzzy\Fuzz;
 use Illuminate\Database\Eloquent\Builder;
-use Venturecraft\Revisionable\RevisionableTrait;
+use App\Revisionable;
 
 class Person extends Model
 {
-    use RevisionableTrait;
+    use Revisionable;
     protected $revisionCreationsEnabled = true;
 
     // Gramatically incorrect, but helps development
