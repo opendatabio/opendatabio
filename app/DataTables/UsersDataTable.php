@@ -30,6 +30,7 @@ class UsersDataTable extends DataTable
                     // Needs to escape special chars, as this will be passed RAW
                     htmlspecialchars($user->email).'</a>';
             }
+
             return htmlspecialchars($user->email);
         })
         ->editColumn('access_level', function ($user) { return $user->textAccess; })

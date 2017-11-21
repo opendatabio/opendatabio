@@ -8,7 +8,6 @@
 namespace Tests;
 
 use App\Revisionable;
-use App\RevisionableRelation;
 use Illuminate\Database\Eloquent\Model;
 
 class RevisionableClass extends Model
@@ -20,11 +19,16 @@ class RevisionableClass extends Model
     protected $table = 'revisionable_test';
     protected $fillable = ['field_1', 'field_2', 'revisionable_relation_id'];
 
-    public function relationOne() {
+    // for revisionable
+    public $relatedModels = ['revisionable_relation_id' => 'relationOne'];
+
+    public function relationOne()
+    {
         return $this->belongsTo('Tests\RevisionableRelationClass', 'revisionable_relation_id');
     }
 
-    public function relationTwo() {
+    public function relationTwo()
+    {
         return $this->belongsToMany('Tests\RevisionableRelationClass');
     }
 }

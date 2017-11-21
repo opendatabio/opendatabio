@@ -32,13 +32,13 @@ class RevisionableTest extends TestCase
 
         $model = $model->fresh();
         $this->assertEquals($model->revisionHistory->count(), 3); // 1 for create, plus 2 for the 2 updated fields
-        $this->assertEquals($model->revisionHistory[0]->fieldName(), "created_at");
+        $this->assertEquals($model->revisionHistory[0]->fieldName(), 'created_at');
         $this->assertEquals($model->created_at, $model->revisionHistory[0]->newValue());
         $this->assertFalse($model->revisionHistory[0]->userResponsible()); // no logged in user, returns FALSE
-        $this->assertEquals($model->revisionHistory[1]->fieldName(), "field_1");
+        $this->assertEquals($model->revisionHistory[1]->fieldName(), 'field_1');
         $this->assertEquals($model->revisionHistory[1]->oldValue(), 'Blabla');
         $this->assertEquals($model->revisionHistory[1]->newValue(), 'Lorem ipsum');
-        $this->assertEquals($model->revisionHistory[2]->fieldName(), "field_2");
+        $this->assertEquals($model->revisionHistory[2]->fieldName(), 'field_2');
         $this->assertEquals($model->revisionHistory[2]->oldValue(), '');
         $this->assertEquals($model->revisionHistory[2]->newValue(), 'Ipsum lorem');
     }
@@ -70,7 +70,7 @@ class RevisionableTest extends TestCase
         $model = $model->fresh();
         $this->assertEquals($model->revisionHistory->count(), 2); // 1 for create, 1 for update
         // This library uses the DATABASE COLUMN, not the relationship name, to derive fieldName()
-        $this->assertEquals($model->revisionHistory[1]->fieldName(), "revisionable_relation");
+        $this->assertEquals($model->revisionHistory[1]->fieldName(), 'revisionable_relation');
         // Not working?? See https://github.com/VentureCraft/revisionable/blob/master/src/Venturecraft/Revisionable/Revision.php
         $this->assertEquals($model->revisionHistory[1]->oldValue(), 'Before');
         $this->assertEquals($model->revisionHistory[1]->newValue(), 'After');

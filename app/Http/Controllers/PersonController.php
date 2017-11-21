@@ -45,6 +45,7 @@ class PersonController extends Controller
             'herbaria' => $herbaria,
     ]);
     }
+
     public function history($id, HistoryDataTable $dataTable)
     {
         return $dataTable->with('person', $id)->render('history.index');

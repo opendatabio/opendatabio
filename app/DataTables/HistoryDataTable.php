@@ -23,17 +23,17 @@ class HistoryDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-            ->addColumn('user', function ($history) { 
-                return $history->userResponsible() ? 
-                    $history->userResponsible()->email : 
-                    Lang::get('messages.unknown_user'); 
+            ->addColumn('user', function ($history) {
+                return $history->userResponsible() ?
+                    $history->userResponsible()->email :
+                    Lang::get('messages.unknown_user');
             })
-            ->addColumn('field', function ($history) { 
-                return $history->fieldName() == "created_at" ? Lang::get('messages.history_created') : $history->fieldName(); 
-            }) 
+            ->addColumn('field', function ($history) {
+                return 'created_at' == $history->fieldName() ? Lang::get('messages.history_created') : $history->fieldName();
+            })
             ->addColumn('old_value', function ($history) { return $history->oldValue(); })
-            ->addColumn('new_value', function ($history) { 
-                return $history->fieldName() == "created_at" ? '' :  $history->newValue(); 
+            ->addColumn('new_value', function ($history) {
+                return 'created_at' == $history->fieldName() ? '' : $history->newValue();
             });
     }
 
@@ -46,8 +46,8 @@ class HistoryDataTable extends DataTable
     {
         if ($this->person) {
             $query = Person::findOrFail($this->person)->revisionHistory();
-        } else { 
-            throw new \Exception ("Unsupported history request!");
+        } else {
+            throw new \Exception('Unsupported history request!');
         }
 
         return $this->applyScopes($query);

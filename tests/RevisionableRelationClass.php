@@ -14,7 +14,8 @@ class RevisionableRelationClass extends Model
     protected $table = 'revisionable_relation_test';
     protected $fillable = ['field_1'];
 
-    public function identifiableName() {
+    public function identifiableName()
+    {
         return $this->field_1;
     }
 }

@@ -10,7 +10,6 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use FuzzyWuzzy\Fuzz;
 use Illuminate\Database\Eloquent\Builder;
-use App\Revisionable;
 
 class Person extends Model
 {
@@ -24,6 +23,7 @@ class Person extends Model
     protected static function boot()
     {
         parent::boot();
+        static::bootRevisionableTrait();
         static::addGlobalScope('order', function (Builder $builder) {
             $builder->orderBy('abbreviation', 'asc');
         });
