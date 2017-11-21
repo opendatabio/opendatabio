@@ -20,6 +20,7 @@ class RevisionableTest extends TestCase
     public function tearDown()
     {
         DB::unprepared("DELETE FROM revisions WHERE revisionable_type = 'Tests\RevisionableClass'");
+        DB::unprepared('DELETE FROM revisionable_revisionable_relation');
         RevisionableClass::query()->delete();
         RevisionableRelationClass::query()->delete();
     }
@@ -56,7 +57,7 @@ class RevisionableTest extends TestCase
         $this->assertEquals($model->revisionHistory[1]->userResponsible()->email, $email);
     }
 
-    public function testSimpleRelation()
+    public function testBelongsToRelation()
     {
         // Sets up a belongsTo relation, updates it, and recovers info using "identifiableName()"
         $r1 = RevisionableRelationClass::create(['field_1' => 'Before']);
@@ -69,10 +70,32 @@ class RevisionableTest extends TestCase
 
         $model = $model->fresh();
         $this->assertEquals($model->revisionHistory->count(), 2); // 1 for create, 1 for update
-        // This library uses the DATABASE COLUMN, not the relationship name, to derive fieldName()
         $this->assertEquals($model->revisionHistory[1]->fieldName(), 'revisionable_relation');
-        // Not working?? See https://github.com/VentureCraft/revisionable/blob/master/src/Venturecraft/Revisionable/Revision.php
         $this->assertEquals($model->revisionHistory[1]->oldValue(), 'Before');
         $this->assertEquals($model->revisionHistory[1]->newValue(), 'After');
+    }
+
+    public function testBelongsToManyRelation()
+    {
+        // Sets up a belongsToMany relation, updates it, and recovers info using "identifiableName()"
+        $r1 = RevisionableRelationClass::create(['field_1' => 'First']);
+        $r2 = RevisionableRelationClass::create(['field_1' => 'Second']);
+        $model = RevisionableClass::create();
+        $model->relationTwo()->sync([$r1->id, $r2->id]);
+
+        $model = $model->fresh();
+        $this->assertEquals($model->revisionHistory->count(), 2); // 1 for create, 1 for sync
+        $this->assertEquals($model->revisionHistory[1]->fieldName(), 'revisionable_revisionable_relation'); // For pivot relations, this is actually the pivot table name (right?)
+        $this->assertEquals($model->revisionHistory[1]->newValue(), 'First, Second'); /// implod'ed from the original values
+    }
+
+    public function testDBRaw()
+    {
+        // Related to https://github.com/VentureCraft/revisionable/issues/293
+        $model = RevisionableClass::create();
+        $model->update(['field_1' => DB::raw("CONCAT('la','lala')")]);
+        $this->assertEquals($model->revisionHistory->count(), 2); // 1 for create, 1 for update??
+        $this->assertEquals($model->revisionHistory[1]->fieldName(), 'field_1'); // ???
+        $this->assertEquals($model->revisionHistory[1]->newValue(), 'lalala'); /// ???????
     }
 }

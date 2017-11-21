@@ -29,6 +29,6 @@ class RevisionableClass extends Model
 
     public function relationTwo()
     {
-        return $this->belongsToMany('Tests\RevisionableRelationClass');
+        return $this->belongsToMany('Tests\RevisionableRelationClass', 'revisionable_revisionable_relation', 'revisionable_id', 'revisionable_relation_id');
     }
 }
