@@ -54,6 +54,8 @@ class Revision extends Eloquent
      */
     protected $revisionFormattedFields = array();
 
+    protected $fillable = ['revisionable_type', 'revisionable_id', 'key', 'old_value', 'new_value', 'user_id'];
+
     /**
      * @param array $attributes
      */
@@ -157,7 +159,13 @@ class Revision extends Eloquent
         if (class_exists($main_model)) {
             $main_model = new $main_model();
             try {
-                if ($this->isRelated()) {
+                if (method_exists($main_model, $this->key)) {
+                    $related_class = $main_model->{$this->key}()->getRelated();
+                    $item = $related_class::find($this->$which_value);
+                    if (method_exists($item, 'identifiableName')) {
+                        return $this->format($this->key, $item->identifiableName());
+                    }
+                } elseif ($this->isRelated()) {
                     $related_model = $this->getRelatedModel();
                     // Now we can find out the namespace of of related model
                     if (!method_exists($main_model, $related_model)) {

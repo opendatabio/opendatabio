@@ -48,6 +48,10 @@ class Taxon extends Node
         return ($this->valid ? '' : '**').$this->fullname;
     }
 
+    public function identifiableName() {
+        return $this->getQualifiedFullnameAttribute();
+    }
+
     public function measurements()
     {
         return $this->morphMany(Measurement::class, 'measured');

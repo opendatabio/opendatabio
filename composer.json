@@ -8,6 +8,7 @@
         "andrechalom/laravel-multiselect": "dev-master",
         "barryvdh/laravel-translation-manager": "^0.4.0",
         "baum/baum": "^1.1",
+        "fico7489/laravel-pivot": "2.1.*",
         "fx3costa/laravelchartjs": "^2.3",
         "guzzlehttp/guzzle": "~6.0",
         "laravel/framework": "5.5.*",

@@ -42,6 +42,9 @@ namespace App;
  */
 trait Revisionable
 {
+    // For registering pivot element hooks:
+    use \Fico7489\Laravel\Pivot\Traits\PivotEventTrait;
+
     /**
      * @var array
      */
@@ -102,6 +105,18 @@ trait Revisionable
             $model->preSave();
             $model->postDelete();
         });
+
+        static::pivotAttached(function ($model, $relationName, $pivotIds) {
+            foreach ($pivotIds as $id) {
+                $model->changePivot($relationName, null, $id);
+            }
+        });
+
+        static::pivotDetached(function ($model, $relationName, $pivotIds) {
+            foreach ($pivotIds as $id) {
+                $model->changePivot($relationName, $id, null);
+            }
+        });
     }
 
     /**
@@ -124,6 +139,18 @@ trait Revisionable
     {
         return \App\Revision::where('revisionable_type', get_called_class())
             ->orderBy('updated_at', $order)->limit($limit)->get();
+    }
+
+    public function changePivot($relationName, $old, $new)
+    {
+        Revision::create([
+            'revisionable_type' => $this->getMorphClass(),
+            'revisionable_id' => $this->getKey(),
+            'key' => $relationName,
+            'old_value' => $old,
+            'new_value' => $new,
+            'user_id' => $this->getSystemUserId(),
+        ]);
     }
 
     /**

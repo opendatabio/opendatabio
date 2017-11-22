@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "455f4fff44365793b1fae7ff70925dd0",
+    "content-hash": "d9c235741615a379b1dad4d9c05154e0",
     "packages": [
         {
             "name": "andrechalom/laravel-multiselect",
@@ -434,6 +434,57 @@
                 "parser"
             ],
             "time": "2017-11-14T20:44:03+00:00"
+        },
+        {
+            "name": "fico7489/laravel-pivot",
+            "version": "2.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/fico7489/laravel-pivot.git",
+                "reference": "7f8058eb093a9afb2c1912ed75215586a67b4099"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/fico7489/laravel-pivot/zipball/7f8058eb093a9afb2c1912ed75215586a67b4099",
+                "reference": "7f8058eb093a9afb2c1912ed75215586a67b4099",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/database": "5.5.*"
+            },
+            "require-dev": {
+                "mockery/mockery": "^0.9",
+                "orchestra/database": "~3.5.0",
+                "orchestra/testbench": "~3.5.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Fico7489\\Laravel\\Pivot\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Filip Horvat",
+                    "email": "filip.horvat@am2studio.hr",
+                    "homepage": "http://am2studio.hr",
+                    "role": "Developer"
+                }
+            ],
+            "description": "This package introduces new eloquent events for changes on pivot table.",
+            "homepage": "https://github.com/fico7489/laravel-pivot",
+            "keywords": [
+                "Laravel BelongsToMany",
+                "Laravel pivot",
+                "laravel",
+                "laravel BelongsToMany events",
+                "laravel pivot events"
+            ],
+            "time": "2017-11-08T16:02:20+00:00"
         },
         {
             "name": "fx3costa/laravelchartjs",

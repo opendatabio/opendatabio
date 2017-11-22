@@ -19,7 +19,7 @@ class RevisionableTest extends TestCase
     /** Used to clean up database after tests (successfull or not!) */
     public function tearDown()
     {
-        DB::unprepared("DELETE FROM revisions WHERE revisionable_type = 'Tests\RevisionableClass'");
+        \App\Revision::where('revisionable_type', 'Tests\RevisionableClass')->delete();
         DB::unprepared('DELETE FROM revisionable_revisionable_relation');
         RevisionableClass::query()->delete();
         RevisionableRelationClass::query()->delete();
@@ -84,9 +84,10 @@ class RevisionableTest extends TestCase
         $model->relationTwo()->sync([$r1->id, $r2->id]);
 
         $model = $model->fresh();
-        $this->assertEquals($model->revisionHistory->count(), 2); // 1 for create, 1 for sync
-        $this->assertEquals($model->revisionHistory[1]->fieldName(), 'revisionable_revisionable_relation'); // For pivot relations, this is actually the pivot table name (right?)
-        $this->assertEquals($model->revisionHistory[1]->newValue(), 'First, Second'); /// implod'ed from the original values
+        $this->assertEquals($model->revisionHistory->count(), 3); // 1 for create, 1 for each pivot synced
+        $this->assertEquals($model->revisionHistory[1]->fieldName(), 'relationTwo'); // For pivot relations, this is stored as the relation name
+        $this->assertEquals($model->revisionHistory[1]->newValue(), 'First');
+        $this->assertEquals($model->revisionHistory[2]->newValue(), 'Second');
     }
 
     public function testDBRaw()
