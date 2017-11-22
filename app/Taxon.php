@@ -48,7 +48,8 @@ class Taxon extends Node
         return ($this->valid ? '' : '**').$this->fullname;
     }
 
-    public function identifiableName() {
+    public function identifiableName()
+    {
         return $this->getQualifiedFullnameAttribute();
     }
 

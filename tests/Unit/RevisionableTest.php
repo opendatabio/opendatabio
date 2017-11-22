@@ -13,6 +13,7 @@ use Tests\RevisionableRelationClass;
 use DB;
 use Auth;
 use App\User;
+use Lang;
 
 class RevisionableTest extends TestCase
 {
@@ -35,12 +36,12 @@ class RevisionableTest extends TestCase
         $this->assertEquals($model->revisionHistory->count(), 3); // 1 for create, plus 2 for the 2 updated fields
         $this->assertEquals($model->revisionHistory[0]->fieldName(), 'created_at');
         $this->assertEquals($model->created_at, $model->revisionHistory[0]->newValue());
-        $this->assertFalse($model->revisionHistory[0]->userResponsible()); // no logged in user, returns FALSE
+        $this->assertNull($model->revisionHistory[0]->userResponsible()); // no logged in user, returns NULL
         $this->assertEquals($model->revisionHistory[1]->fieldName(), 'field_1');
         $this->assertEquals($model->revisionHistory[1]->oldValue(), 'Blabla');
         $this->assertEquals($model->revisionHistory[1]->newValue(), 'Lorem ipsum');
         $this->assertEquals($model->revisionHistory[2]->fieldName(), 'field_2');
-        $this->assertEquals($model->revisionHistory[2]->oldValue(), '');
+//        $this->assertEquals($model->revisionHistory[2]->oldValue(), ''); // -blank- will be tested on other test
         $this->assertEquals($model->revisionHistory[2]->newValue(), 'Ipsum lorem');
     }
 
@@ -95,8 +96,32 @@ class RevisionableTest extends TestCase
         // Related to https://github.com/VentureCraft/revisionable/issues/293
         $model = RevisionableClass::create();
         $model->update(['field_1' => DB::raw("CONCAT('la','lala')")]);
-        $this->assertEquals($model->revisionHistory->count(), 2); // 1 for create, 1 for update??
-        $this->assertEquals($model->revisionHistory[1]->fieldName(), 'field_1'); // ???
-        $this->assertEquals($model->revisionHistory[1]->newValue(), 'lalala'); /// ???????
+        $this->assertEquals($model->revisionHistory->count(), 2); // 1 for create, 1 for update
+        $this->assertEquals($model->revisionHistory[1]->fieldName(), 'field_1');
+        $this->assertEquals($model->revisionHistory[1]->newValue(), 'lalala'); /// The result of DB::raw
+    }
+
+    public function testRevisionNullString()
+    {
+        $r1 = RevisionableRelationClass::create(['field_1' => 'Something']);
+        $model = RevisionableClass::create();
+        $model->relationOne()->associate($r1);
+        $model->save();
+        $model = $model->fresh();
+
+        $this->assertEquals($model->revisionHistory[1]->oldValue(), Lang::get('messages.revisionable_nothing'));
+    }
+
+    public function testRevisionUnknownString()
+    {
+        $r2 = RevisionableRelationClass::create(['field_1' => 'To be deleted']);
+        $model = RevisionableClass::create();
+        $model->relationOne()->associate($r2);
+        $model->save();
+        $model->relationOne()->associate(null);
+        $model->save();
+        $r2->delete();
+
+        $this->assertEquals($model->revisionHistory[1]->newValue(), Lang::get('messages.revisionable_unknown'));
     }
 }

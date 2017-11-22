@@ -33,10 +33,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace App;
 
 /**
- * Revision.
+ * Revisionable.
  *
- * Base model to allow for revision history on
- * any model that extends this model
+ * Trait to allow for revision history
  *
  * Original code (c) Venture Craft <http://www.venturecraft.com.au>
  */
@@ -406,33 +405,6 @@ trait Revisionable
     public function identifiableName()
     {
         return $this->getKey();
-    }
-
-    /**
-     * Revision Unknown String
-     * When displaying revision history, when a foreign key is updated
-     * instead of displaying the ID, you can choose to display a string
-     * of your choice, just override this method in your model
-     * By default, it will fall back to the models ID.
-     *
-     * @return string an identifying name for the model
-     */
-    public function getRevisionNullString()
-    {
-        return isset($this->revisionNullString) ? $this->revisionNullString : 'nothing';
-    }
-
-    /**
-     * No revision string
-     * When displaying revision history, if the revisions value
-     * cant be figured out, this is used instead.
-     * It can be overridden.
-     *
-     * @return string an identifying name for the model
-     */
-    public function getRevisionUnknownString()
-    {
-        return isset($this->revisionUnknownString) ? $this->revisionUnknownString : 'unknown';
     }
 
     /**
