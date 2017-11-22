@@ -156,7 +156,6 @@ class Revision extends Eloquent
             try {
                 // for pivot related values, the key is the actual method name
                 if (method_exists($main_model, $this->key)) {
-                    Log::info('HERE');
                     $related_class = $main_model->{$this->key}()->getRelated();
                     $item = $related_class::find($this->$which_value);
                     if (is_null($item)) {
@@ -167,7 +166,6 @@ class Revision extends Eloquent
                     }
                     // for simple foreign keys:
                 } elseif ($this->isRelated()) {
-                    Log::info('HERE??');
                     $related_model = $this->getRelatedModel();
                     // Now we can find out the namespace of of related model
                     if (!method_exists($main_model, $related_model)) {
