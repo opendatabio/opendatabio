@@ -292,17 +292,8 @@ trait Revisionable
      **/
     public function getSystemUserId()
     {
-        try {
-            if (class_exists($class = '\SleepingOwl\AdminAuth\Facades\AdminAuth')
-                || class_exists($class = '\Cartalyst\Sentry\Facades\Laravel\Sentry')
-                || class_exists($class = '\Cartalyst\Sentinel\Laravel\Facades\Sentinel')
-            ) {
-                return ($class::check()) ? $class::getUser()->id : null;
-            } elseif (\Auth::check()) {
-                return \Auth::user()->getAuthIdentifier();
-            }
-        } catch (\Exception $e) {
-            return null;
+        if (\Auth::check()) {
+            return \Auth::user()->id;
         }
 
         return null;
@@ -375,22 +366,6 @@ trait Revisionable
         }
 
         return false;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRevisionFormattedFields()
-    {
-        return $this->revisionFormattedFields;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getRevisionFormattedFieldNames()
-    {
-        return $this->revisionFormattedFieldNames;
     }
 
     /**
