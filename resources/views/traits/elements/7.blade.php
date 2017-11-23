@@ -24,15 +24,7 @@
 // NOTICE: this will only work if called via AJAX. Set up an alternative for direct loading
 if (typeof jQuery !== 'undefined') {
     $(document).ready(function(){
-        $("#link_autocomplete").devbridgeAutocomplete({
-        serviceUrl: "{{url('taxons/autocomplete')}}",
-            onSelect: function (suggestion) {
-                $("#link_id").val(suggestion.data);
-            },
-            onInvalidateSelection: function() {
-                $("#link_id").val(null);
-            }
-    });
+    $("#link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
     });
 }
 </script>

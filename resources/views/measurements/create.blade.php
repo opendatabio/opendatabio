@@ -155,60 +155,48 @@ echo View::make('traits.elements.' . $measurement->type,
 @endsection
 @push ('scripts')
 <script>
-$("#bibreference_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('references/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#bibreference_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#bibreference_id").val(null);
-    }
+$(document).ready(function() {
+    $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
+    $("#link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+    $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
+    $("#trait_autocomplete").devbridgeAutocomplete({
+        serviceUrl: "{{url('traits/autocomplete')}}",
+        /* adds the object type to request; doubles the namespace back slashes */
+        params: {'type': '{{ str_replace('\\', '\\\\', get_class($object)) }}' },
+        onSelect: function (suggestion) {
+            $("#trait_id").val(suggestion.data);
+            $( "#spinner" ).css('display', 'inline-block');
+            $.ajax({
+            type: "GET",
+                url: "{{url('traits/getformelement')}}",
+                dataType: 'json',
+                data: {'id': suggestion.data, 'measurement': null},
+                success: function (data) {
+                    $("#spinner").hide();
+                    $("#ajax-error").collapse("hide");
+                    $("#append_value").html(data.html);
+                },
+                error: function(e){ 
+                    $("#spinner").hide();
+                    $("#ajax-error").collapse("show");
+                    $("#ajax-error").text('Error sending AJAX request');
+                }
+            })
+        },
+        onInvalidateSelection: function() {
+            $("#trait_id").val(null);
+        },
+        minChars: 3,
+        onSearchStart: function() {
+            $(".minispinner").remove();
+            $(this).after("<div class='spinner minispinner'></div>");
+        },
+        onSearchComplete: function() {
+            $(".minispinner").remove();
+        },
+        showNoSuggestionNotice: true,
+        noSuggestionNotice: "@lang('messages.noresults')"
     });
-$("#trait_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('traits/autocomplete')}}",
-    /* adds the object type to request; doubles the namespace back slashes */
-    params: {'type': '{{ str_replace('\\', '\\\\', get_class($object)) }}' },
-    onSelect: function (suggestion) {
-        $("#trait_id").val(suggestion.data);
-		$( "#spinner" ).css('display', 'inline-block');
-		$.ajax({
-			type: "GET",
-			url: "{{url('traits/getformelement')}}",
-			dataType: 'json',
-			data: {'id': suggestion.data, 'measurement': null},
-			success: function (data) {
-                $("#spinner").hide();
-                $("#ajax-error").collapse("hide");
-                $("#append_value").html(data.html);
-			},
-			error: function(e){ 
-				$("#spinner").hide();
-				$("#ajax-error").collapse("show");
-				$("#ajax-error").text('Error sending AJAX request');
-			}
-		})
-    },
-    onInvalidateSelection: function() {
-        $("#trait_id").val(null);
-    }
-    });
-$("#link_autocomplete").devbridgeAutocomplete({
-serviceUrl: "{{url('taxons/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#link_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#link_id").val(null);
-    }
-    });
-$("#person_autocomplete").devbridgeAutocomplete({
-serviceUrl: "{{url('persons/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#person_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#person_id").val(null);
-    }
-    });
+});
 </script>
 @endpush

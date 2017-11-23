@@ -2,15 +2,18 @@
 $(document).ready(function(){
     // chainable custom autocomplete with some global defaults
     // use invalidateCallback for cleanups
-    $.fn.odbAutocomplete = function(url, id_element, noResult, invalidateCallback) {
+    // If this is edited, NOTICE that measurements/create use a pure devbridge version and
+    // must be updated as well!
+    $.fn.odbAutocomplete = function(url, id_element, noResult, invalidateCallback, params) {
         return this.devbridgeAutocomplete({
             serviceUrl: url,
             onSelect: function (suggestion) {
                 $(id_element).val(suggestion.data);
+                if (typeof selectCallback === "function")
+                    selectCallback();
             },
             onInvalidateSelection: function() {
                 $(id_element).val(null);
-                alert(typeof invalidateCallback);
                 if (typeof invalidateCallback === "function")
                     invalidateCallback();
             },
@@ -23,7 +26,8 @@ $(document).ready(function(){
                 $(".minispinner").remove();
             },
             showNoSuggestionNotice: true,
-            noSuggestionNotice: noResult
+            noSuggestionNotice: noResult,
+            params: params
         });
     };
 	/** Abbreviation helper for the Person entity */

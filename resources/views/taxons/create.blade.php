@@ -247,43 +247,12 @@
 
 @push ('scripts')
 <script>
-$("#parent_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('taxons/autocomplete')}}",
-    params: {'full':  true},
-    onSelect: function (suggestion) {
-        $("#parent_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#parent_id").val(null);
-    }
-    });
-$("#senior_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('taxons/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#senior_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#senior_id").val(null);
-    }
-    });
-$("#author_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('persons/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#author_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#author_id").val(null);
-    }
-    });
-$("#bibreference_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('references/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#bibreference_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#bibreference_id").val(null);
-    }
-    });
+$(document).ready(function() {
+    $("#parent_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#parent_id", "@lang('messages.noresults')");
+    $("#senior_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#senior_id", "@lang('messages.noresults')");
+    $("#author_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#author_id", "@lang('messages.noresults')");
+    $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
+});
 function setFields(vel) {
     var valid = $('#valid').is(":checked");
     switch (valid) {

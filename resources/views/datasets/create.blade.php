@@ -146,14 +146,8 @@
 @endsection
 @push ('scripts')
 <script>
-$("#bibreference_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('references/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#bibreference_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#bibreference_id").val(null);
-    }
-    });
+$(document).ready(function() {
+    $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
+});
 </script>
 @endpush

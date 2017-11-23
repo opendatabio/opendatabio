@@ -55,50 +55,6 @@
   </div>
 </div>
 
-		        <div class="form-group autodetect">
-			    <div class="col-sm-offset-3 col-sm-6">
-            <input type="hidden" name="route-url" value="{{ route('autodetect') }}">
-				<button type="submit" class="btn btn-primary" id="autodetect">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.autodetect')
-				</button>
-				<div class="spinner" id="spinner"> </div>
-			    </div>
-			</div>
-<div class="form-group parent_id">
-    <label for="parent_id" class="col-sm-3 control-label mandatory">
-@lang('messages.location_parent')
-</label>
-        <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
-	    <div class="col-sm-6">
-    <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control autocomplete"
-    value="{{ old('parent_autocomplete', (isset($location) and $location->parent) ? $location->parent->fullname : null) }}">
-    <input type="hidden" name="parent_id" id="parent_id"
-    value="{{ old('parent_id', isset($location) ? $location->parent_id : null) }}">
-            </div>
-  <div class="col-sm-12">
-    <div id="hint2" class="panel-collapse collapse">
-	@lang('messages.location_parent_hint')
-    </div>
-  </div>
-</div>
-<div class="form-group" id="super-uc">
-    <label for="uc_id" class="col-sm-3 control-label">
-@lang('messages.location_uc')
-</label>
-        <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
-	    <div class="col-sm-6">
-    <input type="text" name="uc_autocomplete" id="uc_autocomplete" class="form-control autocomplete"
-    value="{{ old('uc_autocomplete', (isset($location) and $location->uc) ? $location->uc->fullname : null) }}">
-    <input type="hidden" name="uc_id" id="uc_id"
-    value="{{ old('uc_id', isset($location) ? $location->uc_id : null) }}">
-            </div>
-  <div class="col-sm-12">
-    <div id="hint4" class="panel-collapse collapse">
-	@lang('messages.location_uc_hint')
-    </div>
-  </div>
-</div>
 <div id="super-geometry">
 <div class="form-group">
     <label for="geom" class="col-sm-3 control-label mandatory">
@@ -178,6 +134,50 @@
   </div>
 </div>
 </div>
+		        <div class="form-group autodetect">
+			    <div class="col-sm-offset-3 col-sm-6">
+            <input type="hidden" name="route-url" value="{{ route('autodetect') }}">
+				<button type="submit" class="btn btn-primary" id="autodetect">
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.autodetect')
+				</button>
+				<div class="spinner" id="spinner"> </div>
+			    </div>
+                </div>
+<div class="form-group parent_id">
+    <label for="parent_id" class="col-sm-3 control-label mandatory">
+@lang('messages.location_parent')
+</label>
+        <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+    <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control autocomplete"
+    value="{{ old('parent_autocomplete', (isset($location) and $location->parent) ? $location->parent->fullname : null) }}">
+    <input type="hidden" name="parent_id" id="parent_id"
+    value="{{ old('parent_id', isset($location) ? $location->parent_id : null) }}">
+            </div>
+  <div class="col-sm-12">
+    <div id="hint2" class="panel-collapse collapse">
+	@lang('messages.location_parent_hint')
+    </div>
+  </div>
+</div>
+<div class="form-group" id="super-uc">
+    <label for="uc_id" class="col-sm-3 control-label">
+@lang('messages.location_uc')
+</label>
+        <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+    <input type="text" name="uc_autocomplete" id="uc_autocomplete" class="form-control autocomplete"
+    value="{{ old('uc_autocomplete', (isset($location) and $location->uc) ? $location->uc->fullname : null) }}">
+    <input type="hidden" name="uc_id" id="uc_id"
+    value="{{ old('uc_id', isset($location) ? $location->uc_id : null) }}">
+            </div>
+  <div class="col-sm-12">
+    <div id="hint4" class="panel-collapse collapse">
+	@lang('messages.location_uc_hint')
+    </div>
+  </div>
+</div>
 <div class="form-group">
     <label for="altitude" class="col-sm-3 control-label">
 @lang('messages.altitude')
@@ -247,26 +247,10 @@
 @endsection
 @push ('scripts')
 <script>
-$("#parent_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('locations/autocomplete')}}",
-    params: {'scope':  'exceptucs'},
-    onSelect: function (suggestion) {
-        $("#parent_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#parent_id").val(null);
-    }
-    });
-$("#uc_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('locations/autocomplete')}}",
-    params: {'scope':  'ucs'},
-    onSelect: function (suggestion) {
-        $("#uc_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#uc_id").val(null);
-    }
-    });
+$(document).ready(function() {
+    $("#parent_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}","#parent_id", "@lang('messages.noresults')", undefined, {'scope':  'exceptucs'});
+    $("#uc_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}","#uc_id", "@lang('messages.noresults')", undefined, {'scope':  'ucs'});
+});
 	/** For Location create and edit pages. The available fields change with changes on adm_level.
 	 * The "vel" parameter determines the velocity in which the animation is made. **/
 	function setLocationFields(vel) {
