@@ -381,4 +381,5 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'plant_list_for' => 'Plants list for',
   'measurements_for' => 'Measurements for',
   'access_level' => 'Access Level',
+  'noresults' => 'No results',
 );

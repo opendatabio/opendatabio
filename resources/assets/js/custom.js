@@ -1,5 +1,31 @@
 /** CUSTOM JS CODE HERE: */
 $(document).ready(function(){
+    // chainable custom autocomplete with some global defaults
+    // use invalidateCallback for cleanups
+    $.fn.odbAutocomplete = function(url, id_element, noResult, invalidateCallback) {
+        return this.devbridgeAutocomplete({
+            serviceUrl: url,
+            onSelect: function (suggestion) {
+                $(id_element).val(suggestion.data);
+            },
+            onInvalidateSelection: function() {
+                $(id_element).val(null);
+                alert(typeof invalidateCallback);
+                if (typeof invalidateCallback === "function")
+                    invalidateCallback();
+            },
+            minChars: 3,
+            onSearchStart: function() {
+                $(".minispinner").remove();
+                $(this).after("<div class='spinner minispinner'></div>");
+            },
+            onSearchComplete: function() {
+                $(".minispinner").remove();
+            },
+            showNoSuggestionNotice: true,
+            noSuggestionNotice: noResult
+        });
+    };
 	/** Abbreviation helper for the Person entity */
 	$("#full_name").blur(function () {
 		/* Only changes value if the field is empty */

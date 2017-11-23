@@ -1,12 +1,22 @@
 // used in AJAX asynchronous requests
-#spinner {
- border-top: 3px solid $brand-primary;
- border-bottom: 3px solid $brand-primary;
-  border-radius: 50%;
+#spinner, .spinner {
+    border-top: 3px solid $brand-primary;
+    border-bottom: 3px solid $brand-primary;
+    border-radius: 50%;
     width: 20px;
     height: 20px;
     animation: spin 2s ease-in-out infinite;
     display: none;
+}
+
+.spinner.minispinner {
+    position: relative;
+    float: right;
+    width: 10px;
+    height: 10px;
+    left: -10px;
+    top: -24px;
+    display: block;
 }
 
 @keyframes spin {

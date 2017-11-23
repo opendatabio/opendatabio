@@ -286,13 +286,9 @@
 @push ('scripts')
 <script>
 $(document).ready(function() {
-    $("#taxon_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('taxons/autocomplete')}}",
-        onSelect: function (suggestion) {
-            $("#taxon_id").val(suggestion.data);
-        },
-        onInvalidateSelection: function() {
-            $("#taxon_id").val(null);
+$("#location_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}", "#location_id", "@lang('messages.noresults')");
+$("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#taxon_id","@lang('messages.noresults')",
+        function() {
             // When the identification of a plant or voucher is changed, all related fields are reset
             $('input:radio[name=modifier][value=0]').trigger('click');
             $("#identifier_id").val('');
@@ -301,26 +297,8 @@ $(document).ready(function() {
             $("#identification_date_day").val(0);
             $("#herbarium_id").val('');
             $("#identification_notes").val('');
-        }
+        });
+$("#identifier_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#identifier_id", "@lang('messages.noresults')");
 });
-});
-$("#identifier_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('persons/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#identifier_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#identifier_id").val(null);
-    }
-    });
-$("#location_autocomplete").devbridgeAutocomplete({
-    serviceUrl: "{{url('locations/autocomplete')}}",
-    onSelect: function (suggestion) {
-        $("#location_id").val(suggestion.data);
-    },
-    onInvalidateSelection: function() {
-        $("#location_id").val(null);
-    }
-    });
 </script>
 @endpush
