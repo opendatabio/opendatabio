@@ -10,6 +10,7 @@
 <a href="{{url("persons/$person->id/history")}}">
 @lang ('messages.see_history')
 </a>
+</span>
                 </div>
 
 		<div class="panel-body">

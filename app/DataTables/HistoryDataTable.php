@@ -8,6 +8,7 @@
 namespace App\DataTables;
 
 use App\Person;
+use App\BibReference;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
@@ -46,6 +47,8 @@ class HistoryDataTable extends DataTable
     {
         if ($this->person) {
             $query = Person::findOrFail($this->person)->revisionHistory();
+        } elseif ($this->reference) {
+            $query = BibReference::findOrFail($this->reference)->revisionHistory();
         } else {
             throw new \Exception('Unsupported history request!');
         }

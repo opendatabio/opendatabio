@@ -32,6 +32,7 @@ Route::post('userjobs/{userjob}/retry', 'UserJobController@retry');
 Route::post('userjobs/{userjob}/cancel', 'UserJobController@cancel');
 Route::resource('userjobs', 'UserJobController', ['only' => ['index', 'show', 'destroy']]);
 
+Route::get('references/{id}/history', 'BibReferenceController@history');
 Route::get('references/autocomplete', 'BibReferenceController@autocomplete');
 Route::resource('references', 'BibReferenceController');
 
