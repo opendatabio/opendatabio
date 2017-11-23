@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Log;
 class BibReference extends Model
 {
     use Revisionable;
+    protected $revisionCreationsEnabled = true;
 
     // "cached" entries, so we don't need to parse the bibtex for every call
     protected $entries = null;

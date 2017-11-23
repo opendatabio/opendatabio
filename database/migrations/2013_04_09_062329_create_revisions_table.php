@@ -32,7 +32,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 use Illuminate\Database\Migrations\Migration;
 
-class CustomCreateRevisionsTable extends Migration
+class CreateRevisionsTable extends Migration
 {
     /**
      * Run the migrations.

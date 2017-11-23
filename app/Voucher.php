@@ -54,10 +54,10 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 
     public function getTaxonNameAttribute()
     {
-        if ($this->parent_type == Location::class and $this->identification and $this->identification->taxon) {
+        if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
             return $this->identification->taxon->fullname;
         }
-        if ($this->parent_type == Plant::class) {
+        if (Plant::class == $this->parent_type) {
             return $this->parent->taxonName;
         }
 

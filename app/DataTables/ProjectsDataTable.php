@@ -55,6 +55,7 @@ class ProjectsDataTable extends DataTable
     public function query()
     {
         $query = Project::withCount(['plants', 'vouchers'])->with('users');
+
         return $this->applyScopes($query);
     }
 

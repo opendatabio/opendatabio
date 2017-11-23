@@ -66,6 +66,7 @@ class DatasetsDataTable extends DataTable
     public function query()
     {
         $query = Dataset::withCount(['measurements'])->with(['users', 'tags.translations']);
+
         return $this->applyScopes($query);
     }
 
