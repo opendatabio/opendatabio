@@ -24,7 +24,7 @@ class LocationController extends Controller
     public function autocomplete(Request $request)
     {
         $locations = Location::where('name', 'LIKE', ['%'.$request->input('query').'%'])
-                        ->orderBy('name', 'ASC');
+                        ->orderBy('name', 'ASC')->take(30);
         if ($request->scope) {
             switch ($request->scope) {
             case 'ucs':

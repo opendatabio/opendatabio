@@ -29,9 +29,9 @@ class VouchersDataTable extends DataTable
                 htmlspecialchars($voucher->fullname).'</a>';
         })
         ->addColumn('project', function ($voucher) { return $voucher->project->name; })
-        ->addColumn('identification', function ($plant) {
-            return $plant->taxonName == Lang::get('messages.unidentified') ?
-                   $plant->taxonName : '<em>'.htmlspecialchars($plant->taxonName).'</em>';
+        ->addColumn('identification', function ($voucher) {
+            return $voucher->taxonName == Lang::get('messages.unidentified') ?
+                   $voucher->taxonName : '<em>'.htmlspecialchars($voucher->taxonName).'</em>';
         })
         ->addColumn('collectors', function ($voucher) {
             $col = $voucher->collectors;
@@ -61,6 +61,7 @@ class VouchersDataTable extends DataTable
                 'person_id',
                 'project_id',
                 'parent_id',
+                'parent_type',
                 'date',
             ]);
         // customizes the datatable query
@@ -87,6 +88,7 @@ class VouchersDataTable extends DataTable
                     'person_id',
                     'project_id',
                     'parent_id',
+                    'parent_type',
                     'date',
                 ]);
             $query = $query2->where('person_id', $person)->union($q1);

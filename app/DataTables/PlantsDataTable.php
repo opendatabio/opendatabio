@@ -39,6 +39,7 @@ class PlantsDataTable extends DataTable
             return implode(', ', $col->map(function ($c) {return $c->person->fullname; })->all());
         })
         ->editColumn('date', function ($plant) { return $plant->formatDate; })
+        ->addColumn('measurements', function ($location) {return $location->measurements_count; })
 //        ->filterColumn('title', function ($query, $keyword) {
 //            $query->where('bibtex', 'like', ["%{$keyword}%"]);
 //        })
@@ -59,7 +60,7 @@ class PlantsDataTable extends DataTable
                 'location_id',
                 'project_id',
                 'plants.date',
-            ]);
+            ])->withCount('measurements');
         // customizes the datatable query
         if ($this->location) {
             $query = $query->where('location_id', '=', $this->location);
@@ -94,6 +95,7 @@ class PlantsDataTable extends DataTable
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
                 'tag_team' => ['title' => Lang::get('messages.tag_team'), 'searchable' => false, 'orderable' => false],
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
+                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
             ])
             ->parameters([
                 'dom' => 'Brtip',
