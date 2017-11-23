@@ -22,4 +22,10 @@ class Herbarium extends Model
     {
         return $this->belongsToMany(Voucher::class)->withPivot('herbarium_number');
     }
+
+    // For Revisionable
+    public function identifiableName()
+    {
+        return $this->acronym;
+    }
 }

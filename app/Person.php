@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class Person extends Model
 {
+    use Revisionable;
+    protected $revisionCreationsEnabled = true;
+
     // Gramatically incorrect, but helps development
     protected $table = 'persons';
     protected $fillable = ['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id'];
@@ -20,6 +23,7 @@ class Person extends Model
     protected static function boot()
     {
         parent::boot();
+        static::bootRevisionableTrait();
         static::addGlobalScope('order', function (Builder $builder) {
             $builder->orderBy('abbreviation', 'asc');
         });

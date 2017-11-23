@@ -6,6 +6,11 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.person_details')
+<span class="history" style="float:right">
+<a href="{{url("persons/$person->id/history")}}">
+@lang ('messages.see_history')
+</a>
+</span>
                 </div>
 
 		<div class="panel-body">

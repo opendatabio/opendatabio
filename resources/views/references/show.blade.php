@@ -6,6 +6,11 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.bibreference')
+<span class="history" style="float:right">
+<a href="{{url("references/$reference->id/history")}}">
+@lang ('messages.see_history')
+</a>
+</span>
                 </div>
 
                 <div class="panel-body">

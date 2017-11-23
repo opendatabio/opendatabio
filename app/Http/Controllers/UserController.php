@@ -19,6 +19,7 @@ class UserController extends Controller
     public function index(UsersDataTable $dataTable)
     {
         $this->authorize('show', User::class);
+
         return $dataTable->render('users.index');
     }
 
