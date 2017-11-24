@@ -521,12 +521,10 @@ class Installer
             echo "Using production settings!\n";
             $this->writeDotEnv('APP_ENV', 'production');
             $this->writeDotEnv('APP_DEBUG', 'false');
-            $this->writeDotEnv('QUEUE_DRIVER', 'database');
         } else {
             echo "Using development settings!\n";
             $this->writeDotEnv('APP_ENV', 'local');
             $this->writeDotEnv('APP_DEBUG', 'true');
-            $this->writeDotEnv('QUEUE_DRIVER', 'sync');
         }
         $envfields = [
             'APP_URL' => 'What should the base URL for your app be?',
@@ -540,6 +538,10 @@ class Installer
             'PROXY_PASSWD' => 'Proxy password?',
             'GMAPS_API_KEY' => 'Google Maps API key?',
             'MOBOT_API_KEY' => 'Tropicos.org API key?',
+            'MAIL_HOST' => 'E-mail host?',
+            'MAIL_PORT' => 'E-mail port?',
+            'MAIL_USERNAME' => 'E-mail username?',
+            'MAIL_PASSWORD' => 'E-mail password?',
         ];
         foreach ($envfields as $key => $message) {
             echo $message.' ['.getenv($key).'] ';

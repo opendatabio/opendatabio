@@ -134,6 +134,9 @@ User-agent: *
 Disallow: /
 ```
 
+The e-mail system used by OpenDataBio is very flexible, but the installation program supposed you will be using some
+form of SMTP (such as smtp.gmail.com). Check the "config/mail.php" file for more options on how to send e-mails.
+
 ## Development
 
 The Laravel-Datatables library is incompatible with `php artisan serve`, so this command should not be used.
