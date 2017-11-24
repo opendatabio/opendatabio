@@ -13,11 +13,11 @@ use Auth;
 
 class Measurement extends Model
 {
+    use IncompleteDate;
+
     protected $fillable = ['trait_id', 'measured_id', 'measured_type',
         'date', 'dataset_id', 'person_id', 'bibreference_id',
         'value', 'value_i', 'value_a', ];
-
-    use IncompleteDate;
 
     public function measured()
     {

@@ -15,9 +15,6 @@ class ODBTrait extends Model
 {
     use Translatable;
 
-    protected $fillable = ['type', 'export_name', 'unit', 'range_min', 'range_max', 'link_type'];
-    protected $table = 'traits';
-
     // Types that can have measurements associated with
     const OBJECT_TYPES = [
         Plant::class,
@@ -30,6 +27,28 @@ class ODBTrait extends Model
     const LINK_TYPES = [
         Taxon::class,
     ];
+
+    const QUANT_INTEGER = 0;
+    const QUANT_REAL = 1;
+    const CATEGORICAL = 2;
+    const CATEGORICAL_MULTIPLE = 3;
+    const ORDINAL = 4;
+    const TEXT = 5;
+    const COLOR = 6;
+    const LINK = 7; // may include genomic / spectral??
+    const TRAIT_TYPES = [
+        self::QUANT_INTEGER,
+        self::QUANT_REAL,
+        self::CATEGORICAL,
+        self::CATEGORICAL_MULTIPLE,
+        self::ORDINAL,
+        self::TEXT,
+        self::COLOR,
+        self::LINK,
+    ];
+
+    protected $fillable = ['type', 'export_name', 'unit', 'range_min', 'range_max', 'link_type'];
+    protected $table = 'traits';
 
     // for use in the trait edit dropdown
     public static function getObjectTypeNames()
@@ -52,25 +71,6 @@ class ODBTrait extends Model
 
         return $ret;
     }
-
-    const QUANT_INTEGER = 0;
-    const QUANT_REAL = 1;
-    const CATEGORICAL = 2;
-    const CATEGORICAL_MULTIPLE = 3;
-    const ORDINAL = 4;
-    const TEXT = 5;
-    const COLOR = 6;
-    const LINK = 7; // may include genomic / spectral??
-    const TRAIT_TYPES = [
-        self::QUANT_INTEGER,
-        self::QUANT_REAL,
-        self::CATEGORICAL,
-        self::CATEGORICAL_MULTIPLE,
-        self::ORDINAL,
-        self::TEXT,
-        self::COLOR,
-        self::LINK,
-    ];
 
     // for input validation
     public static function rules($id = null, $merge = [])

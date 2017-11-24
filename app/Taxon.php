@@ -13,15 +13,15 @@ use Lang;
 
 class Taxon extends Node
 {
+    protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
+                'bibreference', 'bibreference_id', 'parent_id', 'notes', ];
+
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
     public function getTypenameAttribute()
     {
         return 'taxons';
     }
-
-    protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
-                'bibreference', 'bibreference_id', 'parent_id', 'notes', ];
 
     // for use in selects, lists the most common tax levels
     public static function TaxLevels()

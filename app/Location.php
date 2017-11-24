@@ -13,6 +13,12 @@ use Lang;
 
 class Location extends Node
 {
+    // The "special" adm levels
+    const LEVEL_UC = 99;
+    const LEVEL_PLOT = 100;
+    const LEVEL_TRANSECT = 101;
+    const LEVEL_POINT = 999;
+
     protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty'];
     protected $lat;
     protected $long;
@@ -25,12 +31,6 @@ class Location extends Node
     {
         return 'locations';
     }
-
-    // The "special" adm levels
-    const LEVEL_UC = 99;
-    const LEVEL_PLOT = 100;
-    const LEVEL_TRANSECT = 101;
-    const LEVEL_POINT = 999;
 
     // for use in views/* selects
     public static function AdmLevels()

@@ -16,6 +16,7 @@ use Lang;
 class Plant extends Model
 {
     use IncompleteDate;
+    protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
 
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
@@ -51,8 +52,6 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 )');
         });
     }
-
-    protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
 
     public function setRelativePosition($x, $y = null)
     {

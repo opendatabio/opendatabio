@@ -16,6 +16,15 @@ class User extends Authenticatable
 {
     use Notifiable;
 
+    // Access levels
+    const REGISTERED = 0;
+    const USER = 1;
+    const ADMIN = 2;
+    const LEVELS = [self::REGISTERED, self::USER, self::ADMIN];
+
+    protected $fillable = ['email', 'password', 'person_id'];
+    protected $hidden = ['password', 'remember_token', 'api_token'];
+
     protected static function boot()
     {
         parent::boot();
@@ -23,30 +32,6 @@ class User extends Authenticatable
             $builder->orderBy('email', 'asc');
         });
     }
-
-    // Access levels
-    const REGISTERED = 0;
-    const USER = 1;
-    const ADMIN = 2;
-    const LEVELS = [self::REGISTERED, self::USER, self::ADMIN];
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'email', 'password', 'person_id',
-    ];
-
-    /**
-     * The attributes that should be hidden for arrays.
-     *
-     * @var array
-     */
-    protected $hidden = [
-        'password', 'remember_token', 'api_token',
-    ];
 
     public function setToken()
     {
