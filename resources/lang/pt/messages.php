@@ -397,4 +397,7 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'field' => 'Campo',
   'old_value' => 'Valor antigo',
   'new_value' => 'Valor novo',
+  'no_default_person' => 'Você ainda não associou uma pessoa padrão à sua conta. Selecione uma',
+  'here' => 'aqui',
+  'your_default_person' => 'Sua pessoa padrão'
 );

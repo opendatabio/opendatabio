@@ -392,4 +392,7 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'field' => 'Field',
   'old_value' => 'Old value',
   'new_value' => 'New value',
+  'no_default_person' => 'You don\'t have a default person associated with your account yet. Select one',
+  'here' => 'here',
+  'your_default_person' => 'Your default person'
 );
