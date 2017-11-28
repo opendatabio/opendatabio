@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 
 use App\Person;
 use App\Herbarium;
-use App\Taxon;
 use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Input;
 use App\DataTables\PersonsDataTable;

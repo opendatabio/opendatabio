@@ -61,14 +61,10 @@
 </label>
         <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('person_id', Auth::user()->person_id); ?>
-
-	<select name="person_id" id="person_id" class="form-control" >
-		<option value=0>&nbsp;</option>
-	@foreach ($persons as $person)
-		<option value="{{$person->id}}" {{ $person->id == $selected ? 'selected' : '' }}>{{$person->abbreviation}}</option>
-	@endforeach
-	</select>
+    <input type="text" name="person_autocomplete" id="person_autocomplete" class="form-control autocomplete"
+    value="{{ old('person_autocomplete', (Auth::user()->person ? Auth::user()->person->full_name : null)) }}">
+    <input type="hidden" name="person_id" id="person_id"
+    value="{{ old('person_id', Auth::user()->person_id) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
@@ -101,3 +97,10 @@
         </div>
     </div>
 @endsection
+@push ('scripts')
+<script>
+$(document).ready(function() {
+$("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
+});
+</script>
+@endpush

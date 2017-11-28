@@ -13,9 +13,19 @@ use Illuminate\Support\Facades\Lang;
 use App\User;
 use App\Project;
 use App\Dataset;
+use Response;
 
 class UserController extends Controller
 {
+    public function autocomplete(Request $request)
+    {
+        $users = User::where('email', 'LIKE', ['%'.$request->input('query').'%'])
+            ->select(['id as data', 'email as value'])
+            ->orderBy('email', 'ASC')->take(30)->get();
+
+        return Response::json(['suggestions' => $users]);
+    }
+
     public function index(UsersDataTable $dataTable)
     {
         $this->authorize('show', User::class);

@@ -94,7 +94,7 @@
 </label>
 <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 <div class="col-sm-6">
-{!! Multiselect::select(
+{!! Multiselect::autocomplete(
     'admins', 
     $fullusers->pluck('email', 'id'), isset($dataset) ? $dataset->admins->pluck('id') : [Auth::user()->id],
      ['class' => 'multiselect form-control']
@@ -105,7 +105,7 @@
 @lang('messages.collabs')
 </label>
 <div class="col-sm-6">
-{!! Multiselect::select(
+{!! Multiselect::autocomplete(
     'collabs', 
     $fullusers->pluck('email', 'id'), isset($dataset) ? $dataset->collabs->pluck('id') : [],
      ['class' => 'multiselect form-control']
@@ -116,7 +116,7 @@
 @lang('messages.viewers')
 </label>
 <div class="col-sm-6">
-{!! Multiselect::select(
+{!! Multiselect::autocomplete(
     'viewers', 
     $allusers->pluck('email', 'id'), isset($dataset) ? $dataset->viewers->pluck('id') : [],
      ['class' => 'multiselect form-control']
@@ -150,4 +150,7 @@ $(document).ready(function() {
     $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
 });
 </script>
+{!! Multiselect::scripts('admins', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
+{!! Multiselect::scripts('collabs', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
+{!! Multiselect::scripts('viewers', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 @endpush

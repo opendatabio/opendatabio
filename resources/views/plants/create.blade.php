@@ -141,7 +141,7 @@
 </label>
         <a data-toggle="collapse" href="#hint5" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-{!! Multiselect::select('collector', 
+{!! Multiselect::autocomplete('collector', 
     $persons->pluck('abbreviation', 'id'), 
     isset($plant) ? $plant->collectors->pluck('person_id') : 
     (empty(Auth::user()->person_id) ? '' : [Auth::user()->person_id] )
@@ -301,4 +301,5 @@ $("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#tax
 $("#identifier_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#identifier_id", "@lang('messages.noresults')");
 });
 </script>
+{!! Multiselect::scripts('collector', url('persons/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 @endpush

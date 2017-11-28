@@ -126,7 +126,7 @@ if ($p->identification)
 </label>
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-{!! Multiselect::select(
+{!! Multiselect::autocomplete(
     'collector', 
     $persons->pluck('abbreviation', 'id'), 
     isset($voucher) ? $voucher->collectors->pluck('person_id') : [],
@@ -365,4 +365,5 @@ $("#identifier_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}",
 $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
 });
 </script>
+{!! Multiselect::scripts('collector', url('persons/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 @endpush

@@ -73,6 +73,7 @@ Route::get('traits/getformelement', 'TraitController@getFormElement');
 Route::resource('traits', 'TraitController');
 
 // Users can be resources for the admin
+Route::get('users/autocomplete', 'UserController@autocomplete');
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 
 // Measures use a somewhat complicated schema for routes?
