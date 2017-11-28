@@ -5,7 +5,7 @@
     "type": "project",
     "require": {
         "php": "^7.0",
-        "andrechalom/laravel-multiselect": "dev-master",
+        "andrechalom/laravel-multiselect": "^0.1.0",
         "barryvdh/laravel-translation-manager": "^0.4.0",
         "baum/baum": "^1.1",
         "fico7489/laravel-pivot": "2.1.*",

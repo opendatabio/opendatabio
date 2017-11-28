@@ -125,7 +125,7 @@ class PersonController extends Controller
     {
         $person = Person::findOrFail($id);
         $herbaria = Herbarium::all();
-        $taxons = Taxon::all();
+        $taxons = $person->taxons();
 
         return view('persons.edit', compact('person', 'herbaria', 'taxons'));
     }

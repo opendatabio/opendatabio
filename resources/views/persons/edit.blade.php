@@ -54,3 +54,7 @@
         </div>
     </div>
 @endsection
+
+@push ('scripts')
+{!! Multiselect::scripts('specialist', url('taxons/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
+@endpush

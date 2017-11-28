@@ -65,7 +65,7 @@
 </label>
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-{!! Multiselect::select('specialist', $taxons->pluck('fullname', 'id'), $person->taxons->pluck('id'), ['class' => 'multiselect form-control']) !!}
+{!! Multiselect::autocomplete('specialist', $taxons->pluck('fullname', 'id'), $person->taxons->pluck('id'), ['class' => 'multiselect form-control']) !!}
             </div>
   <div class="col-sm-12">
     <div id="hint3" class="panel-collapse collapse">
