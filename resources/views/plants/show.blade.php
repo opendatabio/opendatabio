@@ -34,6 +34,7 @@
     <p><strong>
     @lang('messages.identification_based_on')
 :</strong>
+        @lang('messages.voucher') {{ $identification->herbarium_reference }} /
     <a href="{{url('herbaria/' . $identification->herbarium_id)}}">
         {{ $identification->herbarium->acronym }}
     </a>

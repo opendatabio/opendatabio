@@ -102,7 +102,7 @@ class PlantController extends Controller
             'collector' => 'required|array',
             'identifier_id' => 'required',
             'taxon_id' => 'required',
-            'identification_notes' => 'required_with:herbarium_id',
+            'herbarium_reference' => 'required_with:herbarium_id',
             'tag' => [ // tag / location must be unique
                 'required',
                 'string',
@@ -173,6 +173,7 @@ class PlantController extends Controller
             'taxon_id' => $request->taxon_id,
             'modifier' => $request->modifier,
             'herbarium_id' => $request->herbarium_id,
+            'herbarium_reference' => $request->herbarium_reference,
             'notes' => $request->identification_notes,
         ]);
         $plant->identification->setDate($request->identification_date_month,
@@ -262,6 +263,7 @@ class PlantController extends Controller
             'taxon_id' => $request->taxon_id,
             'modifier' => $request->modifier,
             'herbarium_id' => $request->herbarium_id,
+            'herbarium_reference' => $request->herbarium_reference,
             'notes' => $request->identification_notes,
         ];
         if ($plant->identification) {

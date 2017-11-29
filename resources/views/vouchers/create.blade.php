@@ -290,6 +290,14 @@ if ($p->identification)
     </div>
   </div>
 </div>
+<div class="form-group herbarium_reference">
+    <label for="herbarium_reference" class="col-sm-3 control-label mandatory">
+@lang('messages.herbarium_reference')
+</label>
+	    <div class="col-sm-6">
+	<input type="text" name="herbarium_reference" id="herbarium_reference" class="form-control" value="{{ old('herbarium_reference', (isset($plant) and $plant->identification) ? $plant->identification->herbarium_reference : null) }}">
+            </div>
+</div>
 
 <div class="form-group">
     <label for="identification_notes" class="col-sm-3 control-label">
@@ -364,6 +372,22 @@ $("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#tax
 $("#identifier_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#identifier_id", "@lang('messages.noresults')");
 $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
 });
+function setIdentificationFields(vel) {
+    var adm = $('#herbarium_id option:selected').val();
+    if ("undefined" === typeof adm) {
+        return; // nothing to do here...
+    }
+    switch (adm) {
+    case "": // no herbarium
+        $(".herbarium_reference").hide(vel);
+        break;
+    default: // other
+        $(".herbarium_reference").show(vel);
+    }
+}
+$("#herbarium_id").change(function() { setIdentificationFields(400); });
+// trigger this on page load
+setIdentificationFields(0);
 </script>
 {!! Multiselect::scripts('collector', url('persons/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 @endpush

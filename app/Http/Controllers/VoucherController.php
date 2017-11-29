@@ -80,7 +80,7 @@ class VoucherController extends Controller
         $rules = [
             'parent_type' => 'required|string',
             'collector' => 'array|nullable',
-            'identification_notes' => 'required_with:herbarium_id',
+            'herbarium_reference' => 'required_with:herbarium_id',
             'number' => [ // collector / number must be unique
                 'required',
                 'string',
@@ -192,6 +192,7 @@ class VoucherController extends Controller
                 'taxon_id' => $request->taxon_id,
                 'modifier' => $request->modifier,
                 'herbarium_id' => $request->herbarium_id,
+                'herbarium_reference' => $request->herbarium_reference,
                 'notes' => $request->identification_notes,
             ]);
             $voucher->identification->setDate($request->identification_date_month,
@@ -295,6 +296,7 @@ class VoucherController extends Controller
                 'taxon_id' => $request->taxon_id,
                 'modifier' => $request->modifier,
                 'herbarium_id' => $request->herbarium_id,
+                'herbarium_reference' => $request->herbarium_reference,
                 'notes' => $request->identification_notes,
             ];
             if ($voucher->identification()->count()) {

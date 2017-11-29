@@ -29,7 +29,7 @@ class Identification extends Model
         self::VEL_AFF,
     ];
 
-    protected $fillable = ['person_id', 'taxon_id', 'object_id', 'object_type', 'date', 'modifier', 'herbarium_id', 'notes'];
+    protected $fillable = ['person_id', 'taxon_id', 'object_id', 'object_type', 'date', 'modifier', 'herbarium_id', 'herbarium_reference', 'notes'];
 
     public function object()
     {
