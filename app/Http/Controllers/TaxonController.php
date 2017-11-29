@@ -17,7 +17,6 @@ use Lang;
 use Validator;
 use Illuminate\Support\MessageBag;
 use App\DataTables\TaxonsDataTable;
-use Log;
 
 class TaxonController extends Controller
 {
@@ -69,7 +68,7 @@ class TaxonController extends Controller
         return view('taxons.create');
     }
 
-    public function customValidate(Request $request)
+    public function customValidate(Request $request, $id = 0) // id used for checking duplicates
     {
         $rules = [
             'name' => 'required|string|max:191',
@@ -142,12 +141,12 @@ class TaxonController extends Controller
         }
         // checks for [name, parent] matches and [name, parent, author] matches (ref issue #61)
         $reqname = trim(substr($request->name, strrpos($request->name, ' ') - strlen($request->name)));
-        Log::info('name '.$reqname);
         $exact_match =
             Taxon::where('author', $request->author)
             ->where('author_id', $request->author_id)
             ->where('name', $reqname)
-            ->where('parent_id', $request->parent_id);
+            ->where('parent_id', $request->parent_id)
+            ->where('id', '!=', $id);
         if ($exact_match->count()) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('name', Lang::get('messages.taxon_duplicate'));
@@ -155,7 +154,9 @@ class TaxonController extends Controller
         }
         $name_match =
             Taxon::where('name', $reqname)
-            ->where('parent_id', $request->parent_id)->where('valid', true);
+            ->where('parent_id', $request->parent_id)
+            ->where('valid', true)
+            ->where('id', '!=', $id);
         if ('on' == $request->valid and $name_match->count()) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('name', Lang::get('messages.taxon_duplicate'));
@@ -252,7 +253,7 @@ class TaxonController extends Controller
     {
         $taxon = Taxon::findOrFail($id);
         $this->authorize('update', $taxon);
-        $validator = $this->customValidate($request);
+        $validator = $this->customValidate($request, $id);
         if ($validator->fails()) {
             return redirect()->back()
                             ->withErrors($validator)
