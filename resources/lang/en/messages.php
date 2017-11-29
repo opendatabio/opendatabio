@@ -1,7 +1,7 @@
 <?php
 
 return array (
-  'taxon_parent_required_error' => 'A parent name is required for all taxa of species or subspecies level.',
+  'taxon_parent_required_error' => 'A parent name is required for all species, infraspecies and clades.',
   'taxon_parent_genus_error' => 'The parent for a species must be of genus level or similar.',
   'taxon_parent_species_error' => 'The parent name for all subspecies, varieties and forms must be a species.',
   'taxon_parent_level_error' => 'The taxon level indicated is inconsistent with the parent\'s level.',

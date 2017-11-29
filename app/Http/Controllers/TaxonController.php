@@ -76,7 +76,7 @@ class TaxonController extends Controller
             'bibreference' => 'nullable|string|max:191',
         ];
         $validator = Validator::make($request->all(), $rules);
-        if ($request->level > 180 and !$request->parent_id) {
+        if ($request->level > 180 or $request->level == -100 and !$request->parent_id) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_required_error'));
             });
@@ -99,6 +99,9 @@ class TaxonController extends Controller
         }
         if ($request->parent_id) {
             $parent = Taxon::findOrFail($request->parent_id);
+            while ($parent->level == -100 and $parent->parent) {
+                $parent = $parent->parent;
+            }
             $validator->after(function ($validator) use ($request, $parent) {
                 if ($request->level <= $parent->level and ($request->level != -100 and $parent->level != -100)) {
                     $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_level_error'));
