@@ -76,7 +76,7 @@ class TaxonController extends Controller
             'bibreference' => 'nullable|string|max:191',
         ];
         $validator = Validator::make($request->all(), $rules);
-        if ($request->level > 180 or $request->level == -100 and !$request->parent_id) {
+        if (($request->level > 180 or $request->level == -100) and !$request->parent_id) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_required_error'));
             });
@@ -124,7 +124,8 @@ class TaxonController extends Controller
         }
         if (($request->author_id and $request->author)
                 or
-             (!$request->author_id and !$request->author)
+                // author is required EXCEPT for clades
+             (!$request->author_id and !$request->author and $request->level != -100)
         ) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('author_id', Lang::get('messages.taxon_author_error'));

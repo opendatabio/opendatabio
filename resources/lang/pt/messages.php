@@ -238,7 +238,7 @@ return array (
   'hint_plant_create' => 'Use este formulário para registrar uma nova planta marcada.',
   'hint_tag_create' => 'Ao criar uma nova tag, por favor providencie uma tradução do nome para todas as línguas implementadas.',
   'hint_taxon_create' => 'Use este formulário para inserir um novo Táxon no banco de dados. Após preencher o nome do táxon, o botão "Checar APIs" pode ser usado para preencher automaticamente a maior parte das informações.',
-  'hint_taxon_name' => 'Entre o nome completo do táxon, incluindo subespécies ou variedade, mas sem um autor. Ex: "Licaria cannella subsp. tenuicarpa"',
+  'hint_taxon_name' => 'Entre o nome completo do táxon, incluindo subespécies ou variedade, mas sem um autor. Ex: "Licaria cannella tenuicarpa"',
   'hint_trait_create' => 'Aqui você pode criar uma nova variável que pode ser usada para associar medições a plantas, amostras de herbário, táxons ou localidades. A definição da variável deve ser precisa e incluir o instrumento utilizado para realizar a medição ou o método pelo qual esta é calculada. Em outras palavras, no lugar de uma variável chamada "Diversidade", dado que há diversas maneiras de estimar a diversidade, uma variável chamada "Diversidade de Shannon" seria mais apropriada, por exemplo. Note que após medidas serem ligadas a uma variável, ela não pode mais ser alterada!',
   'hint_trait_max' => 'Essa variável possui um valor máximo? Medidas serão checadas contra este valor e rejeitadas caso estejam acima deste limite.',
   'hint_trait_min' => 'Essa variável possui um valor mínimo? Medidas serão checadas contra este valor e rejeitadas caso estejam abaixo deste limite.',

@@ -175,6 +175,11 @@ class ExternalAPIs
             $flags = $flags | self::MULTIPLE_HITS;
         }
         $ret = explode('%', $answer[1]);
+        if ($searchstring != $ret[14]) {
+            // bogus hit, like matching genus for species name
+            return [self::NOT_FOUND];
+        }
+
 
         return [$flags,
                 'rank' => $ret[10],
