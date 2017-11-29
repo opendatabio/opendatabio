@@ -140,7 +140,7 @@
         @if ($taxon->senior)
         <p>
         @lang ('messages.accepted_name'):
-        <a href=" {{url('taxons/' . $taxon->senior->id) }}"> {{ $taxon->senior->qualifiedFullname }} </a>
+        {!! $taxon->senior->rawLink() !!}
         </p>
         @endif
         @if ($taxon->juniors->count())
@@ -148,20 +148,20 @@
         @lang ('messages.juniors'):
         <ul>
         @foreach ($taxon->juniors as $junior)
-        <li><a href=" {{ url('taxons/'. $junior->id ) }} ">{{ $junior->qualifiedFullname }} </a> </li>
+        <li>{!! $junior->rawLink() !!}</li>
         @endforeach
         </ul>
         @endif
         @if ($taxon->getAncestors()->count())
         @foreach ($taxon->getAncestors() as $ancestor)
-        <a href=" {{ url('taxons/'. $ancestor->id ) }} ">{{ $ancestor->qualifiedFullname }} </a> &gt;
+        {!! $ancestor->rawLink() !!} &gt;
         @endforeach
         @endif
         {{ $taxon->qualifiedFullname }}
         @if ($taxon->getDescendants()->count())
         <ul>
-        @foreach ($taxon->children as $child)
-        <li> <a href=" {{url('taxons/' . $child->id) }}"> {{ $child->qualifiedFullname }}</a>
+        @foreach ($taxon->children->sortBy('fullname') as $child)
+        <li> {!! $child->rawLink() !!}
             {{ $child->getDescendants()->count() ? '(+' . $child->getDescendants()->count() . ')' : ''}}
         </li>
         @endforeach

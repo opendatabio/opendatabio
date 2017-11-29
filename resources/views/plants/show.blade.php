@@ -14,14 +14,7 @@
 @if (is_null($identification))
         @lang ('messages.unidentified')
 @else
-    <em>        
-    <a href="{{url('taxons/' . $identification->taxon->id)}}">
-        {{ $identification->taxon->fullname }}
-    </a>
-    </em>
-    @if ($identification->modifier)
-        @lang ('levels.identification.' . $identification->modifier)
-    @endif
+{!! $identification->rawLink(); !!}
     </p>
     <p><strong>
     @lang('messages.identified_by')

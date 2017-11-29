@@ -56,7 +56,7 @@
 	</strong>
 <ul>
 @foreach ($person->taxons as $taxon)
-<li><a href="{{url('taxons/'. $taxon->id)}}">{{ $taxon->fullname }}</a></li>
+<li> {!! $taxon->rawLink() !!} </li>
 @endforeach
 </ul>
 </p>
