@@ -118,7 +118,21 @@
         <div class="checkbox">
             <label>
                 <input type="checkbox" name="valid" id="valid" 
-{{ (old('valid', isset($taxon) ? $taxon->valid : "on" ) != "off") ? 'checked' : '' }}
+
+<?php // we have to do this the looooong way
+if (empty(old())) { // no "old" value, we're just arriving
+    if (isset($taxon)) {
+        if ($taxon->valid)
+            echo 'checked';
+    } else {
+        echo 'checked';
+    }
+} else { // "old" value is available, work with it
+    if (!empty(old('valid'))) {
+        echo 'checked';
+    }
+}
+?>
 >
 @lang('messages.valid')?
 
