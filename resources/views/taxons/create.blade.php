@@ -118,7 +118,7 @@
         <div class="checkbox">
             <label>
                 <input type="checkbox" name="valid" id="valid" 
-{{ old('valid', isset($taxon) ? $taxon->valid : true ) ? 'checked' : '' }}
+{{ (old('valid', isset($taxon) ? $taxon->valid : "on" ) != "off") ? 'checked' : '' }}
 >
 @lang('messages.valid')?
 

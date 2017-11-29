@@ -400,5 +400,6 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'new_value' => 'Valor novo',
   'no_default_person' => 'Você ainda não associou uma pessoa padrão à sua conta. Selecione uma',
   'here' => 'aqui',
-  'your_default_person' => 'Sua pessoa padrão'
+  'your_default_person' => 'Sua pessoa padrão',
+  'taxon_duplicate' => 'Verifique se esse nome está duplicado. Não é possível registrar dois nomes válidos com o mesmo nome, pai e autor.',
 );

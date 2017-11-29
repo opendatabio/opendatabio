@@ -17,6 +17,7 @@ use Lang;
 use Validator;
 use Illuminate\Support\MessageBag;
 use App\DataTables\TaxonsDataTable;
+use Log;
 
 class TaxonController extends Controller
 {
@@ -137,6 +138,27 @@ class TaxonController extends Controller
         ) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('bibreference_id', Lang::get('messages.taxon_bibref_error'));
+            });
+        }
+        // checks for [name, parent] matches and [name, parent, author] matches (ref issue #61)
+        $reqname = trim(substr($request->name, strrpos($request->name, ' ') - strlen($request->name)));
+        Log::info('name '.$reqname);
+        $exact_match =
+            Taxon::where('author', $request->author)
+            ->where('author_id', $request->author_id)
+            ->where('name', $reqname)
+            ->where('parent_id', $request->parent_id);
+        if ($exact_match->count()) {
+            $validator->after(function ($validator) {
+                $validator->errors()->add('name', Lang::get('messages.taxon_duplicate'));
+            });
+        }
+        $name_match =
+            Taxon::where('name', $reqname)
+            ->where('parent_id', $request->parent_id)->where('valid', true);
+        if ('on' == $request->valid and $name_match->count()) {
+            $validator->after(function ($validator) {
+                $validator->errors()->add('name', Lang::get('messages.taxon_duplicate'));
             });
         }
 

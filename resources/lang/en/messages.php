@@ -395,5 +395,6 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'new_value' => 'New value',
   'no_default_person' => 'You don\'t have a default person associated with your account yet. Select one',
   'here' => 'here',
-  'your_default_person' => 'Your default person'
+  'your_default_person' => 'Your default person',
+  'taxon_duplicate' => 'This taxon seems to be duplicated. It\'s not possible to register two valid names with the same name, parent and author',
 );

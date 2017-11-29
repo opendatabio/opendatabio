@@ -180,7 +180,6 @@ class ExternalAPIs
             return [self::NOT_FOUND];
         }
 
-
         return [$flags,
                 'rank' => $ret[10],
                 'author' => $ret[11],
