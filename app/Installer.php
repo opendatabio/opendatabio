@@ -21,7 +21,6 @@ class Installer
             ['name' => 'PHP', 'command' => 'php -v', 'min' => '7.0'],
             ['name' => 'Apache Web Server', 'command' => $this->apachecmd.' -v', 'min' => '2.2', 'recommended' => '2.4'],
             ['name' => 'Pandoc', 'command' => 'pandoc --version', 'min' => '1.10'],
-            ['name' => 'ImageMagick', 'command' => 'convert --version', 'min' => '6.7.7', 'recommended' => '6.8.9', 'unsupported' => '7'],
             ['name' => 'Supervisor', 'command' => 'supervisord --version', 'min' => '3.0', 'recommended' => '3.3'],
             // notice MySQL version is set up below
         ];
@@ -56,6 +55,7 @@ class Installer
             ['name' => 'Tokenizer', 'string' => 'tokenizer'],
             ['name' => 'XML', 'string' => 'xml'],
             ['name' => 'DOM', 'string' => 'dom'],
+            ['name' => 'GD', 'string' => 'gd'],
         ];
         foreach ($extensions as $extension) {
             $trouble += $this->checkExtension($extension['name'], $extension['string']);

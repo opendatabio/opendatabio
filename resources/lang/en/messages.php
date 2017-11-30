@@ -397,4 +397,11 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'here' => 'here',
   'your_default_person' => 'Your default person',
   'taxon_duplicate' => 'This taxon seems to be duplicated. It\'s not possible to register two valid names with the same name, parent and author',
+  'pictures' => 'Pictures',
+  'picture' => 'Picture',
+  'credits' => 'Credits',
+  'picture_of' => 'Picture of',
+  'create_picture' => 'Add picture',
+  'invalid_image' => 'The uploaded file was not recognized as a valid image.',
+
 );

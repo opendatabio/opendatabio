@@ -152,8 +152,20 @@
 				</a>
 			    </div>
 @endcan
+    @can ('create', App\Picture::class)
+<div class="col-sm-6">
+    <a href="{{ url('vouchers/'. $voucher->id. '/pictures/create')  }}" class="btn btn-success">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.create_picture')
+    </a>
+</div>
+ @endcan
                 </div>
             </div>
+</div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->
+@if ($voucher->pictures->count())
+{!! View::make('pictures.index', ['pictures' => $voucher->pictures]) !!}
+@endif
     </div>
 @endsection

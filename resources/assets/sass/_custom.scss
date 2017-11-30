@@ -65,3 +65,11 @@ button.unstyle:hover {
 input.autocomplete, input.multiselect { border: 1px solid #5555FF }
 
 .mandatory { color: #a36b6f; }
+
+.picture {
+    max-width: calc(100%); 
+    max-height: 700px; 
+    margin-right: auto; 
+    margin-left: auto; 
+    display: block;
+}

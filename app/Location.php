@@ -334,4 +334,9 @@ class Location extends Node
             DB::raw('AsText(Centroid(geom)) as centroid_raw')
         );
     }
+
+    public function pictures()
+    {
+        return $this->morphMany(Picture::class, 'object');
+    }
 }

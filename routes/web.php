@@ -88,3 +88,9 @@ Route::get('vouchers/{id}/measurements', 'MeasurementController@indexVouchers');
 Route::get('datasets/{id}/measurements', 'MeasurementController@indexDatasets');
 Route::get('traits/{id}/measurements', 'MeasurementController@indexTraits');
 Route::resource('measurements', 'MeasurementController', ['only' => ['show', 'store', 'edit', 'update']]);
+
+Route::get('taxons/{id}/pictures/create', 'PictureController@createTaxons');
+Route::get('locations/{id}/pictures/create', 'PictureController@createLocations');
+Route::get('plants/{id}/pictures/create', 'PictureController@createPlants');
+Route::get('vouchers/{id}/pictures/create', 'PictureController@createVouchers');
+Route::resource('pictures', 'PictureController', ['only' => ['show', 'store', 'edit', 'update']]);

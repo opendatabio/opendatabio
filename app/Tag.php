@@ -17,4 +17,9 @@ class Tag extends Model
     {
         return $this->belongsToMany(Dataset::class);
     }
+
+    public function pictures()
+    {
+        return $this->belongsToMany(Picture::class);
+    }
 }

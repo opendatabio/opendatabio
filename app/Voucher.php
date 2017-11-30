@@ -151,4 +151,9 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 
         return $this->parent->location;
     }
+
+    public function pictures()
+    {
+        return $this->morphMany(Picture::class, 'object');
+    }
 }

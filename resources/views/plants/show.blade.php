@@ -150,7 +150,18 @@
 				</a>
 			    </div>
 @endcan
+    @can ('create', App\Picture::class)
+<div class="col-sm-6">
+    <a href="{{ url('plants/'. $plant->id. '/pictures/create')  }}" class="btn btn-success">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.create_picture')
+    </a>
+</div>
+ @endcan
                 </div>
             </div>
+@if ($plant->pictures->count())
+{!! View::make('pictures.index', ['pictures' => $plant->pictures]) !!}
+@endif
     </div>
 @endsection

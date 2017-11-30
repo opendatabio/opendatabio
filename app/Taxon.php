@@ -38,6 +38,11 @@ class Taxon extends Node
             );
     }
 
+    public function pictures()
+    {
+        return $this->morphMany(Picture::class, 'object');
+    }
+
     public function getLevelNameAttribute()
     {
         return Lang::get('levels.tax.'.$this->level);

@@ -117,9 +117,20 @@
 				</a>
 			    </div>
 @endcan
+    @can ('create', App\Picture::class)
+<div class="col-sm-6">
+    <a href="{{ url('locations/'. $location->id. '/pictures/create')  }}" class="btn btn-success">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.create_picture')
+    </a>
+</div>
+ @endcan
                 </div>
             </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->
+@if ($location->pictures->count())
+{!! View::make('pictures.index', ['pictures' => $location->pictures]) !!}
+@endif
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.location_ancestors_and_children')

@@ -13,3 +13,4 @@ composer.phar
 .env
 *.swp
 .php_cs.cache
+public/upload_pictures/*
