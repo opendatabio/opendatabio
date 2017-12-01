@@ -108,32 +108,28 @@ class TaxonController extends Controller
                 }
             });
         }
-        if ($request->senior_id) {
+        if ('on' != $request->valid and $request->senior_id) {
             $senior = Taxon::findOrFail($request->senior_id);
             $validator->after(function ($validator) use ($request, $senior) {
                 if (abs($request->level - $senior->level) > 20) {
                     $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_level_error'));
-                }
-                if ('on' == $request->valid) {
-                    $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_valid_error'));
                 }
                 if (!$senior->valid) {
                     $validator->errors()->add('senior_id', Lang::get('messages.taxon_senior_invalid_error'));
                 }
             });
         }
-        if (($request->author_id and $request->author)
-                or
-                // author is required EXCEPT for clades
-             (!$request->author_id and !$request->author and $request->level != -100)
-        ) {
+        // author is required EXCEPT for clades
+        if (((!$request->author_id and 'on' == $request->unpublished)
+                or ('on' != $request->unpublished and !$request->author))
+            and $request->level != -100) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('author_id', Lang::get('messages.taxon_author_error'));
             });
         }
         if (($request->bibreference_id and $request->bibreference)
                 or
-             (!$request->bibreference_id and !$request->bibreference)
+             (!$request->bibreference_id and !$request->bibreference and 'on' != $request->unpublished)
         ) {
             $validator->after(function ($validator) {
                 $validator->errors()->add('bibreference_id', Lang::get('messages.taxon_bibref_error'));
@@ -188,15 +184,27 @@ class TaxonController extends Controller
         } else {
             $request['valid'] = false;
         }
+        // cannot have both valid and senior_id
+        if ($request->valid) {
+            $request->senior_id = null;
+        }
 
-        $taxon = new Taxon($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author',
-                'author_id', 'bibreference', 'bibreference_id', 'notes', ]));
-        $taxon->fullname = $request['name'];
-        $taxon->save(); // we need to save it here to have an id to use on the next methods
-        $taxon->setapikey('Mobot', $request['mobotkey']);
-        $taxon->setapikey('IPNI', $request['ipnikey']);
-        $taxon->setapikey('Mycobank', $request['mycobankkey']);
-        $taxon->save();
+        if ('on' == $request['unpublished']) {
+            $request['valid'] = true;
+            $taxon = new Taxon($request->only(['level', 'valid', 'parent_id',
+                    'author_id', 'notes', ]));
+            $taxon->fullname = $request['name'];
+            $taxon->save(); // we need to save it here to have an id to use on the next methods
+        } else {
+            $taxon = new Taxon($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author',
+                    'bibreference', 'bibreference_id', 'notes', ]));
+            $taxon->fullname = $request['name'];
+            $taxon->save(); // we need to save it here to have an id to use on the next methods
+            $taxon->setapikey('Mobot', $request['mobotkey']);
+            $taxon->setapikey('IPNI', $request['ipnikey']);
+            $taxon->setapikey('Mycobank', $request['mycobankkey']);
+            $taxon->save();
+        }
 
         return redirect('taxons/'.$taxon->id)->withStatus(Lang::get('messages.stored'));
     }
@@ -265,15 +273,34 @@ class TaxonController extends Controller
         } else {
             $request['valid'] = false;
         }
+        // cannot have both valid and senior_id
+        if ($request->valid) {
+            $request->senior_id = null;
+        }
 
-        $taxon->update($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author',
-                    'author_id', 'bibreference', 'bibreference_id', 'notes', ]));
-        $taxon->fullname = $request['name'];
-        // update external keys
-        $taxon->setapikey('Mobot', $request['mobotkey']);
-        $taxon->setapikey('IPNI', $request['ipnikey']);
-        $taxon->setapikey('Mycobank', $request['mycobankkey']);
-        $taxon->save();
+        if ('on' == $request['unpublished']) {
+            $request['valid'] = true;
+            $request['author'] = null;
+            $request['bibreference'] = null;
+            $request['bibreference_id'] = null;
+            $request['senior_id'] = null;
+            $taxon->update($request->only(['level', 'valid', 'parent_id', 'author', 'senior_id',
+                        'author_id', 'bibreference', 'bibreference_id', 'notes', ]));
+            $taxon->fullname = $request['name'];
+            // update external keys
+            $taxon->externalrefs()->delete();
+            $taxon->save();
+        } else {
+            $request['author_id'] = null;
+            $taxon->update($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author', 'author_id',
+                        'bibreference', 'bibreference_id', 'notes', ]));
+            $taxon->fullname = $request['name'];
+            // update external keys
+            $taxon->setapikey('Mobot', $request['mobotkey']);
+            $taxon->setapikey('IPNI', $request['ipnikey']);
+            $taxon->setapikey('Mycobank', $request['mycobankkey']);
+            $taxon->save();
+        }
 
         return redirect('taxons/'.$id)->withStatus(Lang::get('messages.saved'));
     }

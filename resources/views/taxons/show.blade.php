@@ -56,7 +56,9 @@
 <p><strong>
 @lang('messages.valid_status')
 : </strong> 
-@if ($taxon->valid) 
+@if ($taxon->author_id)
+@lang ('messages.unpublished')
+@elseif ($taxon->valid) 
 @lang ('messages.isvalid')
 @else
         @lang ('messages.notvalid')

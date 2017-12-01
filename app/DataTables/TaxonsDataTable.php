@@ -56,6 +56,7 @@ class TaxonsDataTable extends DataTable
                 'taxons.id',
                 'name',
                 'parent_id',
+                'author_id',
                 'author',
                 'rgt',
                 'lft',
