@@ -124,13 +124,16 @@ return [
     /* Minimum year to be shown on date pickers */
     'min_year' => 1900,
 
+    /* Color palette to be shown on Color type Traits */
+
+    'spectrum' => ['black', 'white', 'green', 'lightgreen', 'red', 'blanchedalmond', 'blue', 'yellow'],
     /*
     |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |
     | The application locale determines the default locale that will be used
-    | by the translation service provider. You are free to set this value
+   | by the translation service provider. You are free to set this value
     | to any of the locales which will be supported by the application.
     |
     */

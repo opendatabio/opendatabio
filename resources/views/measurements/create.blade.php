@@ -198,5 +198,18 @@ $(document).ready(function() {
         noSuggestionNotice: "@lang('messages.noresults')"
     });
 });
+// NOTE! duplicated from view 6
+@if (isset($measurement) and $measurement->type==6)
+	$("#value").spectrum({
+		flat:true,
+		showInput:true,
+		showPalette: true,
+		showPaletteOnly: true,
+		togglePaletteOnly: true,
+		togglePaletteMoreText: "@lang('spectrum.more')",
+		togglePaletteLessText: "@lang('spectrum.less')",
+		palette: {!! json_encode(config('app.spectrum')) !!}
+});
+@endif
 </script>
 @endpush
