@@ -8,11 +8,14 @@ A companion R package is being developed [here](https://github.com/opendatabio/o
 
 ## Authors
 **Coordinator:** 
-- Alberto Vicentini (vicentini.beto@gmail.com)
+- Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil
 
 **Collaborators:**
-- Andre Chalom (andrechalom@gmail.com)
-- Alexandre Adalardo de Oliveira (adalardo@usp.br)
+- Andre Chalom (andrechalom@gmail.com) 
+- Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
+
+## Funding & Support
+This project has recieved support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home).
 
 ## Overview
 This project aims to provide a flexible but robust framework for storing, analysing and exporting biological data.
