@@ -23,12 +23,25 @@
 <br><em>  
 {{$measurement->odbtrait->description}}</em>
 </p>
-
+<!-- TODO! integrate with mix -->
+<style> 
+.measurement-thumb {
+	width: 16px;
+	height: 16px;
+	margin: 2px 1px;
+	display: inline-block;
+	border: solid 1px #d0d0d0;
+}
+</style>
 <p><strong>
 @lang('messages.value')
 : </strong>  
 {{$measurement->valueActual}} {{ $measurement->odbtrait->unit }}
+@if ($measurement->type == \App\ODBTrait::COLOR) 
+&nbsp;<span class="measurement-thumb" style="background-color: {{$measurement->valueActual}}">
+@endif
 </p>
+
 
 <p><strong>
 @lang('messages.dataset')
