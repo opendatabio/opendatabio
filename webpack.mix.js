@@ -16,6 +16,7 @@ mix.js([
 	'resources/assets/js/custom.js',
 	'vendor/yajra/laravel-datatables-buttons/src/resources/assets/buttons.server-side.js',
 	'vendor/andrechalom/laravel-multiselect/resources/assets/js/multiselect.js',
+	'node_modules/spectrum-colorpicker/spectrum.js',
 	], 'public/js')
    // app css
    .sass('resources/assets/sass/app.scss', 'public/css');

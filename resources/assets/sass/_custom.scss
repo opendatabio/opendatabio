@@ -73,3 +73,15 @@ input.autocomplete, input.multiselect { border: 1px solid #5555FF }
     margin-left: auto; 
     display: block;
 }
+
+// ""thumbnail"" for color trait measurements
+.measurement-thumb {
+	width: 16px;
+	height: 16px;
+	margin: 0px;
+	display: inline-block;
+	border: solid 1px #d0d0d0;
+}
+.sp-palette-container {
+    border: none!important;
+}

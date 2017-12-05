@@ -209,6 +209,7 @@ $(document).ready(function() {
 		togglePaletteMoreText: "@lang('spectrum.more')",
 		togglePaletteLessText: "@lang('spectrum.less')",
 		preferredFormat: "hex",
+        showButtons: false,
 		palette: {!! json_encode(config('app.spectrum')) !!}
 });
 @endif
