@@ -29,31 +29,37 @@
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
 
-		    <form action="{{ url('references')}}" method="POST" class="form-horizontal" enctype="multipart/form-data">
-		     {{ csrf_field() }}
+<form action="{{ url('references')}}" method="POST" class="form-horizontal" enctype="multipart/form-data">
+ {{ csrf_field() }}
 
-<div class="form-group">
-<div class="col-sm-6">
-    <label for="standardize" class="control-label">
-	<input type="checkbox" name="standardize" id="standardize" class="" checked >
-		@lang('messages.standardize_keys')
-	</label>
-</div>
-</div>
-		        <div class="form-group">
-			    <div class="col-sm-6">
-  <span class="btn btn-success fileinput-button" id="fakerfile">
-        <i class="glyphicon glyphicon-file"></i>
-        <span>
-@lang('messages.import_file')
-</span>
-  </span>
-<input type="file" name="rfile" id="rfile" accept=".bib" style="display:none;">
-<input type="hidden" name="MAX_FILE_SIZE" value="30000">
-<button id="submit" type="submit" value="Submit" style="display: none;">Submit</button>
-			    </div>
-			</div>
-		    </form>
+    <div class="form-group">
+        <div class="col-sm-4" style="float: left">
+            <label for="standardize" class="control-label">
+                <input type="checkbox" name="standardize" id="standardize" class="" checked >
+                @lang('messages.standardize_keys')
+            </label>
+        </div>
+        <div class="col-sm-7" style="float: right">
+            <textarea name="references" cols=35></textarea>
+        </div>
+
+        <div class="col-sm-4" style="float: left">
+            <span class="btn btn-success fileinput-button" id="fakerfile">
+                <i class="glyphicon glyphicon-file"></i>
+                <span>
+                    @lang('messages.import_file')
+                </span>
+            </span>
+            <input type="file" name="rfile" id="rfile" accept=".bib" style="display:none;">
+            <input type="hidden" name="MAX_FILE_SIZE" value="30000">
+        </div>
+        <div class="col-sm-7" style="float: right">
+            <button id="submit" type="submit" value="Submit" class="btn btn-success">
+                @lang ('messages.import_from_text')
+            </button>
+        </div>
+    </div>
+</form>
                 </div>
             </div>
 @endcan

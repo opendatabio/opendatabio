@@ -66,7 +66,12 @@ class BibReferenceController extends Controller
     {
         $this->authorize('create', BibReference::class);
         $this->authorize('create', UserJob::class);
-        $contents = file_get_contents($request->rfile->getRealPath());
+        if ($request->rfile) {
+            $contents = file_get_contents($request->rfile->getRealPath());
+        } else {
+            $this->validate($request, ['references' => 'required|string',]);
+            $contents = $request->references;
+        }
         UserJob::dispatch(ImportBibReferences::class, ['contents' => $contents, 'standardize' => $request->standardize]);
 
         return redirect('references')->withStatus(Lang::get('messages.dispatched'));

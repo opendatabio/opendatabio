@@ -9,7 +9,7 @@ namespace App\Jobs;
 
 use RenanBr\BibTexParser\Listener;
 use RenanBr\BibTexParser\Parser;
-use RenanBr\BibTexParser\Processor\AuthorProcessor;
+use RenanBr\BibTexParser\Processor\NamesProcessor as AuthorProcessor;
 use App\BibReference;
 
 class ImportBibReferences extends AppJob

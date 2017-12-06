@@ -405,4 +405,5 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'create_picture' => 'Add picture',
   'invalid_image' => 'The uploaded file was not recognized as a valid image.',
   'unpublished' => 'Unpublished',
+  'import_from_text' => 'Import from text',
 );
