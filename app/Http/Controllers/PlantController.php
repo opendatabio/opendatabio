@@ -112,11 +112,10 @@ class PlantController extends Controller
                     $query->where('location_id', $request->location_id);
                 }),
             ],
-            'x' => 'nullable|numeric|min:0|max:'.(is_null($location) ? '' : $location->x),
-            'y' => 'nullable|numeric|min:0|max:'.(is_null($location) ? '' : $location->y),
         ];
         $validator = Validator::make($request->all(), $rules);
-        $validator->after(function ($validator) use ($request) {
+        $validator->after(function ($validator) use ($request, $location) {
+            // validates date
             $colldate = [$request->date_month, $request->date_day, $request->date_year];
             $iddate = [$request->identification_date_month, $request->identification_date_day, $request->identification_date_year];
             if (!Plant::checkDate($colldate)) {
@@ -133,6 +132,17 @@ class PlantController extends Controller
             if (!(Plant::beforeOrSimilar($iddate, date('Y-m-d')) and
                 Plant::beforeOrSimilar($colldate, $iddate))) {
                 $validator->errors()->add('identification_date_day', Lang::get('messages.identification_date_future_error'));
+            }
+
+            // validates xy / angdist
+            if (999 == $request->location_type) {
+                if ($request->distance < 0 or $request->angle < 0 or $request->angle > 360) {
+                    $validator->errors()->add('distance', Lang::get('messages.plant_ang_dist_error'));
+                }
+            } elseif (100 == $request->location_type or 101 == $request->location_type and $location) {
+                if ($request->x < 0 or $request->y < 0 or $request->x > $location->x or $request->y > $location->y) {
+                    $validator->errors()->add('x', Lang::get('messages.plant_xy_error'));
+                }
             }
         });
 
@@ -159,7 +169,11 @@ class PlantController extends Controller
         $plant = new Plant($request->only([
             'tag', 'location_id', 'project_id', 'notes',
         ]));
-        $plant->setRelativePosition($request->x, $request->y);
+        if (999 == $request->location_type) {
+            $plant->setRelativePosition($request->angle, $request->distance);
+        } else {
+            $plant->setRelativePosition($request->x, $request->y);
+        }
         $plant->setDate($request->date_month, $request->date_day, $request->date_year);
         $plant->save();
 
@@ -245,7 +259,11 @@ class PlantController extends Controller
         $plant->update($request->only([
             'tag', 'location_id', 'project_id', 'notes',
         ]));
-        $plant->setRelativePosition($request->x, $request->y);
+        if (999 == $request->location_type) {
+            $plant->setRelativePosition($request->angle, $request->distance);
+        } else {
+            $plant->setRelativePosition($request->x, $request->y);
+        }
         $plant->setDate($request->date_month, $request->date_day, $request->date_year);
         $plant->save();
 

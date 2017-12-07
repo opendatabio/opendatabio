@@ -69,7 +69,7 @@ class BibReferenceController extends Controller
         if ($request->rfile) {
             $contents = file_get_contents($request->rfile->getRealPath());
         } else {
-            $this->validate($request, ['references' => 'required|string',]);
+            $this->validate($request, ['references' => 'required|string']);
             $contents = $request->references;
         }
         UserJob::dispatch(ImportBibReferences::class, ['contents' => $contents, 'standardize' => $request->standardize]);

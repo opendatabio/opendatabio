@@ -61,7 +61,11 @@
     Unknown location
 @endif
 @if ($plant->x)
-(X: {{$plant->x}} Y: {{$plant->y}})
+    @if ($plant->location->adm_level == 999)
+(@lang('messages.angle'): {{$plant->angle}}, @lang('messages.distance'): {{$plant->distance}})
+    @else
+(X: {{$plant->x}}, Y: {{$plant->y}})
+    @endif
 @endif
 </p>
 

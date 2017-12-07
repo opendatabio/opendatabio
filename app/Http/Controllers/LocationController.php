@@ -42,7 +42,7 @@ class LocationController extends Controller
             $location->data = $location->id;
             $location->value = $location->fullname;
 
-            return $location->only(['data', 'value']);
+            return $location->only(['data', 'value', 'adm_level']);
         });
 
         return Response::json(['suggestions' => $locations]);

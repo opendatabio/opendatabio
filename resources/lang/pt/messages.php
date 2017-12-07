@@ -235,7 +235,7 @@ return array (
   'hint_herbaria_page' => 'Esta tabela contém os herbários registrados nos quais amostras podem ser salvas. Todo herbário deve possuir um número de identificação referente ao Index Herbariorium, que pode ser utilizado para obter outros detalhes, como endereço, telefone ou e-mail. Você pode registrar herbários usando a sigla (também chamada de Herbarium Code), que normalmente consiste de duas a cinco letras. Todo outro campo será preenchido automaticamente.',
   'hint_mobot_key' => 'Aqui você pode inserir o número de identificação deste táxon nos sites externos. Na maioria das vezes este campo será preenchido automaticamente.',
   'hint_plant_tag' => 'Registre aqui qual tag foi usada para marcar esta planta. Não deve haver outra planta nesta localidade com a mesma tag.',
-  'hint_plant_create' => 'Use este formulário para registrar uma nova planta marcada.',
+  'hint_plant_create' => 'Use este formulário para registrar uma nova planta marcada. Plantas registradas em parcelas ou transectos podem ser associadas a uma posição x/y, e plantas registradas em um ponto podem ser associadas a um ângulo e distância.',
   'hint_tag_create' => 'Ao criar uma nova tag, por favor providencie uma tradução do nome para todas as línguas implementadas.',
   'hint_taxon_create' => 'Use este formulário para inserir um novo Táxon no banco de dados. Após preencher o nome do táxon, o botão "Checar APIs" pode ser usado para preencher automaticamente a maior parte das informações. Você também pode usar essa tela para registrar nomes que não foram publicados, como "Euterpe sp1". Para isso, selecione a opção "Não publicado" abaixo, e a seguir você deverá associar esse nome com uma Pessoa já cadastrada no banco de dados.',
   'hint_taxon_name' => 'Entre o nome completo do táxon, incluindo subespécies ou variedade, mas sem um autor. Ex: "Licaria cannella tenuicarpa"',
@@ -411,4 +411,8 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'invalid_image' => 'O arquivo selecionado não foi reconhecido como uma imagem válida.',
   'unpublished' => 'Não publicado',
   'import_from_text' => 'Importar texto',
+  'angle' => 'Ângulo',
+  'distance' => 'Distância',
+  'plant_ang_dist_error' => 'Ângulo ou distância inválidos. O ângulo deve estar entre 0 e 360, e a distância não pode ser negativa.',
+  'plant_xy_error' => 'A posição x / y não pode ser negativa nem maior do que a dimensão da parcela',
 );

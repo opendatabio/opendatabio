@@ -4,13 +4,13 @@ $(document).ready(function(){
     // use invalidateCallback for cleanups
     // If this is edited, NOTICE that measurements/create use a pure devbridge version and
     // must be updated as well!
-    $.fn.odbAutocomplete = function(url, id_element, noResult, invalidateCallback, params) {
+    $.fn.odbAutocomplete = function(url, id_element, noResult, invalidateCallback, params, selectCallback) {
         return this.devbridgeAutocomplete({
             serviceUrl: url,
             onSelect: function (suggestion) {
                 $(id_element).val(suggestion.data);
                 if (typeof selectCallback === "function")
-                    selectCallback();
+                    selectCallback(suggestion);
             },
             onInvalidateSelection: function() {
                 $(id_element).val(null);

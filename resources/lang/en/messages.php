@@ -157,7 +157,7 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'plant_identification_date_hint' => 'Register here the date when the plant was identified with the current taxonomic name.',
   'plant_herbarium_id_hint' => 'Indicate here if the identification was done based on a herbarium sample. If you do so, use the "Herbarium code" field to indicate the herbarium sample number.',
   'herbarium_reference' => 'Herbarium code',
-  'hint_plant_create' => 'Use this form to register a new marked plant.',
+  'hint_plant_create' => 'Use this form to register a new marked plant. Plants registered under a Plot or Transect may have x/y values for position, and plants registered under a point may have angle and distance from the point.',
   'new_plant' => 'New / Edit Plant',
   'plants_hint' => 'This table lists all marked plants in the database. Each plant is identified by its location and a tag. There can only be one plant with the same tag for the same location.',
   'plants' => 'Plants',
@@ -406,4 +406,8 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'invalid_image' => 'The uploaded file was not recognized as a valid image.',
   'unpublished' => 'Unpublished',
   'import_from_text' => 'Import from text',
+  'angle' => 'Angle',
+  'distance' => 'Distance',
+  'plant_ang_dist_error' => 'Angle or distance invalid. Angle must be between 0 and 360, distance must be non-negative.',
+  'plant_xy_error' => 'The x and y positions must be non-negative and less than the plot dimensions.',
 );
