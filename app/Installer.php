@@ -668,6 +668,7 @@ class Installer
 
         echo "Changing storage area permissions...\n";
         exec('chmod -fR 777 storage 2>&1');
+        exec('chmod -fR 777 public/upload_pictures 2>&1');
         exec('chmod -fR 777 bootstrap/cache 2>&1');
 
         echo $this->c("********************************************\n", 'success');
