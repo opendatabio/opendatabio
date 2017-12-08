@@ -416,4 +416,5 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'plant_ang_dist_error' => 'Ângulo ou distância inválidos. O ângulo deve estar entre 0 e 360, e a distância não pode ser negativa.',
   'plant_xy_error' => 'A posição x / y não pode ser negativa nem maior do que a dimensão da parcela',
   'edit_geometry' => 'Editar geometria',
+  'autodetect_blank' => 'É necessário preencher o campo de latitude/longitude ou o campo de geometria antes de tentar o autodetect.',
 );

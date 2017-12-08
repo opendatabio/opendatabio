@@ -411,4 +411,5 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'plant_ang_dist_error' => 'Angle or distance invalid. Angle must be between 0 and 360, distance must be non-negative.',
   'plant_xy_error' => 'The x and y positions must be non-negative and less than the plot dimensions.',
   'edit_geometry' => 'Edit geometry',
+  'autodetect_blank' => 'You must fill the geometry or latitude/longite fields before clicking autodetect',
 );

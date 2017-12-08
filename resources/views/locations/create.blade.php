@@ -126,14 +126,7 @@
 	X: <input type="text" name="x" id="x" class="form-control latlongpicker" value="{{ old('x', isset($location) ? $location->x : null) }}">(m)&nbsp;
 	Y: <input type="text" name="y" id="y" class="form-control latlongpicker" value="{{ old('y', isset($location) ? $location->y : null) }}">(m)
             </div>
-    <label for="lat1" class="col-sm-3 control-label">
-@lang('messages.start')
-</label>
-	    <div class="col-sm-6">
-	Start-X: <input type="text" name="startx" id="startx" class="form-control latlongpicker" value="{{ old('startx', isset($location) ? $location->startx : null) }}">(m)&nbsp;
-	Start-Y: <input type="text" name="starty" id="starty" class="form-control latlongpicker" value="{{ old('starty', isset($location) ? $location->starty : null) }}">(m)
 
-            </div>
   <div class="col-sm-12">
     <div id="hint7" class="panel-collapse collapse">
 	@lang('messages.dimensions_hint')
@@ -151,6 +144,7 @@
 				<div class="spinner" id="spinner"> </div>
 			    </div>
                 </div>
+
 <div class="form-group parent_id">
     <label for="parent_id" class="col-sm-3 control-label mandatory">
 @lang('messages.location_parent')
@@ -161,6 +155,7 @@
     value="{{ old('parent_autocomplete', (isset($location) and $location->parent) ? $location->parent->fullname : null) }}">
     <input type="hidden" name="parent_id" id="parent_id"
     value="{{ old('parent_id', isset($location) ? $location->parent_id : null) }}">
+    <input type="text" name="parent_type" id="parent_type" value="{{old('parent_type', isset($location) ? $location->parent->adm_level : '')}}">
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
@@ -168,6 +163,17 @@
     </div>
   </div>
 </div>
+
+<div class="form-group super-start">
+    <label for="startx" class="col-sm-3 control-label mandatory">
+@lang('messages.start')
+</label>
+	    <div class="col-sm-6">
+	Start-X: <input type="text" name="startx" id="startx" class="form-control latlongpicker" value="{{ old('startx', isset($location) ? $location->startx : null) }}">(m)&nbsp;
+	Start-Y: <input type="text" name="starty" id="starty" class="form-control latlongpicker" value="{{ old('starty', isset($location) ? $location->starty : null) }}">(m)
+        </div>
+</div>
+
 <div class="form-group" id="super-uc">
     <label for="uc_id" class="col-sm-3 control-label">
 @lang('messages.location_uc')
@@ -255,7 +261,12 @@
 @push ('scripts')
 <script>
 $(document).ready(function() {
-    $("#parent_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}","#parent_id", "@lang('messages.noresults')", undefined, {'scope':  'exceptucs'});
+    $("#parent_autocomplete").odbAutocomplete(
+        "{{url('locations/autocomplete')}}","#parent_id", "@lang('messages.noresults')", undefined, {'scope':  'exceptucs'}, 
+        function (suggestion) {
+            $("#parent_type").val(suggestion.adm_level);
+            setLocationFields(400);
+        });
     $("#uc_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}","#uc_id", "@lang('messages.noresults')", undefined, {'scope':  'ucs'});
 });
 	/** For Location create and edit pages. The available fields change with changes on adm_level.
@@ -263,6 +274,7 @@ $(document).ready(function() {
 	function setLocationFields(vel) {
 		var adm = $('#adm_level option:selected').val();
         var geomtype = $('#geom_type').val();
+        var parent_type = $('#parent_type').val();
 		if ("undefined" === typeof adm) {
 			return; // nothing to do here...
 		}
@@ -275,6 +287,7 @@ $(document).ready(function() {
                 $(".parent_id").show(vel);
                 $(".autodetect").show(vel);
                 $(".super-button").hide(vel);
+                $(".super-start").hide(vel);
 				break;
 			case "100": // plot
             case "101": // transect, fall through
@@ -293,6 +306,11 @@ $(document).ready(function() {
 				$("#super-uc").show(vel);
                 $(".parent_id").show(vel);
                 $(".autodetect").show(vel);
+                if (adm == 100 && parent_type == 100) { // start-x and start-y ONLY here
+                    $(".super-start").show(vel);
+                } else {
+                    $(".super-start").hide(vel);
+                }
 				break;
             case "0": // country
 				$("#super-geometry").show(vel);
@@ -302,6 +320,7 @@ $(document).ready(function() {
                 $(".parent_id").hide(vel);
                 $(".autodetect").hide(vel);
                 $(".super-button").hide(vel);
+                $(".super-start").hide(vel);
                 break;
 			default: // other
 				$("#super-geometry").show(vel);
@@ -311,6 +330,7 @@ $(document).ready(function() {
                 $(".parent_id").show(vel);
                 $(".autodetect").show(vel);
                 $(".super-button").hide(vel);
+                $(".super-start").hide(vel);
 		}
 	}
 	$("#adm_level").change(function() { setLocationFields(400); });
