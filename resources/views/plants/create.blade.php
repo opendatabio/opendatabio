@@ -35,7 +35,7 @@
 		    <form action="{{ url('plants')}}" method="POST" class="form-horizontal">
 @endif
 		     {{ csrf_field() }}
-<input type="hidden" id="location_type" name="location_type" value ="{{isset($plant) ? $plant->location->adm_level : '' }}">
+<input type="hidden" id="location_type" name="location_type" value ="{{old('location_type', isset($plant) ? $plant->location->adm_level : '') }}">
 <!-- name -->
 <div class="form-group">
     <label for="tag" class="col-sm-3 control-label mandatory">
