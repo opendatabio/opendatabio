@@ -218,6 +218,10 @@ class Location extends Node
 
     public static function detectParent($geom, $max_level, $parent_uc)
     {
+        // there can be plots inside plots
+        if (self::LEVEL_PLOT == $max_level) {
+            $max_level += 1;
+        }
         $possibles = self::whereRaw('ST_Within(GeomFromText(?), geom)', [$geom])
             ->orderBy('adm_level', 'desc');
         if ($parent_uc) { // only looks for UCs
