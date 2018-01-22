@@ -232,25 +232,28 @@ class Taxon extends Node
 
     public function getMobotAttribute()
     {
-        $ref = $this->externalrefs()->where('name', 'Mobot');
-        if ($ref->count()) {
-            return $ref->first()->reference;
+        foreach ($this->externalrefs as $ref) {
+            if ('Mobot' == $ref->name) {
+                return $ref->reference;
+            }
         }
     }
 
     public function getIpniAttribute()
     {
-        $ref = $this->externalrefs()->where('name', 'IPNI');
-        if ($ref->count()) {
-            return $ref->first()->reference;
+        foreach ($this->externalrefs as $ref) {
+            if ('IPNI' == $ref->name) {
+                return $ref->reference;
+            }
         }
     }
 
     public function getMycobankAttribute()
     {
-        $ref = $this->externalrefs()->where('name', 'Mycobank');
-        if ($ref->count()) {
-            return $ref->first()->reference;
+        foreach ($this->externalrefs as $ref) {
+            if ('Mycobank' == $ref->name) {
+                return $ref->reference;
+            }
         }
     }
 
