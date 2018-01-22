@@ -45,7 +45,8 @@ class Taxon extends Node
 
     public function getLevelNameAttribute()
     {
-        return Lang::get('levels.tax.'.$this->level);
+        return Lang::get('levels.tax.'.$this->level).
+            ($this->author ? '' : ' ('.Lang::get('messages.unpublished').')');
     }
 
     public function getQualifiedFullnameAttribute()
@@ -300,5 +301,22 @@ class Taxon extends Node
         } else {
             return $searchstr;
         }
+    }
+
+    public function getFamilyAttribute()
+    {
+        if ($this->level < 120) {
+            return '';
+        }
+        if (120 == $this->level) {
+            return $this->name;
+        }
+        // else
+        $parent = $this->parent;
+        while ($parent->parent and $parent->level > 120) {
+            $parent = $parent->parent;
+        }
+
+        return $parent->name;
     }
 }

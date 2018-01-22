@@ -30,7 +30,7 @@ return [
     | "alpha", such as 0.1.0-alpha1.
     */
 
-    'version' => '0.7.2',
+    'version' => '0.7.3',
 
     /*
      * Proxy settings
