@@ -39,6 +39,14 @@
 <a href="{{url('datasets/' . $measurement->dataset_id)}}">{{$measurement->dataset->name}}</a>
 </p>
 
+@if ($measurement->notes)
+<p><strong>
+@lang('messages.notes')
+:</strong>
+{{$measurement->notes}}</a>
+</p>
+@endif
+
 <p><strong>
 @lang('messages.measurement_date')
 :</strong>

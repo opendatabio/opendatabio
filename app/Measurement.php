@@ -17,7 +17,7 @@ class Measurement extends Model
 
     protected $fillable = ['trait_id', 'measured_id', 'measured_type',
         'date', 'dataset_id', 'person_id', 'bibreference_id',
-        'value', 'value_i', 'value_a', ];
+        'value', 'value_i', 'value_a', 'notes', ];
 
     public function measured()
     {
@@ -187,7 +187,8 @@ WHERE datasets.privacy = 0 AND dataset_user.user_id = '.Auth::user()->id.'
             'measurements.bibreference_id',
             'measurements.value',
             'measurements.value_i',
-            'measurements.value_a'
+            'measurements.value_a',
+            'measurements.notes'
         );
     }
 }
