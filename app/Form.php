@@ -17,4 +17,11 @@ class Form extends Model
     public function traits() {
         return $this->belongsToMany(ODBTrait::class, 'form_traits', 'form_id', 'trait_id')->withPivot('order');
     }
+    public function getTrait($i) {
+        foreach ($this->traits as $odbtrait) {
+            if ($odbtrait->pivot->order == $i) {
+                return $odbtrait;
+            }
+        }
+    }
 }
