@@ -5,7 +5,7 @@ return array (
   'login' => 'Login',
   'register' => 'Registrar',
   'version' => 'Versão :version',
-  'tag' => 'Um sistema moderno para armazenagento e gestão de dados de plantas - florística, ecologia e monitoramento',
+  'tag' => 'Um sistema moderno para armazenamento e gestão de dados de plantas - florística, ecologia e monitoramento',
   'docs' => 'Documentação',
   'password' => 'Senha',
   'remember' => 'Lembre deste login',
