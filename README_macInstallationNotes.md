@@ -1,5 +1,6 @@
-# MAC OSX LOCALHOST INSTALLATION ON SIERRA
-##Necessary software 
+### Instructions for a Mac-OSX localhost installation
+Tested on Sierra 10.12.6.
+#### Necessary software 
 Commands from [these instructions](https://getgrav.org/blog/macos-sierra-apache-multiple-php-versions) to prep your machine:
 - Install xcode using software update, open and accept license
 ```
@@ -47,7 +48,7 @@ sudo nano /usr/local/etc/httpd/httpd.conf
 ```
 Listen 80
 
-User beto
+User yourusername
 Group staff
 
 ServerName localhost
@@ -132,11 +133,11 @@ memory_limit should be at least 256M!
 post_max_size should be at least 30M!
 upload_max_filesize should be at least 30M!
 ```
-- Install opendatabio and follow instructions
+#### OpenDataBio
 ```
 /Users/beto/opendatabio/php install
 ```
-- You may get a problem with supervisor (create a file manually if that is the case as instructed)
+- You may get a problem with supervisor (create the file informed by the installer manually if that is the case)
 - In /usr/local/etc/httpd/httpd.conf add (adjust according to your installation path)
 ```
 <IfModule alias_module>
