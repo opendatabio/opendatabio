@@ -32,7 +32,7 @@ class BibReferenceDataTable extends DataTable
         ->addColumn('author', function ($reference) { return $reference->author; })
         ->addColumn('year', function ($reference) { return $reference->year; })
         ->addColumn('title', function ($reference) { return $reference->title; })
-        ->addColumn('doi', function ($reference) { return '<a href="https://dx.doi.org/' . $reference->doi . '">' .  $reference->doi . "</a>"; })
+        ->addColumn('doi', function ($reference) { return '<a href="https://dx.doi.org/'.$reference->doi.'">'.$reference->doi.'</a>'; })
         ->filterColumn('title', function ($query, $keyword) {
             $query->where('bibtex', 'like', ["%{$keyword}%"]);
         })

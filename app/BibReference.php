@@ -87,10 +87,11 @@ class BibReference extends Model
 
     public function getDoiAttribute()
     {
-        if (!is_null($this->attributes['doi']))
+        if (!is_null($this->attributes['doi'])) {
             return $this->attributes['doi'];
+        }
 
-        # falls back to the bibtex "doi" field in case the database column is absent
+        // falls back to the bibtex "doi" field in case the database column is absent
         if (is_null($this->entries)) {
             $this->parseBibtex();
         }
@@ -102,15 +103,18 @@ class BibReference extends Model
     }
 
     // NOTE, this may be called as "$newDoi = null" from a newly created resource to guess DOI from bibtex
-    public function setDoi($newDoi) {
+    public function setDoi($newDoi)
+    {
         // if receiving a blank and we have attr set, the user is probably trying to remove the information
-        if ($this->attributes['doi'] and ! $newDoi) {
+        if ($this->attributes['doi'] and !$newDoi) {
             $this->attributes['doi'] = null;
+
             return;
         }
         // if we are receiving something for $newDoi, use it
         if ($newDoi) {
             $this->attributes['doi'] = $newDoi;
+
             return;
         }
         // else, guess it from the bibTex and fill it
@@ -122,11 +126,13 @@ class BibReference extends Model
         }
     }
 
-
-    public static function isValidDoi($doi) {
+    public static function isValidDoi($doi)
+    {
         // Regular expression adapted from https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-        if (preg_match('/^10.\d{4,9}\/[-._;()\/:A-Z0-9]+$/i', $doi) == 1)
+        if (1 == preg_match('/^10.\d{4,9}\/[-._;()\/:A-Z0-9]+$/i', $doi)) {
             return true;
+        }
+
         return false;
     }
 
