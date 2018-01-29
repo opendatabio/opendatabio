@@ -23,7 +23,7 @@ See our [Wiki page](../../wiki) for details.
 
 ## Install
 ### Prerequisites and versions
-Opendatabio is written in PHP and developed over the Laravel framework version 5.4. 
+Opendatabio is written in PHP and developed over the Laravel framework version 5.5. 
 The minimum supported PHP version is 7.0, which is available from apt-get in Ubuntu 16.04 and Debian 9.
 
 It also requires a working web server and a database. The minimum required version for MySQL is 5.7.6
@@ -38,8 +38,8 @@ but it is suggested for a better user experience. The minimum Pandoc version sup
 
 The background jobs (such as data import/export) may be handled by the program Supervisor. 
 
-The software is being developed and extensively tested using PHP 7.1.7, Apache 2.4.26 and
-MySQL 10.1.25-MariaDB. If you have trouble or questions about other softwares or versions, please
+The software is being developed and extensively tested using PHP 7.2.1, Apache 2.4.29 and
+MySQL 10.1.30-MariaDB. If you have trouble or questions about other softwares or versions, please
 contact our team using the Github repository.
 
 ### Installation instructions
