@@ -418,4 +418,6 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'edit_geometry' => 'Editar geometria',
   'autodetect_blank' => 'É necessário preencher o campo de latitude/longitude ou o campo de geometria antes de tentar o autodetect.',
   'new_picture' => 'Nova imagem',
+  'doi' => 'DOI',
+  'incorrect_doi' => 'O campo DOI não está corretamente informado. Dica: 10.1109/5.771073 é um DOI válido",
 );

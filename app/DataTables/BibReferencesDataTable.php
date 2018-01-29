@@ -32,10 +32,11 @@ class BibReferenceDataTable extends DataTable
         ->addColumn('author', function ($reference) { return $reference->author; })
         ->addColumn('year', function ($reference) { return $reference->year; })
         ->addColumn('title', function ($reference) { return $reference->title; })
+        ->addColumn('doi', function ($reference) { return '<a href="https://dx.doi.org/' . $reference->doi . '">' .  $reference->doi . "</a>"; })
         ->filterColumn('title', function ($query, $keyword) {
             $query->where('bibtex', 'like', ["%{$keyword}%"]);
         })
-        ->rawColumns(['bibkey']);
+        ->rawColumns(['bibkey', 'doi']);
     }
 
     /**
@@ -49,6 +50,7 @@ class BibReferenceDataTable extends DataTable
             ->select([
                 'id',
                 'bibtex',
+                'doi',
             ])->addSelect(DB::raw('odb_bibkey(bibtex) as bibkey'));
 
         return $this->applyScopes($query);
@@ -68,6 +70,7 @@ class BibReferenceDataTable extends DataTable
                 'author' => ['title' => Lang::get('messages.authors'), 'searchable' => false, 'orderable' => false],
                 'year' => ['title' => Lang::get('messages.year'), 'searchable' => false, 'orderable' => false],
                 'title' => ['title' => Lang::get('messages.title'), 'searchable' => true, 'orderable' => false],
+                'doi' => ['title' => Lang::get('messages.doi'), 'searchable' => true, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',

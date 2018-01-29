@@ -24,7 +24,7 @@ class BibReference extends Model
 
     // "cached" entries, so we don't need to parse the bibtex for every call
     protected $entries = null;
-    protected $fillable = ['bibtex'];
+    protected $fillable = ['bibtex', 'doi'];
 
     public function datasets()
     {
@@ -83,6 +83,51 @@ class BibReference extends Model
             return;
         }
         $this->entries = $listener->export();
+    }
+
+    public function getDoiAttribute()
+    {
+        if (!is_null($this->attributes['doi']))
+            return $this->attributes['doi'];
+
+        # falls back to the bibtex "doi" field in case the database column is absent
+        if (is_null($this->entries)) {
+            $this->parseBibtex();
+        }
+        if (count($this->entries) > 0 and array_key_exists('doi', $this->entries[0])) {
+            return $this->entries[0]['doi'];
+        } else {
+            return '';
+        }
+    }
+
+    // NOTE, this may be called as "$newDoi = null" from a newly created resource to guess DOI from bibtex
+    public function setDoi($newDoi) {
+        // if receiving a blank and we have attr set, the user is probably trying to remove the information
+        if ($this->attributes['doi'] and ! $newDoi) {
+            $this->attributes['doi'] = null;
+            return;
+        }
+        // if we are receiving something for $newDoi, use it
+        if ($newDoi) {
+            $this->attributes['doi'] = $newDoi;
+            return;
+        }
+        // else, guess it from the bibTex and fill it
+        if (is_null($this->entries)) {
+            $this->parseBibtex();
+        }
+        if (count($this->entries) > 0 and array_key_exists('doi', $this->entries[0])) {
+            $this->doi = $this->entries[0]['doi'];
+        }
+    }
+
+
+    public static function isValidDoi($doi) {
+        // Regular expression adapted from https://www.crossref.org/blog/dois-and-matching-regular-expressions/
+        if (preg_match('/^10.\d{4,9}\/[-._;()\/:A-Z0-9]+$/i', $doi) == 1)
+            return true;
+        return false;
     }
 
     public function getAuthorAttribute()

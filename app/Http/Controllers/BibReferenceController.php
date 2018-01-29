@@ -122,6 +122,8 @@ class BibReferenceController extends Controller
         ]);
 
         $validator->after(function ($validator) use ($reference, $request) {
+            if ($request->doi and ! BibReference::isValidDoi($request->doi))
+                $validator->errors()->add('doi', Lang::get('messages.incorrect_doi'));
             if ('@' != substr(trim($request->bibtex), 0, 1)) {
                 $validator->errors()->add('bibtex', Lang::get('messages.bibtex_at_error'));
             }
@@ -137,6 +139,7 @@ class BibReferenceController extends Controller
         }
 
         $reference->bibtex = $request->bibtex;
+        $reference->setDoi($request->doi);
         $reference->save();
 
         return redirect('references/'.$id)->withStatus(Lang::get('messages.saved'));

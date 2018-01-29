@@ -413,4 +413,6 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'edit_geometry' => 'Edit geometry',
   'autodetect_blank' => 'You must fill the geometry or latitude/longite fields before clicking autodetect',
   'new_picture' => 'New Picture',
+  'doi' => 'DOI',
+  'incorrect_doi' => 'The DOI field seems to be malformed. Tip: 10.1109/5.771073 is a valid DOI',
 );
