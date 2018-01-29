@@ -66,10 +66,14 @@ class ImportLocations extends AppJob
         $altitude = array_key_exists('altitude', $location) ? $location['altitude'] : null;
         $datum = array_key_exists('datum', $location) ? $location['datum'] : null;
         $notes = array_key_exists('notes', $location) ? $location['notes'] : null;
+        $lat = array_key_exists('lat', $location) ? $location['lat'] : null;
+        $long = array_key_exists('long', $location) ? $location['long'] : null;
+        $startx = array_key_exists('startx', $location) ? $location['startx'] : null;
+        $starty = array_key_exists('starty', $location) ? $location['starty'] : null;
         $x = array_key_exists('x', $location) ? $location['x'] : null;
         $y = array_key_exists('y', $location) ? $location['y'] : null;
         $geom = array_key_exists('geom', $location) ? $location['geom'] : null;
-        if ((is_null($x) or is_null($y)) and is_null($geom)) {
+        if ((is_null($lat) or is_null($long)) and is_null($geom)) {
             $this->appendLog("WARNING: Position for location $name not available. Skipping import...");
 
             return;
@@ -100,7 +104,7 @@ class ImportLocations extends AppJob
         }
         // Create geom from lat/long
         if (is_null($geom)) {
-            $geom = "POINT ($y $x)";
+            $geom = "POINT ($long $lat)";
         }
         // TODO: several other validation checks
         // Is this location already imported?
@@ -132,6 +136,10 @@ class ImportLocations extends AppJob
             'altitude' => $altitude,
             'datum' => $datum,
             'notes' => $notes,
+            'startx' => $startx,
+            'starty' => $starty,
+            'x' => $x,
+            'y' => $y,
         ]);
         if (0 !== $parent) {
             $location->parent_id = $parent;
