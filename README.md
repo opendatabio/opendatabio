@@ -20,6 +20,10 @@ See our [Wiki page](../../wiki) for details.
 
 ## Install
 ### Prerequisites and versions
+OpenDataBio software is supported in Debian, Ubuntu and ArchLinux distributions of Linux. You can install it on
+a Mac-OS X by following some [custom instructions](../../README_macInstallationNotes.md), but this is not supported.
+We have no plans for Windows support.
+
 Opendatabio is written in PHP and developed over the Laravel framework version 5.5. 
 The minimum supported PHP version is 7.0, which is available from apt-get in Ubuntu 16.04 and Debian 9.
 
