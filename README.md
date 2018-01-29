@@ -7,11 +7,8 @@ one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
 A companion R package is being developed [here](https://github.com/opendatabio/opendatabio-r).
 
 ## Authors
-**Coordinator:** 
-- Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil
-
-**Collaborators:**
-- Andre Chalom (andrechalom@gmail.com) 
+- Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil - coordination
+- Andre Chalom (andrechalom@gmail.com) - main developer
 - Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
 
 ## Funding & Support
