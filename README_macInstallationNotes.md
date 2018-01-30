@@ -134,10 +134,10 @@ post_max_size should be at least 30M!
 upload_max_filesize should be at least 30M!
 ```
 #### OpenDataBio
+- Install opendatabio, carefully. Check all configuration steps:
 ```
-/Users/beto/opendatabio/php install
+/Users/YOURUSERNAME/opendatabio/php install
 ```
-- You may get a problem with supervisor (create the file informed by the installer manually if that is the case)
 - In /usr/local/etc/httpd/httpd.conf add (adjust according to your installation path)
 ```
 <IfModule alias_module>
@@ -152,4 +152,39 @@ upload_max_filesize should be at least 30M!
 ```
 - Restart apache
 - Check if working [opendatabio](http://localhost/opendatabio)
+#### Supervisor configuration
+- Supervisor is required for submitting Jobs and importing data. You may get a problem during the OpenDataBio installation saying the supervisor worker file was not found, try the following and then run ''php install'' step again:
+     - the default configuration file o supervisor will be  ''/usr/local/etc/supervisord.ini''. Check the last line of this filed and where it points to 
+     - create a symlink to where opendatabio expects to find this file (created the folder supervisor.d as needed):
+     
+            ln -s /usr/local/etc/supervisord.conf /etc/supervisor.d/supervisord.ini
+            
+     - create a opendatabio supervisord conf file:
+     
+            mkdir /usr/local/etc/supervisord.d  #if not present
+            sudo nano /usr/local/etc/supervisord.d/opendatabio-worker.ini #will open an empty file
+            
+     - add the following content to this file (adjust accordingly)
+     
+            ;--------------
+            [program:opendatabio-worker]
+            process_name=%(program_name)s_%(process_num)02d
+            command=php /Users/YOURUSERNAME/opendatabio/app/artisan queue:work --sleep=3 --tries=1 --timeout=0 --daemon
+            autostart=true
+            autorestart=true
+            user=beto
+            numprocs=8
+            redirect_stderr=true
+            stdout_logfile=/Users/YOURUSERNAME/opendatabio/app/storage/logs/supervisor.log
+            ;--------------
+            
+     - Add symlink to where opendatabio will look for this file
+     
+            ln -s /usr/local/etc/supervisord.conf /etc/supervisor.d/supervisord.ini
+            
+     - You may need to create the log folder:
+     
+            mkdir /Users/YOURUSERNAME/opendatabio/app/storage
+            mkidr /Users/YOURUSERNAME/opendatabio/app/storage/logs
+            
 
