@@ -478,19 +478,21 @@ class Installer
         echo 'Do you wish to review the sample Supervisor worker file? yes/[no] ';
         $line = trim(fgets(STDIN));
         if ('y' == $line or 'yes' == $line) {
+            // Since we are inside /app directory, we need to strip it to find the correct root directory
+            $DIR = dirname(__DIR__);
             echo "You should store the following lines in a file called
                 /etc/supervisor/conf.d/opendatabio-worker.conf (Debian/Ubuntu) or 
                 /etc/supervisor.d/opendatabio-worker.ini (ArchLinux)\n(You will need root access for that)\n\n";
             echo ";--------------\n";
             echo"[program:opendatabio-worker]\n";
             echo "process_name=%(program_name)s_%(process_num)02d\n";
-            echo 'command=php '.__DIR__."/artisan queue:work --sleep=3 --tries=1 --timeout=0 --daemon\n";
+            echo 'command=php '.$DIR."/artisan queue:work --sleep=3 --tries=1 --timeout=0 --daemon\n";
             echo "autostart=true\n";
             echo "autorestart=true\n";
             echo 'user='.posix_getpwuid(getmyuid())['name']."\n";
             echo "numprocs=8\n";
             echo "redirect_stderr=true\n";
-            echo 'stdout_logfile='.__DIR__."/storage/logs/supervisor.log\n";
+            echo 'stdout_logfile='.$DIR."/storage/logs/supervisor.log\n";
             echo ";--------------\n\n";
         }
     }
