@@ -87,8 +87,9 @@
 	<input type="radio" name="latO" value="0" @if (!old('latO', isset($location) ? $location->latO : 1)) checked @endif > S
 
             </div>
-<br>
-    <label for="lat1" class="col-sm-3 control-label mandatory">
+</div>
+<div class="form-group">
+    <label for="long1" class="col-sm-3 control-label mandatory">
 @lang('messages.longitude')
 </label>
 	    <div class="col-sm-6">
@@ -155,7 +156,7 @@
     value="{{ old('parent_autocomplete', (isset($location) and $location->parent) ? $location->parent->fullname : null) }}">
     <input type="hidden" name="parent_id" id="parent_id"
     value="{{ old('parent_id', isset($location) ? $location->parent_id : null) }}">
-    <input type="text" name="parent_type" id="parent_type" value="{{old('parent_type', isset($location) ? $location->parent->adm_level : '')}}">
+    <input type="hidden" name="parent_type" id="parent_type" value="{{old('parent_type', isset($location) ? $location->parent->adm_level : '')}}">
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">

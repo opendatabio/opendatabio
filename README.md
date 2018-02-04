@@ -7,11 +7,8 @@ one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
 A companion R package is being developed [here](https://github.com/opendatabio/opendatabio-r).
 
 ## Authors
-**Coordinator:** 
-- Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil
-
-**Collaborators:**
-- Andre Chalom (andrechalom@gmail.com) 
+- Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil - coordination
+- Andre Chalom (andrechalom@gmail.com) - main developer
 - Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
 
 ## Funding & Support
@@ -23,7 +20,11 @@ See our [Wiki page](../../wiki) for details.
 
 ## Install
 ### Prerequisites and versions
-Opendatabio is written in PHP and developed over the Laravel framework version 5.4. 
+OpenDataBio software is supported in Debian, Ubuntu and ArchLinux distributions of Linux. You can install it on
+a Mac-OS X by following some [custom instructions](../../README_macInstallationNotes.md), but this is not supported.
+We have no plans for Windows support.
+
+Opendatabio is written in PHP and developed over the Laravel framework version 5.5. 
 The minimum supported PHP version is 7.0, which is available from apt-get in Ubuntu 16.04 and Debian 9.
 
 It also requires a working web server and a database. The minimum required version for MySQL is 5.7.6
@@ -38,8 +39,8 @@ but it is suggested for a better user experience. The minimum Pandoc version sup
 
 The background jobs (such as data import/export) may be handled by the program Supervisor. 
 
-The software is being developed and extensively tested using PHP 7.1.7, Apache 2.4.26 and
-MySQL 10.1.25-MariaDB. If you have trouble or questions about other softwares or versions, please
+The software is being developed and extensively tested using PHP 7.2.1, Apache 2.4.29 and
+MySQL 10.1.30-MariaDB. If you have trouble or questions about other softwares or versions, please
 contact our team using the Github repository.
 
 ### Installation instructions

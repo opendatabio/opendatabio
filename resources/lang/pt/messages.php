@@ -5,7 +5,7 @@ return array (
   'login' => 'Login',
   'register' => 'Registrar',
   'version' => 'Versão :version',
-  'tag' => 'Um sistema moderno para armazenagento e gestão de dados de plantas - florística, ecologia e monitoramento',
+  'tag' => 'Um sistema moderno para armazenamento e gestão de dados de plantas - florística, ecologia e monitoramento',
   'docs' => 'Documentação',
   'password' => 'Senha',
   'remember' => 'Lembre deste login',
@@ -418,4 +418,6 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'edit_geometry' => 'Editar geometria',
   'autodetect_blank' => 'É necessário preencher o campo de latitude/longitude ou o campo de geometria antes de tentar o autodetect.',
   'new_picture' => 'Nova imagem',
+  'doi' => 'DOI',
+  'incorrect_doi' => 'O campo DOI não está corretamente informado. Dica: 10.1109/5.771073 é um DOI válido',
 );

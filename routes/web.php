@@ -52,6 +52,7 @@ Route::resource('projects', 'ProjectController');
 Route::resource('datasets', 'DatasetController');
 
 Route::get('locations/{id}/plants', 'PlantController@indexLocations');
+Route::get('locations/{id}/plants/create', 'PlantController@createLocations');
 Route::get('taxons/{id}/plants', 'PlantController@indexTaxons');
 Route::get('projects/{id}/plants', 'PlantController@indexProjects');
 Route::get('persons/{id}/plants', 'PlantController@indexPersons');
