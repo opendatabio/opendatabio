@@ -30,19 +30,6 @@
     <input type="text" name="name" id="name" class="form-control" value="{{ old('name', isset($form) ? $form->name : null) }}">
             </div>
 </div>
-<?php $i = 0; ?>
-<div class="form-group">
-    <label for="lalala" class="col-sm-3 control-label mandatory">
-@lang('messages.lalala')
-</label>
-    <div class="col-sm-6">
-    <input type="text" name="trait_autocomplete[{{$i}}]" id="trait_autocomplete[{{$i}}]" class="form-control autocomplete"
-    value="{{ old('trait_autocomplete.'.$i, (isset($form) and $form->traits) ? $form->getTrait($i)->name : null) }}">
-    <input type="hidden" name="trait_id[{{$i}}" id="trait_id[{{$i}}]"
-    value="{{ old('trait_id.'.$i, (isset($form) and $form->trait) ? $form->getTrait($i)->id : null) }}">
-    </div>
-</div>
-
 <div class="form-group">
     <label for="measured_type" class="col-sm-3 control-label mandatory">
 @lang('messages.form_type')
@@ -64,6 +51,34 @@
     </div>
   </div>
 </div>
+<?php 
+// Loop and create boxes for all traits
+// how many traits do we have? 3 for default
+$length = isset($form) ? length($form->traits) : 3;
+for ($i = 1; $i <= $length; $i++) {
+?>
+<div class="form-group">
+    <label for="lalala" class="col-sm-3 control-label mandatory">
+@lang('messages.trait') {{ $i }}
+</label>
+    <div class="col-sm-6" id="trait.{{$i}}">
+    <input type="text" name="trait_autocomplete[{{$i}}]" id="trait_autocomplete[{{$i}}]" class="form-control autocomplete"
+    value="{{ old('trait_autocomplete.'.$i, (isset($form) and $form->traits) ? $form->getTrait($i)->name : null) }}">
+    <input type="hidden" name="trait_id[{{$i}}" id="trait_id[{{$i}}]"
+    value="{{ old('trait_id.'.$i, (isset($form) and $form->trait) ? $form->getTrait($i)->id : null) }}">
+    </div>
+    <div class="col-sm-2">
+        <i class="glyphicon glyphicon-minus"></i>
+        @if ($i != 1)
+        <i class="glyphicon glyphicon-chevron-up"></i>
+        @endif
+        @if ($i != $length)
+        <i class="glyphicon glyphicon-chevron-down"></i>
+        @endif
+    </div>
+</div>
+<?php } ?>
+
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success" name="submit" value="submit">
@@ -82,6 +97,7 @@
 @endsection
 @push ('scripts')
 <script>
+
 $(document).ready(function() {
     $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
     $("#link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
