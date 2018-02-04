@@ -106,6 +106,15 @@
 @lang('messages.plants')
     </a>
 </div>
+@else
+@can ('create', App\Plant::class)
+<div class="col-sm-4">
+<a href="{{url ('locations/' . $location->id . '/plants/create')}}" class="btn btn-default">
+    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.create_plant')
+</a>
+</div>
+@endcan
 @endif
 
 @can ('update', $location)

@@ -71,7 +71,7 @@ class PlantController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
+    public function create(Location $location = null)
     {
         if (!Auth::user()) {
             return view('common.unauthorized');
@@ -84,7 +84,15 @@ class PlantController extends Controller
             return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
         }
 
-        return view('plants.create', compact('persons', 'projects', 'herbaria'));
+        return view('plants.create', compact('persons', 'projects', 'herbaria', 'location'));
+    }
+
+    // Route for quicly creating a plant from a Location page
+    public function createLocations($id)
+    {
+        $location = Location::findOrFail($id);
+
+        return $this->create($location);
     }
 
     public function customValidate(Request $request, Plant $plant = null)

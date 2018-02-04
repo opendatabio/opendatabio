@@ -34,8 +34,18 @@
 @else
 		    <form action="{{ url('plants')}}" method="POST" class="form-horizontal">
 @endif
-		     {{ csrf_field() }}
-<input type="hidden" id="location_type" name="location_type" value ="{{old('location_type', isset($plant) ? $plant->location->adm_level : '') }}">
+             {{ csrf_field() }}
+<?php 
+// sets here the location type, name and id, as this is somewhat convoluted. This must take into account:
+// - are we editing a plant?
+// - are we adding a plant to a registered location?
+
+$ltype = isset($plant) ? $plant->location->adm_level : (is_null($location) ? '' : $location->adm_level); 
+$lname = (isset($plant) and $plant->location) ? $plant->location->fullname : (is_null($location) ? '' : $location->fullname);
+$lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($location) ? '' : $location->id);
+?>
+
+<input type="hidden" id="location_type" name="location_type" value ="{{old('location_type', $ltype)}}">
 <!-- name -->
 <div class="form-group">
     <label for="tag" class="col-sm-3 control-label mandatory">
@@ -58,10 +68,11 @@
 </label>
         <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
+
     <input type="text" name="location_autocomplete" id="location_autocomplete" class="form-control autocomplete"
-    value="{{ old('location_autocomplete', (isset($plant) and $plant->location) ? $plant->location->fullname : null) }}">
+    value="{{ old('location_autocomplete', $lname) }}">
     <input type="hidden" name="location_id" id="location_id"
-    value="{{ old('location_id', isset($plant) ? $plant->location_id : null) }}">
+    value="{{ old('location_id', $lid) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
