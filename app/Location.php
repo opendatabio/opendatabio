@@ -36,10 +36,10 @@ class Location extends Node
     }
 
     // quick way to get the World object
-    public static function world() {
+    public static function world()
+    {
         return self::withoutGlobalScopes()->where('adm_level', -1)->get()->first();
     }
-
 
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?

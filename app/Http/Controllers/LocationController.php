@@ -260,7 +260,7 @@ class LocationController extends Controller
         if ($request->parent_id) {
             $newloc->parent_id = $request->parent_id;
         }
-        if ($request->adm_level === 0) {
+        if (0 === $request->adm_level) {
             $world = Location::world();
             $newloc->parent_id = $world->id;
         }
@@ -387,7 +387,7 @@ class LocationController extends Controller
         }
 
         // sets the parent_id in the request, to be picked up by the next try-catch:
-        if ($request->adm_level === 0) {
+        if (0 === $request->adm_level) {
             $world = Location::world();
             $request->parent_id = $world->id;
         }
