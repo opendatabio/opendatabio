@@ -260,6 +260,10 @@ class LocationController extends Controller
         if ($request->parent_id) {
             $newloc->parent_id = $request->parent_id;
         }
+        if ($request->adm_level === 0) {
+            $world = Location::world();
+            $newloc->parent_id = $world->id;
+        }
         if ($request->uc_id and $request->adm_level > 99) {
             $newloc->uc_id = $request->uc_id;
         }
@@ -380,6 +384,12 @@ class LocationController extends Controller
         }
         if ($request->uc_id and $request->adm_level > 99) {
             $location->uc_id = $request->uc_id;
+        }
+
+        // sets the parent_id in the request, to be picked up by the next try-catch:
+        if ($request->adm_level === 0) {
+            $world = Location::world();
+            $request->parent_id = $world->id;
         }
 
         if ($request->parent_id and $request->parent_id != $location->parent_id) {

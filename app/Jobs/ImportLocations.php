@@ -48,7 +48,7 @@ class ImportLocations extends AppJob
                 $this->import($location);
             } catch (\Exception $e) {
                 $this->setError();
-                $this->appendLog('Exception '.$e->getMessage().' on location '.$location['name']);
+                $this->appendLog('Exception '.$e->getMessage(). ' at '. $e->getFile() . '+' . $e->getLine() . ' on location '.$location['name']);
             }
         }
     }
@@ -106,6 +106,12 @@ class ImportLocations extends AppJob
         if (is_null($geom)) {
             $geom = "POINT ($long $lat)";
         }
+
+        if ($adm_level === 0) {
+            $world = Location::world();
+            $parent = $world->id;
+        }
+
         // TODO: several other validation checks
         // Is this location already imported?
         if ($parent) {
@@ -140,13 +146,10 @@ class ImportLocations extends AppJob
             'starty' => $starty,
             'x' => $x,
             'y' => $y,
+            // forces null if parent / uc was explicitly passed as zero
+            'parent_id' => $parent === 0 ? null : $parent,
+            'uc_id' => $uc === 0 ? null : $uc,
         ]);
-        if (0 !== $parent) {
-            $location->parent_id = $parent;
-        }
-        if (0 !== $uc) {
-            $location->uc_id = $uc;
-        }
         $location->geom = $geom;
 
         $location->save();

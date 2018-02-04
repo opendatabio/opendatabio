@@ -10,6 +10,7 @@ namespace App;
 use Baum\Node;
 use DB;
 use Lang;
+use Illuminate\Database\Eloquent\Builder;
 
 class Location extends Node
 {
@@ -24,6 +25,21 @@ class Location extends Node
     protected $long;
     protected $geom_array = [];
     protected $isSimplified = false;
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::addGlobalScope('dontShowWorld', function (Builder $builder) {
+            return $builder->where('adm_level', '<>', -1);
+        });
+    }
+
+    // quick way to get the World object
+    public static function world() {
+        return self::withoutGlobalScopes()->where('adm_level', -1)->get()->first();
+    }
+
 
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
