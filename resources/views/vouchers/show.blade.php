@@ -55,7 +55,7 @@
     <p><strong>
     @lang('messages.plant')
 : </strong>  
-    <a href="{{url('plants/' . $voucher->parent_id)}}">{{$voucher->parent->full_name}}</a>
+    <a href="{{url('plants/' . $voucher->parent_id)}}">{{$voucher->parent->full_name}}</a> {{ $voucher->parent->location ? $voucher->parent->location->coordinatesSimple : ''}}
     </p>
 @elseif ($voucher->parent instanceof App\Location)
     <p><strong>

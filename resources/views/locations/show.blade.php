@@ -10,7 +10,7 @@
                 <div class="panel-body">
 		    <strong>
 @lang('messages.location_name')
-:</strong> {{ $location->name }}
+:</strong> {{ $location->name }} {{ $location->coordinatesSimple }} 
 <br>
 		    <strong>
 @lang('messages.adm_level')
