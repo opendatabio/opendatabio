@@ -61,7 +61,7 @@ class LocationsDataTable extends DataTable
             'locations.y',
             'locations.startx',
             'locations.starty',
-        ])->withCount(['plants', 'vouchers', 'measurements', 'pictures'])->withGeom();
+        ])->withCount(['plants', 'vouchers', 'measurements', 'pictures'])->withGeom()->noWorld();
 
         return $this->applyScopes($query);
     }

@@ -26,19 +26,15 @@ class Location extends Node
     protected $geom_array = [];
     protected $isSimplified = false;
 
-    protected static function boot()
+    public function scopeNoWorld($query)
     {
-        parent::boot();
-
-        static::addGlobalScope('dontShowWorld', function (Builder $builder) {
-            return $builder->where('adm_level', '<>', -1);
-        });
+        return $query->where('adm_level', '<>', -1);
     }
 
     // quick way to get the World object
     public static function world()
     {
-        return self::withoutGlobalScopes()->where('adm_level', -1)->get()->first();
+        return self::where('adm_level', -1)->get()->first();
     }
 
     // for use when receiving this as part of a morph relation
@@ -128,7 +124,9 @@ class Location extends Node
     {
         $str = '';
         foreach ($this->getAncestors() as $ancestor) {
-            $str .= $ancestor->name.' > ';
+            if ($ancestor->adm_level != '-1') {
+                $str .= $ancestor->name.' > ';
+            }
         }
 
         return $str.$this->name;
