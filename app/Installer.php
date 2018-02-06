@@ -537,7 +537,7 @@ class Installer
             'PROXY_URL' => 'Proxy host? (Leave blank for no proxy)',
             'PROXY_PORT' => 'Proxy port?',
             'PROXY_USER' => 'Proxy username? (Leave blank if not required)',
-            'PROXY_PASSWD' => 'Proxy password?',
+            'PROXY_PASSWORD' => 'Proxy password?',
             'GMAPS_API_KEY' => 'Google Maps API key?',
             'MOBOT_API_KEY' => 'Tropicos.org API key?',
             'MAIL_HOST' => 'E-mail host?',
