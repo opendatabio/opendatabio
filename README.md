@@ -12,7 +12,7 @@ A companion R package is being developed [here](https://github.com/opendatabio/o
 - Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
 
 ## Funding & Support
-This project has recieved support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home).
+This project has received support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home).
 
 ## Overview
 This project aims to provide a flexible but robust framework for storing, analysing and exporting biological data.
@@ -21,7 +21,7 @@ See our [Wiki page](../../wiki) for details.
 ## Install
 ### Prerequisites and versions
 OpenDataBio software is supported in Debian, Ubuntu and ArchLinux distributions of Linux. You can install it on
-a Mac-OS X by following some [custom instructions](../../README_macInstallationNotes.md), but this is not supported.
+a Mac-OS X by following some [custom instructions](../../README_macInstallationNotes.md), but this is not officially supported.
 We have no plans for Windows support.
 
 Opendatabio is written in PHP and developed over the Laravel framework version 5.5. 
@@ -117,6 +117,13 @@ to the ini file, and export it before using the php install command. For example
 ```bash
 $ export PHPRC=/etc/php/7.0/apache2/php.ini
 $ php install
+```
+
+- If you receive errors during the random seeding of the database, you may attempt to remove
+the database entirely and rebuild it. Of course, do not run this on a production server.
+
+```bash
+$ php artisan migrate:fresh && php artisan db:seed
 ```
 
 ### Post-install configurations
