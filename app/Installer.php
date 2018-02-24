@@ -172,13 +172,13 @@ class Installer
 
             return 1;
         }
-        if (0 == sizeof($version)) { // we have MySQL
-            if (version_compare($version[0], $mysqlmin, '<')) {
+        if (!$ismariadb) { // we have MySQL
+            if (version_compare($version[2], $mysqlmin, '<')) {
                 echo $this->c($name.' version is not compatible! Please upgrade!', 'danger');
 
                 return 1;
             }
-            if (version_compare($version[0], $mysqlrecommended, '<')) {
+            if (version_compare($version[2], $mysqlrecommended, '<')) {
                 echo $this->c($name.' version is below recommended...', 'warning');
 
                 return 1;
