@@ -105,6 +105,15 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return $this->belongsTo(Location::class);
     }
 
+    // with access to the location geom field
+    public function getLocationWithGeomAttribute()
+    {
+        // This is ugly as hell, but simpler alternatives are "intercepted" by Baum, which does not respect the added scope...
+        $loc = $this->location;
+        if (!$loc) return;
+        return Location::withGeom()->addSelect('id','name')->find($loc->id);
+    }
+
     public function project()
     {
         return $this->belongsTo(Project::class);

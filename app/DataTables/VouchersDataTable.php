@@ -41,9 +41,16 @@ class VouchersDataTable extends DataTable
             ));
         })
         ->editColumn('date', function ($voucher) { return $voucher->formatDate; })
-//        ->filterColumn('title', function ($query, $keyword) {
-//            $query->where('bibtex', 'like', ["%{$keyword}%"]);
-//        })
+        ->addColumn('measurements', function ($voucher) {return $voucher->measurements_count; })
+        ->addColumn('location', function ($voucher) {
+            if (! $voucher->parent)
+                return;
+            if ($voucher->locationWithGeom)
+                return $voucher->locationWithGeom->name . ' ' . $voucher->locationWithGeom->coordinatesSimple;
+            // else, parent is a plant
+            if ($voucher->parent->locationWithGeom)
+                return $voucher->parent->locationWithGeom->name . ' ' . $voucher->parent->locationWithGeom->coordinatesSimple;
+        })
         ->rawColumns(['number', 'identification']);
     }
 
@@ -63,7 +70,7 @@ class VouchersDataTable extends DataTable
                 'parent_id',
                 'parent_type',
                 'date',
-            ]);
+            ])->withCount('measurements');
         // customizes the datatable query
         if ($this->location) {
             $query = $query->where('parent_type', 'App\Location')->where('parent_id', '=', $this->location);
@@ -90,7 +97,7 @@ class VouchersDataTable extends DataTable
                     'parent_id',
                     'parent_type',
                     'date',
-                ]);
+                ])->withCount('measurements');
             $query = $query2->where('person_id', $person)->union($q1);
         }
 
@@ -112,6 +119,8 @@ class VouchersDataTable extends DataTable
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
                 'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => false, 'orderable' => false],
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
+                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
+                'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Brtip',
@@ -125,7 +134,7 @@ class VouchersDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1, 4, 5],
+                    'targets' => [1, 4, 5, 7],
                     'visible' => false,
                 ]],
             ]);

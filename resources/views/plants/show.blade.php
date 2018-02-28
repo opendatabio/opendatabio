@@ -56,7 +56,7 @@
 @lang('messages.location')
 : </strong>  
 @if($plant->location)
-<a href="{{url('locations/' . $plant->location->id)}}">{{$plant->location->name}}</a>
+<a href="{{url('locations/' . $plant->location->id)}}">{{$plant->location->name}}</a> {{ $plant->locationWithGeom->coordinatesSimple }}
 @else
     Unknown location
 @endif

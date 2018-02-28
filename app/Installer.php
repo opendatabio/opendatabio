@@ -172,13 +172,13 @@ class Installer
 
             return 1;
         }
-        if (0 == sizeof($version)) { // we have MySQL
-            if (version_compare($version[0], $mysqlmin, '<')) {
+        if (!$ismariadb) { // we have MySQL
+            if (version_compare($version[2], $mysqlmin, '<')) {
                 echo $this->c($name.' version is not compatible! Please upgrade!', 'danger');
 
                 return 1;
             }
-            if (version_compare($version[0], $mysqlrecommended, '<')) {
+            if (version_compare($version[2], $mysqlrecommended, '<')) {
                 echo $this->c($name.' version is below recommended...', 'warning');
 
                 return 1;
@@ -537,7 +537,7 @@ class Installer
             'PROXY_URL' => 'Proxy host? (Leave blank for no proxy)',
             'PROXY_PORT' => 'Proxy port?',
             'PROXY_USER' => 'Proxy username? (Leave blank if not required)',
-            'PROXY_PASSWD' => 'Proxy password?',
+            'PROXY_PASSWORD' => 'Proxy password?',
             'GMAPS_API_KEY' => 'Google Maps API key?',
             'MOBOT_API_KEY' => 'Tropicos.org API key?',
             'MAIL_HOST' => 'E-mail host?',
