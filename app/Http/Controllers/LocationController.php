@@ -93,7 +93,7 @@ class LocationController extends Controller
      */
     public function create()
     {
-        $locations = Location::all()->noWorld();
+        $locations = Location::noWorld()->get();
         $uc_list = Location::ucs()->get();
 
         return view('locations.create', compact('locations', 'uc_list'));
