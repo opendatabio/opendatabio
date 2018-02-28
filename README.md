@@ -87,6 +87,8 @@ RedirectMatch ^/$ /opendatabio/
 
 Remember to restart the Apache server after editing the files.
 
+The installation script will download the [Composer](https://getcomposer.org/) dependency manager, and all required PHP libraries. However, if your server is behind a proxy, you should install and configure Composer independently.
+
 Finally, change directory to your opendatabio directory and run 
 ```
 php install
