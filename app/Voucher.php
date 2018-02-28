@@ -113,8 +113,11 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     {
         // This is ugly as hell, but simpler alternatives are "intercepted" by Baum, which does not respect the added scope...
         $loc = $this->parent;
-        if (!$loc or get_class($loc) != Location::class) return;
-        return Location::withGeom()->addSelect('id','name')->find($loc->id);
+        if (!$loc or Location::class != get_class($loc)) {
+            return;
+        }
+
+        return Location::withGeom()->addSelect('id', 'name')->find($loc->id);
     }
 
     public function herbaria()

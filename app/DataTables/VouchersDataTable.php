@@ -43,13 +43,16 @@ class VouchersDataTable extends DataTable
         ->editColumn('date', function ($voucher) { return $voucher->formatDate; })
         ->addColumn('measurements', function ($voucher) {return $voucher->measurements_count; })
         ->addColumn('location', function ($voucher) {
-            if (! $voucher->parent)
+            if (!$voucher->parent) {
                 return;
-            if ($voucher->locationWithGeom)
-                return $voucher->locationWithGeom->name . ' ' . $voucher->locationWithGeom->coordinatesSimple;
+            }
+            if ($voucher->locationWithGeom) {
+                return $voucher->locationWithGeom->name.' '.$voucher->locationWithGeom->coordinatesSimple;
+            }
             // else, parent is a plant
-            if ($voucher->parent->locationWithGeom)
-                return $voucher->parent->locationWithGeom->name . ' ' . $voucher->parent->locationWithGeom->coordinatesSimple;
+            if ($voucher->parent->locationWithGeom) {
+                return $voucher->parent->locationWithGeom->name.' '.$voucher->parent->locationWithGeom->coordinatesSimple;
+            }
         })
         ->rawColumns(['number', 'identification']);
     }

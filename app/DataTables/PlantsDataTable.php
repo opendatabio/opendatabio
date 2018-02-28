@@ -40,12 +40,13 @@ class PlantsDataTable extends DataTable
         })
         ->editColumn('date', function ($plant) { return $plant->formatDate; })
         ->addColumn('measurements', function ($plant) {return $plant->measurements_count; })
-        ->addColumn('location', function ($plant) { 
+        ->addColumn('location', function ($plant) {
             $loc = $plant->locationWithGeom;
-            if (!$loc) { 
-                return; 
+            if (!$loc) {
+                return;
             }
-            return $loc->coordinatesSimple; 
+
+            return $loc->coordinatesSimple;
         })
         ->rawColumns(['tag', 'identification']);
     }

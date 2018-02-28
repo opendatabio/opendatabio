@@ -59,13 +59,16 @@ class Location extends Node
     public function getLatLong()
     {
         // if the "cached" values are already set, do nothing
-        if ($this->long or $this->lat) return;
+        if ($this->long or $this->lat) {
+            return;
+        }
         // for points, extract directly
-        if ($this->geomType == "POINT") {
+        if ('POINT' == $this->geomType) {
             $point = substr($this->geom, 6, -1);
             $pos = strpos($point, ' ');
             $this->long = substr($point, 0, $pos);
             $this->lat = substr($point, $pos + 1);
+
             return;
         }
         // all others, extract from centroid
@@ -89,19 +92,21 @@ class Location extends Node
     {
         $this->getLatLong();
         $letter = $this->lat > 0 ? ' N' : ' S';
-        return $this->lat1 . '&#176;' . $this->lat2 . '\'' . $this->lat3 . '\'\' ' . $letter;
+
+        return $this->lat1.'&#176;'.$this->lat2.'\''.$this->lat3.'\'\' '.$letter;
     }
 
     public function getLongitudeSimpleAttribute()
     {
         $this->getLatLong();
         $letter = $this->long > 0 ? ' E' : ' W';
-        return $this->long1 . '&#176;' . $this->long2 . '\'' . $this->long3 . '\'\' ' . $letter;
+
+        return $this->long1.'&#176;'.$this->long2.'\''.$this->long3.'\'\' '.$letter;
     }
 
-    public function getCoordinatesSimpleAttribute() 
+    public function getCoordinatesSimpleAttribute()
     {
-        return '(' . $this->latitudeSimple . ', ' . $this->longitudeSimple . ')';
+        return '('.$this->latitudeSimple.', '.$this->longitudeSimple.')';
     }
 
     // query scope for conservation units

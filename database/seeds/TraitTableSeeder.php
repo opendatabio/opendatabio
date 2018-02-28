@@ -31,18 +31,18 @@ class TraitsTableSeeder extends Seeder
             $type = $faker->numberBetween(0, 6);
             if (6 == $type) {
                 $type = 7;
-	    }
-	    $export_name = strtolower($trait.'_'.$person);
-	    if (!ODBTrait::where('export_name', $export_name)->count()) {
-            $t = ODBTrait::create([
+            }
+            $export_name = strtolower($trait.'_'.$person);
+            if (!ODBTrait::where('export_name', $export_name)->count()) {
+                $t = ODBTrait::create([
                 'type' => $type,
                 'export_name' => $export_name,
                 'unit' => $type < 2 ? $units->random() : null,
                 'range_min' => $type < 2 ? $faker->numberBetween(-200, 200) : null,
                 'range_max' => $type < 2 ? $faker->numberBetween(400, 1000) : null,
                 'link_type' => 7 == $type ? collect(ODBTrait::LINK_TYPES)->random() : null,
-	]);
-	}
+    ]);
+            }
             UserTranslation::create(['translatable_id' => $t->id,
                 'translatable_type' => 'App\\ODBTrait',
                 'language_id' => '1',
