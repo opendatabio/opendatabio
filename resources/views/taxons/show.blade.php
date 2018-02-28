@@ -56,7 +56,9 @@
 <p><strong>
 @lang('messages.valid_status')
 : </strong> 
-@if ($taxon->valid) 
+@if ($taxon->author_id)
+@lang ('messages.unpublished')
+@elseif ($taxon->valid) 
 @lang ('messages.isvalid')
 @else
         @lang ('messages.notvalid')
@@ -127,9 +129,22 @@
 				</a>
 			    </div>
 @endcan
+    @can ('create', App\Picture::class)
+<div class="col-sm-6">
+    <a href="{{ url('taxons/'. $taxon->id. '/pictures/create')  }}" class="btn btn-success">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.create_picture')
+    </a>
+</div>
+ @endcan
                 </div>
             </div>
         </div>
+
+@if ($taxon->pictures->count())
+{!! View::make('pictures.index', ['pictures' => $taxon->pictures]) !!}
+@endif
+
 <!-- Other details (specialist, herbarium, collects, etc?) -->
             <div class="panel panel-default">
                 <div class="panel-heading">

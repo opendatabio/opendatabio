@@ -30,15 +30,16 @@ class LocationsDataTable extends DataTable
         })
         ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm.'.$location->adm_level); })
         ->addColumn('full_name', function ($location) {return $location->full_name; })
-        ->addColumn('plants', function ($location) {return $location->plants_count; })
-        ->addColumn('vouchers', function ($location) {return $location->vouchers_count; })
-        ->addColumn('measurements', function ($location) {return $location->measurements_count; })
+        ->addColumn('plants', function ($location) {return '<a href="'.url('locations/'.$location->id.'/plants').'">'.$location->plants_count.'</a>'; })
+        ->addColumn('vouchers', function ($location) {return '<a href="'.url('locations/'.$location->id.'/vouchers').'">'.$location->vouchers_count.'</a>'; })
+        ->addColumn('measurements', function ($location) {return '<a href="'.url('locations/'.$location->id.'/measurements').'">'.$location->measurements_count.'</a>'; })
+        ->addColumn('pictures', function ($location) {return '<a href="'.url('locations/'.$location->id).'">'.$location->pictures_count.'</a>'; })
         ->addColumn('latitude', function ($location) {return $location->latitudeSimple; })
         ->addColumn('longitude', function ($location) {return $location->longitudeSimple; })
         ->addColumn('parent', function ($location) {
             return empty($location->parent) ? '' : $location->parent->name;
         })
-        ->rawColumns(['name']);
+        ->rawColumns(['name', 'pictures', 'plants', 'vouchers', 'measurements']);
     }
 
     /**
@@ -60,7 +61,7 @@ class LocationsDataTable extends DataTable
             'locations.y',
             'locations.startx',
             'locations.starty',
-        ])->withCount(['plants', 'vouchers', 'measurements'])->withGeom();
+        ])->withCount(['plants', 'vouchers', 'measurements', 'pictures'])->withGeom();
 
         return $this->applyScopes($query);
     }
@@ -82,6 +83,7 @@ class LocationsDataTable extends DataTable
                 'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
+                'pictures' => ['title' => Lang::get('messages.pictures'), 'searchable' => false, 'orderable' => false],
                 'latitude' => ['title' => Lang::get('messages.latitude'), 'searchable' => false, 'orderable' => false],
                 'longitude' => ['title' => Lang::get('messages.longitude'), 'searchable' => false, 'orderable' => false],
                 'altitude' => ['title' => Lang::get('messages.altitude'), 'searchable' => false, 'orderable' => false],
@@ -102,7 +104,7 @@ class LocationsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1, 3, 8, 9, 10, 11, 12, 13, 14],
+                    'targets' => [1, 3, 9, 10, 11, 12, 13, 14, 15],
                     'visible' => false,
                 ]],
             ]);

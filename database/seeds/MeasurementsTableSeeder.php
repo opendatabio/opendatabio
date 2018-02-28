@@ -16,7 +16,10 @@ class MeasurementsTableSeeder extends Seeder
      */
     public function run()
     {
-//        if (\App\Measurement::count()) { return; }
+        Auth::loginUsingId(1);
+        if (\App\Measurement::count()) {
+            return;
+        }
         $faker = Faker\Factory::create();
 
         $datasets = \App\Dataset::all();

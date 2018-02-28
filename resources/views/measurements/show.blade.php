@@ -23,18 +23,29 @@
 <br><em>  
 {{$measurement->odbtrait->description}}</em>
 </p>
-
 <p><strong>
 @lang('messages.value')
 : </strong>  
 {{$measurement->valueActual}} {{ $measurement->odbtrait->unit }}
+@if ($measurement->type == \App\ODBTrait::COLOR) 
+&nbsp;<span class="measurement-thumb" style="background-color: {{$measurement->valueActual}}">
+@endif
 </p>
+
 
 <p><strong>
 @lang('messages.dataset')
 :</strong>
 <a href="{{url('datasets/' . $measurement->dataset_id)}}">{{$measurement->dataset->name}}</a>
 </p>
+
+@if ($measurement->notes)
+<p><strong>
+@lang('messages.notes')
+:</strong>
+{{$measurement->notes}}</a>
+</p>
+@endif
 
 <p><strong>
 @lang('messages.measurement_date')

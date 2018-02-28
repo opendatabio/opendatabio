@@ -112,11 +112,14 @@
 	@endforeach
 	</select>
 </div>
-  <div class="col-sm-12">
-    <div id="hintd" class="panel-collapse collapse">
-	@lang('messages.measurement_dataset_hint')
-    </div>
-  </div>
+</div>
+<div class="form-group">
+<label for="notes" class="col-sm-3 control-label">
+@lang('messages.notes')
+</label>
+<div class="col-sm-6">
+<input type="text" name="notes" id="notes" class="form-control" value="{{ old('notes', isset($measurement) ? $measurement->notes : null) }}">
+</div>
 </div>
 
 <div class="form-group" id="append_value">
@@ -198,5 +201,20 @@ $(document).ready(function() {
         noSuggestionNotice: "@lang('messages.noresults')"
     });
 });
+// NOTE! duplicated from view 6
+@if (isset($measurement) and $measurement->type==6)
+	$("#value").spectrum({
+		flat:true,
+		showInput:true,
+		showPalette: true,
+		showPaletteOnly: true,
+		togglePaletteOnly: true,
+		togglePaletteMoreText: "@lang('spectrum.more')",
+		togglePaletteLessText: "@lang('spectrum.less')",
+		preferredFormat: "hex",
+        showButtons: false,
+		palette: {!! json_encode(config('app.spectrum')) !!}
+});
+@endif
 </script>
 @endpush

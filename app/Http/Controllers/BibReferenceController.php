@@ -66,7 +66,12 @@ class BibReferenceController extends Controller
     {
         $this->authorize('create', BibReference::class);
         $this->authorize('create', UserJob::class);
-        $contents = file_get_contents($request->rfile->getRealPath());
+        if ($request->rfile) {
+            $contents = file_get_contents($request->rfile->getRealPath());
+        } else {
+            $this->validate($request, ['references' => 'required|string']);
+            $contents = $request->references;
+        }
         UserJob::dispatch(ImportBibReferences::class, ['contents' => $contents, 'standardize' => $request->standardize]);
 
         return redirect('references')->withStatus(Lang::get('messages.dispatched'));
@@ -117,6 +122,9 @@ class BibReferenceController extends Controller
         ]);
 
         $validator->after(function ($validator) use ($reference, $request) {
+            if ($request->doi and !BibReference::isValidDoi($request->doi)) {
+                $validator->errors()->add('doi', Lang::get('messages.incorrect_doi'));
+            }
             if ('@' != substr(trim($request->bibtex), 0, 1)) {
                 $validator->errors()->add('bibtex', Lang::get('messages.bibtex_at_error'));
             }
@@ -132,6 +140,7 @@ class BibReferenceController extends Controller
         }
 
         $reference->bibtex = $request->bibtex;
+        $reference->setDoi($request->doi);
         $reference->save();
 
         return redirect('references/'.$id)->withStatus(Lang::get('messages.saved'));

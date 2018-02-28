@@ -38,6 +38,18 @@
 <div class="col-sm-6">
 {{ $reference->year }} &nbsp;
 </div>
+
+@if ($reference->doi)
+<div class="col-sm-6">
+<strong>
+@lang('messages.doi')
+</strong>
+</div>
+<div class="col-sm-6">
+<a href="https://dx.doi.org/{{ $reference->doi }}">{{$reference->doi}}</a>&nbsp;
+</div>
+@endif
+
 <div class="col-sm-6">
 <strong>
 @lang('messages.bibtex_entry')

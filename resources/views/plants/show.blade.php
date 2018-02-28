@@ -49,12 +49,16 @@
 @lang('messages.location')
 : </strong>  
 @if($plant->location)
-<a href="{{url('locations/' . $plant->location->id)}}">{{$plant->location->name}}</a>
+<a href="{{url('locations/' . $plant->location->id)}}">{{$plant->location->name}}</a> {{ $plant->locationWithGeom->coordinatesSimple }}
 @else
     Unknown location
 @endif
 @if ($plant->x)
-(X: {{$plant->x}} Y: {{$plant->y}})
+    @if ($plant->location->adm_level == 999)
+(@lang('messages.angle'): {{$plant->angle}}, @lang('messages.distance'): {{$plant->distance}})
+    @else
+(X: {{$plant->x}}, Y: {{$plant->y}})
+    @endif
 @endif
 </p>
 
@@ -143,7 +147,18 @@
 				</a>
 			    </div>
 @endcan
+    @can ('create', App\Picture::class)
+<div class="col-sm-6">
+    <a href="{{ url('plants/'. $plant->id. '/pictures/create')  }}" class="btn btn-success">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.create_picture')
+    </a>
+</div>
+ @endcan
                 </div>
             </div>
+@if ($plant->pictures->count())
+{!! View::make('pictures.index', ['pictures' => $plant->pictures]) !!}
+@endif
     </div>
 @endsection

@@ -28,12 +28,24 @@
 
 @if (isset($plant))
 		    <form action="{{ url('plants/' . $plant->id)}}" method="POST" class="form-horizontal">
+
 {{ method_field('PUT') }}
 
 @else
 		    <form action="{{ url('plants')}}" method="POST" class="form-horizontal">
 @endif
-		     {{ csrf_field() }}
+             {{ csrf_field() }}
+<?php 
+// sets here the location type, name and id, as this is somewhat convoluted. This must take into account:
+// - are we editing a plant?
+// - are we adding a plant to a registered location?
+
+$ltype = isset($plant) ? $plant->location->adm_level : (is_null($location) ? '' : $location->adm_level); 
+$lname = (isset($plant) and $plant->location) ? $plant->location->fullname : (is_null($location) ? '' : $location->fullname);
+$lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($location) ? '' : $location->id);
+?>
+
+<input type="hidden" id="location_type" name="location_type" value ="{{old('location_type', $ltype)}}">
 <!-- name -->
 <div class="form-group">
     <label for="tag" class="col-sm-3 control-label mandatory">
@@ -56,10 +68,11 @@
 </label>
         <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
+
     <input type="text" name="location_autocomplete" id="location_autocomplete" class="form-control autocomplete"
-    value="{{ old('location_autocomplete', (isset($plant) and $plant->location) ? $plant->location->fullname : null) }}">
+    value="{{ old('location_autocomplete', $lname) }}">
     <input type="hidden" name="location_id" id="location_id"
-    value="{{ old('location_id', isset($plant) ? $plant->location_id : null) }}">
+    value="{{ old('location_id', $lid) }}">
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
@@ -118,14 +131,18 @@
             </div>
 </div>
 
-<div class="form-group">
+<div class="form-group super-relative">
     <label for="relative_position" class="col-sm-3 control-label">
 @lang('messages.relative_position')
 </label>
         <a data-toggle="collapse" href="#hint12" class="btn btn-default">?</a>
-	    <div class="col-sm-6">
-	X: <input type="text" name="x" id="x" class="form-control latlongpicker" value="{{ old('x', isset($location) ? $location->x : null) }}">(m)&nbsp;
-	Y: <input type="text" name="y" id="y" class="form-control latlongpicker" value="{{ old('y', isset($location) ? $location->y : null) }}">(m)
+	    <div class="col-sm-6 super-xy">
+	X: <input type="text" name="x" id="x" class="form-control latlongpicker" value="{{ old('x', isset($plant) ? $plant->x : null) }}">(m)&nbsp;
+	Y: <input type="text" name="y" id="y" class="form-control latlongpicker" value="{{ old('y', isset($plant) ? $plant->y : null) }}">(m)
+            </div>
+	    <div class="col-sm-6 super-ang">
+	@lang('messages.angle'): <input type="text" name="angle" id="angle" class="form-control latlongpicker" value="{{ old('x', isset($plant) ? $plant->angle : null) }}">&nbsp;
+	@lang('messages.distance'): <input type="text" name="distance" id="distance" class="form-control latlongpicker" value="{{ old('y', isset($plant) ? $plant->distance : null) }}">(m)
             </div>
   <div class="col-sm-12">
     <div id="hint12" class="panel-collapse collapse">
@@ -294,7 +311,12 @@
 @push ('scripts')
 <script>
 $(document).ready(function() {
-$("#location_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}", "#location_id", "@lang('messages.noresults')");
+    $("#location_autocomplete").odbAutocomplete(
+        "{{url('locations/autocomplete')}}", "#location_id", "@lang('messages.noresults')", null, undefined, 
+        function(suggestion) { 
+            $("#location_type").val(suggestion.adm_level);
+            setAngXYFields(400);
+        });
 $("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#taxon_id","@lang('messages.noresults')",
         function() {
             // When the identification of a plant or voucher is changed, all related fields are reset
@@ -321,9 +343,32 @@ function setIdentificationFields(vel) {
         $(".herbarium_reference").show(vel);
     }
 }
+function setAngXYFields(vel) {
+    var adm = $('#location_type').val();
+    if ("undefined" === typeof adm) {
+        return; // nothing to do here...
+    }
+    switch (adm) {
+    case "100": // plot
+    case "101": // transect; fallover!
+        $(".super-xy").show(vel);
+        $(".super-relative").show(vel);
+        $(".super-ang").hide(vel);
+        break;
+    case "999": // point
+        $(".super-xy").hide(vel);
+        $(".super-relative").show(vel);
+        $(".super-ang").show(vel);
+        break;
+    default: // other
+        $(".super-relative").hide(vel);
+        break;
+    }
+}
 $("#herbarium_id").change(function() { setIdentificationFields(400); });
 // trigger this on page load
 setIdentificationFields(0);
+setAngXYFields(0);
 </script>
 {!! Multiselect::scripts('collector', url('persons/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 @endpush

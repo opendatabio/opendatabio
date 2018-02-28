@@ -24,6 +24,14 @@
 	<textarea name="bibtex" id="bibtex" class="form-control" rows=10 cols=80>{{ old('bibtex', isset($reference) ? $reference->bibtex : null) }}</textarea>
     </div>
 </div>
+<div class="form-group">
+    <label for="doi" class="col-sm-3 control-label">
+@lang('messages.doi')
+</label>
+    <div class="col-sm-9">
+    <input type="text" name="doi" id="doi" class="form-control" value="{{ old('doi', isset($reference) ? $reference->doi : null) }}">
+    </div>
+</div>
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success">

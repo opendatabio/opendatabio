@@ -108,6 +108,18 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return $this->morphTo();
     }
 
+    // with access to the location geom field
+    public function getLocationWithGeomAttribute()
+    {
+        // This is ugly as hell, but simpler alternatives are "intercepted" by Baum, which does not respect the added scope...
+        $loc = $this->parent;
+        if (!$loc or Location::class != get_class($loc)) {
+            return;
+        }
+
+        return Location::withGeom()->addSelect('id', 'name')->find($loc->id);
+    }
+
     public function herbaria()
     {
         return $this->belongsToMany(Herbarium::class)->withPivot('herbarium_number');
@@ -150,5 +162,10 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         }
 
         return $this->parent->location;
+    }
+
+    public function pictures()
+    {
+        return $this->morphMany(Picture::class, 'object');
     }
 }

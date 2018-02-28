@@ -65,3 +65,23 @@ button.unstyle:hover {
 input.autocomplete, input.multiselect { border: 1px solid #5555FF }
 
 .mandatory { color: #a36b6f; }
+
+.picture {
+    max-width: calc(100%); 
+    max-height: 700px; 
+    margin-right: auto; 
+    margin-left: auto; 
+    display: block;
+}
+
+// ""thumbnail"" for color trait measurements
+.measurement-thumb {
+	width: 16px;
+	height: 16px;
+	margin: 0px;
+	display: inline-block;
+	border: solid 1px #d0d0d0;
+}
+.sp-palette-container {
+    border: none!important;
+}

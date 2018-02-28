@@ -56,13 +56,24 @@ class Location extends Node
         return $this->morphMany(Measurement::class, 'measured');
     }
 
-    // helper method to get lat/long from POINTS only
-    public function getlatlong()
+    public function getLatLong()
     {
-        $point = substr($this->geom, 6, -1);
-        $pos = strpos($point, ' ');
-        $this->long = substr($point, 0, $pos);
-        $this->lat = substr($point, $pos + 1);
+        // if the "cached" values are already set, do nothing
+        if ($this->long or $this->lat) {
+            return;
+        }
+        // for points, extract directly
+        if ('POINT' == $this->geomType) {
+            $point = substr($this->geom, 6, -1);
+            $pos = strpos($point, ' ');
+            $this->long = substr($point, 0, $pos);
+            $this->lat = substr($point, $pos + 1);
+
+            return;
+        }
+        // all others, extract from centroid
+        $this->long = $this->centroid['x'];
+        $this->lat = $this->centroid['y'];
     }
 
     public function getCentroidAttribute()
@@ -79,16 +90,23 @@ class Location extends Node
 
     public function getLatitudeSimpleAttribute()
     {
-        $coord = $this->centroid['y'];
+        $this->getLatLong();
+        $letter = $this->lat > 0 ? ' N' : ' S';
 
-        return abs($coord).($coord > 0 ? ' N' : ' S');
+        return $this->lat1.'&#176;'.$this->lat2.'\''.$this->lat3.'\'\' '.$letter;
     }
 
     public function getLongitudeSimpleAttribute()
     {
-        $coord = $this->centroid['x'];
+        $this->getLatLong();
+        $letter = $this->long > 0 ? ' E' : ' W';
 
-        return abs($coord).($coord > 0 ? ' E' : ' W');
+        return $this->long1.'&#176;'.$this->long2.'\''.$this->long3.'\'\' '.$letter;
+    }
+
+    public function getCoordinatesSimpleAttribute()
+    {
+        return '('.$this->latitudeSimple.', '.$this->longitudeSimple.')';
     }
 
     // query scope for conservation units
@@ -218,6 +236,10 @@ class Location extends Node
 
     public static function detectParent($geom, $max_level, $parent_uc)
     {
+        // there can be plots inside plots
+        if (self::LEVEL_PLOT == $max_level) {
+            $max_level += 1;
+        }
         $possibles = self::whereRaw('ST_Within(GeomFromText(?), geom)', [$geom])
             ->orderBy('adm_level', 'desc');
         if ($parent_uc) { // only looks for UCs
@@ -333,5 +355,10 @@ class Location extends Node
             DB::raw('Area(geom) as area'),
             DB::raw('AsText(Centroid(geom)) as centroid_raw')
         );
+    }
+
+    public function pictures()
+    {
+        return $this->morphMany(Picture::class, 'object');
     }
 }

@@ -112,8 +112,32 @@
   </div>
 </div>
 
-<!-- senior & is valid -->
 <div class="form-group">
+    <div class="col-md-6 col-md-offset-3">
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" name="unpublished" id="unpublished" 
+<?php // we have to do this the looooong way
+if (empty(old())) { // no "old" value, we're just arriving
+    if (isset($taxon)) {
+        if ($taxon->author_id)
+            echo 'checked';
+    } 
+} else { // "old" value is available, work with it
+    if (!empty(old('unpublished'))) {
+        echo 'checked';
+    }
+}
+?>
+>
+@lang('messages.unpublished')?
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- senior & is valid -->
+<div class="form-group super-valid">
     <div class="col-md-6 col-md-offset-3">
         <div class="checkbox">
             <label>
@@ -135,7 +159,6 @@ if (empty(old())) { // no "old" value, we're just arriving
 ?>
 >
 @lang('messages.valid')?
-
             </label>
         </div>
     </div>
@@ -159,28 +182,41 @@ if (empty(old())) { // no "old" value, we're just arriving
 </div>
 
 <!-- tax author -->
-<div class="form-group">
-    <label for="author_id" class="col-sm-3 control-label mandatory">
+<div class="form-group super-author">
+    <label for="author" class="col-sm-3 control-label mandatory">
 @lang('messages.taxon_author')
 </label>
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
-	    <div class="col-sm-6 group-together">
+	    <div class="col-sm-6">
 	<input type="text" name="author" id="author" class="form-control" value="{{ old('author', isset($taxon) ? $taxon->author : null) }}">
-<div style="text-align:center;">- or -</div>
-    <input type="text" name="author_autocomplete" id="author_autocomplete" class="form-control autocomplete"
-    value="{{ old('author_autocomplete', (isset($taxon) and $taxon->author_person) ? $taxon->author_person->full_name . " [" . $taxon->author_person->abbreviation . "]" : null) }}">
-    <input type="hidden" name="author_id" id="author_id"
-    value="{{ old('author_id', isset($taxon) ? $taxon->author_id : null) }}">
-            </div>
+        </div>
   <div class="col-sm-12">
     <div id="hint3" class="panel-collapse collapse">
 	@lang('messages.taxon_author_hint')
     </div>
   </div>
 </div>
+<!-- tax author ID -->
+<div class="form-group super-author_id">
+    <label for="author_id" class="col-sm-3 control-label mandatory">
+@lang('messages.taxon_author')
+</label>
+        <a data-toggle="collapse" href="#hint3i" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+    <input type="text" name="author_autocomplete" id="author_autocomplete" class="form-control autocomplete"
+    value="{{ old('author_autocomplete', (isset($taxon) and $taxon->author_person) ? $taxon->author_person->full_name . " [" . $taxon->author_person->abbreviation . "]" : null) }}">
+    <input type="hidden" name="author_id" id="author_id"
+    value="{{ old('author_id', isset($taxon) ? $taxon->author_id : null) }}">
+        </div>
+  <div class="col-sm-12">
+    <div id="hint3i" class="panel-collapse collapse">
+	@lang('messages.taxon_author_id_hint')
+    </div>
+  </div>
+</div>
 
 <!-- tax reference -->
-<div class="form-group">
+<div class="form-group super-reference">
     <label for="bibreference_id" class="col-sm-3 control-label mandatory">
 @lang('messages.taxon_bibreference')
 </label>
@@ -201,7 +237,7 @@ if (empty(old())) { // no "old" value, we're just arriving
 </div>
 
 <!-- External refs -->
-<div class="form-group">
+<div class="form-group super-external">
     <label for="mobotkey" class="col-sm-3 control-label">
 @lang('messages.mobot_key')
 </label>
@@ -210,7 +246,7 @@ if (empty(old())) { // no "old" value, we're just arriving
 	<input type="text" name="mobotkey" id="mobotkey" class="form-control" value="{{ old('mobotkey', isset($taxon) ? $taxon->mobot : null) }}">
             </div>
 </div>
-<div class="form-group">
+<div class="form-group super-external">
     <label for="ipnikey" class="col-sm-3 control-label">
 @lang('messages.ipni_key')
 </label>
@@ -218,7 +254,7 @@ if (empty(old())) { // no "old" value, we're just arriving
 	<input type="text" name="ipnikey" id="ipnikey" class="form-control" value="{{ old('ipnikey', isset($taxon) ? $taxon->ipni : null) }}">
             </div>
 </div>
-<div class="form-group">
+<div class="form-group super-external">
     <label for="mycobankkey" class="col-sm-3 control-label">
 @lang('messages.mycobank_key')
 </label>
@@ -268,6 +304,26 @@ $(document).ready(function() {
     $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
 });
 function setFields(vel) {
+    var unpublished = $('#unpublished').is(":checked");
+    switch (unpublished) {
+    case true: 
+        $('#super-senior').hide(vel);
+        $('.super-valid').hide(vel);
+        $('.super-author').hide(vel);
+        $('.super-reference').hide(vel);
+        $('.super-external').hide(vel);
+        $('.super-author_id').show(vel);
+        return null; // so these instructions will not be overriden by "valid" below
+        break;
+    case false: 
+        $('.super-valid').show(vel);
+        $('.super-author').show(vel);
+        $('.super-reference').show(vel);
+        $('.super-external').show(vel);
+        $('.super-author_id').hide(vel);
+        break;
+    }
+
     var valid = $('#valid').is(":checked");
     switch (valid) {
     case false: 
@@ -277,8 +333,10 @@ function setFields(vel) {
         $('#super-senior').hide(vel);
         break;
     }
+
 }
 $("#valid").change(function() { setFields(400); });
+$("#unpublished").change(function() { setFields(400); });
 // trigger this on page load
 setFields(0);
 

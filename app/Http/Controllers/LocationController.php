@@ -42,7 +42,7 @@ class LocationController extends Controller
             $location->data = $location->id;
             $location->value = $location->fullname;
 
-            return $location->only(['data', 'value']);
+            return $location->only(['data', 'value', 'adm_level']);
         });
 
         return Response::json(['suggestions' => $locations]);
@@ -51,8 +51,11 @@ class LocationController extends Controller
     public function autodetect(Request $request)
     {
         $geom = $request->geom;
-        if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_POINT == $request->adm_level) {
+        if (('point' == $request->geom_type and Location::LEVEL_PLOT == $request->adm_level) or Location::LEVEL_POINT == $request->adm_level) {
             $geom = Location::geomFromParts($request);
+        }
+        if (!$geom) {
+            return Response::json(['error' => Lang::get('messages.autodetect_blank')]);
         }
 
         $parent = Location::detectParent($geom, $request->adm_level, false);
@@ -116,16 +119,31 @@ class LocationController extends Controller
             'parent_id' => 'required_unless:adm_level,0',
         ];
         if (Location::LEVEL_PLOT == $request->adm_level) { // PLOT
+            if ('point' == $request->geom_type) {
+                $rules = array_merge($rules, [
+                    'lat1' => 'required|numeric|min:0',
+                    'long1' => 'required|numeric|min:0',
+                    'lat2' => 'numeric|nullable|min:0',
+                    'long2' => 'numeric|nullable|min:0',
+                    'lat3' => 'numeric|nullable|min:0',
+                    'long3' => 'numeric|nullable|min:0',
+                ]);
+            } else {
+                $rules = array_merge($rules, [
+                    'geom' => 'required|string',
+                ]);
+            }
             $rules = array_merge($rules, [
-                'lat1' => 'required|numeric|min:0',
-                'long1' => 'required|numeric|min:0',
-                'lat2' => 'numeric|nullable|min:0',
-                'long2' => 'numeric|nullable|min:0',
-                'lat3' => 'numeric|nullable|min:0',
-                'long3' => 'numeric|nullable|min:0',
                 'x' => 'required|numeric',
                 'y' => 'required|numeric',
             ]);
+            if (100 == $request->parent_type) { // location is a subplot
+                $parent = Location::findOrFail($request->parent_id);
+                $rules = array_merge($rules, [
+                    'startx' => 'required|numeric|min:0|max:'.$parent->x,
+                    'starty' => 'required|numeric|min:0|max:'.$parent->y,
+                ]);
+            }
         } elseif (Location::LEVEL_POINT == $request->adm_level) { //POINT
             $rules = array_merge($rules, [
                 'lat1' => 'required|numeric|min:0',
@@ -143,7 +161,7 @@ class LocationController extends Controller
         $validator = Validator::make($request->all(), $rules);
         // Now we check if the geometry received is valid, and if it falls inside the parent geometry
         $validator->after(function ($validator) use ($request) {
-            if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_POINT == $request->adm_level) {
+            if ((Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type) or Location::LEVEL_POINT == $request->adm_level) {
                 // we check if this exact geometry is already registered
                 $geom = Location::geomFromParts($request);
                 $exact = Location::whereRaw("geom=geomfromtext('$geom')")->get();
@@ -163,10 +181,15 @@ class LocationController extends Controller
         $validator->after(function ($validator) use ($request) {
             if ($request->parent_id < 1) {
                 return;
-            } // don't validate if parent = 0 for none, -1 for autodetect
+            } // don't validate if parent = 0 for none
             $geom = $request->geom;
-            if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_POINT == $request->adm_level) {
+            if ((Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type) or Location::LEVEL_POINT == $request->adm_level) {
                 $geom = Location::geomFromParts($request);
+            }
+            $parent = Location::withGeom()->findOrFail($request->parent_id);
+            // skip validation if parent is dimensionless
+            if ('point' == $parent->geomType) {
+                return;
             }
 
             $valid = DB::select('SELECT ST_Within(GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->parent_id]);
@@ -196,7 +219,7 @@ class LocationController extends Controller
                 ->withInput();
         }
         // checks for duplicates, except if the request is already confirmed
-        if ($request->adm_level > 99 and !$request->confirm) {
+        if ($request->adm_level > 99 and !$request->confirm and 'point' == $request->geom_type) {
             $dupes = Location::withDistance(Location::geomFromParts($request))->get()
                 ->filter(function ($obj) {
                     return $obj->distance < 0.001;
@@ -208,11 +231,19 @@ class LocationController extends Controller
             }
         }
         if (Location::LEVEL_PLOT == $request->adm_level) { // plot
-            $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
-            $newloc->setGeomFromParts($request->only([
-                'lat1', 'lat2', 'lat3', 'latO',
-                'long1', 'long2', 'long3', 'longO',
-            ]));
+            $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y']));
+            if (100 == $request->parent_type) { // see issue #40
+                $newloc->startx = $request->startx;
+                $newloc->starty = $request->starty;
+            }
+            if ('point' == $request->geom_type) {
+                $newloc->setGeomFromParts($request->only([
+                    'lat1', 'lat2', 'lat3', 'latO',
+                    'long1', 'long2', 'long3', 'longO',
+                ]));
+            } else {
+                $newloc->geom = $request->geom;
+            }
         } else {
             // discard x, y data from locations that are not PLOTs
             $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
@@ -319,11 +350,22 @@ class LocationController extends Controller
                 ->withInput();
         }
         if (Location::LEVEL_PLOT == $request->adm_level) {
-            $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty']));
-            $location->setGeomFromParts($request->only([
-                'lat1', 'lat2', 'lat3', 'latO',
-                'long1', 'long2', 'long3', 'longO',
-            ]));
+            $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y']));
+            if (100 == $request->parent_type) { // see issue #40
+                $location->startx = $request->startx;
+                $location->starty = $request->starty;
+            } else {
+                $location->startx = null;
+                $location->starty = null;
+            }
+            if ('point' == $request->geom_type) {
+                $location->setGeomFromParts($request->only([
+                    'lat1', 'lat2', 'lat3', 'latO',
+                    'long1', 'long2', 'long3', 'longO',
+                ]));
+            } else {
+                $location->geom = $request->geom;
+            }
         } else {
             // discard x, y data from locations that are not PLOTs
             $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));

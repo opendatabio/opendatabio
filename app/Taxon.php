@@ -42,9 +42,15 @@ class Taxon extends Node
             );
     }
 
+    public function pictures()
+    {
+        return $this->morphMany(Picture::class, 'object');
+    }
+
     public function getLevelNameAttribute()
     {
-        return Lang::get('levels.tax.'.$this->level);
+        return Lang::get('levels.tax.'.$this->level).
+            ($this->author ? '' : ' ('.Lang::get('messages.unpublished').')');
     }
 
     public function getQualifiedFullnameAttribute()
@@ -230,25 +236,28 @@ class Taxon extends Node
 
     public function getMobotAttribute()
     {
-        $ref = $this->externalrefs()->where('name', 'Mobot');
-        if ($ref->count()) {
-            return $ref->first()->reference;
+        foreach ($this->externalrefs as $ref) {
+            if ('Mobot' == $ref->name) {
+                return $ref->reference;
+            }
         }
     }
 
     public function getIpniAttribute()
     {
-        $ref = $this->externalrefs()->where('name', 'IPNI');
-        if ($ref->count()) {
-            return $ref->first()->reference;
+        foreach ($this->externalrefs as $ref) {
+            if ('IPNI' == $ref->name) {
+                return $ref->reference;
+            }
         }
     }
 
     public function getMycobankAttribute()
     {
-        $ref = $this->externalrefs()->where('name', 'Mycobank');
-        if ($ref->count()) {
-            return $ref->first()->reference;
+        foreach ($this->externalrefs as $ref) {
+            if ('Mycobank' == $ref->name) {
+                return $ref->reference;
+            }
         }
     }
 
@@ -299,5 +308,22 @@ class Taxon extends Node
         } else {
             return $searchstr;
         }
+    }
+
+    public function getFamilyAttribute()
+    {
+        if ($this->level < 120) {
+            return '';
+        }
+        if (120 == $this->level) {
+            return $this->name;
+        }
+        // else
+        $parent = $this->parent;
+        while ($parent->parent and $parent->level > 120) {
+            $parent = $parent->parent;
+        }
+
+        return $parent->name;
     }
 }

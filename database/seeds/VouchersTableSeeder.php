@@ -53,6 +53,8 @@ class VouchersTableSeeder extends Seeder
 
     public function run()
     {
+        // to make sure that we are seeing the whole database
+        Auth::loginUsingId(1);
         if (\App\Voucher::count()) {
             return;
         }

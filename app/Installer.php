@@ -21,7 +21,6 @@ class Installer
             ['name' => 'PHP', 'command' => 'php -v', 'min' => '7.0'],
             ['name' => 'Apache Web Server', 'command' => $this->apachecmd.' -v', 'min' => '2.2', 'recommended' => '2.4'],
             ['name' => 'Pandoc', 'command' => 'pandoc --version', 'min' => '1.10'],
-            ['name' => 'ImageMagick', 'command' => 'convert --version', 'min' => '6.7.7', 'recommended' => '6.8.9', 'unsupported' => '7'],
             ['name' => 'Supervisor', 'command' => 'supervisord --version', 'min' => '3.0', 'recommended' => '3.3'],
             // notice MySQL version is set up below
         ];
@@ -56,6 +55,7 @@ class Installer
             ['name' => 'Tokenizer', 'string' => 'tokenizer'],
             ['name' => 'XML', 'string' => 'xml'],
             ['name' => 'DOM', 'string' => 'dom'],
+            ['name' => 'GD', 'string' => 'gd'],
         ];
         foreach ($extensions as $extension) {
             $trouble += $this->checkExtension($extension['name'], $extension['string']);
@@ -172,13 +172,13 @@ class Installer
 
             return 1;
         }
-        if (0 == sizeof($version)) { // we have MySQL
-            if (version_compare($version[0], $mysqlmin, '<')) {
+        if (!$ismariadb) { // we have MySQL
+            if (version_compare($version[2], $mysqlmin, '<')) {
                 echo $this->c($name.' version is not compatible! Please upgrade!', 'danger');
 
                 return 1;
             }
-            if (version_compare($version[0], $mysqlrecommended, '<')) {
+            if (version_compare($version[2], $mysqlrecommended, '<')) {
                 echo $this->c($name.' version is below recommended...', 'warning');
 
                 return 1;
@@ -478,19 +478,21 @@ class Installer
         echo 'Do you wish to review the sample Supervisor worker file? yes/[no] ';
         $line = trim(fgets(STDIN));
         if ('y' == $line or 'yes' == $line) {
+            // Since we are inside /app directory, we need to strip it to find the correct root directory
+            $DIR = dirname(__DIR__);
             echo "You should store the following lines in a file called
                 /etc/supervisor/conf.d/opendatabio-worker.conf (Debian/Ubuntu) or 
                 /etc/supervisor.d/opendatabio-worker.ini (ArchLinux)\n(You will need root access for that)\n\n";
             echo ";--------------\n";
             echo"[program:opendatabio-worker]\n";
             echo "process_name=%(program_name)s_%(process_num)02d\n";
-            echo 'command=php '.__DIR__."/artisan queue:work --sleep=3 --tries=1 --timeout=0 --daemon\n";
+            echo 'command=php '.$DIR."/artisan queue:work --sleep=3 --tries=1 --timeout=0 --daemon\n";
             echo "autostart=true\n";
             echo "autorestart=true\n";
             echo 'user='.posix_getpwuid(getmyuid())['name']."\n";
             echo "numprocs=8\n";
             echo "redirect_stderr=true\n";
-            echo 'stdout_logfile='.__DIR__."/storage/logs/supervisor.log\n";
+            echo 'stdout_logfile='.$DIR."/storage/logs/supervisor.log\n";
             echo ";--------------\n\n";
         }
     }
@@ -535,7 +537,7 @@ class Installer
             'PROXY_URL' => 'Proxy host? (Leave blank for no proxy)',
             'PROXY_PORT' => 'Proxy port?',
             'PROXY_USER' => 'Proxy username? (Leave blank if not required)',
-            'PROXY_PASSWD' => 'Proxy password?',
+            'PROXY_PASSWORD' => 'Proxy password?',
             'GMAPS_API_KEY' => 'Google Maps API key?',
             'MOBOT_API_KEY' => 'Tropicos.org API key?',
             'MAIL_HOST' => 'E-mail host?',
@@ -668,6 +670,7 @@ class Installer
 
         echo "Changing storage area permissions...\n";
         exec('chmod -fR 777 storage 2>&1');
+        exec('chmod -fR 777 public/upload_pictures 2>&1');
         exec('chmod -fR 777 bootstrap/cache 2>&1');
 
         echo $this->c("********************************************\n", 'success');

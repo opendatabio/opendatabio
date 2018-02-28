@@ -22,6 +22,11 @@
 @endcan
                 </div>
             </div>
+
+            @if ($tag->pictures->count())
+            {!! View::make('pictures.index', ['pictures' => $tag->pictures]) !!}
+            @endif
+
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.datasets')

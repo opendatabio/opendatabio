@@ -10,7 +10,7 @@
                 <div class="panel-body">
 		    <strong>
 @lang('messages.location_name')
-:</strong> {{ $location->name }}
+:</strong> {{ $location->name }} {{ $location->coordinatesSimple }} 
 <br>
 		    <strong>
 @lang('messages.adm_level')
@@ -106,6 +106,15 @@
 @lang('messages.plants')
     </a>
 </div>
+@else
+@can ('create', App\Plant::class)
+<div class="col-sm-4">
+<a href="{{url ('locations/' . $location->id . '/plants/create')}}" class="btn btn-default">
+    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.create_plant')
+</a>
+</div>
+@endcan
 @endif
 
 @can ('update', $location)
@@ -117,9 +126,20 @@
 				</a>
 			    </div>
 @endcan
+    @can ('create', App\Picture::class)
+<div class="col-sm-6">
+    <a href="{{ url('locations/'. $location->id. '/pictures/create')  }}" class="btn btn-success">
+        <i class="fa fa-btn fa-search"></i>
+@lang('messages.create_picture')
+    </a>
+</div>
+ @endcan
                 </div>
             </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->
+@if ($location->pictures->count())
+{!! View::make('pictures.index', ['pictures' => $location->pictures]) !!}
+@endif
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.location_ancestors_and_children')

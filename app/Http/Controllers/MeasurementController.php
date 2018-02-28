@@ -210,7 +210,7 @@ class MeasurementController extends Controller
                 ->withInput();
         }
         $measurement = new Measurement($request->only([
-            'trait_id', 'measured_id', 'measured_type', 'dataset_id', 'person_id', 'bibreference_id',
+            'trait_id', 'measured_id', 'measured_type', 'dataset_id', 'person_id', 'bibreference_id', 'notes',
         ]));
         $measurement->setDate($request->date_month, $request->date_day, $request->date_year);
         $measurement->save();
@@ -255,7 +255,7 @@ class MeasurementController extends Controller
                 ->withInput();
         }
         $measurement->update($request->only([
-            'trait_id', 'dataset_id', 'person_id', 'bibreference_id',
+            'trait_id', 'dataset_id', 'person_id', 'bibreference_id', 'notes',
         ]));
         if (ODBTrait::LINK == $measurement->type) {
             $measurement->value = $request->value;

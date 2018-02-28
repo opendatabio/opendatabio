@@ -16,6 +16,10 @@ use Lang;
 class Plant extends Model
 {
     use IncompleteDate;
+
+    // NOTICE regarding attributes!! relative_position is the name of the database column, so this should be called when writing to database
+    // (ie, setRelativePosition), but this is read as position, so this should be called on read context
+
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
 
     // for use when receiving this as part of a morph relation
@@ -53,13 +57,23 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         });
     }
 
-    public function setRelativePosition($x, $y = null)
+    public function setRelativePosition($x, $y = null) // alternative, ($angle, $distance)
     {
         if (is_null($x) and is_null($y)) {
             $this->attributes['relative_position'] = null;
 
             return;
         }
+
+        $location_type = $this->location->adm_level;
+        if (Location::LEVEL_POINT == $location_type) {
+            $angle = $x * M_PI / 180;
+            $distance = $y;
+            // converts the angle and distance to x/y
+            $x = $distance * cos($angle);
+            $y = $distance * sin($angle);
+        }
+
         // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
         $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('POINT($y $x)')) as val")[0]->val;
         if ($invalid) {
@@ -91,6 +105,18 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return $this->belongsTo(Location::class);
     }
 
+    // with access to the location geom field
+    public function getLocationWithGeomAttribute()
+    {
+        // This is ugly as hell, but simpler alternatives are "intercepted" by Baum, which does not respect the added scope...
+        $loc = $this->location;
+        if (!$loc) {
+            return;
+        }
+
+        return Location::withGeom()->addSelect('id', 'name')->find($loc->id);
+    }
+
     public function project()
     {
         return $this->belongsTo(Project::class);
@@ -120,7 +146,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     {
         // This uses the explicit list to avoid conflict due to global scope
         // maybe check http://lyften.com/journal/user-settings-using-laravel-5-eloquent-global-scopes.html ???
-        return parent::newQuery($excludeDeleted)->addSelect(
+        return parent::newQuery($excludeDeleted)->select(
             'plants.id',
             'plants.tag',
             'plants.project_id',
@@ -134,7 +160,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     // getters for the Relative Position
     public function getXAttribute()
     {
-        $point = substr($this->relativePosition, 6, -1);
+        $point = substr($this->attributes['relativePosition'], 6, -1);
         $pos = strpos($point, ' ');
 
         return substr($point, $pos + 1);
@@ -142,9 +168,36 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 
     public function getYAttribute()
     {
-        $point = substr($this->relativePosition, 6, -1);
+        $point = substr($this->attributes['relativePosition'], 6, -1);
         $pos = strpos($point, ' ');
 
         return substr($point, 0, $pos);
+    }
+
+    public function getAngleAttribute()
+    {
+        $x = $this->getXAttribute();
+        if ('' === $x) {
+            return '';
+        }
+        $y = $this->getYAttribute();
+
+        return 180 / M_PI * atan2((float) $y, (float) $x);
+    }
+
+    public function getDistanceAttribute()
+    {
+        $x = $this->getXAttribute();
+        if ('' === $x) {
+            return '';
+        }
+        $y = $this->getYAttribute();
+
+        return sqrt((float) $x * (float) $x + (float) $y * (float) $y);
+    }
+
+    public function pictures()
+    {
+        return $this->morphMany(Picture::class, 'object');
     }
 }

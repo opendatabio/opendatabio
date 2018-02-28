@@ -7,12 +7,12 @@ one of the greatest Amazon botanists, and Dokuwiki, an inspiring wiki platform.
 A companion R package is being developed [here](https://github.com/opendatabio/opendatabio-r).
 
 ## Authors
-**Coordinator:** 
-- Alberto Vicentini (vicentini.beto@gmail.com)
+- Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil - coordination
+- Andre Chalom (andrechalom@gmail.com) - main developer
+- Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
 
-**Collaborators:**
-- Andre Chalom (andrechalom@gmail.com)
-- Alexandre Adalardo de Oliveira (adalardo@usp.br)
+## Funding & Support
+This project has recieved support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home).
 
 ## Overview
 This project aims to provide a flexible but robust framework for storing, analysing and exporting biological data.
@@ -20,7 +20,11 @@ See our [Wiki page](../../wiki) for details.
 
 ## Install
 ### Prerequisites and versions
-Opendatabio is written in PHP and developed over the Laravel framework version 5.4. 
+OpenDataBio software is supported in Debian, Ubuntu and ArchLinux distributions of Linux. You can install it on
+a Mac-OS X by following some [custom instructions](../../README_macInstallationNotes.md), but this is not supported.
+We have no plans for Windows support.
+
+Opendatabio is written in PHP and developed over the Laravel framework version 5.5. 
 The minimum supported PHP version is 7.0, which is available from apt-get in Ubuntu 16.04 and Debian 9.
 
 It also requires a working web server and a database. The minimum required version for MySQL is 5.7.6
@@ -28,31 +32,31 @@ It also requires a working web server and a database. The minimum required versi
 It should be possible to install using Nginx 
 as webserver, or Postgres as database, but our installation script focuses on a Apache/MySQL setup.
 
-The image manipulation (thumbnails, etc) is done with Imagemagick version 6. Version 7 is not available on 
-most Linux distributions official repositories, and is therefore not supported at the moment.
+The image manipulation (thumbnails, etc) is done with GD.
 
 Pandoc is used to translate LaTeX code used in the bibliographic references. It is not necessary for the installation,
 but it is suggested for a better user experience. The minimum Pandoc version supported is 1.10.
 
 The background jobs (such as data import/export) may be handled by the program Supervisor. 
 
-The software is being developed and extensively tested using PHP 7.1.7, Apache 2.4.26, 
-MySQL 10.1.25-MariaDB and ImageMagick 6.9.8. If you have trouble or questions about other softwares or versions, please
+The software is being developed and extensively tested using PHP 7.2.1, Apache 2.4.29 and
+MySQL 10.1.30-MariaDB. If you have trouble or questions about other softwares or versions, please
 contact our team using the Github repository.
 
 ### Installation instructions
-First, install the prerequisite software: Apache, MySQL, PHP, pandoc, supervisor and ImageMagick.
+First, install the prerequisite software: Apache, MySQL, PHP, pandoc and supervisor.
 
 On a Debian 9 system, you need to install some PHP extensions as well. Use:
 ```
 apt-get install apache2 mysql-server php7.0 libapache2-mod-php7.0 php7.0-mysql \ 
-		php7.0-cli imagemagick pandoc php7.0-mbstring php7.0-xml \
+		php7.0-cli pandoc php7.0-mbstring php7.0-xml php7.0-gd \
 		supervisor
 
 a2enmod php7.0
 phpenmod mbstring
 phpenmod xml
 phpenmod dom
+phpenmod gd
 ```
 
 The recommended way to install OpenDataBio is using a dedicated
@@ -83,6 +87,8 @@ RedirectMatch ^/$ /opendatabio/
 
 Remember to restart the Apache server after editing the files.
 
+The installation script will download the [Composer](https://getcomposer.org/) dependency manager, and all required PHP libraries. However, if your server is behind a proxy, you should install and configure Composer independently.
+
 Finally, change directory to your opendatabio directory and run 
 ```
 php install
@@ -93,7 +99,7 @@ If the installer complains about missing PHP extensions, remember to activate th
 If the install script finishes with success, you're good to 
 go! Point your browser to 
 http://localhost/opendatabio. The database migrations come with an administrator account, with
-login 'admin@example.org' and and password 'password1'. Edit the file before importing, or change the password after 
+login 'admin@example.org' and password 'password1'. Edit the file before importing, or change the password after 
 installing.
 
 If you have any problems such as a blank page, error 500 or error 403, check the error logs at /var/log/apache and /home/odbserver/opendatabio/storage/logs.
@@ -137,10 +143,13 @@ Disallow: /
 The e-mail system used by OpenDataBio is very flexible, but the installation program supposed you will be using some
 form of SMTP (such as smtp.gmail.com). Check the "config/mail.php" file for more options on how to send e-mails.
 
+When considering database backups for an OpenDataBio installation, please remember that the user uploaded images are
+stored in the filesystem, and plan your backup accordingly.
+
 ## Development
 
 The Laravel-Datatables library is incompatible with `php artisan serve`, so this command should not be used.
-The recommended way of runing this app in development is by installing it and choosing "development" in the installer.
+The recommended way of running this app in development is by installing it and choosing "development" in the installer.
 
 This system uses Laravel Mix to compile the SASS and JavaScript code used. 
 If you would like to contribute to the app development,

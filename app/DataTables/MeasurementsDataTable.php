@@ -9,7 +9,7 @@ namespace App\DataTables;
 
 use App\Measurement;
 use Yajra\DataTables\Services\DataTable;
-use Yajra\DataTables\EloquentDataTable;
+use Yajra\DataTables\CollectionDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
 
@@ -22,7 +22,7 @@ class MeasurementsDataTable extends DataTable
      */
     public function dataTable(DataTables $dataTables, $query)
     {
-        return (new EloquentDataTable($query))
+        return (new CollectionDataTable($query))
         ->editColumn('value', function ($measurement) {
             return '<a href="'.url('measurements/'.$measurement->id).'">'.
                 // Needs to escape special chars, as this will be passed RAW
@@ -81,8 +81,14 @@ class MeasurementsDataTable extends DataTable
         if ($this->odbtrait) {
             $query = $query->where('trait_id', $this->odbtrait);
         }
+        $query = $this->applyScopes($query);
 
-        return $this->applyScopes($query);
+        return collect($query->get())->filter(function ($item) {
+            // This relies on the global scopes for the "measured" items to trigger. If the measured object is, eg, a Plant, and the plant is not accessible by the current user, the following relation will return "null", and the if() will evaluate to false
+            if ($item->measured) {
+                return true;
+            }
+        });
     }
 
     /**
