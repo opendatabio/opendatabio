@@ -24,6 +24,7 @@ $v0api = function () {
     Route::get('locations', '\App\Http\Api\v0\LocationController@index');
     Route::post('locations', '\App\Http\Api\v0\LocationController@store');
     Route::get('jobs', '\App\Http\Api\v0\UserJobController@index');
+    Route::get('persons', '\App\Http\Api\v0\PersonController@index');
 };
 
 Route::group(['prefix' => 'v0'], $v0api);
