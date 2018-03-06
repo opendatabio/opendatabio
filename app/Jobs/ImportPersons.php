@@ -67,6 +67,17 @@ class ImportPersons extends AppJob
             'institution' => $institution,
             'herbarium_id' => $herbarium,
         ]);
+        $dupes = Person::duplicates($full_name, $abbreviation);
+        if (count($dupes)) {
+            $same = $dupes->where('full_name', '=', $full_name)
+                        ->where('abbreviation', '=', $abbreviation)->get();
+            if (count($same)){
+                $this->setError();
+                $this->appendLog('There is another registry of a person with name '.$full_name.' and abbreviation '.$abbreviation);
+                return;
+            }
+            $this->appendLog('There is another registry of a person with name like '.$full_name.' and abbreviation like '.$abbreviation);
+        }
         $person->save();
         $this->affectedId($person->id);
         return;
@@ -74,7 +85,7 @@ class ImportPersons extends AppJob
 
     protected function extractAbbreviation($person)
     {
-        if (array_key_exists('abbreviation', $person))
+        if (array_key_exists('abbreviation', $person) && ('' !== $person['abbreviation']))
             return $person['abbreviation'];
         else
         {
