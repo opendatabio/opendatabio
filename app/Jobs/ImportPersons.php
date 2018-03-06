@@ -8,6 +8,7 @@
 namespace App\Jobs;
 
 use App\Person;
+use App\Herbarium;
 
 class ImportPersons extends AppJob
 {
@@ -60,6 +61,17 @@ class ImportPersons extends AppJob
         $institution = array_key_exists('institution', $person) ? $person['institution'] : null;
         $abbreviation = $this->extractAbbreviation($person);
         $herbarium = $this->extractHerbarium($person);
+        $dupes = Person::duplicates($full_name, $abbreviation);
+        if (count($dupes)) {
+            $same = Person::where('abbreviation', '=', $abbreviation)->get();
+            if (count($same)){
+                $this->setError();
+                $this->appendLog('ERROR: There is another registry of a person with name '.$full_name.' and abbreviation '.$abbreviation);
+                return;
+            }
+            $this->appendLog('WARNING: There is another registry of a person with name like '.$full_name.' or abbreviation like '.$abbreviation);
+        }
+
         $person = new Person([
             'full_name' => $full_name,
             'abbreviation' => $abbreviation,
@@ -67,17 +79,6 @@ class ImportPersons extends AppJob
             'institution' => $institution,
             'herbarium_id' => $herbarium,
         ]);
-        $dupes = Person::duplicates($full_name, $abbreviation);
-        if (count($dupes)) {
-            $same = $dupes->where('full_name', '=', $full_name)
-                        ->where('abbreviation', '=', $abbreviation)->get();
-            if (count($same)){
-                $this->setError();
-                $this->appendLog('There is another registry of a person with name '.$full_name.' and abbreviation '.$abbreviation);
-                return;
-            }
-            $this->appendLog('There is another registry of a person with name like '.$full_name.' and abbreviation like '.$abbreviation);
-        }
         $person->save();
         $this->affectedId($person->id);
         return;
@@ -85,7 +86,7 @@ class ImportPersons extends AppJob
 
     protected function extractAbbreviation($person)
     {
-        if (array_key_exists('abbreviation', $person) && ('' !== $person['abbreviation']))
+        if (array_key_exists('abbreviation', $person) && ('' != $person['abbreviation']))
             return $person['abbreviation'];
         else
         {
@@ -100,7 +101,7 @@ class ImportPersons extends AppJob
 
     protected function extractHerbarium($person)
     {
-        if (array_key_exists('herbarium', $person))
+        if (array_key_exists('herbarium', $person) and ('' != $person['herbarium']))
         {
             if (is_numeric($person['herbarium']))
                 return $person['herbarium'];
