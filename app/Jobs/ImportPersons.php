@@ -58,8 +58,8 @@ class ImportPersons extends AppJob
 	    $full_name = $person['full_name'];
         $email = array_key_exists('email', $person) ? $person['email'] : null;
         $institution = array_key_exists('institution', $person) ? $person['institution'] : null;
-        $abbreviation = extractAbbreviation($person);
-        $herbarium = extractHerbarium($person);
+        $abbreviation = $this->extractAbbreviation($person);
+        $herbarium = $this->extractHerbarium($person);
         $person = new Person([
             'full_name' => $full_name,
             'abbreviation' => $abbreviation,
@@ -100,9 +100,10 @@ class ImportPersons extends AppJob
                 if ($herbarium_obj->count()) {
                     return $herbarium_obj->first()->id;
                 } else {
-                    $this->appendLog("WARNING: Herbarium for person $person['full_name'] is listed as $person['herbarium'], but this was not found in the database.");
+                    $this->appendLog("WARNING: Herbarium for person ".$person['full_name']." is listed as ".$person['herbarium'].", but this was not found in the database.");
                     return null;
-                }
+		}
+	    }
         }
         else
         {

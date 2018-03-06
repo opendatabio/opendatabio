@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use App\Person;
 use App\UserJob;
 use Response;
-use App\Jobs\ImportLocations;
+use App\Jobs\ImportPersons;
 
 class PersonController extends Controller
 {
@@ -44,7 +44,7 @@ class PersonController extends Controller
     {
         $this->authorize('create', Person::class);
         $this->authorize('create', UserJob::class);
-        $jobid = UserJob::dispatch(ImportPerson::class, ['data' => $request->post()]);
+        $jobid = UserJob::dispatch(ImportPersons::class, ['data' => $request->post()]);
 
         return Response::json(['message' => 'OK', 'userjob' => $jobid]);
     }
