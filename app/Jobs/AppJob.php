@@ -33,6 +33,7 @@ class AppJob implements ShouldQueue
     {
         $this->userjob = $userjob;
         $this->userjob->log = json_encode([]);
+        $this->userjob->affected_ids = $this->userjob->affected_ids ? $this->userjob->affected_ids : json_encode([]);
         $this->userjob->save();
         $this->errors = false;
     }
@@ -62,6 +63,14 @@ class AppJob implements ShouldQueue
         Log::info($text);
     }
 
+    public function affectedId($id)
+    {
+        $ids = json_decode($this->userjob->fresh()->affected_ids, true);
+        array_push($ids, $id);
+        $this->userjob->affected_ids = json_encode($ids);
+        $this->userjob->save();
+    }
+
     public function handle()
     {
         // temporarily removing rollback capabilities:
@@ -82,6 +91,7 @@ class AppJob implements ShouldQueue
         } catch (\Exception $e) {
             //			    DB::rollback();
             $this->appendLog('BLOCKING EXCEPTION '.$e->getMessage());
+            Log::warning($e->getTraceAsString());
             $this->userjob->setFailed();
         }
     }
