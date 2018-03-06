@@ -72,6 +72,7 @@ class ImportBibReferences extends AppJob
                 // guesses the DOI from the bibtex and saves it on the relevant database column
                 $ref->setDoi(null);
                 $ref->save();
+                $this->affectedId($ref->id);
             }
         }
     }
