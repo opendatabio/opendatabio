@@ -131,6 +131,7 @@ class ImportTaxons extends AppJob
             $taxon->setapikey('IPNI', $ipni);
         }
         $taxon->save();
+        $this->affectedId($taxon->id);
 
         return;
     }
