@@ -153,6 +153,7 @@ class ImportLocations extends AppJob
         $location->geom = $geom;
 
         $location->save();
+        $this->affectedId($location->id);
 
         return;
     }

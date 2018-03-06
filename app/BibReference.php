@@ -106,7 +106,7 @@ class BibReference extends Model
     public function setDoi($newDoi)
     {
         // if receiving a blank and we have attr set, the user is probably trying to remove the information
-        if ($this->attributes['doi'] and !$newDoi) {
+        if (array_key_exists('doi', $this->attributes) and $this->attributes['doi'] and !$newDoi) {
             $this->attributes['doi'] = null;
 
             return;

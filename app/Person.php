@@ -29,10 +29,8 @@ class Person extends Model
         });
     }
 
-    // Looks for possible duplication of persons. Returns a collection of possible dupes
-    public static function duplicates($fullname, $abbreviation)
-    {
-        function normalize($text)
+    // For use in Person::duplicates
+   public static function normalize($text)
         {
             $text = trim(strtolower($text));
             $text = preg_replace('/[^a-z ]/', '', $text);
@@ -46,12 +44,15 @@ class Person extends Model
             return join(' ', $tarr);
         }
 
+    // Looks for possible duplication of persons. Returns a collection of possible dupes
+    public static function duplicates($fullname, $abbreviation)
+    {
         $fuzz = new Fuzz();
-        $fullname = normalize($fullname);
-        $abbreviation = normalize($abbreviation);
+        $fullname = self::normalize($fullname);
+        $abbreviation = self::normalize($abbreviation);
         $persons = self::all()->filter(function ($element) use ($fuzz, $fullname, $abbreviation) {
-            $fn = normalize($element->full_name);
-            $abb = normalize($element->abbreviation);
+            $fn = self::normalize($element->full_name);
+            $abb = self::normalize($element->abbreviation);
             $score = 0;
 
             return $fuzz->weightedRatio($abb, $abbreviation) > 70 or
