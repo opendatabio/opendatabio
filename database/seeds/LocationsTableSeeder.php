@@ -15,7 +15,7 @@ class LocationsTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\Location::count()) {
+        if (\App\Location::noWorld()->count()) {
             return;
         }
 

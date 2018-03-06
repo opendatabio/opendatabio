@@ -23,7 +23,7 @@ class LocationController extends Controller
     // MAY receive optional "$request->scope" to return only UCs; default is to return all locations?
     public function autocomplete(Request $request)
     {
-        $locations = Location::where('name', 'LIKE', ['%'.$request->input('query').'%'])
+        $locations = Location::where('name', 'LIKE', ['%'.$request->input('query').'%'])->noWorld()
                         ->orderBy('name', 'ASC')->take(30);
         if ($request->scope) {
             switch ($request->scope) {
@@ -93,7 +93,7 @@ class LocationController extends Controller
      */
     public function create()
     {
-        $locations = Location::all();
+        $locations = Location::noWorld()->get();
         $uc_list = Location::ucs()->get();
 
         return view('locations.create', compact('locations', 'uc_list'));
@@ -260,6 +260,10 @@ class LocationController extends Controller
         if ($request->parent_id) {
             $newloc->parent_id = $request->parent_id;
         }
+        if (0 === $request->adm_level) {
+            $world = Location::world();
+            $newloc->parent_id = $world->id;
+        }
         if ($request->uc_id and $request->adm_level > 99) {
             $newloc->uc_id = $request->uc_id;
         }
@@ -380,6 +384,12 @@ class LocationController extends Controller
         }
         if ($request->uc_id and $request->adm_level > 99) {
             $location->uc_id = $request->uc_id;
+        }
+
+        // sets the parent_id in the request, to be picked up by the next try-catch:
+        if (0 === $request->adm_level) {
+            $world = Location::world();
+            $request->parent_id = $world->id;
         }
 
         if ($request->parent_id and $request->parent_id != $location->parent_id) {

@@ -10,6 +10,7 @@ namespace App;
 use Baum\Node;
 use DB;
 use Lang;
+use Illuminate\Database\Eloquent\Builder;
 
 class Location extends Node
 {
@@ -24,6 +25,17 @@ class Location extends Node
     protected $long;
     protected $geom_array = [];
     protected $isSimplified = false;
+
+    public function scopeNoWorld($query)
+    {
+        return $query->where('adm_level', '<>', -1);
+    }
+
+    // quick way to get the World object
+    public static function world()
+    {
+        return self::where('adm_level', -1)->get()->first();
+    }
 
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
@@ -130,7 +142,9 @@ class Location extends Node
     {
         $str = '';
         foreach ($this->getAncestors() as $ancestor) {
-            $str .= $ancestor->name.' > ';
+            if ($ancestor->adm_level != '-1') {
+                $str .= $ancestor->name.' > ';
+            }
         }
 
         return $str.$this->name;

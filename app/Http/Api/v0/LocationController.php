@@ -22,7 +22,7 @@ class LocationController extends Controller
      */
     public function index(Request $request)
     {
-        $locations = Location::select('*')->withGeom();
+        $locations = Location::select('*')->withGeom()->noWorld();
         if ($request->id) {
             $locations = $locations->whereIn('id', explode(',', $request->id));
         }
