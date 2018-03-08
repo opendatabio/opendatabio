@@ -66,7 +66,12 @@ class HerbariumController extends Controller
         'acronym' => 'required|max:20|unique:herbaria',
         'irn' => 'required',
     ]);
-        $herb = Herbarium::create($request->all());
+
+	$herb = Herbarium::create([
+		'name' => $request->name, 
+		'irn' => $request->irn, 
+		'acronym' => strtoupper($request->acronym),
+	]);
 
         return redirect('herbaria/'.$herb->id)->withStatus(Lang::get('messages.stored'));
     }

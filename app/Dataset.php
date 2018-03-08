@@ -31,6 +31,17 @@ class Dataset extends Model
         return $this->belongsToMany(Tag::class);
     }
 
+    public function getTagLinksAttribute() {
+	    if (empty($this->tags)) {
+		    return ''; 
+	    }
+	    $ret = ''; 
+	    foreach ($this->tags as $tag) {
+		    $ret .= "<a href='".url('tags/'.$tag->id)."'>".htmlspecialchars($tag->name).'</a><br>';
+	    }
+	    return $ret;
+    }
+
     public function reference()
     {
         return $this->belongsTo(BibReference::class, 'bibreference_id');
