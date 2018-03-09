@@ -44,17 +44,7 @@ class DatasetsDataTable extends DataTable
 
             return $ret;
         })
-        ->addColumn('tags', function ($dataset) {
-            if (empty($dataset->tags)) {
-                return '';
-            }
-            $ret = '';
-            foreach ($dataset->tags as $tag) {
-                $ret .= "<a href='".url('tags/'.$tag->id)."'>".htmlspecialchars($tag->name).'</a><br>';
-            }
-
-            return $ret;
-        })
+        ->addColumn('tags', function ($dataset) { return $dataset->tagLinks; })
         ->rawColumns(['name', 'members', 'tags']);
     }
 

@@ -23,6 +23,10 @@ class TaxonController extends Controller
     public function index(Request $request)
     {
         $taxons = Taxon::query()->with(['author_person', 'reference']);
+	if ($request->root) {
+		$root_tx = Taxon::select('lft', 'rgt')->where('id',$request->root)->get()->first();
+		$taxons->where('lft', '>=', $root_tx['lft'])->where('rgt', '<=', $root_tx['rgt'])->orderBy('lft');
+	}
         if ($request->id) {
             $taxons = $taxons->whereIn('id', explode(',', $request->id));
         }
