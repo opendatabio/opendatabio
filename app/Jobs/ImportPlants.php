@@ -126,7 +126,7 @@ class ImportPlants extends AppJob
         $this->affectedId($plant->id);
         if ($identification) {
             $identification['object_id'] = $plant->id;
-            $identification = new Identification($identification);
+            Identification::create($identification);
         }
         return;
     }
@@ -145,7 +145,7 @@ class ImportPlants extends AppJob
             $taxon_id = Taxon::select('id')->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%'.$taxon.'%'])->get();
         }
         if (count($taxon_id)) {
-            $identification['taxon_id'] = $taxon_id->first();
+            $identification['taxon_id'] = $taxon_id->first()->id;
         } else {
             $this->appendLog("WARNING: Taxon $taxon was not found in the database.");
             return null;
@@ -163,32 +163,32 @@ class ImportPlants extends AppJob
                                 ->get();
             }
             if (count($identifier_id))
-                $identification['person_id'] = $identifier_id->first();
+                $identification['person_id'] = $identifier_id->first()->id;
             else
                 $this->appendLog("WARNING: Identifier $identifier was not found in the person table.");
         }
         if (!array_key_exists('modifier', $idetification))
             $idetification['modifier'] = 0;
-        $idetification['date'] = array_key_exists('idetification_date', $plant) ? $plant['idetification_date'] : $plant['date'];
+        $identification['date'] = array_key_exists('identification_date', $plant) ? $plant['identification_date'] : $plant['date'];
         $identification['object_type'] = 'App\Plant';
         return $identification;
     }
 
     protected function breakTaxonNameModifier($taxon)
     {
-        if (endsWith($taxon, ' s.s.')) {
+        if ($this->endsWith($taxon, ' s.s.')) {
             $name = substr($taxon, 0, -5);
             $modifier = Identification::SS;
-        } elseif (endsWith($taxon, ' s.l.')) {
+        } elseif ($this->endsWith($taxon, ' s.l.')) {
             $name = substr($taxon, 0, -5);
             $modifier = Identification::SL;
-        } elseif (endsWith($taxon, ' c.f.')) {
+        } elseif ($this->endsWith($taxon, ' c.f.')) {
             $name = substr($taxon, 0, -5);
             $modifier = Identification::CF;
-        } elseif (endsWith($taxon, ' vel aff.')) {
+        } elseif ($this->endsWith($taxon, ' vel aff.')) {
             $name = substr($taxon, 0, -9);
             $modifier = Identification::VEL_AFF;
-        } elseif (endsWith($taxon, ' aff.')) {
+        } elseif ($this->endsWith($taxon, ' aff.')) {
             $name = substr($taxon, 0, -5);
             $modifier = Identification::AFF;
         } else {
@@ -199,5 +199,10 @@ class ImportPlants extends AppJob
             'name' => $name,
             'modifier' => $modifier,
         );
+    }
+    
+    protected function endsWith($complete, $end)
+    {
+        return $end === substr($complete, 0, -strlen($end));
     }
 }
