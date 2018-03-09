@@ -7,7 +7,7 @@
 
 namespace App\Jobs;
 
-use App\Plants;
+use App\Plant;
 use App\Taxon;
 use App\Identification;
 use App\Location;
@@ -43,14 +43,14 @@ class ImportPlants extends AppJob
                 $this->appendLog('ERROR: person entry is not formatted as array!'.serialize($plant));
                 continue;
             }
-            if (!hasRequiredKeys(['tag', 'date', 'location', 'project'], $plant))
+            if (!$this->hasRequiredKeys(['tag', 'date', 'location', 'project'], $plant))
                 continue;
-            if (!validLocation($plant)) {
+            if (!$this->validValue($plant, 'location', Location::class, 'name')) {
                 $this->setError();
                 $this->appendLog('ERROR: entry needs a location: '.implode(';', $plant));
                 continue;
             }
-            if (!validProject($plant)) {
+            if (!$this->validValue($plant, 'project', Project::class, 'name')) {
                 $this->setError();
                 $this->appendLog('ERROR: entry needs a project: '.implode(';', $plant));
                 continue;
@@ -60,13 +60,13 @@ class ImportPlants extends AppJob
                 $this->import($plant);
             } catch (\Exception $e) {
                 $this->setError();
-                $this->appendLog('Exception '.$e->getMessage().' on person '.$plant['full_name']);
+                $this->appendLog('Exception '.$e->getMessage().' on plant '.$plant['tag']);
             }
         }
     }
 
     protected function hasRequiredKeys($requiredKeys, $registry) {
-        for ($requiredKeys as $key)
+        foreach ($requiredKeys as $key)
             if (!array_key_exists($key, $registry)) {
                 $this->setError();
                 $this->appendLog('ERROR: entry needs a '.$key.': '.implode(';', $registry));
@@ -75,36 +75,20 @@ class ImportPlants extends AppJob
         return true;
     }
     
-    protected function validLocation($plant)
+    protected function validValue(&$array, $key, $class, $field)
     {
-        $location = $plant['location'];
-        if (!is_numeric($location)) {
-            $locations_id = Location::select('id')->where('name', '=', $location)->get();
-            if (count($locations_id)) {
-                $location = $locations_id->first();
-                $plant['location'] = $location;
-            } else {
-                $this->appendLog("WARNING: Location $location was not found in the database.");
-                return false;
-            }
+        $value = $array[$key];
+        if (is_numeric($value))
+            return true;
+        $id = $class::select('id')->where($field, 'LIKE', '%'.$value.'%')->get();
+        if (count($id)) {
+            $value = $id->first()->id;
+            $array[$key] = $value;
+            return true;
+        } else {
+            $this->appendLog("WARNING: $key $value was not found in the database.");
+            return false;
         }
-        return true;
-    }
-
-    protected function validProject($plant)
-    {
-        $project = $plant['project'];
-        if (!is_numeric($project)) {
-            $projects_id = Project::select('id')->where('name', '=', $project)->get();
-            if (count($projects_id)) {
-                $project = $projects_id->first();
-                $plant['project'] = $project;
-            } else {
-                $this->appendLog("WARNING: Project $project was not found in the database.");
-                return false;
-            }
-        }
-        return true;
     }
 
     public function import($plant)
@@ -117,7 +101,7 @@ class ImportPlants extends AppJob
         $updated_at = array_key_exists('updated_at', $plant) ? $plant['updated_at'] : null;
         $notes = array_key_exists('notes', $plant) ? $plant['notes'] : null;
         $relative_position = array_key_exists('relative_position', $plant) ? $plant['relative_position'] : null;
-        $same = Plant::where('location', '=', $location)->where('tag', '=', $tag)->get();
+        $same = Plant::where('location_id', '=', $location)->where('tag', '=', $tag)->get();
         if (count($same)){
             $this->setError();
             $this->appendLog('ERROR: There is another registry of a plant with location '.$location.' and tag '.$tag);
@@ -125,7 +109,7 @@ class ImportPlants extends AppJob
         }
 
         // Plants' fields is ok, what about indetification of this plant?
-        $identification = extractIdentification($plant);
+        $identification = $this->extractIdentification($plant);
         
         //Finaly create the registries
         $plant = new Plant([
@@ -153,12 +137,12 @@ class ImportPlants extends AppJob
             return null;
         $taxon = $plant['taxon'];
         if (is_numeric($taxon)) {
-            $taxon_id = Taxon::select('id')->where('id', '=', $taxon])->get();
+            $taxon_id = Taxon::select('id')->where('id', '=', $taxon)->get();
         } else {
-            $taxon = breakTaxonNameModifier($taxon);
+            $taxon = $this->breakTaxonNameModifier($taxon);
             $idetification['modifier'] = $taxon['modifier'];
             $taxon = $taxon['name'];
-            $taxon_id = Taxon::select('id')->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%'.$request->taxon.'%'])->get();
+            $taxon_id = Taxon::select('id')->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%'.$taxon.'%'])->get();
         }
         if (count($taxon_id)) {
             $identification['taxon_id'] = $taxon_id->first();
@@ -192,28 +176,28 @@ class ImportPlants extends AppJob
 
     protected function breakTaxonNameModifier($taxon)
     {
-        if (endsWith($taxon, ' s.s.') {
-            $name = sustr($taxon, 0, -5);
+        if (endsWith($taxon, ' s.s.')) {
+            $name = substr($taxon, 0, -5);
             $modifier = Identification::SS;
-        } elseif (endsWith($taxon, ' s.l.') {
-            $name = sustr($taxon, 0, -5);
+        } elseif (endsWith($taxon, ' s.l.')) {
+            $name = substr($taxon, 0, -5);
             $modifier = Identification::SL;
-        } elseif (endsWith($taxon, ' c.f.') {
-            $name = sustr($taxon, 0, -5);
+        } elseif (endsWith($taxon, ' c.f.')) {
+            $name = substr($taxon, 0, -5);
             $modifier = Identification::CF;
-        } elseif (endsWith($taxon, ' vel aff.') {
-            $name = sustr($taxon, 0, -9);
+        } elseif (endsWith($taxon, ' vel aff.')) {
+            $name = substr($taxon, 0, -9);
             $modifier = Identification::VEL_AFF;
-        } elseif (endsWith($taxon, ' aff.') {
-            $name = sustr($taxon, 0, -5);
+        } elseif (endsWith($taxon, ' aff.')) {
+            $name = substr($taxon, 0, -5);
             $modifier = Identification::AFF;
         } else {
             $name = $taxon;
             $modifier = Identification::NONE;
         }
         return array (
-            'name' -> $name;
-            'modifier' -> $modifier
+            'name' => $name,
+            'modifier' => $modifier,
         );
     }
 }

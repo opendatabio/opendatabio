@@ -108,9 +108,17 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     public function getLocationNameAttribute()
     {
         if ($this->location) {
-            return $this->location->name . '(' . $this->location->latitudeSimple . ', ' . $this->location->longitudeSimple . ')';
+            return $this->location->name . ' (' . $this->location->latitudeSimple . ', ' . $this->location->longitudeSimple . ')';
         }
         return 'Unknown location';
+    }
+
+    public function getProjectNameAttribute()
+    {
+        if ($this->project) {
+            return $this->project->name;
+        }
+        return 'Unknown project';
     }
 
     // with access to the location geom field
