@@ -29,6 +29,10 @@ class IncompleteDateTest extends TestCase
         $this->assertEquals($obj->day, '10');
         $this->assertEquals($obj->month, '11');
         $this->assertEquals($obj->year, '2012');
+        $obj->setDate(5, 2, 2012);
+        $this->assertEquals($obj->month, '05');
+        $obj->date = '2012-5-2';
+        $this->assertEquals($obj->month, '05');
     }
 
     public function testFormat()
@@ -40,6 +44,8 @@ class IncompleteDateTest extends TestCase
         $this->assertEquals($obj->formatDate, '2012-11');
         $obj->date = '2012-00-00';
         $this->assertEquals($obj->formatDate, '2012');
+        $obj->setDate("05", "01", "2012");
+        $this->assertEquals($obj->formatDate, '2012-05-01');
     }
 
     public function testValid()
@@ -86,5 +92,21 @@ class IncompleteDateTest extends TestCase
         $this->assertFalse(IncompleteDateClass::beforeOrSimilar([00, 00, 1970], [12, 31, 1969]));
         // incomplete first, known month
         $this->assertFalse(IncompleteDateClass::beforeOrSimilar([12, 00, 1969], [11, 31, 1969]));
+    }
+
+    public function testNA() {
+	# The class should be able to deal with NA
+        $obj = new IncompleteDateClass();
+        $obj->setDate("NA", "NA", "2012");
+        $this->assertEquals($obj->formatDate, '2012');
+        $obj->date = '2014-NA-NA';
+        $this->assertEquals($obj->formatDate, '2014');
+        $obj->setDate(05, "NA", "2012");
+        $this->assertEquals($obj->formatDate, '2012-05');
+	$obj->date = '2017-03-NA';
+        $this->assertEquals($obj->formatDate, '2017-03');
+        $this->assertEquals($obj->date, '2017-03-00');
+        $this->assertTrue(IncompleteDateClass::checkDate("NA", "NA", 2017));
+        $this->assertTrue(IncompleteDateClass::checkDate([01, "NA", 2017]));
     }
 }
