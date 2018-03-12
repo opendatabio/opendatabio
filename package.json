@@ -11,11 +11,11 @@
   },
   "devDependencies": {
     "bootstrap-sass": "^3.3.7",
-    "chart.js": "^2.7.1",
+    "chart.js": "^2.7.2",
     "datatables": "^1.10.7",
-    "datatables.net-buttons": "^1.4.2",
-    "devbridge-autocomplete": "^1.4.4",
-    "jquery": "^3.1.1",
+    "datatables.net-buttons": "^1.5.1",
+    "devbridge-autocomplete": "^1.4.7",
+    "jquery": "^3.3.1",
     "laravel-mix": "0.*",
     "spectrum-colorpicker": "^1.8.0"
   }
