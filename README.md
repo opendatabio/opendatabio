@@ -9,10 +9,12 @@ A companion R package is being developed [here](https://github.com/opendatabio/o
 ## Authors
 - Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil - coordination
 - Andre Chalom (andrechalom@gmail.com) - main developer
+- Rafael Arantes (birutaibm@gmail.com)
 - Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
 
 ## Funding & Support
-This project has received support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home).
+This project has received support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home). Rafael Arantes contribution was supported
+by a FAPESP TTIV scholarship (#2017/21695-8).
 
 ## Overview
 This project aims to provide a flexible but robust framework for storing, analysing and exporting biological data.
@@ -171,4 +173,12 @@ A tool for upgrading duckewiki databases to opendatabio is currently being devel
 ## License
 Opendatabio is licensed for use under a GPLv3 license. 
 
-PHP is licensed under the PHP license. Composer and Laravel framework are licensed under the MIT license.
+PHP is licensed under the PHP license. Composer and Laravel framework are licensed under the MIT license. OpenDataBio reimplements parts of the
+[Revisionable](https://github.com/VentureCraft/revisionable) library, under MIT license.
+
+## Acknowledgements
+- Rodrigo Augusto Santinelo Pereira (raspereira@ffclrp.usp.br)
+- Lo Almeida 
+- Rodrigo Pereira
+- Ricardo Perdiz
+- Renato Lima

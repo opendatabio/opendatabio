@@ -639,11 +639,13 @@ class Installer
         echo $this->c('Do you want to create the database user and schema? [yes]/no ', 'warning');
         $line = trim(fgets(STDIN));
         if ('' != $line and 'y' != $line and 'yes' != $line) {
+            $createcmd = str_replace('\`', '`', $createcmd);
             exit($this->c("Unable to complete installation. Please create the database and database user. Suggested commands:\n$createcmd", 'danger'));
         } else {
             echo $this->c("You will be prompted now for the MySQL root password:\n", 'warning');
             $this->runDbRoot($createcmd);
             if (false === $this->runDbUser('SELECT 1;')) {
+                $createcmd = str_replace('\`', '`', $createcmd);
                 exit($this->c("Unable to create database! Try to create the user and database manually... Suggested commands:\n$createcmd", 'danger'));
             }
         }
@@ -690,11 +692,18 @@ class Installer
             exit($this->c("running 'php artisan migrate' failed!\n", 'danger'));
         }
 
-	echo 'Do you wish to seed the database with default taxon and locations? yes/[no] ';
+	echo 'Do you wish to import the default taxon and locations to the database? yes/[no] ';
 	$line = trim(fgets(STDIN));
-	if ('y' == $line or 'yes' == $line) {
-		$this->getSeeds();
-	}
+    if ('y' == $line or 'yes' == $line) {
+        echo $this->c('NOTICE: This will completely replace the current taxon and locations table. To proceed, type in uppercase PROCEED ', 'danger');
+        $line = trim(fgets(STDIN));
+        if ('PROCEED' == $line) {
+            $this->getSeeds();
+        } else {
+            echo $this->c('Database imported cancelled.', 'danger');
+        }
+
+    }
 
         if ('local' == getenv('APP_ENV')) {
             echo 'Do you wish to seed the database with randomly generated test data? yes/[no] ';
