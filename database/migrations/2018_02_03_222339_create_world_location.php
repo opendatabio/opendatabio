@@ -20,7 +20,7 @@ class CreateWorldLocation extends Migration
     {
         $WORLD = Location::create(['name' => 'World', 'adm_level' => -1]);
         $countries = Location::where('adm_level', 0)->get();
-        if (! empty($countries)) {
+        if (!empty($countries)) {
             $countries->each(function ($location) use ($WORLD) {$location->makeChildOf($WORLD); });
         }
     }
@@ -31,7 +31,7 @@ class CreateWorldLocation extends Migration
     public function down()
     {
         $WORLD = Location::world();
-        if (! empty($WORLD) and !empty($WORLD->children()) ) {
+        if (!empty($WORLD) and !empty($WORLD->children())) {
             $WORLD->children()->each(function ($location) {$location->makeRoot(); });
             Location::where('adm_level', -1)->delete();
         }

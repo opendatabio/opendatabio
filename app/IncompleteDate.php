@@ -9,10 +9,9 @@ namespace App;
 
 trait IncompleteDate
 {
-
-    private function _zeroPad($what) 
+    private function _zeroPad($what, $howmany = 2)
     {
-        return str_pad($what, 2, '0', STR_PAD_LEFT);
+        return str_pad($what, $howmany, '0', STR_PAD_LEFT);
     }
 
     public function getDayAttribute()
@@ -30,25 +29,34 @@ trait IncompleteDate
         return (int) substr($this->date, 0, 4);
     }
 
-    public function setDate($month, $day, $year)
+    // This can be used to set the date if you have separate numbers
+    public function setDate($month, $day = null, $year = null)
     {
-	$year = (int) $year;
-	$month = (int) $month;
-	$day = (int) $day;
-        $this->attributes['date'] = $year.'-'.$this->_zeroPad($month).'-'.$this->_zeroPad($day);
+        if (strlen($month) > 2) {
+            return $this->setDateFromString($month);
+        }
+        $year = (int) $year;
+        $month = (int) $month;
+        $day = (int) $day;
+        $this->date = $this->_zeroPad($year, 4).'-'.$this->_zeroPad($month).'-'.$this->_zeroPad($day);
     }
 
-    public function setFormatDateAttribute($string) 
+    // This can be used to set the date from a string
+    public function setDateFromString(string $string)
     {
-	    $firstdash = strpos($string, '-', 0);
-	    $seconddash = strpos($string, '-', $firstdash+1);
-	    $this->setDate(
-		    # month
-		    substr($string, $firstdash + 1, $seconddash - $firstdash - 1),
-		    # day
-		    substr($string, $seconddash + 1, strlen($string) - $seconddash - 1),
-		    # year
-		    substr($string, 0, $firstdash - 1));
+        try {
+            $firstdash = strpos($string, '-', 0);
+            $seconddash = strpos($string, '-', $firstdash + 1);
+        } catch (\ErrorException $e) {
+            return $this->date = null;
+        }
+        $this->setDate(
+            // month
+            substr($string, $firstdash + 1, $seconddash - $firstdash - 1),
+            // day
+            substr($string, $seconddash + 1, strlen($string) - $seconddash - 1),
+            // year
+            substr($string, 0, $firstdash));
     }
 
     public function getFormatDateAttribute()
@@ -70,9 +78,9 @@ trait IncompleteDate
             $day = $month[1];
             $month = $month[0];
         }
-	$year = (int) $year;
-	$month = (int) $month;
-	$day = (int) $day;
+        $year = (int) $year;
+        $month = (int) $month;
+        $day = (int) $day;
         // if month is unknown, day must be unknown too
         if (0 == $month and 0 != $day) {
             return false;
@@ -93,7 +101,7 @@ trait IncompleteDate
         // may receive dates as array of [$m, $d, $y] or as a date string formated in Y-m-d
         // NOTE THAT string dates must NOT be incomplete
         if (is_array($first)) { // will be bumped down for comparison
-            $first = $first[2].'-'.$this->_zeroPad($first[0]).'-'.$this->_zeroPad($first[1]);
+            $first = $first[2].'-'.str_pad($first[0], 2, '0', STR_PAD_LEFT).'-'.str_pad($first[1], 2, '0', STR_PAD_LEFT);
         }
         if (is_array($second)) { // must be bumped UP for comparison
             if (0 == $second[1] and 0 == $second[0]) {
@@ -101,7 +109,7 @@ trait IncompleteDate
             } elseif (0 == $second[1]) {
                 $second[0] = $second[0] + 1;
             }
-            $second = $second[2].'-'.$this->_zeroPad($second[0]).'-'.$this->_zeroPad($second[1]);
+            $second = $second[2].'-'.str_pad($second[0], 2, '0', STR_PAD_LEFT).'-'.str_pad($second[1], 2, '0', STR_PAD_LEFT);
         }
         if (!(is_string($first) and is_string($second))) {
             throw new \InvalidArgumentException('beforeOrSimilar expects string or array arguments');
