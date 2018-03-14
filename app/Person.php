@@ -30,19 +30,19 @@ class Person extends Model
     }
 
     // For use in Person::duplicates
-   public static function normalize($text)
-        {
-            $text = trim(strtolower($text));
-            $text = preg_replace('/[^a-z ]/', '', $text);
-            $tarr = explode(' ', $text);
-            foreach ($tarr as $key => $token) {
-                if (strlen($token) < 2) {
-                    unset($tarr[$key]);
-                }
+    public static function normalize($text)
+    {
+        $text = trim(strtolower($text));
+        $text = preg_replace('/[^a-z ]/', '', $text);
+        $tarr = explode(' ', $text);
+        foreach ($tarr as $key => $token) {
+            if (strlen($token) < 2) {
+                unset($tarr[$key]);
             }
-
-            return join(' ', $tarr);
         }
+
+        return join(' ', $tarr);
+    }
 
     // Looks for possible duplication of persons. Returns a collection of possible dupes
     public static function duplicates($fullname, $abbreviation)

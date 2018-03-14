@@ -56,7 +56,7 @@ class ImportPersons extends AppJob
 
     public function import($person)
     {
-	    $full_name = $person['full_name'];
+        $full_name = $person['full_name'];
         $email = array_key_exists('email', $person) ? $person['email'] : null;
         $institution = array_key_exists('institution', $person) ? $person['institution'] : null;
         $abbreviation = $this->extractAbbreviation($person);
@@ -64,9 +64,10 @@ class ImportPersons extends AppJob
         $dupes = Person::duplicates($full_name, $abbreviation);
         if (count($dupes)) {
             $same = Person::where('abbreviation', '=', $abbreviation)->get();
-            if (count($same)){
+            if (count($same)) {
                 $this->setError();
                 $this->appendLog('ERROR: There is another registry of a person with name '.$full_name.' and abbreviation '.$abbreviation);
+
                 return;
             }
             $this->appendLog('WARNING: There is another registry of a person with name like '.$full_name.' or abbreviation like '.$abbreviation);
@@ -81,44 +82,43 @@ class ImportPersons extends AppJob
         ]);
         $person->save();
         $this->affectedId($person->id);
+
         return;
     }
 
     protected function extractAbbreviation($person)
     {
-        if (array_key_exists('abbreviation', $person) && ('' != $person['abbreviation']))
+        if (array_key_exists('abbreviation', $person) && ('' != $person['abbreviation'])) {
             return $person['abbreviation'];
-        else
-        {
+        } else {
             $names = explode(' ', strtoupper($person['full_name']));
             $size = count($names);
-            $abbreviation = $names[$size-1] . ', ';
-            for ($i = 0; $i < $size-1; $i++)
-                $abbreviation = $abbreviation . $names[$i][0] . '. ';
+            $abbreviation = $names[$size - 1].', ';
+            for ($i = 0; $i < $size - 1; ++$i) {
+                $abbreviation = $abbreviation.$names[$i][0].'. ';
+            }
+
             return $abbreviation;
         }
     }
 
     protected function extractHerbarium($person)
     {
-        if (array_key_exists('herbarium', $person) and ('' != $person['herbarium']))
-        {
-            if (is_numeric($person['herbarium']))
+        if (array_key_exists('herbarium', $person) and ('' != $person['herbarium'])) {
+            if (is_numeric($person['herbarium'])) {
                 return $person['herbarium'];
-            else // It is the herbarium name
-            {
+            } else { // It is the herbarium name
                 $herbarium_obj = Herbarium::where('name', '=', $person['herbarium'])
                                     ->orWhere('acronym', '=', $person['herbarium'])->get();
                 if ($herbarium_obj->count()) {
                     return $herbarium_obj->first()->id;
                 } else {
-                    $this->appendLog("WARNING: Herbarium for person ".$person['full_name']." is listed as ".$person['herbarium'].", but this was not found in the database.");
+                    $this->appendLog('WARNING: Herbarium for person '.$person['full_name'].' is listed as '.$person['herbarium'].', but this was not found in the database.');
+
                     return null;
-		}
-	    }
-        }
-        else
-        {
+                }
+            }
+        } else {
             return null;
         }
     }
