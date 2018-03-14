@@ -10,7 +10,6 @@ namespace App;
 use Baum\Node;
 use DB;
 use Lang;
-use Illuminate\Database\Eloquent\Builder;
 
 class Location extends Node
 {
@@ -142,7 +141,7 @@ class Location extends Node
     {
         $str = '';
         foreach ($this->getAncestors() as $ancestor) {
-            if ($ancestor->adm_level != '-1') {
+            if ('-1' != $ancestor->adm_level) {
                 $str .= $ancestor->name.' > ';
             }
         }

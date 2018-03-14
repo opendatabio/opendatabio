@@ -62,6 +62,14 @@
 </p>
 @endif
 
+@if ($dataset->tags)
+<p><strong>
+@lang('messages.tags')
+: </strong><br>
+{!! $dataset->tagLinks !!}
+</p>
+@endif
+
 @if ($dataset->measurements()->count())
 			    <div class="col-sm-6">
 				<a href="{{ url('datasets/'. $dataset->id. '/measurements')  }}" class="btn btn-success" name="submit" value="submit">

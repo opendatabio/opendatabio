@@ -420,4 +420,5 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'new_picture' => 'Nova imagem',
   'doi' => 'DOI',
   'incorrect_doi' => 'O campo DOI não está corretamente informado. Dica: 10.1109/5.771073 é um DOI válido',
+  'family' => 'Família',
 );

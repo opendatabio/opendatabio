@@ -23,6 +23,10 @@ class LocationController extends Controller
     public function index(Request $request)
     {
         $locations = Location::select('*')->withGeom()->noWorld();
+        if ($request->root) {
+            $root_loc = Location::select('lft', 'rgt')->where('id', $request->root)->get()->first();
+            $locations->where('lft', '>=', $root_loc['lft'])->where('rgt', '<=', $root_loc['rgt'])->orderBy('lft');
+        }
         if ($request->id) {
             $locations = $locations->whereIn('id', explode(',', $request->id));
         }
@@ -30,7 +34,7 @@ class LocationController extends Controller
             $locations = $locations->where('name', 'LIKE', '%'.$request->search.'%');
         }
         if ($request->adm_level) {
-            $locations = $locations->where('adm_level', '=', $request->level);
+            $locations = $locations->where('adm_level', '=', $request->adm_level);
         }
         if ($request->limit) {
             $locations->limit($request->limit);
