@@ -432,22 +432,23 @@ class Installer
         }
     }
 
-    public function makeProxy() {
-            $proxystring = '';
+    public function makeProxy()
+    {
+        $proxystring = '';
         if ('' != getenv('PROXY_URL')) {
-
             if ('' != getenv('PROXY_USER')) {
                 $proxystring = getenv('PROXY_USER').':'.getenv('PROXY_PASSWORD').'@';
             }
-	    $proxystring .= getenv('PROXY_URL').':'.getenv('PROXY_PORT');
-	}
-	    return $proxystring;
+            $proxystring .= getenv('PROXY_URL').':'.getenv('PROXY_PORT');
+        }
+
+        return $proxystring;
     }
 
     public function testProxy()
     {
         if ('' != getenv('PROXY_URL')) {
-		$proxystring = $this->makeProxy();
+            $proxystring = $this->makeProxy();
             echo 'Testing proxy settings...';
             $client = new \GuzzleHttp\Client(['base_uri' => 'http://www.example.com', 'proxy' => $proxystring]);
             try {
@@ -465,38 +466,45 @@ class Installer
         }
     }
 
-    protected function maxVersion($array) {
-	    $config = require(dirname(__DIR__) . '/config/app.php');
-	    $myversion = $config['version'];
-	    foreach (array_keys($array) as $key=>$val) {
-		if(version_compare($val, $myversion, '>'))
-			return $array[ array_keys($array)[$key-1] ];
-	    }
-	    return $array[ array_keys($array)[$key] ];
+    protected function maxVersion($array)
+    {
+        $config = require dirname(__DIR__).'/config/app.php';
+        $myversion = $config['version'];
+        foreach (array_keys($array) as $key => $val) {
+            if (version_compare($val, $myversion, '>')) {
+                return $array[array_keys($array)[$key - 1]];
+            }
+        }
+
+        return $array[array_keys($array)[$key]];
     }
 
-    protected function processSeed($file, $client) {
-	    $DIR = dirname(__DIR__) . '/storage/';
-	    # downloads file to storage
-	$client->request('GET', $this->rawpath . $file . '.tar.gz', ['sink' => $DIR . $file . '.tar.gz']);
-	    exec('tar xzf '. $DIR . $file . '.tar.gz -C '. $DIR);
-	    exec('mysql -u'.getenv('DB_USERNAME').
+    protected function processSeed($file, $client)
+    {
+        $DIR = dirname(__DIR__).'/storage/';
+        // downloads file to storage
+        $client->request('GET', $this->rawpath.$file.'.tar.gz', ['sink' => $DIR.$file.'.tar.gz']);
+        exec('tar xzf '.$DIR.$file.'.tar.gz -C '.$DIR);
+        exec('mysql -u'.getenv('DB_USERNAME').
             ' -h'.getenv('DB_HOST').
             ' -p'.getenv('DB_PASSWORD').
-            ' '.getenv('DB_DATABASE')."<". $DIR.$file,  $result, $status);
-	if ($status != 0) echo $this->c('Error processing database seed file!', 'danger');
-}
+            ' '.getenv('DB_DATABASE').'<'.$DIR.$file, $result, $status);
+        if (0 != $status) {
+            echo $this->c('Error processing database seed file!', 'danger');
+        }
+    }
 
-    protected function getSeeds() {
-	    echo "Downloading seed information...\n";
-	    $client = new \GuzzleHttp\Client(['base_uri' => 'https://www.github.com', 'proxy' => $this->makeProxy()]);
-	    $response = $client->request('GET', $this->rawpath . 'seeds.json');
-	    $seed_array = json_decode((string) $response->getBody(), true);
-	    $seeds = $this->maxVersion($seed_array['versions']);
-	    echo "Processing seed for taxons...\n";
-	    $this->processSeed($seeds['taxon'], $client);
-	    echo "Processing seed for locations...\n";
-	    $this->processSeed($seeds['location'], $client);
+    protected function getSeeds()
+    {
+        echo "Downloading seed information...\n";
+        $client = new \GuzzleHttp\Client(['base_uri' => 'https://www.github.com', 'proxy' => $this->makeProxy()]);
+        $response = $client->request('GET', $this->rawpath.'seeds.json');
+        $seed_array = json_decode((string) $response->getBody(), true);
+        $seeds = $this->maxVersion($seed_array['versions']);
+        echo "Processing seed for taxons...\n";
+        $this->processSeed($seeds['taxon'], $client);
+        echo "Processing seed for locations...\n";
+        $this->processSeed($seeds['location'], $client);
     }
 
     public function checkSupervisor()
@@ -692,18 +700,17 @@ class Installer
             exit($this->c("running 'php artisan migrate' failed!\n", 'danger'));
         }
 
-	echo 'Do you wish to import the default taxon and locations to the database? yes/[no] ';
-	$line = trim(fgets(STDIN));
-    if ('y' == $line or 'yes' == $line) {
-        echo $this->c('NOTICE: This will completely replace the current taxon and locations table. To proceed, type in uppercase PROCEED ', 'danger');
+        echo 'Do you wish to import the default taxon and locations to the database? yes/[no] ';
         $line = trim(fgets(STDIN));
-        if ('PROCEED' == $line) {
-            $this->getSeeds();
-        } else {
-            echo $this->c('Database imported cancelled.', 'danger');
+        if ('y' == $line or 'yes' == $line) {
+            echo $this->c('NOTICE: This will completely replace the current taxon and locations table. To proceed, type in uppercase PROCEED ', 'danger');
+            $line = trim(fgets(STDIN));
+            if ('PROCEED' == $line) {
+                $this->getSeeds();
+            } else {
+                echo $this->c('Database imported cancelled.', 'danger');
+            }
         }
-
-    }
 
         if ('local' == getenv('APP_ENV')) {
             echo 'Do you wish to seed the database with randomly generated test data? yes/[no] ';

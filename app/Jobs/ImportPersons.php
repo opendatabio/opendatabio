@@ -67,6 +67,7 @@ class ImportPersons extends AppJob
             if (count($same)) {
                 $this->setError();
                 $this->appendLog('ERROR: There is another registry of a person with name '.$full_name.' and abbreviation '.$abbreviation);
+
                 return;
             }
             $this->appendLog('WARNING: There is another registry of a person with name like '.$full_name.' or abbreviation like '.$abbreviation);
@@ -81,6 +82,7 @@ class ImportPersons extends AppJob
         ]);
         $person->save();
         $this->affectedId($person->id);
+
         return;
     }
 
@@ -95,6 +97,7 @@ class ImportPersons extends AppJob
             for ($i = 0; $i < $size - 1; ++$i) {
                 $abbreviation = $abbreviation.$names[$i][0].'. ';
             }
+
             return $abbreviation;
         }
     }
