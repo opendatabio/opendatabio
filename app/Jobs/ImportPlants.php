@@ -142,7 +142,7 @@ class ImportPlants extends AppJob
                 
             ]);
             $identification->setDate($date);
-            Identification::create($identification);
+            $identification->save();
         }
         foreach ($collectors as $collector) {
             Collector::create([
