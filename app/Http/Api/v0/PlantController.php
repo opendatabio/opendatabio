@@ -71,7 +71,7 @@ class PlantController extends Controller
      * Example: asIdList('Rafael', 'Person', array('full_name', 'abbreviation', 'email') returns an array with the id of
      * all registry at table persons where full_name, or abbreviation or email contains Rafael.
      */
-    public function asIdList($variable, $class, $textField)
+    public static function asIdList($variable, $class, $textField)
     {
         if (preg_match("/\d+(,\d+)*/", $variable))
             return explode(',', $variable);

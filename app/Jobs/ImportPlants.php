@@ -13,6 +13,8 @@ use App\Identification;
 use App\Location;
 use App\Project;
 use App\Person;
+use App\Collector;
+use App\Http\Api\v0\PlantController; //for use asIdList function
 
 class ImportPlants extends AppJob
 {
@@ -108,27 +110,60 @@ class ImportPlants extends AppJob
             return;
         }
 
-        // Plants' fields is ok, what about indetification of this plant?
+        // Plants' fields is ok, what about related tables?
         $identification = $this->extractIdentification($plant);
+        $collectors = $this->extractCollectors($plant);
         
-        //Finaly create the registries
+        //Finaly create the registries:
+        // - First plant's registry, to get their id
         $plant = new Plant([
             'location_id' => $location,
             'tag' => $tag,
-            'date' => $date,
             'project_id' => $project,
             'created_at' => $created_at,
             'updated_at' => $updated_at,
             'notes' => $notes,
             'relative_position' => $relative_position,
         ]);
+        //date can not be set into constructor due to IncompleteDate compatibility
+        $plant->setDate($date);
         $plant->save();
         $this->affectedId($plant->id);
+        
+        // - Then create the related registries (for identification and collector), if requested
         if ($identification) {
-            $identification['object_id'] = $plant->id;
+            $date = $identification['date'];
+            $identification = new Identification([
+                'object_id' => $plant->id,
+                'object_type' => 'App\Plant',
+                'modifier' => $identification['modifier'],
+                'taxon_id' => $identification['taxon_id'],
+                'person_id' => array_key_exists('person_id', $identification) ? $identification['person_id'] : null,
+                
+            ]);
+            $identification->setDate($date);
             Identification::create($identification);
         }
+        foreach ($collectors as $collector) {
+            Collector::create([
+                    'person_id' => $collector,
+                    'object_id' => $plant->id,
+                    'object_type' => 'App\Plant'
+            ]);
+        }
         return;
+    }
+    
+    protected function extractCollectors($plant)
+    {
+        if (!array_key_exists('tagging_team', $plant))
+            return null;
+        $tagging_team = explode(';', $plant['tagging_team']);
+        $ids = array();
+        foreach ($tagging_team as $person)
+            $ids = array_merge($ids,
+                PlantController::asIdList($person, Person::class, array('full_name', 'abbreviation', 'email')));
+        return $ids;
     }
     
     protected function extractIdentification($plant)
@@ -140,7 +175,7 @@ class ImportPlants extends AppJob
             $taxon_id = Taxon::select('id')->where('id', '=', $taxon)->get();
         } else {
             $taxon = $this->breakTaxonNameModifier($taxon);
-            $idetification['modifier'] = $taxon['modifier'];
+            $identification['modifier'] = $taxon['modifier'];
             $taxon = $taxon['name'];
             $taxon_id = Taxon::select('id')->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%'.$taxon.'%'])->get();
         }
@@ -167,8 +202,8 @@ class ImportPlants extends AppJob
             else
                 $this->appendLog("WARNING: Identifier $identifier was not found in the person table.");
         }
-        if (!array_key_exists('modifier', $idetification))
-            $idetification['modifier'] = 0;
+        if (!array_key_exists('modifier', $identification))
+            $identification['modifier'] = 0;
         $identification['date'] = array_key_exists('identification_date', $plant) ? $plant['identification_date'] : $plant['date'];
         $identification['object_type'] = 'App\Plant';
         return $identification;
