@@ -54,17 +54,17 @@
 <?php 
 // Loop and create boxes for all traits
 // how many traits do we have? 3 for default
-$length = isset($form) ? length($form->traits) : 3;
+$length = isset($form) ? count($form->traits) : 3;
 for ($i = 1; $i <= $length; $i++) {
 ?>
 <div class="form-group">
-    <label for="lalala" class="col-sm-3 control-label mandatory">
+    <label for="trait.{{$i}}" class="col-sm-3 control-label mandatory">
 @lang('messages.trait') {{ $i }}
 </label>
     <div class="col-sm-6" id="trait.{{$i}}">
     <input type="text" name="trait_autocomplete[{{$i}}]" id="trait_autocomplete[{{$i}}]" class="form-control autocomplete"
     value="{{ old('trait_autocomplete.'.$i, (isset($form) and $form->traits) ? $form->getTrait($i)->name : null) }}">
-    <input type="hidden" name="trait_id[{{$i}}" id="trait_id[{{$i}}]"
+    <input type="hidden" name="trait_id[{{$i}}]" id="trait_id[{{$i}}]"
     value="{{ old('trait_id.'.$i, (isset($form) and $form->trait) ? $form->getTrait($i)->id : null) }}">
     </div>
     <div class="col-sm-2">
@@ -77,7 +77,22 @@ for ($i = 1; $i <= $length; $i++) {
         @endif
     </div>
 </div>
+
 <?php } ?>
+
+<div class="form-group">
+<div class="col-sm-offset-3 col-sm-6">
+        <i class="glyphicon glyphicon-plus"></i>
+</div>
+</div>
+
+<div class="form-group">
+<label for="notes" class="col-sm-3 control-label">
+@lang('messages.notes')
+</label>
+	    <div class="col-sm-6">
+    <textarea name="notes" id="notes" class="form-control">{{ old('notes', isset($form) ? $form->notes : null) }}</textarea>
+            </div>
 
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
@@ -97,64 +112,13 @@ for ($i = 1; $i <= $length; $i++) {
 @endsection
 @push ('scripts')
 <script>
-
 $(document).ready(function() {
-    $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
-    $("#link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
-    $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
-    $("#trait_autocomplete").devbridgeAutocomplete({
-        serviceUrl: "{{url('traits/autocomplete')}}",
-        /* adds the object type to request; doubles the namespace back slashes */
-//        params: {'type': '{ {  str_replace('\\', '\\\\', get_class($ object)) } }' },
-        onSelect: function (suggestion) {
-            $("#trait_id").val(suggestion.data);
-            $( "#spinner" ).css('display', 'inline-block');
-            $.ajax({
-            type: "GET",
-                url: "{{url('traits/getformelement')}}",
-                dataType: 'json',
-                data: {'id': suggestion.data, 'form': null},
-                success: function (data) {
-                    $("#spinner").hide();
-                    $("#ajax-error").collapse("hide");
-                    $("#append_value").html(data.html);
-                },
-                error: function(e){ 
-                    $("#spinner").hide();
-                    $("#ajax-error").collapse("show");
-                    $("#ajax-error").text('Error sending AJAX request');
-                }
-            })
-        },
-        onInvalidateSelection: function() {
-            $("#trait_id").val(null);
-        },
-        minChars: 3,
-        onSearchStart: function() {
-            $(".minispinner").remove();
-            $(this).after("<div class='spinner minispinner'></div>");
-        },
-        onSearchComplete: function() {
-            $(".minispinner").remove();
-        },
-        showNoSuggestionNotice: true,
-        noSuggestionNotice: "@lang('messages.noresults')"
-    });
+    // Sets the autocomplete on the previously available elements
+<?php for ($i = 1; $i <= $length; $i++) { ?>
+    $("#trait_autocomplete\\[{{$i}}\\]").odbAutocomplete("{{url('traits/autocomplete')}}","#trait_id\\[{{$i}}\\]", "@lang('messages.noresults')", null,
+        {'type': $("#measured_type option:selected").val() }
+    );
+<?php } ?>
 });
-// NOTE! duplicated from view 6
-@if (isset($form) and $form->type==6)
-	$("#value").spectrum({
-		flat:true,
-		showInput:true,
-		showPalette: true,
-		showPaletteOnly: true,
-		togglePaletteOnly: true,
-		togglePaletteMoreText: "@lang('spectrum.more')",
-		togglePaletteLessText: "@lang('spectrum.less')",
-		preferredFormat: "hex",
-        showButtons: false,
-		palette: {!! json_encode(config('app.spectrum')) !!}
-});
-@endif
 </script>
 @endpush

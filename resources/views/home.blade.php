@@ -41,6 +41,14 @@
 @endforeach
     </ul>
 @endif
+@if (Auth::user()->forms()->count())
+<p><strong>@lang('messages.forms'):</strong></p>
+<ul>
+@foreach (Auth::user()->forms as $form)
+    <li><a href="{{url('forms/' . $form->id)}}">{{$form->name}}</a> </li>
+@endforeach
+    </ul>
+@endif
 
 
 

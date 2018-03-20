@@ -63,4 +63,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Dataset::class)->withPivot('access_level');
     }
+
+    public function forms()
+    {
+        return $this->hasMany(Form::class);
+    }
 }

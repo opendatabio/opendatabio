@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Form;
 use Illuminate\Http\Request;
 use App\DataTables\FormsDataTable;
+use Auth;
+use Lang;
 
 class FormController extends Controller
 {
@@ -36,7 +38,20 @@ class FormController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize('create', Form::class);
+        $this->validate($request, [
+            'name' => 'required|string|max:191',
+            'measured_type' => 'required|string',
+            'trait_id' => 'required|array|min:1',
+        ]);
+        $form = new Form($request->only(['name', 'measured_type']));
+        $form->user_id = Auth::user()->id;
+        $form->save(); // to generate id
+        foreach ($request->trait_id as $order => $odbtrait) {
+            $form->traits()->attach($odbtrait, ['order' => $order]);
+        }
+        $form->save();
+        return redirect('forms/'.$form->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -45,9 +60,10 @@ class FormController extends Controller
      * @param  \App\Form  $form
      * @return \Illuminate\Http\Response
      */
-    public function show(Form $form)
+    public function show($id)
     {
-        //
+        $form = Form::with('traits')->findOrFail($id);
+        return view('forms.show', compact('form'));
     }
 
     /**
@@ -56,9 +72,10 @@ class FormController extends Controller
      * @param  \App\Form  $form
      * @return \Illuminate\Http\Response
      */
-    public function edit(Form $form)
+    public function edit($id)
     {
-        //
+        $form = Form::findOrFail($id);
+        return view('forms.create', compact('form'));
     }
 
     /**
