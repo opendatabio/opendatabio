@@ -39,10 +39,15 @@ class PlantsDataTable extends DataTable
             return implode(', ', $col->map(function ($c) {return $c->person->fullname; })->all());
         })
         ->editColumn('date', function ($plant) { return $plant->formatDate; })
-        ->addColumn('measurements', function ($location) {return $location->measurements_count; })
-//        ->filterColumn('title', function ($query, $keyword) {
-//            $query->where('bibtex', 'like', ["%{$keyword}%"]);
-//        })
+        ->addColumn('measurements', function ($plant) {return $plant->measurements_count; })
+        ->addColumn('location', function ($plant) {
+            $loc = $plant->locationWithGeom;
+            if (!$loc) {
+                return;
+            }
+
+            return $loc->coordinatesSimple;
+        })
         ->rawColumns(['tag', 'identification']);
     }
 
@@ -96,6 +101,7 @@ class PlantsDataTable extends DataTable
                 'tag_team' => ['title' => Lang::get('messages.tag_team'), 'searchable' => false, 'orderable' => false],
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
+                'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Brtip',
@@ -109,7 +115,7 @@ class PlantsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1, 4, 5],
+                    'targets' => [1, 4, 5, 7],
                     'visible' => false,
                 ]],
             ]);

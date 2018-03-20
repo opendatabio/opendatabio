@@ -10,7 +10,7 @@
                 <div class="panel-body">
 		    <strong>
 @lang('messages.location_name')
-:</strong> {{ $location->name }}
+:</strong> {{ $location->name }} {{ $location->coordinatesSimple }} 
 <br>
 		    <strong>
 @lang('messages.adm_level')
@@ -148,7 +148,9 @@
                 <div class="panel-body">
 	@if ($location->getAncestors()->count())
 	@foreach ($location->getAncestors() as $ancestor)
-		<a href=" {{ url('locations/'. $ancestor->id ) }} ">{{ $ancestor->name }} </a> &gt;
+        @if ($ancestor->adm_level != -1)
+        <a href=" {{ url('locations/'. $ancestor->id ) }} ">{{ $ancestor->name }} </a> &gt;
+        @endif
 	@endforeach
 	@endif
 	 {{ $location->name }}

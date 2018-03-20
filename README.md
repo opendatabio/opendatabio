@@ -9,10 +9,12 @@ A companion R package is being developed [here](https://github.com/opendatabio/o
 ## Authors
 - Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil - coordination
 - Andre Chalom (andrechalom@gmail.com) - main developer
+- Rafael Arantes (birutaibm@gmail.com)
 - Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
 
 ## Funding & Support
-This project has recieved support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home).
+This project has received support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home). Rafael Arantes contribution was supported
+by a FAPESP TTIV scholarship (#2017/21695-8).
 
 ## Overview
 This project aims to provide a flexible but robust framework for storing, analysing and exporting biological data.
@@ -21,7 +23,7 @@ See our [Wiki page](../../wiki) for details.
 ## Install
 ### Prerequisites and versions
 OpenDataBio software is supported in Debian, Ubuntu and ArchLinux distributions of Linux. You can install it on
-a Mac-OS X by following some [custom instructions](../../README_macInstallationNotes.md), but this is not supported.
+a Mac-OS X by following some [custom instructions](../../README_macInstallationNotes.md), but this is not officially supported.
 We have no plans for Windows support.
 
 Opendatabio is written in PHP and developed over the Laravel framework version 5.5. 
@@ -87,6 +89,8 @@ RedirectMatch ^/$ /opendatabio/
 
 Remember to restart the Apache server after editing the files.
 
+The installation script will download the [Composer](https://getcomposer.org/) dependency manager, and all required PHP libraries. However, if your server is behind a proxy, you should install and configure Composer independently.
+
 Finally, change directory to your opendatabio directory and run 
 ```
 php install
@@ -117,6 +121,13 @@ to the ini file, and export it before using the php install command. For example
 ```bash
 $ export PHPRC=/etc/php/7.0/apache2/php.ini
 $ php install
+```
+
+- If you receive errors during the random seeding of the database, you may attempt to remove
+the database entirely and rebuild it. Of course, do not run this on a production server.
+
+```bash
+$ php artisan migrate:fresh && php artisan db:seed
 ```
 
 ### Post-install configurations
@@ -162,4 +173,12 @@ A tool for upgrading duckewiki databases to opendatabio is currently being devel
 ## License
 Opendatabio is licensed for use under a GPLv3 license. 
 
-PHP is licensed under the PHP license. Composer and Laravel framework are licensed under the MIT license.
+PHP is licensed under the PHP license. Composer and Laravel framework are licensed under the MIT license. OpenDataBio reimplements parts of the
+[Revisionable](https://github.com/VentureCraft/revisionable) library, under MIT license.
+
+## Acknowledgements
+- Rodrigo Augusto Santinelo Pereira (raspereira@ffclrp.usp.br)
+- Lo Almeida 
+- Rodrigo Pereira
+- Ricardo Perdiz
+- Renato Lima

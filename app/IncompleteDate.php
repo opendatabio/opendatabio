@@ -9,6 +9,11 @@ namespace App;
 
 trait IncompleteDate
 {
+    private function _zeroPad($what, $howmany = 2)
+    {
+        return str_pad($what, $howmany, '0', STR_PAD_LEFT);
+    }
+
     public function getDayAttribute()
     {
         return (int) substr($this->date, 8, 2);
@@ -24,9 +29,34 @@ trait IncompleteDate
         return (int) substr($this->date, 0, 4);
     }
 
-    public function setDate($month, $day, $year)
+    // This can be used to set the date if you have separate numbers
+    public function setDate($month, $day = null, $year = null)
     {
-        $this->date = $year.'-'.$month.'-'.$day;
+        if (strlen($month) > 2) {
+            return $this->setDateFromString($month);
+        }
+        $year = (int) $year;
+        $month = (int) $month;
+        $day = (int) $day;
+        $this->date = $this->_zeroPad($year, 4).'-'.$this->_zeroPad($month).'-'.$this->_zeroPad($day);
+    }
+
+    // This can be used to set the date from a string
+    public function setDateFromString(string $string)
+    {
+        try {
+            $firstdash = strpos($string, '-', 0);
+            $seconddash = strpos($string, '-', $firstdash + 1);
+        } catch (\ErrorException $e) {
+            return $this->date = null;
+        }
+        $this->setDate(
+            // month
+            substr($string, $firstdash + 1, $seconddash - $firstdash - 1),
+            // day
+            substr($string, $seconddash + 1, strlen($string) - $seconddash - 1),
+            // year
+            substr($string, 0, $firstdash));
     }
 
     public function getFormatDateAttribute()
@@ -48,6 +78,9 @@ trait IncompleteDate
             $day = $month[1];
             $month = $month[0];
         }
+        $year = (int) $year;
+        $month = (int) $month;
+        $day = (int) $day;
         // if month is unknown, day must be unknown too
         if (0 == $month and 0 != $day) {
             return false;

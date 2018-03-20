@@ -4,6 +4,7 @@
     </IfModule>
 
     RewriteEngine On
+    RewriteBase /opendatabio/
 
 #    Redirect Trailing Slashes If Not A Folder...
 #    Removed from .htaccess as this app is supposed to be served inside a custom directory

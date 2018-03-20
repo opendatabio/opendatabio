@@ -8,13 +8,13 @@
                     @lang('messages.taxon')
 <div style="float:right;">
 @if ($taxon->mobot)
-<a href="http://tropicos.org/Name/{{$taxon->mobot}}"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
+<a href="http://tropicos.org/Name/{{$taxon->mobot}}" target="_blank"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
 @endif
 @if ($taxon->ipni)
-<a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id={{$taxon->ipni}}"><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
+<a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id={{$taxon->ipni}}" target="_blank"><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
 @endif
 @if ($taxon->mycobank)
-<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec={{$taxon->mycobank}}&Fields=All"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
+<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec={{$taxon->mycobank}}&Fields=All" target="_blank"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
 @endif
                 </div>
 

@@ -25,7 +25,7 @@ class DataTableTest extends TestCase
         $this->assertEquals($dt->count(), \App\BibReference::count());
 
         $dt = (new \App\DataTables\LocationsDataTable())->query();
-        $this->assertEquals($dt->count(), \App\Location::count());
+        $this->assertEquals($dt->count(), \App\Location::noWorld()->count());
 
         $dt = (new \App\DataTables\PersonsDataTable())->query();
         $this->assertEquals($dt->count(), \App\Person::count());

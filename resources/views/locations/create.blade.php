@@ -156,7 +156,7 @@
     value="{{ old('parent_autocomplete', (isset($location) and $location->parent) ? $location->parent->fullname : null) }}">
     <input type="hidden" name="parent_id" id="parent_id"
     value="{{ old('parent_id', isset($location) ? $location->parent_id : null) }}">
-    <input type="hidden" name="parent_type" id="parent_type" value="{{old('parent_type', isset($location) ? $location->parent->adm_level : '')}}">
+    <input type="hidden" name="parent_type" id="parent_type" value="{{old('parent_type', (isset($location) and $location->parent) ? $location->parent->adm_level : '')}}">
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">

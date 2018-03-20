@@ -415,4 +415,5 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'new_picture' => 'New Picture',
   'doi' => 'DOI',
   'incorrect_doi' => 'The DOI field seems to be malformed. Tip: 10.1109/5.771073 is a valid DOI',
+  'family' => 'Family',
 );

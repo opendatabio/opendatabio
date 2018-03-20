@@ -42,6 +42,8 @@ class PlantsTableSeeder extends Seeder
 
     public function run()
     {
+        // To make sure that we are seeing all registered plants
+        Auth::loginUsingId(1);
         if (\App\Plant::count()) {
             return;
         }

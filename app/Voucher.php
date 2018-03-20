@@ -31,8 +31,10 @@ class Voucher extends Model
         static::addGlobalScope('projectScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->join('projects', 'projects.id', '=', 'project_id')
-                    ->where('projects.privacy', '=', Project::PRIVACY_PUBLIC);
+                return $builder->whereRaw('vouchers.id IN 
+(SELECT p1.id FROM vouchers AS p1 
+JOIN projects ON (projects.id = p1.project_id)
+WHERE projects.privacy = 2)');
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {
@@ -106,6 +108,18 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     public function parent()
     {
         return $this->morphTo();
+    }
+
+    // with access to the location geom field
+    public function getLocationWithGeomAttribute()
+    {
+        // This is ugly as hell, but simpler alternatives are "intercepted" by Baum, which does not respect the added scope...
+        $loc = $this->parent;
+        if (!$loc or Location::class != get_class($loc)) {
+            return;
+        }
+
+        return Location::withGeom()->addSelect('id', 'name')->find($loc->id);
     }
 
     public function herbaria()
