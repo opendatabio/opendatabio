@@ -73,7 +73,7 @@ for ($i = 1; $i <= $length; $i++) {
     <input type="text" name="trait_autocomplete[{{$i}}]" id="trait_autocomplete[{{$i}}]" class="form-control autocomplete"
     value="{{ old('trait_autocomplete.'.$i, (isset($form) and $form->traits) ? $form->getTrait($i)->name : null) }}">
     <input type="hidden" name="trait_id[{{$i}}]" id="trait_id[{{$i}}]"
-    value="{{ old('trait_id.'.$i, (isset($form) and $form->trait) ? $form->getTrait($i)->id : null) }}">
+    value="{{ old('trait_id.'.$i, (isset($form) and $form->traits) ? $form->getTrait($i)->id : null) }}">
     </div>
     <div class="col-sm-2">
         @if ($i != 1)

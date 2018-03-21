@@ -44,11 +44,12 @@ class FormController extends Controller
             'measured_type' => 'required|string',
             'trait_id' => 'required|array|min:1',
         ]);
-        $form = new Form($request->only(['name', 'measured_type']));
+        $form = new Form($request->only(['name', 'measured_type', 'notes']));
         $form->user_id = Auth::user()->id;
         $form->save(); // to generate id
-        foreach ($request->trait_id as $order => $odbtrait) {
-            $form->traits()->attach($odbtrait, ['order' => $order]);
+        $ids = array_values(array_filter($request->trait_id)); // to collapse empty keys
+        foreach ($ids as $order => $odbtrait) {
+            $form->traits()->attach($odbtrait, ['order' => $order + 1]);
         }
         $form->save();
         return redirect('forms/'.$form->id)->withStatus(Lang::get('messages.stored'));
@@ -95,8 +96,9 @@ class FormController extends Controller
         ]);
         $form->update($request->only(['name', 'notes']));
         $form->traits()->detach();
-        foreach ($request->trait_id as $order => $odbtrait) {
-            $form->traits()->attach($odbtrait, ['order' => $order]);
+        $ids = array_values(array_filter($request->trait_id)); // to collapse empty keys
+        foreach ($ids as $order => $odbtrait) {
+            $form->traits()->attach($odbtrait, ['order' => $order + 1]);
         }
         return redirect('forms/'.$form->id)->withStatus(Lang::get('messages.saved'));
     }

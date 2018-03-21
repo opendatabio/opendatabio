@@ -14,7 +14,7 @@ class AddNotesToForms extends Migration
     public function up()
     {
         Schema::table('forms', function (Blueprint $table) {
-            $table->text('notes');
+            $table->text('notes')->nullable();
         });
     }
 
