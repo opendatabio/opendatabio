@@ -77,10 +77,10 @@ for ($i = 1; $i <= $length; $i++) {
     </div>
     <div class="col-sm-2">
         @if ($i != 1)
-        <i class="glyphicon glyphicon-chevron-up form_buttons"></i>
+        <i class="glyphicon glyphicon-chevron-up form_buttons" id="chevron_up[{{$i}}]"></i>
         @endif
         @if ($i != $length)
-        <i class="glyphicon glyphicon-chevron-down form_buttons"></i>
+        <i class="glyphicon glyphicon-chevron-down form_buttons" id="chevron_down[{{$i}}]"></i>
         @endif
     </div>
 </div>
@@ -123,13 +123,19 @@ for ($i = 1; $i <= $length; $i++) {
 <script>
 $(document).ready(function() {
     function addChevDown() {
+        var n = $('input[name^="trait_autocomplete"]').length;
         var $lc = $("#trait_container").children().last();
-        $lc.children().last().append("<i class='glyphicon glyphicon-chevron-down form_buttons'></i>");
+        $lc.children().last().append("<i class='glyphicon glyphicon-chevron-down form_buttons' id='chevron_down[" + n + "]'></i>");
+        $("#chevron_down\\[" + n + "\\]").click(chevron_swap_down);
     }
     function addTraitDiv() {
         var $container = $("#trait_container");
         var n = $('input[name^="trait_autocomplete"]').length + 1;
-        $container.append(" <div class='form-group'> <div class='col-sm-offset-3 col-sm-6 trait_div'> <input type='text' name='trait_autocomplete[" + n + "]' id='trait_autocomplete[" + n + "]' class='form-control autocomplete' value=''> <input type='hidden' name='trait_id[" + n + "]' id='trait_id[" + n + "]' value=''> </div> <div class='col-sm-2'><i class='glyphicon glyphicon-chevron-up form_buttons'></i> </div> </div>");
+        $container.append(" <div class='form-group'> <div class='col-sm-offset-3 col-sm-6 trait_div'> <input type='text' name='trait_autocomplete[" + n + "]' id='trait_autocomplete[" + n + "]' class='form-control autocomplete' value=''> <input type='hidden' name='trait_id[" + n + "]' id='trait_id[" + n + "]' value=''> </div> <div class='col-sm-2'><i class='glyphicon glyphicon-chevron-up form_buttons' id='chevron_up[" + n + "]'></i> </div> </div>");
+        $("#trait_autocomplete\\[" + n + "\\]").odbAutocomplete("{{url('traits/autocomplete')}}","#trait_id\\[" + n + "\\]", "@lang('messages.noresults')", null,
+        {'type': $("#measured_type option:selected").val() }
+    );
+        $("#chevron_up\\[" + n + "\\]").click(chevron_swap_up);
     }
     function remTraitDiv() {
         var $container = $("#trait_container");
@@ -139,12 +145,33 @@ $(document).ready(function() {
         var $lc = $("#trait_container").children().last();
         $lc.children().last().children().last().remove();
     }
+    function chevron_swap_down() {
+        var element_id = $(this).attr('id');
+        var ix = parseInt(element_id.substring(13,element_id.length - 1));
+        chevron_swap(ix); 
+    }
+    function chevron_swap_up() {
+        var element_id = $(this).attr('id');
+        var ix = parseInt(element_id.substring(11,element_id.length - 1)) - 1;
+        chevron_swap(ix); 
+    }
+    function swap_val(obj1, obj2) {
+        var tmp = obj1.val();
+        obj1.val(obj2.val());
+        obj2.val(tmp);
+    }
+    function chevron_swap(ix) {
+        swap_val($("#trait_autocomplete\\[" + ix + "\\]"), $("#trait_autocomplete\\[" + (ix+1) + "\\]"));
+        swap_val($("#trait_id\\[" + ix + "\\]"), $("#trait_id\\[" + (ix+1) + "\\]"));
+    }
     // Sets the autocomplete on the previously available elements
 <?php for ($i = 1; $i <= $length; $i++) { ?>
     $("#trait_autocomplete\\[{{$i}}\\]").odbAutocomplete("{{url('traits/autocomplete')}}","#trait_id\\[{{$i}}\\]", "@lang('messages.noresults')", null,
         {'type': $("#measured_type option:selected").val() }
     );
 <?php } ?>
+    $("i[id^='chevron_down']").click(chevron_swap_down);
+    $("i[id^='chevron_up']").click(chevron_swap_up);
     $("#plus_button").click(function() { addChevDown(); addTraitDiv(); });
     $("#minus_button").click(function() {
         var n = $('input[name^="trait_autocomplete"]').length;

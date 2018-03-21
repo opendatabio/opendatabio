@@ -85,9 +85,20 @@ class FormController extends Controller
      * @param  \App\Form  $form
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Form $form)
+    public function update(Request $request, $id)
     {
-        //
+        $form = Form::findOrFail($id);
+        $this->authorize('update', $form);
+        $this->validate($request, [
+            'name' => 'required|string|max:191',
+            'trait_id' => 'required|array|min:1',
+        ]);
+        $form->update($request->only(['name', 'notes']));
+        $form->traits()->detach();
+        foreach ($request->trait_id as $order => $odbtrait) {
+            $form->traits()->attach($odbtrait, ['order' => $order]);
+        }
+        return redirect('forms/'.$form->id)->withStatus(Lang::get('messages.saved'));
     }
 
     /**
