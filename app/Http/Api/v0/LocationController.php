@@ -30,6 +30,9 @@ class LocationController extends Controller
         if ($request->id) {
             $locations = $locations->whereIn('id', explode(',', $request->id));
         }
+        if ($request->parent_id) {
+            $locations = $locations->whereIn('parent_id', explode(',', $request->parent_id));
+        }
         if ($request->search) {
             $locations = $locations->where('name', 'LIKE', '%'.$request->search.'%');
         }
