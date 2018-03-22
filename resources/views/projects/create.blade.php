@@ -118,5 +118,5 @@
 @push ('scripts')
 {!! Multiselect::scripts('admins', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 {!! Multiselect::scripts('collabs', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
-{!! Multiselect::scripts('viewers', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
+{!! Multiselect::scripts('viewers', url('users/autocomplete_all'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 @endpush
