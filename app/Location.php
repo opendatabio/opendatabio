@@ -19,7 +19,7 @@ class Location extends Node
     const LEVEL_TRANSECT = 101;
     const LEVEL_POINT = 999;
 
-    protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty'];
+    protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty', 'parent_id'];
     protected $lat;
     protected $long;
     protected $geom_array = [];
