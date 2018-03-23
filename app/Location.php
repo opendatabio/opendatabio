@@ -157,9 +157,10 @@ class Location extends Node
             return;
         }
         // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
-        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val")[0]->val;
+        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val");
+        $invalid = count($invalid) ? $invalid[0]->val : 1;
         if ($invalid) {
-            throw new \UnexpectedValueException('Invalid Geometry object');
+            throw new \UnexpectedValueException('Invalid Geometry object: '.$value);
         }
         $this->attributes['geom'] = DB::raw("GeomFromText('$value')");
     }

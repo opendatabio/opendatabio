@@ -36,7 +36,7 @@ class LocationController extends Controller
         if ($request->search) {
             $locations = $locations->where('name', 'LIKE', '%'.$request->search.'%');
         }
-        if ($request->adm_level) {
+        if (isset($request->adm_level)) {
             $locations = $locations->where('adm_level', '=', $request->adm_level);
         }
         if ($request->limit) {
