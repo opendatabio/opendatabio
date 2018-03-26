@@ -247,7 +247,7 @@ return array (
   'hint_voucher_number' => 'Este é o número sequencial da amostra de herbário coletada pela pessoa designada como principal coletor.',
   'invalid_trait_type_error' => 'Os tipos de objetos permitidos para esta variável não são compatíveis com o objeto referenciado.',
   'ipni_error' => 'Erro ao acessar os servidores IPNI!',
-  'location_adm_level_hint' => 'Armazena o tipo da localidade. Alguns tipos são, de fato, níveis administrativos, relacionados ao aspecto legal da localidade (países, estados, províncias, etc). Alguns estão relacionados à natureza da localidade (como uma coordenada de GPS ou uma parcela).',
+  'location_adm_level_hint' => 'Armazena o tipo da localidade. Alguns tipos são, de fato, níveis administrativos, relacionados ao aspecto legal da localidade (países, estados, províncias, etc). Alguns estão relacionados à natureza da localidade (como uma coordenada de GPS ou uma parcela). Note que o significado das áreas administrativas pode mudar de acordo com o país; por exemplo áreas 1 no Brasil são estados e áreas 2 são municípios, enquanto na Bolívia áreas 1 são departamentos, áreas 2 são províncias e áreas 3 são municípios.',
   'measurement_bibreference' => 'Bib Reference da Medida.',
   'measurement_bibreference_hint' => 'Se esta Medida específica possui uma referência bibliográfica (que difere da referência no conjunto de dados), registre ela aqui.',
   'new_trait' => 'Criar/Editar Variável',
