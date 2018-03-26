@@ -144,12 +144,14 @@ class ImportPlants extends AppJob
             $identification->setDate($date);
             $identification->save();
         }
-        foreach ($collectors as $collector) {
-            Collector::create([
-                    'person_id' => $collector,
-                    'object_id' => $plant->id,
-                    'object_type' => 'App\Plant'
-            ]);
+        if ($collectors) {
+            foreach ($collectors as $collector) {
+                Collector::create([
+                        'person_id' => $collector,
+                        'object_id' => $plant->id,
+                        'object_type' => 'App\Plant'
+                ]);
+            }
         }
         return;
     }
