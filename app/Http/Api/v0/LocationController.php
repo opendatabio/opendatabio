@@ -33,20 +33,8 @@ class LocationController extends Controller
         if ($request->parent_id) {
             $locations = $locations->whereIn('parent_id', explode(',', $request->parent_id));
         }
-        if ($request->search) {
-            $locations = $locations->where('name', 'LIKE', '%'.$request->search.'%');
-        }
         if ($request->name) {
-            $pos = strpos($request->name, '*');
-            if ($pos === FALSE)
-                $locations = $locations->where('name', '=', $request->name);
-            else {
-                while ($pos !== FALSE) {
-                    $request->name = substr_replace($request->name, '%', $pos, 1);
-                    $pos = strpos($request->name, '*');
-                }
-                $locations = $locations->where('name', 'LIKE', $request->name);
-            }
+            $locations = $this->filter($locations, 'name', $request->name);
         }
         if (isset($request->adm_level)) {
             $locations = $locations->where('adm_level', '=', $request->adm_level);

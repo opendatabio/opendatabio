@@ -29,6 +29,15 @@ class PersonController extends Controller
         if ($request->search) {
             $persons = $persons->where('full_name', 'LIKE', '%'.$request->search.'%')->orWhere('abbreviation', 'LIKE', '%'.$request->search.'%')->orWhere('email', 'LIKE', '%'.$request->search.'%');
         }
+        if ($request->name) {
+            $persons = $this->filter($persons, 'full_name', $request->name);
+        }
+        if ($request->abbrev) {
+            $persons = $this->filter($persons, 'abbreviation', $request->abbrev);
+        }
+        if ($request->email) {
+            $persons = $this->filter($persons, 'email', $request->email);
+        }
         if ($request->limit) {
             $persons->limit($request->limit);
         }
