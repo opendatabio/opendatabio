@@ -17,33 +17,16 @@ class ImportPersons extends AppJob
      */
     public function inner_handle()
     {
-        $data = $this->userjob->data['data'];
-        if (!count($data)) {
-            $this->setError();
-            $this->appendLog('ERROR: data received is empty!');
-
+        $data = $this->extractEntrys();
+        if (!$this->setProgressMax($data))
             return;
-        }
-        $this->userjob->setProgressMax(count($data));
         foreach ($data as $person) {
-            // has this job been cancelled?
-            // calls "fresh" to make sure we're not receiving a cached object
-            if ('Cancelled' == $this->userjob->fresh()->status) {
-                $this->appendLog('WARNING: received CANCEL signal');
+            if ($this->isCancelled())
                 break;
-            }
             $this->userjob->tickProgress();
 
-            if (!is_array($person)) {
-                $this->setError();
-                $this->appendLog('ERROR: person entry is not formatted as array!'.serialize($person));
+            if (!$this->hasRequiredKeys(['full_name'], $person))
                 continue;
-            }
-            if (!array_key_exists('full_name', $person)) {
-                $this->setError();
-                $this->appendLog('ERROR: entry needs a name: '.implode(';', $person));
-                continue;
-            }
             // Arrived here: let's import it!!
             try {
                 $this->import($person);

@@ -37,7 +37,7 @@ class LocationController extends Controller
             $locations = $this->filter($locations, 'name', $request->name);
         }
         if (isset($request->adm_level)) {
-            $locations = $locations->where('adm_level', '=', $request->adm_level);
+            $locations = $locations->whereIn('adm_level', explode(',', $request->adm_level));
         }
         if ($request->limit) {
             $locations->limit($request->limit);

@@ -23,28 +23,14 @@ class ImportPlants extends AppJob
      */
     public function inner_handle()
     {
-        $data = $this->userjob->data['data'];
-        if (!count($data)) {
-            $this->setError();
-            $this->appendLog('ERROR: data received is empty!');
-
+        $data = $this->extractEntrys();
+        if (!$this->setProgressMax($data))
             return;
-        }
-        $this->userjob->setProgressMax(count($data));
         foreach ($data as $plant) {
-            // has this job been cancelled?
-            // calls "fresh" to make sure we're not receiving a cached object
-            if ('Cancelled' == $this->userjob->fresh()->status) {
-                $this->appendLog('WARNING: received CANCEL signal');
+            if ($this->isCancelled())
                 break;
-            }
             $this->userjob->tickProgress();
 
-            if (!is_array($plant)) {
-                $this->setError();
-                $this->appendLog('ERROR: person entry is not formatted as array!'.serialize($plant));
-                continue;
-            }
             if (!$this->hasRequiredKeys(['tag', 'date', 'location', 'project'], $plant))
                 continue;
             if (!$this->validValue($plant, 'location', Location::class, 'name')) {
@@ -66,31 +52,20 @@ class ImportPlants extends AppJob
             }
         }
     }
-
-    protected function hasRequiredKeys($requiredKeys, $registry) {
-        foreach ($requiredKeys as $key)
-            if (!array_key_exists($key, $registry)) {
-                $this->setError();
-                $this->appendLog('ERROR: entry needs a '.$key.': '.implode(';', $registry));
-                return false;
-            }
-        return true;
-    }
     
     protected function validValue(&$array, $key, $class, $field)
     {
         $value = $array[$key];
         if (is_numeric($value))
             return true;
-        $id = $class::select('id')->where($field, 'LIKE', '%'.$value.'%')->get();
+        $id = $class::select('id')->where($field, '=', $value)->get();
         if (count($id)) {
             $value = $id->first()->id;
             $array[$key] = $value;
             return true;
-        } else {
-            $this->appendLog("WARNING: $key $value was not found in the database.");
-            return false;
         }
+        $this->appendLog("WARNING: $key $value was not found in the database.");
+        return false;
     }
 
     public function import($plant)

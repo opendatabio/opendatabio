@@ -35,14 +35,14 @@ class Controller extends BaseController
     // Returns a query that is the recieved query plus a where statement filtering the field with the value. It suports exact match, as soon as 'LIKE' match if the $value contains '*'.
     public function filter($query, $field, $value)
     {
-        $tratedValue = $this->trateWildcard($value);
-        if ($tratedValue === $value)
-            return $query->where($field, '=', $tratedValue);
-        return $query->where($field, 'LIKE', $tratedValue);
+        $treatedValue = $this->treateWildcard($value);
+        if ($treatedValue === $value)
+            return $query->where($field, '=', $treatedValue);
+        return $query->where($field, 'LIKE', $treatedValue);
     }
 
     // Replace all '*' to '%'
-    public function trateWildcard($string)
+    public function treateWildcard($string)
     {
         $pos = strpos($string, '*');
         while ($pos !== FALSE) {
