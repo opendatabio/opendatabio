@@ -46,8 +46,7 @@ class ImportTaxons extends AppJob
             $level = Taxon::getRank($level);
         }
         if (is_null($level)) {
-            $this->appendLog("WARNING: Level for taxon $name not available. Skipping import...");
-
+            $this->skipEntry($taxon, "Level for taxon $name not available");
             return;
         }
         // parent might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
@@ -57,14 +56,12 @@ class ImportTaxons extends AppJob
             if ($parent_obj->count()) {
                 $parent = $parent_obj->first()->id;
             } else {
-                $this->appendLog("WARNING: Parent for taxon $name is listed as $parent, but this was not found in the database.");
-
+                $this->skipEntry($taxon, "Parent for taxon $name is listed as $parent, but this was not found in the database");
                 return;
             }
         }
         if ($level > 180 and !$parent) {
-            $this->appendLog("WARNING: Parent for taxon $name is required!");
-
+            $this->skipEntry($taxon, "Parent for taxon $name is required!");
             return;
         }
         // TODO: several other validation checks
@@ -75,8 +72,7 @@ class ImportTaxons extends AppJob
         // TODO: senior_id
         // Is this taxon already imported?
         if (Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count() > 0) {
-            $this->appendLog('WARNING: taxon '.$name.' already imported to database');
-
+            $this->skipEntry($taxon, 'taxon '.$name.' already imported to database');
             return;
         }
         // Set the API Keys. If blank, try to get them from the right API
@@ -89,7 +85,7 @@ class ImportTaxons extends AppJob
                 $mobot = $mobotdata['key'];
             }
         }
-        $ipni = array_key_exists('mobot', $taxon) ? $taxon['mobot'] : null;
+        $ipni = array_key_exists('ipni', $taxon) ? $taxon['ipni'] : null;
         if (!$ipni) {
             $ipnidata = $apis->getIPNI($name);
             if (!is_null($ipnidata) && array_key_exists('key', $ipnidata)) {
