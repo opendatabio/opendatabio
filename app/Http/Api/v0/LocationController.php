@@ -34,7 +34,7 @@ class LocationController extends Controller
             $locations = $locations->whereIn('parent_id', explode(',', $request->parent_id));
         }
         if ($request->name) {
-            $locations = $this->filter($locations, 'name', $request->name);
+            $locations = $this->advancedWhereIn($locations, 'name', $request->name);
         }
         if (isset($request->adm_level)) {
             $locations = $locations->whereIn('adm_level', explode(',', $request->adm_level));

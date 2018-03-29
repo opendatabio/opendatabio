@@ -27,16 +27,20 @@ class PersonController extends Controller
             $persons = $persons->whereIn('id', explode(',', $request->id));
         }
         if ($request->search) {
-            $persons = $persons->where('full_name', 'LIKE', '%'.$request->search.'%')->orWhere('abbreviation', 'LIKE', '%'.$request->search.'%')->orWhere('email', 'LIKE', '%'.$request->search.'%');
+            $persons = $persons->where(function ($query) {
+                $query->where('full_name', 'LIKE', '%'.$request->search.'%')
+                    ->orWhere('abbreviation', 'LIKE', '%'.$request->search.'%')
+                    ->orWhere('email', 'LIKE', '%'.$request->search.'%');
+            });
         }
         if ($request->name) {
-            $persons = $this->filter($persons, 'full_name', $request->name);
+            $persons = $this->advancedWhereIn($persons, 'full_name', $request->name);
         }
         if ($request->abbrev) {
-            $persons = $this->filter($persons, 'abbreviation', $request->abbrev);
+            $persons = $this->advancedWhereIn($persons, 'abbreviation', $request->abbrev);
         }
         if ($request->email) {
-            $persons = $this->filter($persons, 'email', $request->email);
+            $persons = $this->advancedWhereIn($persons, 'email', $request->email);
         }
         if ($request->limit) {
             $persons->limit($request->limit);

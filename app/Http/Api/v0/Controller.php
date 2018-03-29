@@ -33,12 +33,43 @@ class Controller extends BaseController
     }
 
     // Returns a query that is the recieved query plus a where statement filtering the field with the value. It suports exact match, as soon as 'LIKE' match if the $value contains '*'.
-    public function filter($query, $field, $value)
+    public function filter($query, $field, $value, $raw=false)
     {
         $treatedValue = $this->treateWildcard($value);
-        if ($treatedValue === $value)
-            return $query->where($field, '=', $treatedValue);
-        return $query->where($field, 'LIKE', $treatedValue);
+        $op = ($treatedValue === $value) ? '=' : 'LIKE';
+        if ($raw)
+            return $query->whereRaw("$field $op ?", [$treatedValue]);
+        return $query->where($field, $op, $treatedValue);
+    }
+
+    public function advancedWhereIn($query, $field, $value, $raw=false)
+    {
+        $values = explode(',', $value, 2);
+        if (count($values) == 1)
+            return $this->filter($query, $field, $values[0], $raw);
+        // count($values) == 2
+        return $query->where(function ($internalQuery) use ($field, $raw, $values){
+            return $this->orFilter(
+                    $this->filter($internalQuery, $field, $values[0], $raw),
+                    $field,
+                    explode(',', $values[1]),
+                    $raw
+            );
+        });
+    }
+
+    protected function orFilter($query, $field, $values, $raw=false)
+    {
+        if (is_array($values))
+            foreach ($values as $value) {
+                $treatedValue = $this->treateWildcard($value);
+                $op = ($treatedValue === $value) ? '=' : 'LIKE';
+                if ($raw)
+                    $query = $query->orWhereRaw("$field $op ?", [$treatedValue]);
+                else
+                    $query = $query->orWhere($field, $op, $treatedValue);
+            }
+        return $query;
     }
 
     // Replace all '*' to '%'

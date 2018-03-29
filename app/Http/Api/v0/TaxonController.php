@@ -31,10 +31,10 @@ class TaxonController extends Controller
             $taxons = $taxons->whereIn('id', explode(',', $request->id));
         }
         if ($request->name) {
-            $treatedName = $this->treateWildcard($request->name);
-            if ($treatedName === $request->name)
-                $taxons = $taxons->whereRaw('odb_txname(name, level, parent_id) = ?', [$treatedName]);
-            $taxons = $taxons->whereRaw('odb_txname(name, level, parent_id) LIKE ?', [$treatedName]);
+            $taxons = $this->advancedWhereIn($taxons,
+                    'odb_txname(name, level, parent_id)',
+                    $request->name,
+                    true);
         }
         if (isset($request->level)) {
             $taxons = $taxons->where('level', '=', $request->level);

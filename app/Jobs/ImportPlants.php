@@ -124,11 +124,15 @@ class ImportPlants extends AppJob
     {
         if (!array_key_exists('tagging_team', $plant))
             return null;
-        $tagging_team = explode(';', $plant['tagging_team']);
+        $tagging_team = explode(',', $plant['tagging_team']);
         $ids = array();
-        foreach ($tagging_team as $person)
-            $ids = array_merge($ids,
-                PlantController::asIdList($person, Person::class, array('full_name', 'abbreviation', 'email')));
+        foreach ($tagging_team as $person) {
+            $valid = $this->validIdOrName(Person::select('id'), $person, 'id', 'abbreviation');
+            if ($valid === null)
+                $this->appendLog('WARNING: Plant '.$plant['tag'].' reffers to '.$person.' as member of tagging team, but this person was not found in the database. Ignoring person '.$person);
+            else
+                array_push($ids, $valid);
+        }
         return $ids;
     }
     

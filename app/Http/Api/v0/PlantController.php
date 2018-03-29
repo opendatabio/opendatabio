@@ -41,8 +41,15 @@ class PlantController extends Controller
             $plant = $plant->where('tag', 'LIKE', '%'.$request->tag.'%');
         }
         if ($request->taxon) {
-            $taxon = Taxon::select('id')->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%'.$request->taxon.'%'])->get();
-            $identification = Identification::select('object_id')->where('object_type', '=', 'App\\Plant')->whereIn('taxon_id', $taxon);
+            $taxon = $this->asIdList(
+                    $request->taxon,
+                    Taxon::class,
+                    'odb_txname(name, level, parent_id)',
+                    true);
+            $identification = Identification::select('object_id')
+                    ->where('object_type', '=', 'App\\Plant')
+                    ->whereIn('taxon_id', $taxon)
+                    ->get();
             $plant = $plant->whereIn('plants.id', $identification);
         }
         if ($request->project) {
@@ -65,26 +72,17 @@ class PlantController extends Controller
     /**
      * Interprets $value as a value to search at a given table and $class as the class that is associated with the table.
      * If $value has a number or a list of numbers separeted by comma, this method converts this list to an array of numbers.
-     * Otherwise, this method search the table for registries that has the $names LIKE '%'.$value.'%'. Additinally,
-     * $names could be an array of fields, then the method find in all fields listed in this array, in this case if a single
-     * registry matches more than one name (in $names) this method returns only once that registry.
-     *
-     * Example: asIdList('Rafael', 'Person', array('full_name', 'abbreviation', 'email') returns an array with the id of
-     * all registry at table persons where full_name, or abbreviation or email contains Rafael.
+     * Otherwise, this method search the table for registries that has the field $name with value $value. Additinally,
+     * $value could be a string containing a comma separeted list of values, and each value could contains the wildcard '*'.
      */
-    public static function asIdList($value, $class, $names)
+    public function asIdList($value, $class, $name, $raw=false)
     {
         if (preg_match("/\d+(,\d+)*/", $value))
             return explode(',', $value);
-        if (!is_array($names))
-            return array ($class::select('id')->where($names, 'LIKE', '%'.$value.'%')->get()->first()->id);
         $ids = array();
-        foreach ($names as $name) {
-            $found = $class::select('id')->where($name, 'LIKE', '%'.$value.'%')->get();
-            foreach ($found as $registry) {
-                array_push($ids, $registry->id);
-            }
-        }
+        $found = $this->advancedWhereIn($class::select('id'), $name, $value, $raw)->get();
+        foreach ($found as $registry)
+            array_push($ids, $registry->id);
         return array_unique($ids);
     }
     
