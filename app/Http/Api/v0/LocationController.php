@@ -42,10 +42,33 @@ class LocationController extends Controller
         if ($request->limit) {
             $locations->limit($request->limit);
         }
+        // For lat / long searches
+        if ($request->querytype and isset($request->lat) and isset($request->long)) {
+            $geom = "POINT($request->long $request->lat)";
+            if ($request->querytype=='exact') {
+                $locations = $locations->whereRaw('AsText(geom) = ?', [$geom]);
+            }
+            if ($request->querytype=='parent') {
+                $parent = Location::detectParent($geom, 100, false);
+                if ($parent) {
+                    $locations->where('id', $parent->id);
+                } else {
+                    // no results should be shown
+                    $locations->whereRaw('1 = 0');
+                }
+            }
+            if ($request->querytype=='closest') {
+                $locations = $locations->withDistance($geom)->orderBy('distance', 'ASC');
+                if (!isset($request->limit)) {
+                    $locations->limit(10);
+                }
+            }
+        }
         $locations = $locations->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $locations = $this->setFields($locations, $fields, ['id', 'name', 'levelName', 'geom']);
+        // NOTE that "distance" as a field is only defined for querytype='closest', but it is ignored for other queries
+        $locations = $this->setFields($locations, $fields, ['id', 'name', 'levelName', 'geom', 'distance']);
 
         return $this->wrap_response($locations);
     }

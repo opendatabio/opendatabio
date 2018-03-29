@@ -58,7 +58,7 @@ class Location extends Node
     {
         // this query hangs if you attempt to run it on full geom objects, so we add
         // a "where" to make sure we're only calculating distance from small objects
-        return $query->addSelect('*', DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
+        return $query->addSelect(DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
             ->where('adm_level', '>', 99);
     }
 
