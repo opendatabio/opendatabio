@@ -17,7 +17,16 @@ use Response;
 
 class UserController extends Controller
 {
-    public function autocomplete(Request $request)
+    public function autocomplete(Request $request) # Shows authorizes users
+    {
+        $users = User::where('email', 'LIKE', ['%'.$request->input('query').'%'])
+            ->whereIn('access_level', [User::USER, User::ADMIN])
+            ->select(['id as data', 'email as value'])
+            ->orderBy('email', 'ASC')->take(30)->get();
+
+        return Response::json(['suggestions' => $users]);
+    }
+    public function autocompleteAll(Request $request) # Show ALL users
     {
         $users = User::where('email', 'LIKE', ['%'.$request->input('query').'%'])
             ->select(['id as data', 'email as value'])

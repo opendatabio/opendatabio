@@ -179,7 +179,7 @@ class LocationController extends Controller
             }
         });
         $validator->after(function ($validator) use ($request) {
-            if ($request->parent_id < 1) {
+            if ($request->parent_id < 1 or $request->adm_level == 0) {
                 return;
             } // don't validate if parent = 0 for none
             $geom = $request->geom;

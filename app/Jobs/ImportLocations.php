@@ -107,7 +107,7 @@ class ImportLocations extends AppJob
             $geom = "POINT ($long $lat)";
         }
 
-        if (0 === $adm_level) {
+        if (0 == $adm_level) {
             $world = Location::world();
             $parent = $world->id;
         }
@@ -147,8 +147,8 @@ class ImportLocations extends AppJob
             'x' => $x,
             'y' => $y,
             // forces null if parent / uc was explicitly passed as zero
-            'parent_id' => 0 === $parent ? null : $parent,
-            'uc_id' => 0 === $uc ? null : $uc,
+            'parent_id' => (0 == $parent ? null : $parent),
+            'uc_id' => (0 == $uc ? null : $uc),
         ]);
         $location->geom = $geom;
 
