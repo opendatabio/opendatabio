@@ -97,4 +97,5 @@ Route::get('plants/{id}/pictures/create', 'PictureController@createPlants');
 Route::get('vouchers/{id}/pictures/create', 'PictureController@createVouchers');
 Route::resource('pictures', 'PictureController', ['only' => ['show', 'store', 'edit', 'update']]);
 
+Route::post('forms/{id}/prepare', 'FormController@prepare');
 Route::resource('forms', 'FormController');

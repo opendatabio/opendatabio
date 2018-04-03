@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Form;
+use App\Measurement;
+use App\Plant;
+use App\Project;
 use Illuminate\Http\Request;
 use App\DataTables\FormsDataTable;
 use Auth;
@@ -112,5 +115,23 @@ class FormController extends Controller
     public function destroy(Form $form)
     {
         //
+    }
+    
+    public function prepare(Request $request, $id)
+    {
+        $form = Form::findOrFail($id);
+        $traits = $form->traits->pluck('id');
+//        switch ($form->measured_type) {
+//        case Plant::class:
+            $items = Project::findOrFail($request->project_id)->plants;
+//            break;
+//        default:
+//            $items = [];
+//        }
+        //        TODO: do something with these measurements
+        $measurements = Measurement::where('measured_type', $form->measured_type)
+            ->whereIn('measured_id', $items->pluck('id'))
+            ->whereIn('trait_id', $traits);
+    return view('forms.prepare', compact('form', 'items', 'measurements'));
     }
 }
