@@ -28,16 +28,16 @@ class LocationController extends Controller
             $locations->where('lft', '>=', $root_loc['lft'])->where('rgt', '<=', $root_loc['rgt'])->orderBy('lft');
         }
         if ($request->id) {
-            $locations = $locations->whereIn('id', explode(',', $request->id));
+            $locations->whereIn('id', explode(',', $request->id));
         }
         if ($request->parent_id) {
-            $locations = $locations->whereIn('parent_id', explode(',', $request->parent_id));
+            $locations->whereIn('parent_id', explode(',', $request->parent_id));
         }
         if ($request->name) {
-            $locations = $this->advancedWhereIn($locations, 'name', $request->name);
+            $this->advancedWhereIn($locations, 'name', $request->name);
         }
         if (isset($request->adm_level)) {
-            $locations = $locations->whereIn('adm_level', explode(',', $request->adm_level));
+            $locations->whereIn('adm_level', explode(',', $request->adm_level));
         }
         if ($request->limit) {
             $locations->limit($request->limit);
@@ -46,7 +46,7 @@ class LocationController extends Controller
         if ($request->querytype and isset($request->lat) and isset($request->long)) {
             $geom = "POINT($request->long $request->lat)";
             if ($request->querytype=='exact') {
-                $locations = $locations->whereRaw('AsText(geom) = ?', [$geom]);
+                $locations->whereRaw('AsText(geom) = ?', [$geom]);
             }
             if ($request->querytype=='parent') {
                 $parent = Location::detectParent($geom, 100, false);
@@ -58,7 +58,7 @@ class LocationController extends Controller
                 }
             }
             if ($request->querytype=='closest') {
-                $locations = $locations->withDistance($geom)->orderBy('distance', 'ASC');
+                $locations->withDistance($geom)->orderBy('distance', 'ASC');
                 if (!isset($request->limit)) {
                     $locations->limit(10);
                 }

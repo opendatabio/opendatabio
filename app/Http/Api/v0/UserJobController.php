@@ -25,10 +25,10 @@ class UserJobController extends Controller
         }
         $jobs = Auth::user()->userjobs();
         if ($request->status) {
-            $jobs = $jobs->where('status', '=', $request->status);
+            $jobs->where('status', '=', $request->status);
         }
         if ($request->id) {
-            $jobs = $jobs->whereIn('id', explode(',', $request->id));
+            $jobs->whereIn('id', explode(',', $request->id));
         }
         $jobs = $jobs->get();
 

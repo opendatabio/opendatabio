@@ -24,23 +24,27 @@ class PersonController extends Controller
     {
         $persons = Person::select('*');
         if ($request->id) {
-            $persons = $persons->whereIn('id', explode(',', $request->id));
+            $persons->whereIn('id', explode(',', $request->id));
         }
         if ($request->search) {
-            $persons = $persons->where(function ($query) {
-                $query->where('full_name', 'LIKE', '%'.$request->search.'%')
-                    ->orWhere('abbreviation', 'LIKE', '%'.$request->search.'%')
-                    ->orWhere('email', 'LIKE', '%'.$request->search.'%');
+            $persons->where(function ($query) use ($request->search) {
+                $name = clone $query;
+                $this->advancedWhereIn($name, 'full_name', $request->search);
+                $abbrev = clone $query;
+                $this->advancedWhereIn($abbrev, 'abbreviation', $request->search);
+                $email = clone $query;
+                $this->advancedWhereIn($email, 'email', $request->search);
+                $query->union($name)->union($abbrev)->union($email);
             });
         }
         if ($request->name) {
-            $persons = $this->advancedWhereIn($persons, 'full_name', $request->name);
+            $this->advancedWhereIn($persons, 'full_name', $request->name);
         }
         if ($request->abbrev) {
-            $persons = $this->advancedWhereIn($persons, 'abbreviation', $request->abbrev);
+            $this->advancedWhereIn($persons, 'abbreviation', $request->abbrev);
         }
         if ($request->email) {
-            $persons = $this->advancedWhereIn($persons, 'email', $request->email);
+            $this->advancedWhereIn($persons, 'email', $request->email);
         }
         if ($request->limit) {
             $persons->limit($request->limit);
