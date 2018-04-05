@@ -36,8 +36,10 @@ class Controller extends BaseController
     public function filter($query, $field, $value)
     {
         $treatedValue = $this->treateWildcard($value);
-        if ($treatedValue === $value)
+        if ($treatedValue === $value) {
             return $query->where($field, '=', $treatedValue);
+        }
+
         return $query->where($field, 'LIKE', $treatedValue);
     }
 
@@ -45,10 +47,11 @@ class Controller extends BaseController
     public function treateWildcard($string)
     {
         $pos = strpos($string, '*');
-        while ($pos !== FALSE) {
+        while (false !== $pos) {
             $string = substr_replace($string, '%', $pos, 1);
             $pos = strpos($string, '*');
         }
+
         return $string;
     }
 

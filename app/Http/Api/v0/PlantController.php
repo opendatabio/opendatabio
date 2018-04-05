@@ -15,7 +15,6 @@ use App\Identification;
 use App\Project;
 use App\UserJob;
 use Response;
-use Auth;
 use DB;
 use App\Jobs\ImportPlants;
 
@@ -34,8 +33,9 @@ class PlantController extends Controller
         }
         if ($request->location) {
             $locations = $this->asIdList($request->location, Location::class, 'name');
-            if (count($locations))
+            if (count($locations)) {
                 $plant = $plant->whereIn('location_id', $locations);
+            }
         }
         if ($request->tag) {
             $plant = $plant->where('tag', 'LIKE', '%'.$request->tag.'%');
@@ -47,8 +47,9 @@ class PlantController extends Controller
         }
         if ($request->project) {
             $projects = $this->asIdList($request->project, Project::class, 'name');
-            if (count($projects))
+            if (count($projects)) {
                 $plant = $plant->whereIn('project_id', $projects);
+            }
         }
         if ($request->limit) {
             $plant->limit($request->limit);
@@ -56,7 +57,7 @@ class PlantController extends Controller
         $plant = $plant->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $plant = $this->setFields($plant, $fields, ['fullName', 'taxonName', 'id', 'location_id', 'locationName', 'tag', 'date', 'notes', 'projectName', 'relativePosition'
+        $plant = $this->setFields($plant, $fields, ['fullName', 'taxonName', 'id', 'location_id', 'locationName', 'tag', 'date', 'notes', 'projectName', 'relativePosition',
         ]);
 
         return $this->wrap_response($plant);
@@ -74,10 +75,12 @@ class PlantController extends Controller
      */
     public static function asIdList($value, $class, $names)
     {
-        if (preg_match("/\d+(,\d+)*/", $value))
+        if (preg_match("/\d+(,\d+)*/", $value)) {
             return explode(',', $value);
-        if (!is_array($names))
-            return array ($class::select('id')->where($names, 'LIKE', '%'.$value.'%')->get()->first()->id);
+        }
+        if (!is_array($names)) {
+            return array($class::select('id')->where($names, 'LIKE', '%'.$value.'%')->get()->first()->id);
+        }
         $ids = array();
         foreach ($names as $name) {
             $found = $class::select('id')->where($name, 'LIKE', '%'.$value.'%')->get();
@@ -85,9 +88,10 @@ class PlantController extends Controller
                 array_push($ids, $registry->id);
             }
         }
+
         return array_unique($ids);
     }
-    
+
     public function store(Request $request)
     {
         $this->authorize('create', Plant::class);

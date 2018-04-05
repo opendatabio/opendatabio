@@ -40,7 +40,8 @@ class FormsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Form::select('*')->withCount(['traits'])->with(['user']); 
+        $query = Form::select('*')->withCount(['traits'])->with(['user']);
+
         return $this->applyScopes($query);
     }
 

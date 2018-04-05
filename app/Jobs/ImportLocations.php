@@ -17,15 +17,18 @@ class ImportLocations extends AppJob
     public function inner_handle()
     {
         $data = $this->extractEntrys();
-        if (!$this->setProgressMax($data))
+        if (!$this->setProgressMax($data)) {
             return;
+        }
         foreach ($data as $location) {
-            if ($this->isCancelled())
+            if ($this->isCancelled()) {
                 break;
+            }
             $this->userjob->tickProgress();
 
-            if (!$this->hasRequiredKeys(['name'], $location))
+            if (!$this->hasRequiredKeys(['name'], $location)) {
                 continue;
+            }
             // Arrived here: let's import it!!
             try {
                 $this->import($location);

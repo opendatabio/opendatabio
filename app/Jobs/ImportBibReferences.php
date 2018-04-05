@@ -21,17 +21,19 @@ class ImportBibReferences extends AppJob
     {
         $this->standardize = $this->userjob->data['standardize'];
         $newentries = $this->extractEntrys();
-        if (!$this->setProgressMax($newentries))
+        if (!$this->setProgressMax($newentries)) {
             return;
+        }
         foreach ($newentries as $entry) {
             // has this job been cancelled?
             // calls "fresh" to make sure we're not receiving a cached object
-            if ($this->isCancelled())
+            if ($this->isCancelled()) {
                 break;
+            }
             $this->userjob->tickProgress();
-            if (!$this->hasRequiredKeys(['citation-key'], $entry))
+            if (!$this->hasRequiredKeys(['citation-key'], $entry)) {
                 continue;
-            elseif ($this->standardize and array_key_exists('title', $entry)
+            } elseif ($this->standardize and array_key_exists('title', $entry)
                 and array_key_exists('author', $entry)
                 and array_key_exists('year', $entry)) {
                 $fword = trim(strtolower(strtok($entry['title'], ' ')));
@@ -77,7 +79,7 @@ class ImportBibReferences extends AppJob
         $parser->addListener($listener);
         $parser->parseString($contents);
         $newentries = $listener->export();
+
         return $newentries;
     }
 }
-
