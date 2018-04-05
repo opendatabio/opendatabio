@@ -53,13 +53,15 @@
     @foreach ($form->traits as $odbtrait)
     <td>
 <?php 
+// This returns null for no records:
+$measurement = $measurements->filter(function($m) use ($odbtrait, $form_item) {
+    return $m->trait_id == $odbtrait->id and $m->measured_id == $form_item->id;
+})->first();
 // TODO: adapt views other than 0 and 2 to use index
-// TODO: write the controller methods
-// TODO: add date picker
 echo View::make('traits.elements.' . $odbtrait->type, 
 [
     'odbtrait' => $odbtrait,
-    'measurement' => null,
+    'measurement' => $measurement,
     'index' => $form_item->id,
 ]);
 ?>
@@ -96,7 +98,7 @@ echo View::make('traits.elements.' . $odbtrait->type,
         <a data-toggle="collapse" href="#hintdate" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 {!! View::make('common.incompletedate')->with([
-    'object' => isset($measurement) ? $measurement : null, 
+    'object' => null, 
     'field_name' => 'date'
 ]) !!}
             </div>
@@ -122,7 +124,6 @@ echo View::make('traits.elements.' . $odbtrait->type,
 	</select>
 </div>
 </div>
-    
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success" name="submit" value="submit">

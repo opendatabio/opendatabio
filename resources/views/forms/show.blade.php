@@ -76,7 +76,7 @@
 <div class="form-group">
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
 	    <div class="col-sm-6 col-sm-offset-3">
-<input type="checkbox" name="clear">
+<input type="checkbox" name="blank">
 @lang('messages.blank')
             </div>
   <div class="col-sm-12">

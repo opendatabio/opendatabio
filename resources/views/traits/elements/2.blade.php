@@ -6,7 +6,12 @@
 @endif
 	<?php $selected = old('value', (isset($measurement) and $measurement->categories) ? $measurement->categories()->first()->category_id : null); ?>
 
-	<select name='value{{ isset($index) ? "[$index][]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' class="form-control" >
+    <select name='value{{ isset($index) ? "[$index][]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' class="form-control" 
+@if (isset($index) and isset($measurement)) 
+    disabled
+@endif
+
+>
         <option value=""></option>
 	@foreach ($odbtrait->categories as $cat )
 		<option value="{{ $cat->id }}" {{ $cat->id == $selected ? 'selected' : '' }}>
@@ -18,6 +23,14 @@ echo $cat->name;
 		</option>
 	@endforeach
 	</select>
+@if (isset($index) and isset($measurement)) 
+<span style="float:right">
+    <a href="{{url('measurements/' . $measurement->id . '/edit')}}" target="_blank">
+            @lang('messages.edit')
+        <i class="glyphicon glyphicon-new-window"></i>
+    </a>
+</span>
+@endif
 @if (!isset($index))
 </div>
 @endif

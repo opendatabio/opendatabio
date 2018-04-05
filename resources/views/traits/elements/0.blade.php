@@ -4,7 +4,19 @@
 </label>
 <div class="col-sm-6">
 @endif
-<input name ='value{{ isset($index) ? "[$index][]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' type="text" class="form-control" value="{{old('value', isset($measurement) ? $measurement->valueActual : null)}}">
+<input name ='value{{ isset($index) ? "[$index][]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' type="text" class="form-control" value="{{old('value', isset($measurement) ? $measurement->valueActual : null)}}"
+@if (isset($index) and isset($measurement)) 
+    disabled
+@endif
+>
+@if (isset($index) and isset($measurement)) 
+<span style="float:right">
+    <a href="{{url('measurements/' . $measurement->id . '/edit')}}" target="_blank">
+            @lang('messages.edit')
+        <i class="glyphicon glyphicon-new-window"></i>
+    </a>
+</span>
+@endif
 @if (isset($odbtrait->unit))
 <em>@lang('messages.unit'): {{ $odbtrait->unit }} </em><br/>
 @endif
