@@ -144,6 +144,8 @@ echo View::make('traits.elements.' . $odbtrait->type,
 
 @push ('scripts')
 <script>
+$(document).ready(function() {
     $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
+});
 </script>
 @endpush
