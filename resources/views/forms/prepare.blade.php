@@ -50,7 +50,7 @@
     @endif
     </td>
 
-    @foreach ($form->traits as $odbtrait)
+    @foreach ($form->traits as $traitorder => $odbtrait)
     <td>
 <?php 
 // This returns null for no records:
@@ -63,6 +63,7 @@ echo View::make('traits.elements.' . $odbtrait->type,
     'odbtrait' => $odbtrait,
     'measurement' => $measurement,
     'index' => $form_item->id,
+    'traitorder' => $traitorder,
 ]);
 ?>
     </td>

@@ -6,7 +6,7 @@
 @endif
 	<?php $selected = old('value', (isset($measurement) and $measurement->categories) ? $measurement->categories()->first()->category_id : null); ?>
 
-    <select name='value{{ isset($index) ? "[$index][]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' class="form-control" 
+    <select name='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' class="form-control" 
 @if (isset($index) and isset($measurement)) 
     disabled
 @endif

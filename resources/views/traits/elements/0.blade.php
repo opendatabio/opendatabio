@@ -4,7 +4,7 @@
 </label>
 <div class="col-sm-6">
 @endif
-<input name ='value{{ isset($index) ? "[$index][]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' type="text" class="form-control" value="{{old('value', isset($measurement) ? $measurement->valueActual : null)}}"
+<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' type="text" class="form-control" value="{{old('value', isset($measurement) ? $measurement->valueActual : null)}}"
 @if (isset($index) and isset($measurement)) 
     disabled
 @endif
