@@ -65,6 +65,11 @@ class LocationController extends Controller
             }
         }
         $locations = $locations->get();
+        
+        // Hide world id
+        foreach ($locations as $location)
+            if ('Country' === $location->levelName)
+                unset($location->parent_id);
 
         $fields = ($request->fields ? $request->fields : 'simple');
         // NOTE that "distance" as a field is only defined for querytype='closest', but it is ignored for other queries
