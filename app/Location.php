@@ -58,7 +58,7 @@ class Location extends Node
     {
         // this query hangs if you attempt to run it on full geom objects, so we add
         // a "where" to make sure we're only calculating distance from small objects
-        return $query->addSelect('*', DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
+        return $query->addSelect(DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
             ->where('adm_level', '>', 99);
     }
 
@@ -157,9 +157,10 @@ class Location extends Node
             return;
         }
         // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
-        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val")[0]->val;
+        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val");
+        $invalid = count($invalid) ? $invalid[0]->val : 1;
         if ($invalid) {
-            throw new \UnexpectedValueException('Invalid Geometry object');
+            throw new \UnexpectedValueException('Invalid Geometry object: '.$value);
         }
         $this->attributes['geom'] = DB::raw("GeomFromText('$value')");
     }

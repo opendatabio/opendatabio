@@ -32,6 +32,26 @@ class Controller extends BaseController
         ]);
     }
 
+    // Returns a query that is the recieved query plus a where statement filtering the field with the value. It suports exact match, as soon as 'LIKE' match if the $value contains '*'.
+    public function filter($query, $field, $value)
+    {
+        $treatedValue = $this->treateWildcard($value);
+        if ($treatedValue === $value)
+            return $query->where($field, '=', $treatedValue);
+        return $query->where($field, 'LIKE', $treatedValue);
+    }
+
+    // Replace all '*' to '%'
+    public function treateWildcard($string)
+    {
+        $pos = strpos($string, '*');
+        while ($pos !== FALSE) {
+            $string = substr_replace($string, '%', $pos, 1);
+            $pos = strpos($string, '*');
+        }
+        return $string;
+    }
+
     // Filters the designated fields in the collection to be returned
     public function setFields($collection, $fields, $simple)
     {

@@ -63,28 +63,29 @@ class PlantController extends Controller
     }
 
     /**
-     * Interprets $variable as a value to search at a given table and $class as the class that is associated with the table.
-     * If $variable has a number or a list of numbers separeted by comma, this method converts this list to an array of numbers.
-     * Otherwise, this method search the table for registries that has the $textField LIKE '%'.$variable.'%'. Additinally,
-     * $textField could be an array of fields, then the method find in all fields listed in this array.
+     * Interprets $value as a value to search at a given table and $class as the class that is associated with the table.
+     * If $value has a number or a list of numbers separeted by comma, this method converts this list to an array of numbers.
+     * Otherwise, this method search the table for registries that has the $names LIKE '%'.$value.'%'. Additinally,
+     * $names could be an array of fields, then the method find in all fields listed in this array, in this case if a single
+     * registry matches more than one name (in $names) this method returns only once that registry.
      *
      * Example: asIdList('Rafael', 'Person', array('full_name', 'abbreviation', 'email') returns an array with the id of
      * all registry at table persons where full_name, or abbreviation or email contains Rafael.
      */
-    public static function asIdList($variable, $class, $textField)
+    public static function asIdList($value, $class, $names)
     {
-        if (preg_match("/\d+(,\d+)*/", $variable))
-            return explode(',', $variable);
-        if (!is_array($textField))
-            return array ($class::select('id')->where($textField, 'LIKE', '%'.$variable.'%')->get()->first()->id);
+        if (preg_match("/\d+(,\d+)*/", $value))
+            return explode(',', $value);
+        if (!is_array($names))
+            return array ($class::select('id')->where($names, 'LIKE', '%'.$value.'%')->get()->first()->id);
         $ids = array();
-        foreach ($textField as $name) {
-            $found = $class::select('id')->where($name, 'LIKE', '%'.$variable.'%')->get();
+        foreach ($names as $name) {
+            $found = $class::select('id')->where($name, 'LIKE', '%'.$value.'%')->get();
             foreach ($found as $registry) {
                 array_push($ids, $registry->id);
             }
         }
-        return $ids;
+        return array_unique($ids);
     }
     
     public function store(Request $request)

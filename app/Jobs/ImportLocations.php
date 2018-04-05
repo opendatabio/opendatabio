@@ -16,33 +16,16 @@ class ImportLocations extends AppJob
      */
     public function inner_handle()
     {
-        $data = $this->userjob->data['data'];
-        if (!count($data)) {
-            $this->setError();
-            $this->appendLog('ERROR: data received is empty!');
-
+        $data = $this->extractEntrys();
+        if (!$this->setProgressMax($data))
             return;
-        }
-        $this->userjob->setProgressMax(count($data));
         foreach ($data as $location) {
-            // has this job been cancelled?
-            // calls "fresh" to make sure we're not receiving a cached object
-            if ('Cancelled' == $this->userjob->fresh()->status) {
-                $this->appendLog('WARNING: received CANCEL signal');
+            if ($this->isCancelled())
                 break;
-            }
             $this->userjob->tickProgress();
 
-            if (!is_array($location)) {
-                $this->setError();
-                $this->appendLog('ERROR: location entry is not formatted as array!'.serialize($location));
+            if (!$this->hasRequiredKeys(['name'], $location))
                 continue;
-            }
-            if (!array_key_exists('name', $location)) {
-                $this->setError();
-                $this->appendLog('ERROR: entry needs a name: '.implode(';', $location));
-                continue;
-            }
             // Arrived here: let's import it!!
             try {
                 $this->import($location);
