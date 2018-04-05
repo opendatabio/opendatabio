@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Form;
+use App\Dataset;
 use App\Measurement;
 use App\Plant;
 use App\Project;
@@ -120,6 +121,11 @@ class FormController extends Controller
     public function prepare(Request $request, $id)
     {
         $form = Form::findOrFail($id);
+        $datasets = Auth::user()->datasets;
+        // TODO: better handling here
+        if (!$datasets->count()) {
+            return view('common.errors')->withErrors([Lang::get('messages.no_valid_dataset_error')]);
+        }
         $traits = $form->traits->pluck('id');
 //        switch ($form->measured_type) {
 //        case Plant::class:
@@ -132,6 +138,47 @@ class FormController extends Controller
         $measurements = Measurement::where('measured_type', $form->measured_type)
             ->whereIn('measured_id', $items->pluck('id'))
             ->whereIn('trait_id', $traits);
-    return view('forms.prepare', compact('form', 'items', 'measurements'));
+        return view('forms.prepare', compact('form', 'items', 'measurements', 'datasets'));
+    }
+
+    public function fill(Request $request, $id) {
+        // TODO: update / delete if it had filled values???
+        $form = Form::findOrFail($id);
+        $traits = $form->traits->pluck('id');
+        // TODO: more validation
+        $request->validate([
+            'date_year' => 'required|integer',
+            'person_id' => 'required|integer',
+            'dataset_id' => 'required|integer',
+        ]);
+        $dataset = Dataset::findOrFail($request->dataset_id);
+        $this->authorize('create', [Measurement::class, $dataset]);
+        $form_size = count($request->measured_id);
+        // TODO: support link type traits
+        
+        // TODO: request->measured_id not needed??
+
+        dd($request->value);
+
+        for ($line = 0; $line < $form_size; $line++) {
+            for ($column = 0; $column < count($traits); $column ++) {
+                if (!is_null($request->value[$line][$column])) {
+                    $measurement = new Measurement([
+                        'trait_id' => $traits[$column],
+                        'measured_id' => $request->measured_id[$line],
+                        'measured_type' => $form->measured_type,
+                        'dataset_id' => $request->dataset_id,
+                        'person_id' => $request->person_id,
+                        // TODO: bibreference
+                        'notes' => 'Created with form ' . $id,
+                    ]);
+                    $measurement->setDate($request->date_month, $request->date_day, $request->date_year);
+                    $measurement->save();
+                    $measurement->valueActual = $request->value[$line][$column];
+                    $measurement->save();
+                }
+            }
+        }
+        return redirect('forms/'.$id)->withStatus(Lang::get('messages.stored'));
     }
 }

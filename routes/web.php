@@ -98,4 +98,7 @@ Route::get('vouchers/{id}/pictures/create', 'PictureController@createVouchers');
 Route::resource('pictures', 'PictureController', ['only' => ['show', 'store', 'edit', 'update']]);
 
 Route::post('forms/{id}/prepare', 'FormController@prepare');
+Route::post('forms/{id}/fill', 'FormController@fill');
+Route::get('forms/{id}/prepare', 'FormController@show'); // if someone accidentaly writes "/prepare", they probably mean /show
+
 Route::resource('forms', 'FormController');

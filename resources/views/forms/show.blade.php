@@ -74,10 +74,16 @@
 </div>
 
 <div class="form-group">
+        <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
 	    <div class="col-sm-6 col-sm-offset-3">
 <input type="checkbox" name="clear">
-@lang('messages.clear')
+@lang('messages.blank')
             </div>
+  <div class="col-sm-12">
+    <div id="hint1" class="panel-collapse collapse">
+	@lang('messages.form_blank_hint')
+    </div>
+  </div>
 </div>
 
 		        <div class="form-group">
