@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Form extends Model
 {
-    protected $fillable = ['name', 'measured_type', 'user_id'];
+    protected $fillable = ['name', 'measured_type', 'user_id', 'notes'];
 
     public function user()
     {

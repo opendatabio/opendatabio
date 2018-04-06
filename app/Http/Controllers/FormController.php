@@ -53,6 +53,7 @@ class FormController extends Controller
             'name' => 'required|string|max:191',
             'measured_type' => 'required|string',
             'trait_id' => 'required|array|min:1',
+            'trait_id.1' => 'required|numeric',
         ]);
         $form = new Form($request->only(['name', 'measured_type', 'notes']));
         $form->user_id = Auth::user()->id;
@@ -135,10 +136,6 @@ class FormController extends Controller
     {
         $form = Form::findOrFail($id);
         $datasets = Auth::user()->datasets;
-        // TODO: better handling here
-        if (!$datasets->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_dataset_error')]);
-        }
         $traits = $form->traits->pluck('id');
 //        switch ($form->measured_type) {
 //        case Plant::class:
@@ -186,7 +183,7 @@ class FormController extends Controller
                         'measured_type' => $form->measured_type,
                         'dataset_id' => $request->dataset_id,
                         'person_id' => $request->person_id,
-                        // TODO: bibreference
+                        'bibreference_id' => $request->bibreference_id,
                         'notes' => 'Measurements created with form '.$id,
                     ]);
                     $measurement->setDate($request->date_month, $request->date_day, $request->date_year);
