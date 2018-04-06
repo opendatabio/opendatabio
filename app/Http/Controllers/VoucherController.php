@@ -149,11 +149,6 @@ class VoucherController extends Controller
         $herbaria = Herbarium::all();
         $persons = Person::all();
         $projects = Auth::user()->projects;
-        // TODO: better handling here
-        if (!$projects->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-        }
-
         return view('vouchers.create', compact('persons', 'projects', 'herbaria', 'parent'));
     }
 
@@ -255,11 +250,6 @@ class VoucherController extends Controller
         $persons = Person::all();
         $plants = Plant::with('location')->get();
         $projects = Auth::user()->projects;
-        // TODO: better handling here
-        if (!$projects->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-        }
-
         return view('vouchers.create', compact('voucher', 'persons', 'projects', 'herbaria', 'plants'));
     }
 

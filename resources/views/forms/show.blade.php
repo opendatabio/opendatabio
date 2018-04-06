@@ -50,6 +50,7 @@
             </div>
 </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->
+@if (Auth::user())
         <div class="col-sm-offset-2 col-sm-8">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -63,13 +64,20 @@
 @lang('messages.fill_form_for')
 </label>
 	    <div class="col-sm-6">
+@if (count(Auth::user()->projects))
 	<select name="project_id" id="project_id" class="form-control">
 	@foreach ( Auth::user()->projects as $project )
 		<option value="{{$project->id}}" >
             {{ $project->name }}
 		</option>
 	@endforeach
-	</select>
+    </select>
+    @else
+        <div class="alert alert-danger">
+        @lang ('messages.no_valid_project')
+        </div>
+        @endif
+
             </div>
 </div>
 
@@ -88,19 +96,21 @@
 
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success" name="submit" value="submit">
+                <button type="submit" class="btn btn-success" name="submit" value="submit"
+@if(!count(Auth::user()->projects))
+disabled
+@endif
+>
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.fill')
 				</button>
 			    </div>
 			</div>
             </form>
-
-
-
-
             </div>
         </div>
+@endif
+
 </div>
 
 @endsection

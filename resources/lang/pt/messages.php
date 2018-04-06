@@ -438,4 +438,6 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'select_traits' => 'Selecione variáveis',
   'trait_measurement_mismatch' => 'Essa medida está incorreta para a definição dessa variável!',
   'unknown_user' => 'Usuário desconhecido',
+  'no_valid_project' => 'Seu usuário não está autorizado em nenhum projeto. Corrija isso e recarregue esta página.',
+  'no_valid_dataset' => 'Seu usuário não está autorizado em nenhum conjunto de dados. Corrija isso e recarregue esta página.',
 );

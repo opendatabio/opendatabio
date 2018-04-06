@@ -86,14 +86,12 @@ class MeasurementController extends Controller
 
     protected function create($object)
     {
+        if (!Auth::user()) {
+            return view('common.unauthorized');
+        }
         $persons = Person::all();
         $references = BibReference::all();
         $datasets = Auth::user()->datasets;
-        // TODO: better handling here
-        if (!$datasets->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_dataset_error')]);
-        }
-
         return view('measurements.create', compact('object', 'references', 'datasets', 'persons'));
     }
 
@@ -227,21 +225,16 @@ class MeasurementController extends Controller
 
     public function edit($id)
     {
+        if (!Auth::user()) {
+            return view('common.unauthorized');
+        }
         $measurement = Measurement::findOrFail($id);
         $object = $measurement->measured;
-        $traits = ODBTrait::appliesTo($measurement->measured_type)->get();
         $persons = Person::all();
         $references = BibReference::all();
         $datasets = Auth::user()->datasets;
-        // TODO: better handling here
-        if (!$datasets->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_dataset_error')]);
-        }
-        if (!$traits->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_trait_error')]);
-        }
 
-        return view('measurements.create', compact('measurement', 'object', 'traits', 'references', 'datasets', 'persons'));
+        return view('measurements.create', compact('measurement', 'object', 'references', 'datasets', 'persons'));
     }
 
     public function update(Request $request, $id)
