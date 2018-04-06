@@ -152,9 +152,9 @@ class AppJob implements ShouldQueue
     public function validIdOrName($query, $value, $id = 'id', $name = 'name')
     {
         if (is_numeric($value))
-            $query = $query->where($id, '=', $value);
+            $query->where($id, '=', $value);
         else
-            $query = $query->where($name, '=', $value)
+            $query->where($name, '=', $value)
         $query = $query->get();
         if (count($query))
             return $query->first()[$id];

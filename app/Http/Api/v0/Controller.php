@@ -38,13 +38,14 @@ class Controller extends BaseController
      * Otherwise, this method search the table for registries that has the field $name with value $value. Additinally,
      * $value could be a string containing a comma separeted list of values, and each value could contains the wildcard '*'.
      */
-    public function asIdList($value, $class, $name, $raw=false)
+    public function asIdList($value, $query, $name, $raw=false)
     {
         if (preg_match("/\A\d+(,\d+)*\z/", $value))
             return explode(',', $value);
         $ids = array();
-        $found = $this->advancedWhereIn($class::select('id'), $name, $value, $raw)->get();
-        foreach ($found as $registry)
+        $this->advancedWhereIn($query, $name, $value, $raw);
+        $query = $query->get();
+        foreach ($query as $registry)
             array_push($ids, $registry->id);
         return array_unique($ids);
     }

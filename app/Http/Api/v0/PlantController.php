@@ -33,7 +33,7 @@ class PlantController extends Controller
             $plant->whereIn('plants.id', explode(',', $request->id));
         }
         if ($request->location) {
-            $locations = $this->asIdList($request->location, Location::class, 'name');
+            $locations = $this->asIdList($request->location, Location::select('id'), 'name');
             $plant->whereIn('location_id', $locations);
         }
         if ($request->tag) {
@@ -42,7 +42,7 @@ class PlantController extends Controller
         if ($request->taxon) {
             $taxon = $this->asIdList(
                     $request->taxon,
-                    Taxon::class,
+                    Taxon::select('id'),
                     'odb_txname(name, level, parent_id)',
                     true);
             $identification = Identification::select('object_id')
@@ -52,7 +52,7 @@ class PlantController extends Controller
             $plant->whereIn('plants.id', $identification);
         }
         if ($request->project) {
-            $projects = $this->asIdList($request->project, Project::class, 'name');
+            $projects = $this->asIdList($request->project, Project::select('id'), 'name');
             $plant->whereIn('project_id', $projects);
         }
         if ($request->limit) {
