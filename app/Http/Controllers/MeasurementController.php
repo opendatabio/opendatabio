@@ -170,6 +170,10 @@ class MeasurementController extends Controller
             if (isset($odbtrait->range_max) and $request->value > $odbtrait->range_max) {
                 $validator->errors()->add('value', Lang::get('messages.value_out_of_range'));
             }
+            // Checks if integer variable is integer type
+            if ($odbtrait->type == ODBTrait::QUANT_INTEGER and strval($request->value) != strval(intval($request->value))) {
+                $validator->errors()->add('value', Lang::get('messages.value_integer'));
+            }
             if (in_array($odbtrait->type, [ODBTrait::CATEGORICAL, ODBTrait::ORDINAL, ODBTrait::CATEGORICAL_MULTIPLE])) {
                 // validates that the chosen category is ACTUALLY from the trait
                 $valid = $odbtrait->categories->pluck('id')->all();
@@ -207,6 +211,11 @@ class MeasurementController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+        // Fixes https://github.com/opendatabio/opendatabio/issues/218
+        $odbtrait = ODBTrait::findOrFail($request->trait_id);
+        if ($odbtrait->type == ODBTrait::QUANT_REAL)
+            $request->value = str_replace(',', '.', $request->value);
+
         $measurement = new Measurement($request->only([
             'trait_id', 'measured_id', 'measured_type', 'dataset_id', 'person_id', 'bibreference_id', 'notes',
         ]));
@@ -247,6 +256,10 @@ class MeasurementController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+        // Fixes https://github.com/opendatabio/opendatabio/issues/218
+        $odbtrait = ODBTrait::findOrFail($request->trait_id);
+        if ($odbtrait->type == ODBTrait::QUANT_REAL)
+            $request->value = str_replace(',', '.', $request->value);
         $measurement->update($request->only([
             'trait_id', 'dataset_id', 'person_id', 'bibreference_id', 'notes',
         ]));

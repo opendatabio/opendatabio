@@ -435,4 +435,5 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'trait_measurement_mismatch' => 'This measurement is incorrect for the trait definition!',
   'no_valid_project' => 'Your user is not authorized in any project. Please correct this, then reload this page.',
   'no_valid_dataset' => 'Your user is not authorized in any dataset. Please correct this, then reload this page.',
+  'value_integer' => 'Value must be integer',
 );
