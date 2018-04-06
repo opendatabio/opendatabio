@@ -57,7 +57,7 @@
                     @lang('messages.fill_form')
                 </div>
             <div class="panel-body">
-		    <form action="{{ url('forms/' . $form->id . '/prepare')}}" method="POST" class="form-horizontal">
+		    <form action="{{ url('forms/' . $form->id . '/prepare')}}" method="GET" class="form-horizontal">
 		     {{ csrf_field() }}
 <div class="form-group">
 <label for="form_for" class="col-sm-3 control-label mandatory">

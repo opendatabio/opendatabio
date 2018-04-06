@@ -118,7 +118,6 @@
 
 @foreach ($items as $form_item)
 <tr>
-    <input type="hidden"  name="measured_id[]" value="{{$form_item->id}}">
     <td>{{ $form_item->fullname }} 
     @if ($form_item->taxonname)
         <br>(<em>{{ $form_item->taxonname}}</em>)

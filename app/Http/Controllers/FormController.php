@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use App\DataTables\FormsDataTable;
 use Auth;
 use Lang;
+use Validator;
 
 class FormController extends Controller
 {
@@ -162,17 +163,32 @@ class FormController extends Controller
     {
         $form = Form::findOrFail($id);
         $traits = $form->traits->pluck('id');
+        // Validate request:
         // TODO: more validation
-        $request->validate([
+        $rules = [
             'date_year' => 'required|integer',
             'person_id' => 'required|integer',
             'dataset_id' => 'required|integer',
-        ]);
+        ];
+        $validator = Validator::make($request->all(), $rules);
+        $validator->after(function ($validator) use ($request) {
+            $colldate = [$request->date_month, $request->date_day, $request->date_year];
+            if (!Measurement::checkDate($colldate)) {
+                $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
+            }
+            // measurement date must be in the past or today
+            if (!Measurement::beforeOrSimilar($colldate, date('Y-m-d'))) {
+                $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
+            }
+        });
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
         $dataset = Dataset::findOrFail($request->dataset_id);
         $this->authorize('create', [Measurement::class, $dataset]);
         // TODO: support link type traits
-
-        // TODO: request->measured_id not needed??
 
         foreach ($request->value as $line => $elements) {
             for ($column = 0; $column < count($traits); ++$column ) {

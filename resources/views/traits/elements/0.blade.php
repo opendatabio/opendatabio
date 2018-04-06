@@ -4,7 +4,11 @@
 </label>
 <div class="col-sm-6">
 @endif
-<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][]" : "" }}' type="text" class="form-control" value="{{old('value', isset($measurement) ? $measurement->valueActual : null)}}"
+<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' type="text" class="form-control" value="{{ 
+    isset($index) ? 
+    old('value.' . $index . '.' . $traitorder, isset($measurement) ? $measurement->valueActual : null) : 
+    old('value', isset($measurement) ? $measurement->valueActual : null)
+}}"
 @if (isset($index) and isset($measurement)) 
     disabled
 @endif
