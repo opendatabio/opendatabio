@@ -281,7 +281,7 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-        $location = Location::select('*')->with('children')->withGeom()->findOrFail($id);
+        $location = Location::noWorld()->select('*')->with('children')->withGeom()->findOrFail($id);
         $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
         if ($location->x) {
             if ($location->x > $location->y) {
