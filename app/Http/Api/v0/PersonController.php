@@ -29,22 +29,22 @@ class PersonController extends Controller
         if ($request->search) {
             $persons->where(function ($query) use ($request->search) {
                 $name = clone $query;
-                $this->advancedWhereIn($name, 'full_name', $request->search);
+                ODBFunctions::advancedWhereIn($name, 'full_name', $request->search);
                 $abbrev = clone $query;
-                $this->advancedWhereIn($abbrev, 'abbreviation', $request->search);
+                ODBFunctions::advancedWhereIn($abbrev, 'abbreviation', $request->search);
                 $email = clone $query;
-                $this->advancedWhereIn($email, 'email', $request->search);
+                ODBFunctions::advancedWhereIn($email, 'email', $request->search);
                 $query->union($name)->union($abbrev)->union($email);
             });
         }
         if ($request->name) {
-            $this->advancedWhereIn($persons, 'full_name', $request->name);
+            ODBFunctions::advancedWhereIn($persons, 'full_name', $request->name);
         }
         if ($request->abbrev) {
-            $this->advancedWhereIn($persons, 'abbreviation', $request->abbrev);
+            ODBFunctions::advancedWhereIn($persons, 'abbreviation', $request->abbrev);
         }
         if ($request->email) {
-            $this->advancedWhereIn($persons, 'email', $request->email);
+            ODBFunctions::advancedWhereIn($persons, 'email', $request->email);
         }
         if ($request->limit) {
             $persons->limit($request->limit);

@@ -35,13 +35,13 @@ class VoucherController extends Controller
             $voucher->whereIn('id', explode(',', $request->id));
         }
         if ($request->number) {
-            $this->advancedWhereIn($voucher, 'number', $request->number);
+            ODBFunctions::advancedWhereIn($voucher, 'number', $request->number);
         }
         if ($request->location) {
-            $locations = $this->asIdList($request->location, Location::select('id'), 'name');
+            $locations = ODBFunctions::asIdList($request->location, Location::select('id'), 'name');
             if ($request->plant) { // if request has location, plant refers to the plant_tag
                 $plants = Plant::select('plants.id')->whereIn('location_id', $locations);
-                $this->advancedWhereIn($plants, 'plants.tag', $request->plant);
+                ODBFunctions::advancedWhereIn($plants, 'plants.tag', $request->plant);
                 $voucher->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', $plants);
             } else // gives only vouchers of the specified locations
             /*
@@ -56,15 +56,15 @@ class VoucherController extends Controller
             }
         }
         if ($request->collector) {
-            $main_collector = $this->asIdList($request->collector, Person::select('id'), 'abbreviation');
+            $main_collector = ODBFunctions::asIdList($request->collector, Person::select('id'), 'abbreviation');
             $voucher->whereIn('person_id', $main_collector);
         }
         if ($request->project) {
-            $projects = $this->asIdList($request->project, Project::select('id'), 'name');
+            $projects = ODBFunctions::asIdList($request->project, Project::select('id'), 'name');
             $voucher->whereIn('project_id', $projects);
         }
         if ($request->taxon) { // taxon may refers to identification of the voucher requested by the client, or refers to identification of plant refered to the voucher requested by the client.
-            $taxon = $this->asIdList($request->taxon, Taxon::select('id'), 'odb_txname(name, level, parent_id)', true);
+            $taxon = ODBFunctions::asIdList($request->taxon, Taxon::select('id'), 'odb_txname(name, level, parent_id)', true);
             $voucher->where(function ($query) use ($taxon) {
                 $identifications = Identification::select('object_id')
                         ->where('object_type', '=', 'App\\Voucher')

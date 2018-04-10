@@ -34,7 +34,7 @@ class LocationController extends Controller
             $locations->whereIn('parent_id', explode(',', $request->parent_id));
         }
         if ($request->name) {
-            $this->advancedWhereIn($locations, 'name', $request->name);
+            ODBFunctions::advancedWhereIn($locations, 'name', $request->name);
         }
         if (isset($request->adm_level)) {
             $locations->whereIn('adm_level', explode(',', $request->adm_level));

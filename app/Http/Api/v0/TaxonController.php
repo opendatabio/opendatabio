@@ -31,7 +31,7 @@ class TaxonController extends Controller
             $taxons->whereIn('id', explode(',', $request->id));
         }
         if ($request->name) {
-            $this->advancedWhereIn($taxons,
+            ODBFunctions::advancedWhereIn($taxons,
                     'odb_txname(name, level, parent_id)',
                     $request->name,
                     true);
