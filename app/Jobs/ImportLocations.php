@@ -76,12 +76,12 @@ class ImportLocations extends AppJob
             if (0 == $parent) // forces null if parent was explicitly passed as zero
                 $parent = null;
             else {
-                $valid = $this->validIdOrName(Location::select('id'), $parent);
+                $valid = ODBFunctions::validRegistry(Location::select('id'), $parent);
                 if ($valid === null) {
                     $this->skipEntry($location, "Parent for location $name is listed as $parent, but this was not found in the database.");
                     return;
                 } else
-                    $parent = $valid;
+                    $parent = $valid->id;
             }
         }
 
@@ -96,12 +96,12 @@ class ImportLocations extends AppJob
             if (0 == $uc) // forces null if uc was explicitly passed as zero
                 $uc = null;
             else {
-                $valid = $this->validIdOrName(Location::select('id'), $uc);
+                $valid = ODBFunctions::validRegistry(Location::select('id'), $uc);
                 if ($valid === null) {
                     $this->skipEntry($location, "Conservation unit for location $name is listed as $uc, but this was not found in the database.");
                     return;
                 } else
-                    $uc = $valid;
+                    $uc = $valid->id;
             }
         }
 

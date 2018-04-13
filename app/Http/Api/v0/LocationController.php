@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Response;
 use App\Location;
 use App\UserJob;
+use App\ODBFunctions;
 use App\Jobs\ImportLocations;
 
 class LocationController extends Controller

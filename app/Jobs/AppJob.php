@@ -147,17 +147,4 @@ class AppJob implements ShouldQueue
             $entry = serialize($entry);
         $this->appendLog('WARNING: '.$cause.'. Skipping import of '.$entry);
     }
-
-    // Extracts the $id of the $query that is equals to the $value or reffers to a $name equals to the $value.
-    public function validIdOrName($query, $value, $id = 'id', $name = 'name')
-    {
-        if (is_numeric($value))
-            $query->where($id, '=', $value);
-        else
-            $query->where($name, '=', $value)
-        $query = $query->get();
-        if (count($query))
-            return $query->first()[$id];
-        return null;
-    }
 }

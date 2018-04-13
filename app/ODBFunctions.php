@@ -7,14 +7,7 @@
 
 namespace App;
 
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Response;
-use URL;
-
-class ODBFunctions extends BaseController
+class ODBFunctions
 {
     /**
      * Interprets $value as a value to search at a given table and $class as the class that is associated with the table.
@@ -32,6 +25,24 @@ class ODBFunctions extends BaseController
         foreach ($query as $registry)
             array_push($ids, $registry->id);
         return array_unique($ids);
+    }
+
+    /**
+     * Extracts the regitry of the $query that has one field of $fields equals to the $value or null if not found.
+     * The fields order represent the preference order, so if we have one plant with id=1 and another with tag=1,
+     * validRegistry(Plant::select(*), 1, ['id', 'tag']) returns the plant with id=1 instead of the plant with tag=1.
+     */
+    public static function validRegistry($query, $value, $fields = ['id', 'name'])
+    {
+        if (is_string($fields))
+            $fields = explode(',', $fields);
+        foreach ($fields as $field) {
+            $myQuery = clone $query;
+            $myQuery = $myQuery->where($field, $value)->get();
+            if (count($myQuery))
+                return $myQuery->first();
+        }
+        return null;
     }
 
     public static function advancedWhereIn(&$query, $field, $value, $raw=false)
