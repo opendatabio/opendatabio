@@ -18,7 +18,16 @@
 <p>@lang ('messages.no_default_person') 
     <a href="{{url('/selfedit')}}">@lang('messages.here')</a>
 </p>
-
+@endif
+@if (Auth::user()->defaultProject)
+<p>@lang ('messages.default_project'): 
+    <a href="{{url('projects/'.Auth::user()->project_id)}}">{{Auth::user()->defaultProject->fullname}}</a>
+</p>
+@endif
+@if (Auth::user()->defaultDataset)
+<p>@lang ('messages.default_dataset'): 
+    <a href="{{url('datasets/'.Auth::user()->dataset_id)}}">{{Auth::user()->defaultDataset->name}}</a>
+</p>
 @endif
 
 @if (Auth::user()->projects()->count())

@@ -22,7 +22,7 @@ class User extends Authenticatable
     const ADMIN = 2;
     const LEVELS = [self::REGISTERED, self::USER, self::ADMIN];
 
-    protected $fillable = ['email', 'password', 'person_id'];
+    protected $fillable = ['email', 'password', 'person_id', 'project_id', 'dataset_id'];
     protected $hidden = ['password', 'remember_token', 'api_token'];
 
     protected static function boot()
@@ -42,6 +42,18 @@ class User extends Authenticatable
     public function person()
     {
         return $this->belongsTo(Person::class);
+    }
+
+    // NOTE, these functions should never be used to VALIDATE authorization, only to display a default in forms.
+    // Use $user->projects and $user->datasets for authorization
+    public function defaultDataset()
+    {
+        return $this->belongsTo(Dataset::class, 'dataset_id');
+    }
+
+    public function defaultProject()
+    {
+        return $this->belongsTo(Project::class, 'project_id');
     }
 
     public function userjobs()

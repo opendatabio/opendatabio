@@ -92,6 +92,7 @@ class MeasurementController extends Controller
         $persons = Person::all();
         $references = BibReference::all();
         $datasets = Auth::user()->datasets;
+
         return view('measurements.create', compact('object', 'references', 'datasets', 'persons'));
     }
 
@@ -171,7 +172,7 @@ class MeasurementController extends Controller
                 $validator->errors()->add('value', Lang::get('messages.value_out_of_range'));
             }
             // Checks if integer variable is integer type
-            if ($odbtrait->type == ODBTrait::QUANT_INTEGER and strval($request->value) != strval(intval($request->value))) {
+            if (ODBTrait::QUANT_INTEGER == $odbtrait->type and strval($request->value) != strval(intval($request->value))) {
                 $validator->errors()->add('value', Lang::get('messages.value_integer'));
             }
             if (in_array($odbtrait->type, [ODBTrait::CATEGORICAL, ODBTrait::ORDINAL, ODBTrait::CATEGORICAL_MULTIPLE])) {
@@ -213,8 +214,9 @@ class MeasurementController extends Controller
         }
         // Fixes https://github.com/opendatabio/opendatabio/issues/218
         $odbtrait = ODBTrait::findOrFail($request->trait_id);
-        if ($odbtrait->type == ODBTrait::QUANT_REAL)
+        if (ODBTrait::QUANT_REAL == $odbtrait->type) {
             $request->value = str_replace(',', '.', $request->value);
+        }
 
         $measurement = new Measurement($request->only([
             'trait_id', 'measured_id', 'measured_type', 'dataset_id', 'person_id', 'bibreference_id', 'notes',
@@ -258,8 +260,9 @@ class MeasurementController extends Controller
         }
         // Fixes https://github.com/opendatabio/opendatabio/issues/218
         $odbtrait = ODBTrait::findOrFail($request->trait_id);
-        if ($odbtrait->type == ODBTrait::QUANT_REAL)
+        if (ODBTrait::QUANT_REAL == $odbtrait->type) {
             $request->value = str_replace(',', '.', $request->value);
+        }
         $measurement->update($request->only([
             'trait_id', 'dataset_id', 'person_id', 'bibreference_id', 'notes',
         ]));

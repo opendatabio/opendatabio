@@ -441,4 +441,8 @@ vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado 
   'no_valid_project' => 'Seu usuário não está autorizado em nenhum projeto. Corrija isso e recarregue esta página.',
   'no_valid_dataset' => 'Seu usuário não está autorizado em nenhum conjunto de dados. Corrija isso e recarregue esta página.',
   'value_integer' => 'O valor precisa ser um número inteiro',
+  'default_project' => 'Projeto Padrão',
+  'default_dataset' => 'Conjunto de Dados Padrão',
+  'hint_default_project' => 'Se você selecionar um Projeto nesta tela, ele será usado como padrão em todos os formulários de interesse, como quando você for inserir plantas ou amostras.',
+  'hint_default_dataset' => 'Se você selecionar um Conjunto de Dados nesta tela, ele será usado como padrão em todos os formulários de interesse, como quando você for inserir medidas.',
 );

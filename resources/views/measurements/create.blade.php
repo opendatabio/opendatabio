@@ -104,7 +104,7 @@
         <a data-toggle="collapse" href="#hintd" class="btn btn-default">?</a>
 <div class="col-sm-6">
 @if (count($datasets))
-	<?php $selected = old('dataset_id', isset($measurement) ? $measurement->dataset_id : null); ?>
+	<?php $selected = old('dataset_id', isset($measurement) ? $measurement->dataset_id : (Auth::user()->defaultDataset ? Auth::user()->defaultDataset->id : null)); ?>
 	<select name="dataset_id" id="dataset_id" class="form-control" >
 	@foreach ( $datasets as $dataset )
 		<option value="{{$dataset->id}}" {{ $dataset->id == $selected ? 'selected' : '' }}>

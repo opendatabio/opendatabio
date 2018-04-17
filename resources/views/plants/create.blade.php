@@ -88,7 +88,7 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 @if (count($projects))
-	<?php $selected = old('project_id', isset($plant) ? $plant->project_id : null); ?>
+	<?php $selected = old('project_id', isset($plant) ? $plant->project_id : (Auth::user()->defaultProject ? Auth::user()->defaultProject->id : null)); ?>
 
 	<select name="project_id" id="project_id" class="form-control" >
 	@foreach ($projects as $project)
