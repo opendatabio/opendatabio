@@ -63,7 +63,7 @@ class Installer
         }
         $configs = [
             ['name' => 'allow_url_fopen', 'min' => true],
-            ['name' => 'memory_limit', 'min' => '256M'],
+            ['name' => 'memory_limit', 'min' => '512M'],
             ['name' => 'post_max_size', 'min' => '30M'],
             ['name' => 'upload_max_filesize', 'min' => '30M'],
         ];

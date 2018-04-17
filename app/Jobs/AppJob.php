@@ -110,17 +110,19 @@ class AppJob implements ShouldQueue
             return false;
         }
         $this->userjob->setProgressMax(count($data));
+
         return true;
     }
 
     public function isCancelled()
     {
         // calls "fresh" to make sure we're not receiving a cached object
-        if ('Cancelled' == $this->userjob->fresh()->status)
-        {
+        if ('Cancelled' == $this->userjob->fresh()->status) {
             $this->appendLog('WARNING: received CANCEL signal');
+
             return true;
         }
+
         return false;
     }
 
@@ -129,13 +131,17 @@ class AppJob implements ShouldQueue
         // if $entry is not an array it has not the $requiredKeys
         if (!is_array($entry)) {
             $this->skipEntry($entry, 'entry is not formatted as array');
+
             return false;
         }
-        foreach ($requiredKeys as $key)
+        foreach ($requiredKeys as $key) {
             if (!array_key_exists($key, $entry)) {
                 $this->skipEntry($entry, 'entry needs a '.$key);
+
                 return false;
             }
+        }
+
         return true;
     }
 

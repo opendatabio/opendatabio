@@ -87,6 +87,7 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
 </label>
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
+@if (count($projects))
 	<?php $selected = old('project_id', isset($plant) ? $plant->project_id : null); ?>
 
 	<select name="project_id" id="project_id" class="form-control" >
@@ -96,6 +97,12 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
 		</option>
 	@endforeach
 	</select>
+    @else
+        <div class="alert alert-danger">
+        @lang ('messages.no_valid_project')
+        </div>
+        @endif
+
             </div>
   <div class="col-sm-12">
     <div id="hint3" class="panel-collapse collapse">
@@ -292,7 +299,11 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
 </div>
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success" name="submit" value="submit">
+                <button type="submit" class="btn btn-success" name="submit" value="submit"
+@if(!count($projects))
+disabled
+@endif
+>
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.add')
 

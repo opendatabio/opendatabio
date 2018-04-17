@@ -16,6 +16,7 @@ class ODBTrait extends Model
     use Translatable;
 
     // Types that can have measurements associated with
+    // If this is ever changed, remember to edit getObjectTypeNames!
     const OBJECT_TYPES = [
         Plant::class,
         Voucher::class,
@@ -53,7 +54,6 @@ class ODBTrait extends Model
     // for use in the trait edit dropdown
     public static function getObjectTypeNames()
     {
-        // ugly, TODO refactor
         return [
             Lang::get('classes.'.Plant::class),
             Lang::get('classes.'.Voucher::class),

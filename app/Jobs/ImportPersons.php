@@ -18,15 +18,18 @@ class ImportPersons extends AppJob
     public function inner_handle()
     {
         $data = $this->extractEntrys();
-        if (!$this->setProgressMax($data))
+        if (!$this->setProgressMax($data)) {
             return;
+        }
         foreach ($data as $person) {
-            if ($this->isCancelled())
+            if ($this->isCancelled()) {
                 break;
+            }
             $this->userjob->tickProgress();
 
-            if (!$this->hasRequiredKeys(['full_name'], $person))
+            if (!$this->hasRequiredKeys(['full_name'], $person)) {
                 continue;
+            }
             // Arrived here: let's import it!!
             try {
                 $this->import($person);

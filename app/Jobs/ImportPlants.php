@@ -19,14 +19,16 @@ class ImportPlants extends ImportCollectable
     public function inner_handle()
     {
         $data = $this->extractEntrys();
-        if (!$this->setProgressMax($data))
+        if (!$this->setProgressMax($data)) {
             return;
+        }
         foreach ($data as $plant) {
-            if ($this->isCancelled())
+            if ($this->isCancelled()) {
                 break;
+            }
             $this->userjob->tickProgress();
 
-            if (!$this->hasRequiredKeys(['tag', 'date', 'location', 'project'], $plant))
+            if (!$this->hasRequiredKeys(['tag', 'date', 'location', 'project'], $plant)) {
                 continue;
             //validate location
             $valid = ODBFunctions::validRegistry(Location::select('id'), $plant['location']);
@@ -63,7 +65,7 @@ class ImportPlants extends ImportCollectable
         $notes = array_key_exists('notes', $plant) ? $plant['notes'] : null;
         $relative_position = array_key_exists('relative_position', $plant) ? $plant['relative_position'] : null;
         $same = Plant::where('location_id', '=', $location)->where('tag', '=', $tag)->get();
-        if (count($same)){
+        if (count($same)) {
             $this->skipEntry($plant, 'There is another registry of a plant with location '.$location.' and tag '.$tag);
             return;
         }
@@ -71,7 +73,7 @@ class ImportPlants extends ImportCollectable
         // Plants' fields is ok, what about related tables?
         $identification = $this->extractIdentification($plant);
         $collectors = $this->extractCollectors('Plant '.$tag, $plant, 'tagging_team');
-        
+
         //Finaly create the registries:
         // - First plant's registry, to get their id
         $plant = new Plant([
@@ -87,7 +89,7 @@ class ImportPlants extends ImportCollectable
         $plant->setDate($date);
         $plant->save();
         $this->affectedId($plant->id);
-        
+
         // - Then create the related registries (for identification and collector), if requested
         $this->createCollectorsAndIdentification('App\Plant', $plant->id, $collectors, $identification);
         return;

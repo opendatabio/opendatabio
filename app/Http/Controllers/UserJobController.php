@@ -46,7 +46,7 @@ class UserJobController extends Controller
     }
 
     public function cancel($id)
-    { // TODO: only allow cancel of Submitted jobs?
+    {
         $job = UserJob::findOrFail($id);
         $this->authorize('update', $job);
         $job->status = 'Cancelled';

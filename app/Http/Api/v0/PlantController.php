@@ -16,7 +16,6 @@ use App\Project;
 use App\UserJob;
 use App\ODBFunctions;
 use Response;
-use Auth;
 use DB;
 use App\Jobs\ImportPlants;
 
@@ -62,12 +61,12 @@ class PlantController extends Controller
         $plant = $plant->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $plant = $this->setFields($plant, $fields, ['fullName', 'taxonName', 'id', 'location_id', 'locationName', 'tag', 'date', 'notes', 'projectName', 'relativePosition'
+        $plant = $this->setFields($plant, $fields, ['fullName', 'taxonName', 'id', 'location_id', 'locationName', 'tag', 'date', 'notes', 'projectName', 'relativePosition',
         ]);
 
         return $this->wrap_response($plant);
     }
-    
+
     public function store(Request $request)
     {
         $this->authorize('create', Plant::class);
