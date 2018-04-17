@@ -33,6 +33,7 @@ class AppJob implements ShouldQueue
     {
         $this->userjob = $userjob;
         $this->userjob->log = json_encode([]);
+        $this->userjob->affected_ids = $this->userjob->affected_ids ? $this->userjob->affected_ids : json_encode([]);
         $this->userjob->save();
         $this->errors = false;
     }
@@ -62,6 +63,14 @@ class AppJob implements ShouldQueue
         Log::info($text);
     }
 
+    public function affectedId($id)
+    {
+        $ids = json_decode($this->userjob->fresh()->affected_ids, true);
+        array_push($ids, $id);
+        $this->userjob->affected_ids = json_encode($ids);
+        $this->userjob->save();
+    }
+
     public function handle()
     {
         // temporarily removing rollback capabilities:
@@ -82,7 +91,59 @@ class AppJob implements ShouldQueue
         } catch (\Exception $e) {
             //			    DB::rollback();
             $this->appendLog('BLOCKING EXCEPTION '.$e->getMessage());
+            Log::warning($e->getTraceAsString());
             $this->userjob->setFailed();
         }
+    }
+
+    public function extractEntrys()
+    {
+        return $this->userjob->data['data'];
+    }
+
+    public function setProgressMax($data)
+    {
+        if (!count($data)) {
+            $this->setError();
+            $this->appendLog('ERROR: data received is empty!');
+
+            return false;
+        }
+        $this->userjob->setProgressMax(count($data));
+
+        return true;
+    }
+
+    public function isCancelled()
+    {
+        // calls "fresh" to make sure we're not receiving a cached object
+        if ('Cancelled' == $this->userjob->fresh()->status) {
+            $this->appendLog('WARNING: received CANCEL signal');
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function hasRequiredKeys($requiredKeys, $entry)
+    {
+        // if $entry is not an array it has not the $requiredKeys
+        if (!is_array($entry)) {
+            $this->setError();
+            $this->appendLog('ERROR: entry is not formatted as array!'.serialize($entry));
+
+            return false;
+        }
+        foreach ($requiredKeys as $key) {
+            if (!array_key_exists($key, $entry)) {
+                $this->setError();
+                $this->appendLog('ERROR: entry needs a '.$key.': '.implode(';', $entry));
+
+                return false;
+            }
+        }
+
+        return true;
     }
 }

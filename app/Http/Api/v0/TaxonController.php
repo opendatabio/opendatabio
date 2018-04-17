@@ -23,16 +23,24 @@ class TaxonController extends Controller
     public function index(Request $request)
     {
         $taxons = Taxon::query()->with(['author_person', 'reference']);
+        if ($request->root) {
+            $root_tx = Taxon::select('lft', 'rgt')->where('id', $request->root)->get()->first();
+            $taxons->where('lft', '>=', $root_tx['lft'])->where('rgt', '<=', $root_tx['rgt'])->orderBy('lft');
+        }
         if ($request->id) {
             $taxons = $taxons->whereIn('id', explode(',', $request->id));
         }
-        if ($request->search) {
-            $taxons = $taxons->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%'.$request->search.'%']);
+        if ($request->name) {
+            $treatedName = $this->treateWildcard($request->name);
+            if ($treatedName === $request->name) {
+                $taxons = $taxons->whereRaw('odb_txname(name, level, parent_id) = ?', [$treatedName]);
+            }
+            $taxons = $taxons->whereRaw('odb_txname(name, level, parent_id) LIKE ?', [$treatedName]);
         }
-        if ($request->level) {
+        if (isset($request->level)) {
             $taxons = $taxons->where('level', '=', $request->level);
         }
-        if ($request->valid) {
+        if (isset($request->valid)) {
             $taxons = $taxons->valid();
         }
         if ($request->external) {

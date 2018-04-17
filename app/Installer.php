@@ -13,6 +13,7 @@ class Installer
     protected $apachecmd = null;
     protected $composercmd = null;
     public $dotenv = null; // will hold the environment variables
+    protected $rawpath = '/opendatabio/data/raw/master/';
 
     // What are the required versions from prerequisite software
     protected function versions()
@@ -62,7 +63,7 @@ class Installer
         }
         $configs = [
             ['name' => 'allow_url_fopen', 'min' => true],
-            ['name' => 'memory_limit', 'min' => '256M'],
+            ['name' => 'memory_limit', 'min' => '512M'],
             ['name' => 'post_max_size', 'min' => '30M'],
             ['name' => 'upload_max_filesize', 'min' => '30M'],
         ];
@@ -431,15 +432,23 @@ class Installer
         }
     }
 
-    public function testProxy()
+    public function makeProxy()
     {
+        $proxystring = '';
         if ('' != getenv('PROXY_URL')) {
-            $proxystring = '';
             if ('' != getenv('PROXY_USER')) {
                 $proxystring = getenv('PROXY_USER').':'.getenv('PROXY_PASSWORD').'@';
             }
             $proxystring .= getenv('PROXY_URL').':'.getenv('PROXY_PORT');
+        }
 
+        return $proxystring;
+    }
+
+    public function testProxy()
+    {
+        if ('' != getenv('PROXY_URL')) {
+            $proxystring = $this->makeProxy();
             echo 'Testing proxy settings...';
             $client = new \GuzzleHttp\Client(['base_uri' => 'http://www.example.com', 'proxy' => $proxystring]);
             try {
@@ -455,6 +464,47 @@ class Installer
                 echo $this->c('Unable to connect to external providers using the provided proxy (ClientException)!', 'danger');
             }
         }
+    }
+
+    protected function maxVersion($array)
+    {
+        $config = require dirname(__DIR__).'/config/app.php';
+        $myversion = $config['version'];
+        foreach (array_keys($array) as $key => $val) {
+            if (version_compare($val, $myversion, '>')) {
+                return $array[array_keys($array)[$key - 1]];
+            }
+        }
+
+        return $array[array_keys($array)[$key]];
+    }
+
+    protected function processSeed($file, $client)
+    {
+        $DIR = dirname(__DIR__).'/storage/';
+        // downloads file to storage
+        $client->request('GET', $this->rawpath.$file.'.tar.gz', ['sink' => $DIR.$file.'.tar.gz']);
+        exec('tar xzf '.$DIR.$file.'.tar.gz -C '.$DIR);
+        exec('mysql -u'.getenv('DB_USERNAME').
+            ' -h'.getenv('DB_HOST').
+            ' -p'.getenv('DB_PASSWORD').
+            ' '.getenv('DB_DATABASE').'<'.$DIR.$file, $result, $status);
+        if (0 != $status) {
+            echo $this->c('Error processing database seed file!', 'danger');
+        }
+    }
+
+    protected function getSeeds()
+    {
+        echo "Downloading seed information...\n";
+        $client = new \GuzzleHttp\Client(['base_uri' => 'https://www.github.com', 'proxy' => $this->makeProxy()]);
+        $response = $client->request('GET', $this->rawpath.'seeds.json');
+        $seed_array = json_decode((string) $response->getBody(), true);
+        $seeds = $this->maxVersion($seed_array['versions']);
+        echo "Processing seed for taxons...\n";
+        $this->processSeed($seeds['taxon'], $client);
+        echo "Processing seed for locations...\n";
+        $this->processSeed($seeds['location'], $client);
     }
 
     public function checkSupervisor()
@@ -597,11 +647,13 @@ class Installer
         echo $this->c('Do you want to create the database user and schema? [yes]/no ', 'warning');
         $line = trim(fgets(STDIN));
         if ('' != $line and 'y' != $line and 'yes' != $line) {
+            $createcmd = str_replace('\`', '`', $createcmd);
             exit($this->c("Unable to complete installation. Please create the database and database user. Suggested commands:\n$createcmd", 'danger'));
         } else {
             echo $this->c("You will be prompted now for the MySQL root password:\n", 'warning');
             $this->runDbRoot($createcmd);
             if (false === $this->runDbUser('SELECT 1;')) {
+                $createcmd = str_replace('\`', '`', $createcmd);
                 exit($this->c("Unable to create database! Try to create the user and database manually... Suggested commands:\n$createcmd", 'danger'));
             }
         }
@@ -646,6 +698,18 @@ class Installer
         system('php artisan migrate', $status);
         if (0 != $status) {
             exit($this->c("running 'php artisan migrate' failed!\n", 'danger'));
+        }
+
+        echo 'Do you wish to import the default taxon and locations to the database? yes/[no] ';
+        $line = trim(fgets(STDIN));
+        if ('y' == $line or 'yes' == $line) {
+            echo $this->c('NOTICE: This will completely replace the current taxon and locations table. To proceed, type in uppercase PROCEED ', 'danger');
+            $line = trim(fgets(STDIN));
+            if ('PROCEED' == $line) {
+                $this->getSeeds();
+            } else {
+                echo $this->c('Database imported cancelled.', 'danger');
+            }
         }
 
         if ('local' == getenv('APP_ENV')) {

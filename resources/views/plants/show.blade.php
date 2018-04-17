@@ -19,9 +19,13 @@
     <p><strong>
     @lang('messages.identified_by')
 :</strong>
+@if ($identification->person)
     <a href="{{url('persons/' . $identification->person->id)}}">
         {{ $identification->person->full_name }}
     </a> ({{ $identification->formatDate }})
+@else
+    @lang('messages.not_registered')
+@endif
     </p>
     @if ($identification->herbarium_id)
     <p><strong>

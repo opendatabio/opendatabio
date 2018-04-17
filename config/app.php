@@ -30,7 +30,7 @@ return [
     | "alpha", such as 0.1.0-alpha1.
     */
 
-    'version' => '0.7.4',
+    'version' => '0.8.0-rc2',
 
     /*
      * Proxy settings
@@ -97,7 +97,7 @@ return [
     'timezone' => 'UTC',
 
     /* Administrative levels: which administrative levels should be displayed
-     * to users? Default is [0, 1, 2] which corresponds to country, state, municipality.
+     * to users? Default is [0, 1, 2] which corresponds to country, state, municipality in Brazil.
      * Note that other "administrative levels" such as plots, points and conservation units
      * are always displayed. You can control the name for each adm level in the
      * resources/lang/[language]/levels.php file

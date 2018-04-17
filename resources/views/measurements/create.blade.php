@@ -103,14 +103,22 @@
 </label>
         <a data-toggle="collapse" href="#hintd" class="btn btn-default">?</a>
 <div class="col-sm-6">
-	<?php $selected = old('dataset_id', isset($measurement) ? $measurement->dataset_id : null); ?>
+@if (count($datasets))
+	<?php $selected = old('dataset_id', isset($measurement) ? $measurement->dataset_id : (Auth::user()->defaultDataset ? Auth::user()->defaultDataset->id : null)); ?>
 	<select name="dataset_id" id="dataset_id" class="form-control" >
 	@foreach ( $datasets as $dataset )
 		<option value="{{$dataset->id}}" {{ $dataset->id == $selected ? 'selected' : '' }}>
             {{ $dataset->name }}
 		</option>
 	@endforeach
-	</select>
+    </select>
+@else
+<div class="alert alert-danger">
+@lang ('messages.no_valid_dataset')
+</div>
+@endif
+
+
 </div>
 </div>
 <div class="form-group">
@@ -142,7 +150,11 @@ echo View::make('traits.elements.' . $measurement->type,
 </div>
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success" name="submit" value="submit">
+                <button type="submit" class="btn btn-success" name="submit" value="submit" 
+@if (!count($datasets))
+disabled
+@endif
+>
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.add')
 				</button>

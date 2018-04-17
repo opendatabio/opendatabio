@@ -23,7 +23,7 @@ class LocationController extends Controller
     // MAY receive optional "$request->scope" to return only UCs; default is to return all locations?
     public function autocomplete(Request $request)
     {
-        $locations = Location::where('name', 'LIKE', ['%'.$request->input('query').'%'])
+        $locations = Location::where('name', 'LIKE', ['%'.$request->input('query').'%'])->noWorld()
                         ->orderBy('name', 'ASC')->take(30);
         if ($request->scope) {
             switch ($request->scope) {
@@ -93,7 +93,7 @@ class LocationController extends Controller
      */
     public function create()
     {
-        $locations = Location::all();
+        $locations = Location::noWorld()->get();
         $uc_list = Location::ucs()->get();
 
         return view('locations.create', compact('locations', 'uc_list'));
@@ -179,7 +179,7 @@ class LocationController extends Controller
             }
         });
         $validator->after(function ($validator) use ($request) {
-            if ($request->parent_id < 1) {
+            if ($request->parent_id < 1 or 0 == $request->adm_level) {
                 return;
             } // don't validate if parent = 0 for none
             $geom = $request->geom;
@@ -260,6 +260,10 @@ class LocationController extends Controller
         if ($request->parent_id) {
             $newloc->parent_id = $request->parent_id;
         }
+        if (0 === $request->adm_level) {
+            $world = Location::world();
+            $newloc->parent_id = $world->id;
+        }
         if ($request->uc_id and $request->adm_level > 99) {
             $newloc->uc_id = $request->uc_id;
         }
@@ -277,7 +281,7 @@ class LocationController extends Controller
      */
     public function show($id)
     {
-        $location = Location::select('*')->with('children')->withGeom()->findOrFail($id);
+        $location = Location::noWorld()->select('*')->with('children')->withGeom()->findOrFail($id);
         $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
         if ($location->x) {
             if ($location->x > $location->y) {
@@ -380,6 +384,12 @@ class LocationController extends Controller
         }
         if ($request->uc_id and $request->adm_level > 99) {
             $location->uc_id = $request->uc_id;
+        }
+
+        // sets the parent_id in the request, to be picked up by the next try-catch:
+        if (0 === $request->adm_level) {
+            $world = Location::world();
+            $request->parent_id = $world->id;
         }
 
         if ($request->parent_id and $request->parent_id != $location->parent_id) {

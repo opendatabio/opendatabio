@@ -19,11 +19,22 @@ class Location extends Node
     const LEVEL_TRANSECT = 101;
     const LEVEL_POINT = 999;
 
-    protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty'];
+    protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty', 'parent_id'];
     protected $lat;
     protected $long;
     protected $geom_array = [];
     protected $isSimplified = false;
+
+    public function scopeNoWorld($query)
+    {
+        return $query->where('adm_level', '<>', -1);
+    }
+
+    // quick way to get the World object
+    public static function world()
+    {
+        return self::where('adm_level', -1)->get()->first();
+    }
 
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
@@ -47,7 +58,7 @@ class Location extends Node
     {
         // this query hangs if you attempt to run it on full geom objects, so we add
         // a "where" to make sure we're only calculating distance from small objects
-        return $query->addSelect('*', DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
+        return $query->addSelect(DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
             ->where('adm_level', '>', 99);
     }
 
@@ -130,7 +141,9 @@ class Location extends Node
     {
         $str = '';
         foreach ($this->getAncestors() as $ancestor) {
-            $str .= $ancestor->name.' > ';
+            if ('-1' != $ancestor->adm_level) {
+                $str .= $ancestor->name.' > ';
+            }
         }
 
         return $str.$this->name;
@@ -144,9 +157,10 @@ class Location extends Node
             return;
         }
         // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
-        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val")[0]->val;
+        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val");
+        $invalid = count($invalid) ? $invalid[0]->val : 1;
         if ($invalid) {
-            throw new \UnexpectedValueException('Invalid Geometry object');
+            throw new \UnexpectedValueException('Invalid Geometry object: '.$value);
         }
         $this->attributes['geom'] = DB::raw("GeomFromText('$value')");
     }

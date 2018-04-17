@@ -16,31 +16,17 @@ class ImportLocations extends AppJob
      */
     public function inner_handle()
     {
-        $data = $this->userjob->data['data'];
-        if (!count($data)) {
-            $this->setError();
-            $this->appendLog('ERROR: data received is empty!');
-
+        $data = $this->extractEntrys();
+        if (!$this->setProgressMax($data)) {
             return;
         }
-        $this->userjob->setProgressMax(count($data));
         foreach ($data as $location) {
-            // has this job been cancelled?
-            // calls "fresh" to make sure we're not receiving a cached object
-            if ('Cancelled' == $this->userjob->fresh()->status) {
-                $this->appendLog('WARNING: received CANCEL signal');
+            if ($this->isCancelled()) {
                 break;
             }
             $this->userjob->tickProgress();
 
-            if (!is_array($location)) {
-                $this->setError();
-                $this->appendLog('ERROR: location entry is not formatted as array!'.serialize($location));
-                continue;
-            }
-            if (!array_key_exists('name', $location)) {
-                $this->setError();
-                $this->appendLog('ERROR: entry needs a name: '.implode(';', $location));
+            if (!$this->hasRequiredKeys(['name'], $location)) {
                 continue;
             }
             // Arrived here: let's import it!!
@@ -48,7 +34,7 @@ class ImportLocations extends AppJob
                 $this->import($location);
             } catch (\Exception $e) {
                 $this->setError();
-                $this->appendLog('Exception '.$e->getMessage().' on location '.$location['name']);
+                $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on location '.$location['name']);
             }
         }
     }
@@ -106,6 +92,12 @@ class ImportLocations extends AppJob
         if (is_null($geom)) {
             $geom = "POINT ($long $lat)";
         }
+
+        if (0 == $adm_level) {
+            $world = Location::world();
+            $parent = $world->id;
+        }
+
         // TODO: several other validation checks
         // Is this location already imported?
         if ($parent) {
@@ -140,16 +132,14 @@ class ImportLocations extends AppJob
             'starty' => $starty,
             'x' => $x,
             'y' => $y,
+            // forces null if parent / uc was explicitly passed as zero
+            'parent_id' => (0 == $parent ? null : $parent),
+            'uc_id' => (0 == $uc ? null : $uc),
         ]);
-        if (0 !== $parent) {
-            $location->parent_id = $parent;
-        }
-        if (0 !== $uc) {
-            $location->uc_id = $uc;
-        }
         $location->geom = $geom;
 
         $location->save();
+        $this->affectedId($location->id);
 
         return;
     }

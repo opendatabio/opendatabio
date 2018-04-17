@@ -79,10 +79,6 @@ class PlantController extends Controller
         $herbaria = Herbarium::all();
         $persons = Person::all();
         $projects = Auth::user()->projects;
-        // TODO: better handling here
-        if (!$projects->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-        }
 
         return view('plants.create', compact('persons', 'projects', 'herbaria', 'location'));
     }
@@ -238,10 +234,6 @@ class PlantController extends Controller
         $herbaria = Herbarium::all();
         $persons = Person::all();
         $projects = Auth::user()->projects;
-        // TODO: better handling here
-        if (!$projects->count()) {
-            return view('common.errors')->withErrors([Lang::get('messages.no_valid_project_error')]);
-        }
 
         return view('plants.create', compact('plant', 'persons', 'projects', 'herbaria'));
     }

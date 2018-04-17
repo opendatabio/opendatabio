@@ -15,7 +15,7 @@ class LocationsTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\Location::count()) {
+        if (\App\Location::noWorld()->where('adm_level', 100)->count()) {
             return;
         }
 

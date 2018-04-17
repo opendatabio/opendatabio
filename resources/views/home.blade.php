@@ -18,7 +18,16 @@
 <p>@lang ('messages.no_default_person') 
     <a href="{{url('/selfedit')}}">@lang('messages.here')</a>
 </p>
-
+@endif
+@if (Auth::user()->defaultProject)
+<p>@lang ('messages.default_project'): 
+    <a href="{{url('projects/'.Auth::user()->project_id)}}">{{Auth::user()->defaultProject->fullname}}</a>
+</p>
+@endif
+@if (Auth::user()->defaultDataset)
+<p>@lang ('messages.default_dataset'): 
+    <a href="{{url('datasets/'.Auth::user()->dataset_id)}}">{{Auth::user()->defaultDataset->name}}</a>
+</p>
 @endif
 
 @if (Auth::user()->projects()->count())
@@ -38,6 +47,14 @@
     <li><a href="{{url('datasets/' . $dataset->id)}}">{{$dataset->name}}</a>
 (@lang('levels.project.' . $dataset->pivot->access_level )
 )</li>
+@endforeach
+    </ul>
+@endif
+@if (Auth::user()->forms()->count())
+<p><strong>@lang('messages.forms'):</strong></p>
+<ul>
+@foreach (Auth::user()->forms as $form)
+    <li><a href="{{url('forms/' . $form->id)}}">{{$form->name}}</a> </li>
 @endforeach
     </ul>
 @endif

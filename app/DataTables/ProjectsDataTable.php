@@ -32,7 +32,6 @@ class ProjectsDataTable extends DataTable
         ->addColumn('full_name', function ($project) {return $project->full_name; })
         ->addColumn('plants', function ($project) {return $project->plants_count; })
         ->addColumn('vouchers', function ($project) {return $project->vouchers_count; })
-        ->addColumn('measurements', function ($project) {return $project->measurements_count; })
         ->addColumn('members', function ($project) {
             if (empty($project->users)) {
                 return '';

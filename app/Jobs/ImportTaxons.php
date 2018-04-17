@@ -17,31 +17,17 @@ class ImportTaxons extends AppJob
      */
     public function inner_handle()
     {
-        $data = $this->userjob->data['data'];
-        if (!count($data)) {
-            $this->setError();
-            $this->appendLog('ERROR: data received is empty!');
-
+        $data = $this->extractEntrys();
+        if (!$this->setProgressMax($data)) {
             return;
         }
-        $this->userjob->setProgressMax(count($data));
         foreach ($data as $taxon) {
-            // has this job been cancelled?
-            // calls "fresh" to make sure we're not receiving a cached object
-            if ('Cancelled' == $this->userjob->fresh()->status) {
-                $this->appendLog('WARNING: received CANCEL signal');
+            if ($this->isCancelled()) {
                 break;
             }
             $this->userjob->tickProgress();
 
-            if (!is_array($taxon)) {
-                $this->setError();
-                $this->appendLog('ERROR: taxon entry is not formatted as array!'.serialize($taxon));
-                continue;
-            }
-            if (!array_key_exists('name', $taxon)) {
-                $this->setError();
-                $this->appendLog('ERROR: entry needs a name: '.implode(';', $taxon));
+            if (!$this->hasRequiredKeys(['name'], $taxon)) {
                 continue;
             }
             // Arrived here: let's import it!!
@@ -131,6 +117,7 @@ class ImportTaxons extends AppJob
             $taxon->setapikey('IPNI', $ipni);
         }
         $taxon->save();
+        $this->affectedId($taxon->id);
 
         return;
     }

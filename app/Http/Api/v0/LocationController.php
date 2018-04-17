@@ -22,23 +22,60 @@ class LocationController extends Controller
      */
     public function index(Request $request)
     {
-        $locations = Location::select('*')->withGeom();
+        $locations = Location::select('*')->withGeom()->noWorld();
+        if ($request->root) {
+            $root_loc = Location::select('lft', 'rgt')->where('id', $request->root)->get()->first();
+            $locations->where('lft', '>=', $root_loc['lft'])->where('rgt', '<=', $root_loc['rgt'])->orderBy('lft');
+        }
         if ($request->id) {
             $locations = $locations->whereIn('id', explode(',', $request->id));
         }
-        if ($request->search) {
-            $locations = $locations->where('name', 'LIKE', '%'.$request->search.'%');
+        if ($request->parent_id) {
+            $locations = $locations->whereIn('parent_id', explode(',', $request->parent_id));
         }
-        if ($request->adm_level) {
-            $locations = $locations->where('adm_level', '=', $request->level);
+        if ($request->name) {
+            $locations = $this->filter($locations, 'name', $request->name);
+        }
+        if (isset($request->adm_level)) {
+            $locations = $locations->whereIn('adm_level', explode(',', $request->adm_level));
         }
         if ($request->limit) {
             $locations->limit($request->limit);
         }
+        // For lat / long searches
+        if ($request->querytype and isset($request->lat) and isset($request->long)) {
+            $geom = "POINT($request->long $request->lat)";
+            if ('exact' == $request->querytype) {
+                $locations = $locations->whereRaw('AsText(geom) = ?', [$geom]);
+            }
+            if ('parent' == $request->querytype) {
+                $parent = Location::detectParent($geom, 100, false);
+                if ($parent) {
+                    $locations->where('id', $parent->id);
+                } else {
+                    // no results should be shown
+                    $locations->whereRaw('1 = 0');
+                }
+            }
+            if ('closest' == $request->querytype) {
+                $locations = $locations->withDistance($geom)->orderBy('distance', 'ASC');
+                if (!isset($request->limit)) {
+                    $locations->limit(10);
+                }
+            }
+        }
         $locations = $locations->get();
 
+        // Hide world id
+        foreach ($locations as $location) {
+            if ('Country' === $location->levelName) {
+                unset($location->parent_id);
+            }
+        }
+
         $fields = ($request->fields ? $request->fields : 'simple');
-        $locations = $this->setFields($locations, $fields, ['id', 'name', 'levelName', 'geom']);
+        // NOTE that "distance" as a field is only defined for querytype='closest', but it is ignored for other queries
+        $locations = $this->setFields($locations, $fields, ['id', 'name', 'levelName', 'geom', 'distance']);
 
         return $this->wrap_response($locations);
     }

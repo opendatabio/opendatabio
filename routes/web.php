@@ -75,6 +75,7 @@ Route::resource('traits', 'TraitController');
 
 // Users can be resources for the admin
 Route::get('users/autocomplete', 'UserController@autocomplete');
+Route::get('users/autocomplete_all', 'UserController@autocompleteAll');
 Route::resource('users', 'UserController', ['only' => ['index', 'show', 'edit', 'update', 'destroy']]);
 
 // Measures use a somewhat complicated schema for routes?
@@ -95,3 +96,8 @@ Route::get('locations/{id}/pictures/create', 'PictureController@createLocations'
 Route::get('plants/{id}/pictures/create', 'PictureController@createPlants');
 Route::get('vouchers/{id}/pictures/create', 'PictureController@createVouchers');
 Route::resource('pictures', 'PictureController', ['only' => ['show', 'store', 'edit', 'update']]);
+
+Route::get('forms/{id}/prepare', 'FormController@prepare');
+Route::post('forms/{id}/fill', 'FormController@fill');
+
+Route::resource('forms', 'FormController');

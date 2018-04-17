@@ -50,7 +50,7 @@ class Taxon extends Node
     public function getLevelNameAttribute()
     {
         return Lang::get('levels.tax.'.$this->level).
-            ($this->author ? '' : ' ('.Lang::get('messages.unpublished').')');
+            ($this->author_person ? ' ('.Lang::get('messages.unpublished').')' : '');
     }
 
     public function getQualifiedFullnameAttribute()

@@ -100,9 +100,9 @@ class MeasurementsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
+                'trait_id' => ['title' => Lang::get('messages.trait'), 'searchable' => false, 'orderable' => false],
                 'value' => ['title' => Lang::get('messages.value'), 'searchable' => false, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
-                'trait_id' => ['title' => Lang::get('messages.trait'), 'searchable' => false, 'orderable' => false],
                 'measured_id' => ['title' => Lang::get('messages.object'), 'searchable' => false, 'orderable' => false],
                 'unit' => ['title' => Lang::get('messages.unit'), 'searchable' => false, 'orderable' => false],
                 'dataset_id' => ['title' => Lang::get('messages.dataset'), 'searchable' => false, 'orderable' => false],
@@ -118,10 +118,10 @@ class MeasurementsDataTable extends DataTable
                     'excel',
                     'print',
                     'reload',
-                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
+                    ['extend' => 'colvis',  'columns' => ':gt(1)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1, 4, 5, 6],
+                    'targets' => [2, 4, 5, 6],
                     'visible' => false,
                 ]],
             ]);

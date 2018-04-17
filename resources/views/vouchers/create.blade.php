@@ -163,7 +163,8 @@ if ($p->identification)
 </label>
         <a data-toggle="collapse" href="#hintprj" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('project_id', isset($voucher) ? $voucher->project_id : null); ?>
+@if (count($projects))
+	<?php $selected = old('project_id', isset($voucer) ? $voucher->project_id : (Auth::user()->defaultProject ? Auth::user()->defaultProject->id : null)); ?>
 
 	<select name="project_id" id="project_id" class="form-control" >
 	@foreach ($projects as $project)
@@ -172,6 +173,11 @@ if ($p->identification)
 		</option>
 	@endforeach
 	</select>
+    @else
+        <div class="alert alert-danger">
+        @lang ('messages.no_valid_project')
+        </div>
+        @endif
             </div>
   <div class="col-sm-12">
     <div id="hintprj" class="panel-collapse collapse">
@@ -338,7 +344,11 @@ if ($p->identification)
 </div>
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success" name="submit" value="submit">
+                <button type="submit" class="btn btn-success" name="submit" value="submit"
+@if(!count($projects))
+disabled
+@endif
+>
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.add')
 

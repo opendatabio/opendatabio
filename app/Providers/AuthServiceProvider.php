@@ -32,6 +32,7 @@ class AuthServiceProvider extends ServiceProvider
         \App\ODBTrait::class => \App\Policies\TraitPolicy::class,
         \App\Measurement::class => \App\Policies\MeasurementPolicy::class,
         \App\Picture::class => \App\Policies\PicturePolicy::class,
+        \App\Form::class => \App\Policies\FormPolicy::class,
     ];
 
     /**

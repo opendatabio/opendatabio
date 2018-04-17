@@ -92,6 +92,9 @@
 			<li><a href="{{ route('traits.index') }}">
 @lang('messages.traits')
 </a></li>
+			<li><a href="{{ route('forms.index') }}">
+@lang('messages.forms')
+</a></li>
 
                                 </ul>
                             </li>
