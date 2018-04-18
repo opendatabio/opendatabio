@@ -59,6 +59,16 @@
     @endif
 @endif
 </p>
+@if ($plant->location) 
+    <p><strong>
+    @lang('messages.location_precision')
+:</strong>
+    {{ $plant->location->precision }} <a data-toggle="collapse" href='#hintp'>?</a>
+    </p>
+@endif
+<div id='hintp' class='panel-collapse collapse'>
+    @lang('messages.location_precision_hint')
+</div>
 
 <p><strong>
 @lang('messages.plant_tag')

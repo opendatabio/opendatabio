@@ -48,6 +48,11 @@
     {!! $voucher->parent->rawLink() !!} 
     {{ $voucher->parent->location ? $voucher->parent->locationWithGeom->coordinatesSimple : ''}}
     </p>
+    <p><strong>
+    @lang('messages.location_precision')
+:</strong>
+    {{ $voucher->parent->location ? $voucher->parent->location->precision : '' }} <a data-toggle="collapse" href='#hintp'>?</a>
+    </p>
 @elseif ($voucher->parent instanceof App\Location)
     <p><strong>
     @lang('messages.location')
@@ -55,12 +60,20 @@
     {!! $voucher->parent->rawLink() !!} 
     {{ $voucher->locationWithGeom->coordinatesSimple }} 
     </p>
+    <p><strong>
+    @lang('messages.location_precision')
+:</strong>
+    {{ $voucher->parent->precision }} <a data-toggle="collapse" href='#hintp'>?</a>
+    </p>
 @else
     <p><strong>
     @lang('messages.voucher_parent_missing_error')
     </strong>  
     </p>
 @endif
+<div id='hintp' class='panel-collapse collapse'>
+    @lang('messages.location_precision_hint')
+</div>
 
 <p><strong>
 @lang('messages.voucher_number')
