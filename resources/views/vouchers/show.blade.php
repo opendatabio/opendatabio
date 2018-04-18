@@ -18,7 +18,7 @@
     <p><strong>
     @lang('messages.identified_by')
 :</strong>
-    {!! $identification->person->rawLink() !!}
+    {!! $identification->person ? $identification->person->rawLink() : Lang::get('messages.not_registered') !!}
      ({{ $identification->formatDate }})
     </p>
     @if ($identification->herbarium_id)

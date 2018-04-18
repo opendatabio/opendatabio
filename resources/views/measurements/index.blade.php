@@ -47,14 +47,11 @@
 @lang('messages.measurements_for')
 :</strong>
 @if (isset($object))
-{{ $object->fullname }}
-    @if ($object->taxonName)
-    (<em>{{ $object->taxonName }}</em>)
-    @endif
+{!! $object->rawLink(true) !!}
 @elseif (isset($dataset))
-{{ $dataset->name }}
+{!! $dataset->rawLink() !!}
 @else <!-- the only left object is trait -->
-{{ $odbtrait->name }}
+{!! $odbtrait->rawLink() !!}
 @endif
 </p>
 {!! $dataTable->table() !!}
