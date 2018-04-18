@@ -118,11 +118,7 @@
 
 @foreach ($items as $form_item)
 <tr>
-    <td>{{ $form_item->fullname }} 
-    @if ($form_item->taxonname)
-        <br>(<em>{{ $form_item->taxonname}}</em>)
-    @endif
-    </td>
+    <td>{!! $form_item->rawLink(true) !!} </td>
 
     @foreach ($form->traits as $traitorder => $odbtrait)
     <td>
@@ -176,6 +172,47 @@ disabled
 $(document).ready(function() {
     $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
     $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
+    $(".spectrum").each(function () {
+        if($(this).val() == '') {
+        $(this).spectrum({
+            flat:true,
+            showInput:true,
+            showInitial: false,
+            allowEmpty: true,
+            showPalette: true,
+            showPaletteOnly: true,
+            togglePaletteOnly: true,
+            togglePaletteMoreText: "@lang('spectrum.more')",
+            togglePaletteLessText: "@lang('spectrum.less')",
+            preferredFormat: "hex",
+            showButtons: false,
+            palette: {!! json_encode(config('app.spectrum')) !!}
+        });
+        } else {
+        $(this).spectrum({
+            flat:true,
+            showInput:true,
+            showInitial: false,
+            allowEmpty: true,
+            showPalette: true,
+            showPaletteOnly: true,
+            togglePaletteOnly: false,
+            togglePaletteMoreText: "@lang('spectrum.more')",
+            togglePaletteLessText: "@lang('spectrum.less')",
+            preferredFormat: "hex",
+            showButtons: false,
+            palette: [$(this).val()]
+        });
+        }
+    });
+    $("input[name^=link_autocomplete]").each(function(index) {
+        var element_id = $(this).attr('id');
+        var firstc = element_id.indexOf("[");
+        var secondc = element_id.lastIndexOf("[");
+        var ix = parseInt(element_id.substring(firstc + 1,secondc - 1));
+        var jx = parseInt(element_id.substring(secondc + 1, element_id.length - 1));
+        $(this).odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id\\[${ix}\\]\\[${jx}\\]", "@lang('messages.noresults')");
+    });
 });
 </script>
 @endpush

@@ -1,3 +1,6 @@
+@if (isset($index))
+<p class="alert alert-danger"><strong>NOTE:</strong> multi selectors are currently not supported in forms</p>
+@else
 <label for="value" class="col-sm-3 control-label">
 @lang('messages.value')
 </label>
@@ -8,6 +11,7 @@
         ['class' => 'multiselect form-control']) 
 !!}
 </div>
+@endif
 <script type="text/javascript">
 // TODO: avoid duplication!!
 $(document).ready(function(){

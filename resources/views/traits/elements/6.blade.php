@@ -1,11 +1,30 @@
+@if (!isset($index))
 <label for="value" class="col-sm-3 control-label">
 @lang('messages.value')
 </label>
 <div class="col-sm-6">
-<input name ="value" id="value" type="text" class="form-control" value="{{old('value', isset($measurement) ? $measurement->valueActual : null)}}">
+@endif
+<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' type="text" class="form-control spectrum" value="{{ 
+    isset($index) ? 
+    old('value.' . $index . '.' . $traitorder, isset($measurement) ? $measurement->valueActual : null) : 
+    old('value', isset($measurement) ? $measurement->valueActual : null)
+}}"
+@if (isset($index) and isset($measurement)) 
+    disabled
+@endif
+>
+@if (isset($index) and isset($measurement)) 
+<span style="float:right">
+    <a href="{{url('measurements/' . $measurement->id . '/edit')}}" target="_blank">
+            @lang('messages.edit')
+        <i class="glyphicon glyphicon-new-window"></i>
+    </a>
+</span>
+@endif
+@if (!isset($index))
 </div>
-
 <script>
+// This works in the measurement screen, when this view is appended via jQuery
 if (typeof jQuery !== 'undefined') {
 $(document).ready(function() {
 	$("#value").spectrum({
@@ -23,3 +42,4 @@ $(document).ready(function() {
 });
 }
 </script>
+@endif

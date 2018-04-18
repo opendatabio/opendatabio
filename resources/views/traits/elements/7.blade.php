@@ -1,23 +1,54 @@
-@if ($odbtrait->link_type == "App\Taxon")
-<div class="form-group">
-<label for="link" class="col-sm-3 control-label">
-@lang('messages.link') 
-</label>
-<div class="col-sm-6">
-    <input type="text" name="link_autocomplete" id="link_autocomplete" class="form-control autocomplete"
-    value="{{ old('link_autocomplete', (isset($measurement) and $measurement->linked) ? $measurement->linked->fullname : '') }}">
-    <input type="hidden" name="link_id" id="link_id"
-    value="{{ old('link_id', isset($measurement) ? $measurement->value_i : null) }}">
-
-</div>
-</div>
+@if ($odbtrait->link_type == "App\Taxon") <!-- other link types need separate elements!! -->
+    @if (!isset ($index))
+        <div class="form-group">
+        <label for="link" class="col-sm-3 control-label">
+        @lang('messages.link') 
+        </label>
+        <div class="col-sm-6">
+    @endif
+            <input type="text" name='link_autocomplete{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='link_autocomplete{{ isset($index) ? "[$index][$traitorder]" : "" }}' class="form-control autocomplete"
+            value="{{ 
+            isset($index) ? 
+                old('link_autocomplete.' . $index . '.' . $traitorder, (isset($measurement) and $measurement->linked) ? $measurement->linked->fullname : '') : 
+                old('link_autocomplete', (isset($measurement) and $measurement->linked) ? $measurement->linked->fullname : '')
+}}"
+@if (isset($index) and isset($measurement)) 
+    disabled
 @endif
+>
+            <input type="hidden" name='link_id{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='link_id{{ isset($index) ? "[$index][$traitorder]" : "" }}'
+            value="{{ 
+    isset($index) ?
+old('link_id.' . $index . '.' . $traitorder, isset($measurement) ? $measurement->value_i : null) :
+old('link_id', isset($measurement) ? $measurement->value_i : null) 
+}}"
+
+@if (isset($index) and isset($measurement)) 
+    disabled
+@endif
+>
+    @if (!isset($index))
+        </div>
+        </div>
+    @endif
+@endif
+    @if (!isset($index))
 <div class="form-group">
 <label for="value" class="col-sm-3 control-label">
 @lang('messages.value') (@lang('messages.optional'))
 </label>
 <div class="col-sm-6">
-<input name ="value" id="value" type="text" class="form-control" value="{{old('value', isset($measurement) ? $measurement->value : null)}}">
+    @endif
+<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' type="text" class="form-control" value="{{ 
+    isset($index) ? 
+    old('value.' . $index . '.' . $traitorder, isset($measurement) ? $measurement->value : null) : 
+    old('value', isset($measurement) ? $measurement->value : null)
+}}"
+@if (isset($index) and isset($measurement)) 
+    disabled
+@endif
+>
+    @if (!isset($index))
 </div>
 </div>
 <script>
@@ -28,3 +59,12 @@ if (typeof jQuery !== 'undefined') {
     });
 }
 </script>
+    @endif
+@if (isset($index) and isset($measurement)) 
+<span style="float:right">
+    <a href="{{url('measurements/' . $measurement->id . '/edit')}}" target="_blank">
+            @lang('messages.edit')
+        <i class="glyphicon glyphicon-new-window"></i>
+    </a>
+</span>
+@endif

@@ -59,7 +59,6 @@
 <?php 
 // Loop and create boxes for all traits
 // how many traits do we have? 3 for default
-// TODO: refactor this based on OLD values!
 $length = isset($form) ? count($form->traits) : 3;
 for ($i = 1; $i <= $length; $i++) {
 ?>
