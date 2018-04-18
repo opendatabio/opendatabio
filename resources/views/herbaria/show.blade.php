@@ -60,7 +60,7 @@
                                 @foreach ($herbarium->persons as $person)
                                     <tr>
 					<td class="table-text"><div>
-					<a href="{{ url('persons/'.$person->id) }}">{{ $person->abbreviation }}</a>
+                    {!! $person->rawLink() !!}
 					</div></td>
                                         <td class="table-text">{{ $person->full_name }}</td>
                                         <td class="table-text">{{ $person->email }}</td>
@@ -79,7 +79,7 @@
 		<div class="panel-body">
             <ul>
             @foreach ($herbarium->vouchers as $voucher)
-                <li><a href="{{url('vouchers/'.$voucher->id)}}">{{$voucher->fullname}}</a> ({{$voucher->pivot->herbarium_number}})</li>
+                <li>{!! $voucher->rawLink() !!} ({{$voucher->pivot->herbarium_number}})</li>
             @endforeach
             </ul>
         </div>

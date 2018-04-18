@@ -43,7 +43,7 @@
                                 @foreach ($tag->datasets as $dataset)
                                     <tr>
 					<td class="table-text">
-					<a href="{{ url('datasets/'.$dataset->id) }}">{{ $dataset->name }}</a>
+                    {!! $dataset->rawLink() !!}
 					</td>
                                     </tr>
                                 @endforeach

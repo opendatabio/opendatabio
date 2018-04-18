@@ -25,6 +25,13 @@ class User extends Authenticatable
     protected $fillable = ['email', 'password', 'person_id', 'project_id', 'dataset_id'];
     protected $hidden = ['password', 'remember_token', 'api_token'];
 
+    public function rawLink()
+    {
+        return '<a href="'.url('users/'.$this->id).'">'.
+            // Needs to escape special chars, as this will be passed RAW
+            htmlspecialchars($this->email).'</a>';
+    }
+
     protected static function boot()
     {
         parent::boot();

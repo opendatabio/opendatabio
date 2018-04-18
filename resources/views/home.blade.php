@@ -12,7 +12,7 @@
 
 @if (Auth::user()->person)
 <p>@lang ('messages.your_default_person'): 
-    <a href="{{url('persons/'.Auth::user()->person_id)}}">{{Auth::user()->person->fullname}}</a>
+    {!! Auth::user()->person->rawLink() !!}
 </p>
 @else
 <p>@lang ('messages.no_default_person') 
@@ -21,12 +21,12 @@
 @endif
 @if (Auth::user()->defaultProject)
 <p>@lang ('messages.default_project'): 
-    <a href="{{url('projects/'.Auth::user()->project_id)}}">{{Auth::user()->defaultProject->fullname}}</a>
+    {!! Auth::user()->defaultProject->rawLink() !!}
 </p>
 @endif
 @if (Auth::user()->defaultDataset)
 <p>@lang ('messages.default_dataset'): 
-    <a href="{{url('datasets/'.Auth::user()->dataset_id)}}">{{Auth::user()->defaultDataset->name}}</a>
+    {!! Auth::user()->defaultDataset->rawLink() !!}
 </p>
 @endif
 
@@ -34,7 +34,7 @@
 <p><strong>@lang('messages.projects'):</strong></p>
 <ul>
 @foreach (Auth::user()->projects as $project)
-    <li><a href="{{url('projects/' . $project->id)}}">{{$project->name}}</a>
+    <li>{!! $project->rawLink() !!}
 (@lang('levels.project.' . $project->pivot->access_level )
 )</li>
 @endforeach
@@ -44,7 +44,7 @@
 <p><strong>@lang('messages.datasets'):</strong></p>
 <ul>
 @foreach (Auth::user()->datasets as $dataset)
-    <li><a href="{{url('datasets/' . $dataset->id)}}">{{$dataset->name}}</a>
+    <li>{!! $dataset->rawLink() !!}
 (@lang('levels.project.' . $dataset->pivot->access_level )
 )</li>
 @endforeach
@@ -54,7 +54,7 @@
 <p><strong>@lang('messages.forms'):</strong></p>
 <ul>
 @foreach (Auth::user()->forms as $form)
-    <li><a href="{{url('forms/' . $form->id)}}">{{$form->name}}</a> </li>
+    <li>{!! $form->rawLink() !!}</li>
 @endforeach
     </ul>
 @endif

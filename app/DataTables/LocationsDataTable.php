@@ -24,9 +24,7 @@ class LocationsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('name', function ($location) {
-            return '<a href="'.url('locations/'.$location->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($location->name).'</a>';
+            return $location->rawLink();
         })
         ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm.'.$location->adm_level); })
         ->addColumn('full_name', function ($location) {return $location->full_name; })

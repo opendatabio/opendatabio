@@ -24,9 +24,7 @@ class PersonsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('abbreviation', function ($person) {
-            return '<a href="'.url('persons/'.$person->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($person->abbreviation).'</a>';
+            return $person->rawLink();
         })
         ->addColumn('herbarium', function ($person) {
             return empty($person->herbarium) ? '' : $person->herbarium->name;

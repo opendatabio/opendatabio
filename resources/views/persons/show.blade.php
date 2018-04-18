@@ -45,7 +45,7 @@
 	<strong>
 	@lang('messages.herbarium')
 :</strong>
-<a href="{{url('herbaria/'. $person->herbarium->id)}}">{{ $person->herbarium->acronym }}</a>
+{!! $person->herbarium->rawLink() !!}
 @endif
 </p>
 

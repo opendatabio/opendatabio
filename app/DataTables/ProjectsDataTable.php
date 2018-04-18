@@ -24,9 +24,7 @@ class ProjectsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('name', function ($project) {
-            return '<a href="'.url('projects/'.$project->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($project->name).'</a>';
+            return $project->rawLink();
         })
         ->editColumn('privacy', function ($project) { return Lang::get('levels.privacy.'.$project->privacy); })
         ->addColumn('full_name', function ($project) {return $project->full_name; })

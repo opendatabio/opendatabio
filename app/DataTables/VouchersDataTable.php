@@ -24,9 +24,7 @@ class VouchersDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('number', function ($voucher) {
-            return '<a href="'.url('vouchers/'.$voucher->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($voucher->fullname).'</a>';
+            return $voucher->rawLink();
         })
         ->addColumn('project', function ($voucher) { return $voucher->project->name; })
         ->addColumn('identification', function ($voucher) {

@@ -18,18 +18,15 @@
     <p><strong>
     @lang('messages.identified_by')
 :</strong>
-    <a href="{{url('persons/' . $identification->person->id)}}">
-        {{ $identification->person->full_name }}
-    </a> ({{ $identification->formatDate }})
+    {!! $identification->person->rawLink() !!}
+     ({{ $identification->formatDate }})
     </p>
     @if ($identification->herbarium_id)
     <p><strong>
     @lang('messages.identification_based_on')
 :</strong>
     @lang('messages.voucher') {{ $identification->herbarium_reference }} /
-    <a href="{{url('herbaria/' . $identification->herbarium_id)}}">
-        {{ $identification->herbarium->acronym }}
-    </a>
+    {!! $herbarium->herbarium->rawLink() !!}
     </p>
     @endif
     @if ($identification->notes)
@@ -47,19 +44,21 @@
 @if ($voucher->parent instanceof App\Plant)
     <p><strong>
     @lang('messages.plant')
-: </strong>  
-    <a href="{{url('plants/' . $voucher->parent_id)}}">{{$voucher->parent->full_name}}</a> {{ $voucher->parent->location ? $voucher->parent->locationWithGeom->coordinatesSimple : ''}}
+: </strong> 
+    {!! $voucher->parent->rawLink() !!} 
+    {{ $voucher->parent->location ? $voucher->parent->locationWithGeom->coordinatesSimple : ''}}
     </p>
 @elseif ($voucher->parent instanceof App\Location)
     <p><strong>
     @lang('messages.location')
 : </strong>  
-    <a href="{{url('locations/' . $voucher->parent_id)}}">{{$voucher->parent->name}}</a> {{ $voucher->locationWithGeom->coordinatesSimple }} 
+    {!! $voucher->parent->rawLink() !!} 
+    {{ $voucher->locationWithGeom->coordinatesSimple }} 
     </p>
 @else
     <p><strong>
     @lang('messages.voucher_parent_missing_error')
-: </strong>  
+    </strong>  
     </p>
 @endif
 
@@ -75,7 +74,7 @@
 :</strong>
 <ul>
 @foreach ($voucher->herbaria as $herb)
-<li><a href="{{url('herbaria/'.$herb->id)}}">{{$herb->acronym}}</a> ({{$herb->pivot->herbarium_number}})</li>
+<li>{!! $herb->rawLink() !!} ({{$herb->pivot->herbarium_number}})</li>
 @endforeach
 </ul>
 @endif
@@ -83,7 +82,7 @@
 <p><strong>
 @lang('messages.project')
 :</strong>
-<a href="{{url('projects/' . $voucher->project->id)}}">{{$voucher->project->name}}</a>
+{!! $voucher->project->rawLink() !!}
 </p>
 
 <p><strong>
@@ -105,13 +104,13 @@
 :</strong><br>
 @lang ('messages.main_collector')
 :<ul>
-    <li><a href="{{url('persons/' . $voucher->person_id)}}">{{$voucher->person->full_name}}</a></li>
+    <li>{!! $voucher->person->rawLink() !!}</li>
 </ul>
 @if ($collectors->count())
 @lang ('messages.additional_collectors')
     <ul>
     @foreach ($collectors as $collector)
-    <li><a href="{{url('persons/' . $collector->person->id)}}">{{$collector->person->full_name}}</a></li>
+    <li>{!! $collector->person->rawLink() !!}</li>
     @endforeach
     </ul>
 @endif

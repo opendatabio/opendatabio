@@ -37,11 +37,13 @@ class Identification extends Model
         return $this->morphTo('object');
     }
 
-    public function rawLink() {
+    public function rawLink()
+    {
         if ($this->taxon) {
-            return $this->taxon->rawLink() . 
-                ($this->modifier ? ' ' . Lang::get('levels.identification.' . $this->modifier) : '');
+            return $this->taxon->rawLink().
+                ($this->modifier ? ' '.Lang::get('levels.identification.'.$this->modifier) : '');
         }
+
         return Lang::get('messages.unidentified');
     }
 

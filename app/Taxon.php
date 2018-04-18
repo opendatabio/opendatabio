@@ -23,8 +23,9 @@ class Taxon extends Node
         return 'taxons';
     }
 
-    public function rawLink() {
-        return "<em><a href='" . url('taxons/' . $this->id) . "'>" . htmlspecialchars($this->qualifiedFullname) . "</a></em>";
+    public function rawLink()
+    {
+        return "<em><a href='".url('taxons/'.$this->id)."'>".htmlspecialchars($this->qualifiedFullname).'</a></em>';
     }
 
     // for use in selects, lists the most common tax levels

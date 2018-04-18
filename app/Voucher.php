@@ -18,6 +18,22 @@ class Voucher extends Model
 
     protected $fillable = ['parent_id', 'parent_type', 'person_id', 'number', 'date', 'notes', 'project_id'];
 
+    public function rawLink($addId = false)
+    {
+        $text = "<a href='".url('vouchers/'.$this->id)."'>".htmlspecialchars($this->fullname).'</a>';
+        if ($addId) {
+            if ($this->identification) {
+                $text .= ' ('.$this->identification->rawLink().')';
+            } elseif ($this->parent and $this->parent->identification) {
+                $text .= ' ('.$this->parent->identification->rawLink().')';
+            } else {
+                $text .= ' '.Lang::get('messages.unidentified');
+            }
+        }
+
+        return $text;
+    }
+
     // for use when receiving this as part of a morph relation
     public function getTypenameAttribute()
     {

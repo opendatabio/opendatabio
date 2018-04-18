@@ -22,6 +22,20 @@ class Plant extends Model
 
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
 
+    public function rawLink($addId = false)
+    {
+        $text = "<a href='".url('plants/'.$this->id)."'>".htmlspecialchars($this->fullname).'</a>';
+        if ($addId) {
+            if ($this->identification) {
+                $text .= ' ('.$this->identification->rawLink().')';
+            } else {
+                $text .= ' '.Lang::get('messages.unidentified');
+            }
+        }
+
+        return $text;
+    }
+
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?
     public function getTypenameAttribute()

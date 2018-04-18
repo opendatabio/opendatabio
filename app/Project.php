@@ -24,6 +24,11 @@ class Project extends Model
 
     protected $fillable = ['name', 'notes', 'privacy'];
 
+    public function rawLink()
+    {
+        return "<a href='".url('projects/'.$this->id)."'>".htmlspecialchars($this->fullname).'</a>';
+    }
+
     public function plants()
     {
         return $this->hasMany(Plant::class);

@@ -25,6 +25,11 @@ class Location extends Node
     protected $geom_array = [];
     protected $isSimplified = false;
 
+    public function rawLink()
+    {
+        return "<a href='".url('locations/'.$this->id)."'>".htmlspecialchars($this->name).'</a>';
+    }
+
     public function scopeNoWorld($query)
     {
         return $query->where('adm_level', '<>', -1);

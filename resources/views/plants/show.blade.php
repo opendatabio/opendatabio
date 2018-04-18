@@ -20,9 +20,7 @@
     @lang('messages.identified_by')
 :</strong>
 @if ($identification->person)
-    <a href="{{url('persons/' . $identification->person->id)}}">
-        {{ $identification->person->full_name }}
-    </a> ({{ $identification->formatDate }})
+{!! $identification->person->rawLink() !!} ({{ $identification->formatDate }})
 @else
     @lang('messages.not_registered')
 @endif
@@ -32,9 +30,7 @@
     @lang('messages.identification_based_on')
 :</strong>
         @lang('messages.voucher') {{ $identification->herbarium_reference }} /
-    <a href="{{url('herbaria/' . $identification->herbarium_id)}}">
-        {{ $identification->herbarium->acronym }}
-    </a>
+    {!! $identification->herbarium->rawLink() !!}
     </p>
     @endif
     @if ($identification->notes)
@@ -45,15 +41,13 @@
     </a> 
     </p>
     @endif
-
-
 @endif
         
 <p><strong>
 @lang('messages.location')
 : </strong>  
 @if($plant->location)
-<a href="{{url('locations/' . $plant->location->id)}}">{{$plant->location->name}}</a> {{ $plant->locationWithGeom->coordinatesSimple }}
+{!! $plant->location->rawLink() !!} {{ $plant->locationWithGeom->coordinatesSimple }}
 @else
     Unknown location
 @endif
@@ -75,7 +69,7 @@
 <p><strong>
 @lang('messages.project')
 :</strong>
-<a href="{{url('projects/' . $plant->project->id)}}">{{$plant->project->name}}</a>
+{!! $plant->project->rawLink() !!}
 </p>
 
 <p><strong>
@@ -98,7 +92,7 @@
 @if ($collectors->count())
     <ul>
     @foreach ($collectors as $collector)
-    <li><a href="{{url('persons/' . $collector->person->id)}}">{{$collector->person->full_name}}</a></li>
+    <li>{!! $collector->person->rawLink() !!}</li>
     @endforeach
     </ul>
 @else

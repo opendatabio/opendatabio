@@ -24,9 +24,7 @@ class TraitsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('name', function ($odbtrait) {
-            return '<a href="'.url('traits/'.$odbtrait->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($odbtrait->name).'</a>';
+            return $odbtrait->rawLink();
         })
         ->editColumn('type', function ($odbtrait) { return Lang::get('levels.traittype.'.$odbtrait->type); })
         ->addColumn('details', function ($odbtrait) {return $odbtrait->details(); })

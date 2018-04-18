@@ -58,7 +58,7 @@
 @if ($dataset->bibreference_id) 
 		    <p><strong>
 @lang('messages.dataset_bibreference')
-: </strong><a href="{{url('references/'.$dataset->bibreference_id)}}">{{$dataset->reference->bibkey}}</a>
+: </strong>{!! $dataset->reference->rawLink() !!}
 </p>
 @endif
 

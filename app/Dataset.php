@@ -21,6 +21,11 @@ class Dataset extends Model
 
     protected $fillable = ['name', 'notes', 'privacy', 'bibreference_id'];
 
+    public function rawLink()
+    {
+        return "<a href='".url('datasets/'.$this->id)."'>".htmlspecialchars($this->name).'</a>';
+    }
+
     public function measurements()
     {
         return $this->hasMany(Measurement::class);

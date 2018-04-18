@@ -45,7 +45,7 @@
 @if ($location->uc_id)
 <strong>
 @lang('messages.uc')
-:</strong> <a href="{{url('locations/'. $location->uc->id)}}">{{ $location->uc->name }}</a>
+:</strong> {!! $location->uc->rawLink() !!}
 <br>
 @endif
 <strong> 
@@ -149,7 +149,7 @@
 	@if ($location->getAncestors()->count())
 	@foreach ($location->getAncestors() as $ancestor)
         @if ($ancestor->adm_level != -1)
-        <a href=" {{ url('locations/'. $ancestor->id ) }} ">{{ $ancestor->name }} </a> &gt;
+        {!! $ancestor->rawLink() !!} &gt;
         @endif
 	@endforeach
 	@endif
@@ -158,7 +158,7 @@
 
 	<ul>
 	 @foreach ($location->children as $child)
-		<li> <a href=" {{url('locations/' . $child->id) }}"> {{ $child->name }} </a>
+		<li> {!! $child->rawLink() !!} </a>
 			{{ $child->getDescendants()->count() ? '(+' . $child->getDescendants()->count() . ')' : ''}}
 		</li>
 @endforeach

@@ -43,7 +43,8 @@
                 <div class="panel-body">
 <ul>
 @foreach ($myprojects as $project)
-    <li><a href="{{url('projects/' . $project->id)}}">{{$project->name}}</a>
+
+    <li>{!! $project->rawLink() !!}
 (@lang('levels.project.' . $project->pivot->access_level )
 )</li>
 @endforeach
