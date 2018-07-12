@@ -18,9 +18,7 @@ use App\Person;
 use App\UserJob;
 use App\ODBFunctions;
 use Response;
-use Auth;
-use DB;
-use App\Jobs\ImportSample;
+use App\Jobs\ImportSamples;
 
 class SampleController extends Controller
 {
@@ -44,16 +42,16 @@ class SampleController extends Controller
                 $plants = Plant::select('plants.id')->whereIn('location_id', $locations);
                 ODBFunctions::advancedWhereIn($plants, 'plants.tag', $request->plant);
                 $sample->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', $plants);
-            } else // gives only samples of the specified locations
-            /*
-            */
+            } else { // gives only samples of the specified locations
                 $sample->where('parent_type', '=', 'App\\Location')->whereIn('parent_id', $locations);
+            }
         } else {
             if ($request->plant) { // plant without location refers to plant.id
-                if ('*' === $request->plant) // especial case that means all samples of plant
+                if ('*' === $request->plant) { // especial case that means all samples of plant
                     $sample->where('parent_type', '=', 'App\\Plant');
-                else
+                } else {
                     $sample->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', explode(',', $request->plant));
+                }
             }
         }
         if ($request->collector) {
@@ -91,13 +89,6 @@ class SampleController extends Controller
         return $this->wrap_response($sample);
     }
 
-    public static function idListByFullname($variable, $class)
-    {
-        if (preg_match("/\d+(,\d+)*/", $variable))
-            return explode(',', $variable);
-        return array ($class::byFullNameAttribute($variable)->id);
-    }
-    
     public function store(Request $request)
     {
         $this->authorize('create', Voucher::class);

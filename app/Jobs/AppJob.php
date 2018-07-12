@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\UserJob;
 use DB;
 use Log;
+use Auth;
 
 // All app jobs must extend this:
 // This class intermediates between the jobs dispatched and the UserJob model
@@ -74,6 +75,7 @@ class AppJob implements ShouldQueue
     public function handle()
     {
         // temporarily removing rollback capabilities:
+        Auth::loginUsingId($this->userjob->user_id);
         $this->userjob->setProcessing();
         $this->userjob->job_id = $this->job->getJobId();
         $this->userjob->save();
@@ -135,7 +137,7 @@ class AppJob implements ShouldQueue
             return false;
         }
         foreach ($requiredKeys as $key) {
-            if (!array_key_exists($key, $entry)) {
+            if (!array_key_exists($key, $entry) or (null === $entry[$key])) {
                 $this->skipEntry($entry, 'entry needs a '.$key);
 
                 return false;
@@ -148,7 +150,7 @@ class AppJob implements ShouldQueue
     public function skipEntry($entry, $cause)
     {
         if (is_array($entry))
-            $entry = implode(';', $entry);
+            $entry = json_encode($entry);
         elseif ('object' == gettype($entry))
             $entry = serialize($entry);
         $this->appendLog('WARNING: '.$cause.'. Skipping import of '.$entry);

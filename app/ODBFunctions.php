@@ -38,24 +38,41 @@ class ODBFunctions
             $fields = explode(',', $fields);
         foreach ($fields as $field) {
             $myQuery = clone $query;
-            $myQuery = $myQuery->where($field, $value)->get();
+            $myQuery = $myQuery->where(trim($field), trim($value))->get();
             if (count($myQuery))
                 return $myQuery->first();
         }
         return null;
     }
 
-    public static function advancedWhereIn(&$query, $field, $value, $raw=false)
+    public static function moreAdvancedWhereIn(&$query, array $fields, string $value, $raw=false)
+    {
+        if (count($fields) == 1)
+            ODBFunctions::advancedWhereIn($query, trim($fields[0]), trim($value), $raw);
+        else {
+            $values = explode(',', $value);
+            $query->where(function ($internalQuery) use ($fields, $raw, $values) {
+                    ODBFunctions::filter($internalQuery, trim($fields[0]), trim($values[0]), $raw);
+                    ODBFunctions::orFilterMultiField(
+                            $internalQuery,
+                            $fields,
+                            $values,
+                            $raw);
+                });
+        }
+    }
+
+    public static function advancedWhereIn(&$query, string $field, string $value, $raw=false)
     {
         $values = explode(',', $value, 2);
         if (count($values) == 1)
-            ODBFunctions::filter($query, $field, $values[0], $raw);
+            ODBFunctions::filter($query, trim($field), trim($values[0]), $raw);
         else // count($values) == 2
             $query->where(function ($internalQuery) use ($field, $raw, $values) {
-                ODBFunctions::filter($internalQuery, $field, $values[0], $raw);
+                ODBFunctions::filter($internalQuery, trim($field), trim($values[0]), $raw);
                 ODBFunctions::orFilter(
                         $internalQuery,
-                        $field,
+                        trim($field),
                         explode(',', $values[1]),
                         $raw);
             });
@@ -73,7 +90,7 @@ class ODBFunctions
     }
 
     // Changes the $query that is recieved adding a orWhere statement filtering the $field with the $value. It suports exact match, as soon as 'LIKE' match if the $value contains '*'. It can receive $raw=true to specify that $field is a sql function to be applied
-    private static function orFilter(&$query, $field, $values, $raw=false)
+    private static function orFilter(&$query, $field, array $values, $raw=false)
     {
         foreach ($values as $value) {
             $treatedValue = ODBFunctions::treateWildcard($value);
@@ -82,6 +99,21 @@ class ODBFunctions
                 $query->orWhereRaw("$field $op ?", [$treatedValue]);
             else
                 $query->orWhere($field, $op, $treatedValue);
+        }
+    }
+
+    // Changes the $query that is recieved adding a orWhere statement filtering the $field with the $value. It suports exact match, as soon as 'LIKE' match if the $value contains '*'. It can receive $raw=true to specify that $field is a sql function to be applied
+    private static function orFilterMultiField(&$query, array $fields, array $values, $raw=false)
+    {
+        foreach ($values as $value) {
+            $treatedValue = ODBFunctions::treateWildcard($value);
+            $op = ($treatedValue === $value) ? '=' : 'LIKE';
+            foreach ($fields as $field) {
+                if ($raw)
+                    $query->orWhereRaw("$field $op ?", [$treatedValue]);
+                else
+                    $query->orWhere($field, $op, $treatedValue);
+            }
         }
     }
 

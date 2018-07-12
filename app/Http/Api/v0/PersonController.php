@@ -7,12 +7,12 @@
 
 namespace App\Http\Api\v0;
 
-use Illuminate\Http\Request;
 use App\Person;
 use App\UserJob;
 use App\ODBFunctions;
-use Response;
 use App\Jobs\ImportPersons;
+use Illuminate\Http\Request;
+use Response;
 
 class PersonController extends Controller
 {
@@ -28,15 +28,7 @@ class PersonController extends Controller
             $persons->whereIn('id', explode(',', $request->id));
         }
         if ($request->search) {
-            $persons->where(function ($query) use ($request->search) {
-                $name = clone $query;
-                ODBFunctions::advancedWhereIn($name, 'full_name', $request->search);
-                $abbrev = clone $query;
-                ODBFunctions::advancedWhereIn($abbrev, 'abbreviation', $request->search);
-                $email = clone $query;
-                ODBFunctions::advancedWhereIn($email, 'email', $request->search);
-                $query->union($name)->union($abbrev)->union($email);
-            });
+            ODBFunctions::moreAdvancedWhereIn($persons, ['full_name', 'abbreviation', 'email'], '*'.$request->search.'*');
         }
         if ($request->name) {
             ODBFunctions::advancedWhereIn($persons, 'full_name', $request->name);

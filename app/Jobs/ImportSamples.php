@@ -11,8 +11,9 @@ use App\Voucher;
 use App\Location;
 use App\Plant;
 use App\Project;
+use App\ODBFunctions;
 
-class ImportSamples extends AppJob
+class ImportSamples extends ImportCollectable
 {
     /**
      * Execute the job.
@@ -20,65 +21,85 @@ class ImportSamples extends AppJob
     public function inner_handle()
     {
         $data = $this->extractEntrys();
-        if (!$this->setProgressMax($data))
+        if (!$this->setProgressMax($data)) {
+
             return;
+        }
         foreach ($data as $sample) {
-            if ($this->isCancelled())
+            if ($this->isCancelled()) {
                 break;
+            }
             $this->userjob->tickProgress();
 
-            if (!$this->hasRequiredKeys(['number', 'date', 'collector', 'project'], $sample))
-                continue;
-            //validate parent
-            $parent = $this->validParent($sample);
-            if ($parent === null) {
-                $this->skipEntry($sample, 'especified parent was not found in the database');
-                continue;
-            } else {
-                $sample['parent_id'] = $parent['id'];
-                $sample['parent_type'] = $parent['type'];
-            }
-            //validate project
-            $valid = ODBFunctions::validRegistry(Project::select('id'), $sample['project']);
-            if ($valid === null) {
-                $this->skipEntry($sample, 'project '.$sample['project'].' was not found in the database');
-                continue;
-            } else
-                $sample['project'] = $valid->id;
-            // Arrived here: let's import it!!
-            try {
-                $this->import($sample);
-            } catch (\Exception $e) {
-                $this->setError();
-                $this->appendLog('Exception '.$e->getMessage().' on voucher '.$sample['collector'].' - '.$sample['number']);
+            if ($this->validateData($sample)) {
+                // Arrived here: let's import it!!
+                try {
+                    $this->import($sample);
+                } catch (\Exception $e) {
+                    $this->setError();
+                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on sample '.$sample['collector'].' - '.$sample['number']);
+                }
             }
         }
+    }
+
+    protected function validateData(&$sample)
+    {
+        if (!$this->hasRequiredKeys(['number', 'date', 'collector'], $sample)) {
+
+            return false;
+        }
+        if (!$this->validateProject($sample)) {
+
+            return false;
+        }
+
+        //validate parent
+        $parent = $this->validParent($sample);
+        if (null === $parent) {
+            $this->skipEntry($sample, 'especified parent was not found in the database');
+
+            return false;
+        }
+        $sample['parent_id'] = $parent['id'];
+        $sample['parent_type'] = $parent['type'];
+
+        return true;
     }
 
     private function validParent($sample)
     {
         if (array_key_exists('parent_id', $sample)) {
-            if (array_key_exists('parent_type', $sample))
+            if (array_key_exists('parent_type', $sample)) {
+
                 return array (
                     'id' => $sample['parent_id'],
                     'type' => $sample['parent_type']
                 );
-            return null;
-        } elseif (array_key_exists('parent_type', $sample))
-            return null;
-        elseif (array_key_exists('location', $sample)) {
+            }
+
+            return null; // has id, but not type of parent
+        } elseif (array_key_exists('parent_type', $sample)) {
+
+            return null; // has type, but not id of parent
+        } elseif (array_key_exists('location', $sample)) {
             if (array_key_exists('plant', $sample)) {
-                $valid = validate($sample['location'], $sample['plant']);
-                if ($valid === null)
+                $valid = $this->validate($sample['location'], $sample['plant']);
+                if (null === $valid) {
+
                     return null;
+                }
+
                 return array (
                     'id' => $valid,
                     'type' => 'App\Plant'
                 );
             } else {
                 $valid = ODBFunctions::validRegistry(Location::select('id'), $location);
-                if ($valid === null)
+                if (null === $valid) {
+
                     return null;
+                }
                 return array (
                     'id' => $valid->id,
                     'type' => 'App\Location'
@@ -88,8 +109,11 @@ class ImportSamples extends AppJob
             $valid = Plant::select('id')
                     ->where('id', $sample['plant'])
                     ->get();
-            if (count($valid) === 0)
+            if (0 === count($valid)) {
+
                 return null;
+            }
+
             return array (
                 'id' => $valid->first()->id,
                 'type' => 'App\Plant'
@@ -101,26 +125,38 @@ class ImportSamples extends AppJob
     private function validate($location, $plant)
     {
         $valid = ODBFunctions::validRegistry(Location::select('id'), $location);
-        if ($valid === null)
+        if (null === $valid) {
+
             return null;
-        $valid = Plant::select('id')
-                ->where('location_id', $valid->id)
-                ->where('tag', $plant)
+        }
+        $location = $valid->id;
+        $valid = Plant::select('plants.id as plant_id')
+                ->where('plants.location_id', $location)
+                ->where('plants.tag', $plant)
                 ->get();
-        if (count($valid) === 0)
+        if (0 === count($valid)) {
+
             return null;
-        return $valid->first()->id;
+        }
+
+        return $valid->first()->plant_id;
     }
 
     public function extractHerbariaNumers($sample)
     {
         $herbaria = array();
-        foreach ($sample as $key => $value)
-            if (0 === strpos($key, 'H_') {
-                $valid = ODBFunctions::validRegistry(Herbarium::select('id'), substr($key, 2), ['id','acronym','name','irn'])
-                if ($valid !== null)
+        foreach ($sample as $key => $value) {
+            if (0 === strpos($key, 'H_')) {
+                $query = Herbarium::select('id');
+                $value = substr($key, 2);
+                $fields = ['id','acronym','name','irn'];
+                $valid = ODBFunctions::validRegistry($query, $value, $fields);
+                if (null !== $valid) {
                     $herbaria[$valid->id] = $value;
+                }
             }
+        }
+
         return $herbaria;
     }
 
@@ -135,26 +171,30 @@ class ImportSamples extends AppJob
         $updated_at = array_key_exists('updated_at', $sample) ? $sample['updated_at'] : null;
         $notes = array_key_exists('notes', $sample) ? $sample['notes'] : null;
         $collectors = $this->extractCollectors('Sample '.$number, $sample);
-        if (count($collectors) === 0) {
+        if (0 === count($collectors)) {
             $this->skipEntry($sample, 'Can not found any collector of this voucher in the database');
+
             return;
         }
-        $same = Voucher::where('person_id', '=', $collectos[0])->where('number', '=', $number)->get();
-        if (count($same)){
+        $same = Voucher::where('person_id', '=', $collectors[0])->where('number', '=', $number)->get();
+        if (count($same)) {
             $this->skipEntry($sample, 'There is another registry of a voucher with main collector '.$collectors[0].' and number '.$number);
+
             return;
         }
 
         // vouchers' fields is ok, what about related tables?
-        if ($parent_type === 'App\Location') {
+        if ('App\Location' === $parent_type) {
             $identification = $this->extractIdentification($sample);
-            if ($identification === null) {
+            if (null === $identification) {
                 $this->skipEntry($sample, 'Vouchers of location must have taxonomic information');
+
                 return;
             }
-        } else
+        } else {
             $identification = null;
-        
+        }
+
         $herbaria = $this->extractHerbariaNumers($sample);
         //Finaly create the registries:
         // - First voucher's registry, to get their id
@@ -173,9 +213,10 @@ class ImportSamples extends AppJob
         $sample->setHerbariaNumbers($herbaria);
         $sample->save();
         $this->affectedId($sample->id);
-        
+
         // - Then create the related registries (for identification and collector), if requested
         $this->createCollectorsAndIdentification('App\Voucher', $sample->id, $collectors, $identification);
+
         return;
     }
 }

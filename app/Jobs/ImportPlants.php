@@ -10,6 +10,7 @@ namespace App\Jobs;
 use App\Plant;
 use App\Location;
 use App\Project;
+use App\ODBFunctions;
 
 class ImportPlants extends ImportCollectable
 {
@@ -28,30 +29,39 @@ class ImportPlants extends ImportCollectable
             }
             $this->userjob->tickProgress();
 
-            if (!$this->hasRequiredKeys(['tag', 'date', 'location', 'project'], $plant)) {
-                continue;
-            //validate location
-            $valid = ODBFunctions::validRegistry(Location::select('id'), $plant['location']);
-            if ($valid === null) {
-                $this->skipEntry($plant, 'location '.$plant['location'].' was not found in the database');
-                continue;
-            } else
-                $plant['location'] = $valid->id;
-            //validate project
-            $valid = ODBFunctions::validRegistry(Project::select('id'), $plant['project']);
-            if ($valid === null) {
-                $this->skipEntry($plant, 'project '.$plant['project'].' was not found in the database');
-                continue;
-            } else
-                $plant['project'] = $valid->id;
-            // Arrived here: let's import it!!
-            try {
-                $this->import($plant);
-            } catch (\Exception $e) {
-                $this->setError();
-                $this->appendLog('Exception '.$e->getMessage().' on plant '.$plant['tag']);
+            if ($this->validateData($plant)) {
+                // Arrived here: let's import it!!
+                try {
+                    $this->import($plant);
+                } catch (\Exception $e) {
+                    $this->setError();
+                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on plant '.$plant['tag']);
+                }
             }
         }
+    }
+
+    protected function validateData(&$plant)
+    {
+        if (!$this->hasRequiredKeys(['tag', 'date', 'location'], $plant)) {
+
+            return false;
+        }
+        if (!$this->validateProject($plant)) {
+
+            return false;
+        }
+
+        //validate location
+        $valid = ODBFunctions::validRegistry(Location::select('id'), $plant['location']);
+        if (null === $valid) {
+            $this->skipEntry($plant, 'location '.$plant['location'].' was not found in the database');
+
+            return false;
+        }
+        $plant['location'] = $valid->id;
+
+        return true;
     }
 
     public function import($plant)
