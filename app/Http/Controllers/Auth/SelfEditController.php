@@ -26,10 +26,10 @@ class SelfEditController extends Controller
     public function selfedit()
     {
         $persons = Person::orderBy('abbreviation')->get();
+        $projects = Auth::user()->projects;
+        $datasets = Auth::user()->datasets;
 
-        return view('auth.selfedit', [
-            'persons' => $persons,
-        ]);
+        return view('auth.selfedit', compact('persons', 'projects', 'datasets'));
     }
 
     public function token()
@@ -71,20 +71,15 @@ class SelfEditController extends Controller
         if ($validator->fails()) {
             return redirect('selfedit')
                 ->withErrors($validator)
-                ->withInput($request->only(['email', 'person_id']));
+                ->withInput($request->only(['email', 'person_id', 'project_id', 'dataset_id']));
         }
 
         // if the validation has succeeded...
-        Auth::user()->email = $request->email;
         if (!is_null($request->new_password)) {
             Auth::user()->password = bcrypt($request->new_password);
+            Auth::user()->save();
         }
-        if ($request->person_id > 0) {
-            Auth::user()->person_id = $request->person_id;
-        } else {
-            Auth::user()->person_id = null;
-        }
-        Auth::user()->save();
+        Auth::user()->update($request->only(['email', 'person_id', 'project_id', 'dataset_id']));
 
         return redirect()->route('home')->withStatus('Profile updated!');
     }

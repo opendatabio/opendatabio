@@ -25,6 +25,19 @@ class Location extends Node
     protected $geom_array = [];
     protected $isSimplified = false;
 
+    public function getPrecisionAttribute()
+    {
+        if ($this->adm_level <= 99) {
+            return Lang::get('levels.imprecise');
+        }
+        return Lang::get('levels.precise');
+    }
+
+    public function rawLink()
+    {
+        return "<a href='".url('locations/'.$this->id)."'>".htmlspecialchars($this->name).'</a>';
+    }
+
     public function scopeNoWorld($query)
     {
         return $query->where('adm_level', '<>', -1);

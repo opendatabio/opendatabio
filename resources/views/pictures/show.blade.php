@@ -22,7 +22,7 @@
 	<strong>
 	@lang('messages.picture_of')
 :</strong>
-    <a href="{{url ( $picture->object->typename . '/' . $picture->object_id ) }}">{{ $picture->object->fullname }}</a>
+    {!! $picture->object->rawLink() !!}
 </p>
 
 @if ($picture->tags->count())
@@ -38,7 +38,7 @@
 <p> <strong> @lang('messages.credits') :</strong>
     <ul>
     @foreach ($picture->collectors as $collector) 
-    <li><a href="{{url('persons/'. $collector->person_id)}}">{{$collector->person->full_name}}</a></li>
+    <li>{!! $collector->rawLink() !!}</li>
     @endforeach
     </ul>
 </p>

@@ -24,14 +24,10 @@ class MeasurementsDataTable extends DataTable
     {
         return (new CollectionDataTable($query))
         ->editColumn('value', function ($measurement) {
-            return '<a href="'.url('measurements/'.$measurement->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($measurement->valueActual).'</a>';
+            return $measurement->rawLink();
         })
         ->editColumn('trait_id', function ($measurement) {
-            return '<a href="'.url('traits/'.$measurement->trait_id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($measurement->odbtrait->name).'</a>';
+            return $measurement->odbtrait->rawLink();
         })
         ->editColumn('measured_id', function ($measurement) {
             $object = $measurement->measured;

@@ -13,6 +13,11 @@ class Herbarium extends Model
 {
     protected $fillable = ['name', 'acronym', 'irn'];
 
+    public function rawLink()
+    {
+        return "<a href='".url('herbaria/'.$this->id)."'>".htmlspecialchars($this->acronym).'</a>';
+    }
+
     public function persons()
     {
         return $this->hasMany(Person::class);

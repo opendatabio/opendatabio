@@ -18,26 +18,38 @@
     </div>
   </div>
 
-@if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
-        <div class="panel panel-default">
-            <div class="panel-heading">
-  @lang('messages.voucher_list')
-            </div>
-            <div class="panel-body">
-    <p><strong>
-    @lang('messages.voucher_list_for'):</strong>
-    {{ $object->fullname }}
-    </p>
-            </div>
-        </div>
+@if (isset($object))
+@can ('create', App\Voucher::class)
+            <div class="panel panel-default">
+                <div class="panel-heading">
+      @lang('messages.create_voucher')
+                </div>
+
+                <div class="panel-body">
+			    <div class="col-sm-6">
+				<a href="{{url ( $object->typename . '/' . $object->id .   '/vouchers/create')}}" class="btn btn-success">
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.create')
+				</a>
+			</div>
+                </div>
+	    </div>
+@endcan
 @endif
+
             <!-- Registered Vouchers -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         @lang('messages.vouchers')
                     </div>
-{!! $dataTable->table() !!}
                     <div class="panel-body">
+@if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
+    <p><strong>
+    @lang('messages.voucher_list_for'):</strong>
+    {!! $object->rawLink() !!}
+    </p>
+@endif
+{!! $dataTable->table() !!}
                     </div>
                 </div>
         </div>

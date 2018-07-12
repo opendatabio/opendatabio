@@ -25,9 +25,7 @@ class TaxonsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('fullname', function ($taxon) {
-            return '<a href="'.url('taxons/'.$taxon->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($taxon->qualifiedFullname).'</a>';
+            return $taxon->rawLink();
         })
         ->editColumn('level', function ($taxon) { return $taxon->levelName; })
         ->addColumn('authorSimple', function ($taxon) { return $taxon->authorSimple; })

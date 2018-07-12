@@ -8,6 +8,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Lang;
 
 class Identification extends Model
 {
@@ -34,6 +35,16 @@ class Identification extends Model
     public function object()
     {
         return $this->morphTo('object');
+    }
+
+    public function rawLink()
+    {
+        if ($this->taxon) {
+            return $this->taxon->rawLink().
+                ($this->modifier ? ' '.Lang::get('levels.identification.'.$this->modifier) : '');
+        }
+
+        return Lang::get('messages.unidentified');
     }
 
     public function person()

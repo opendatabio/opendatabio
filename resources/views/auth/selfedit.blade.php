@@ -18,7 +18,7 @@
                          {{ method_field('PUT') }}
 
 <div class="form-group">
-    <label for="email" class="col-sm-3 control-label">
+    <label for="email" class="col-sm-3 control-label mandatory">
 @lang('messages.email')
 </label>
     <div class="col-sm-6">
@@ -26,7 +26,7 @@
     </div>
 </div>
 <div class="form-group">
-    <label for="password" class="col-sm-3 control-label">
+    <label for="password" class="col-sm-3 control-label mandatory">
 @lang('messages.current_password')
 </label>
 	    <div class="col-sm-6">
@@ -69,6 +69,64 @@
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
 	@lang('messages.hint_default_person')
+    </div>
+  </div>
+</div>
+<div class="form-group">
+    <label for="project_id" class="col-sm-3 control-label">
+@lang('messages.default_project')
+</label>
+        <a data-toggle="collapse" href="#hint2p" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+@if (count($projects))
+	<?php $selected = old('project_id', Auth::user()->defaultProject ? Auth::user()->defaultProject->id : null); ?>
+
+	<select name="project_id" id="project_id" class="form-control" >
+    <option value=""> </option>
+	@foreach ($projects as $project)
+		<option value="{{$project->id}}" {{ $project->id == $selected ? 'selected' : '' }}>
+            {{ $project->name }}
+		</option>
+	@endforeach
+	</select>
+@else
+        <div class="alert alert-warning">
+        @lang ('messages.no_valid_project')
+        </div>
+@endif
+            </div>
+  <div class="col-sm-12">
+    <div id="hint2p" class="panel-collapse collapse">
+	@lang('messages.hint_default_project')
+    </div>
+  </div>
+</div>
+<div class="form-group">
+    <label for="dataset_id" class="col-sm-3 control-label">
+@lang('messages.default_dataset')
+</label>
+        <a data-toggle="collapse" href="#hint2d" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+@if (count($datasets))
+	<?php $selected = old('dataset_id', Auth::user()->defaultDataset ? Auth::user()->defaultDataset->id : null); ?>
+
+	<select name="dataset_id" id="dataset_id" class="form-control" >
+    <option value=""> </option>
+	@foreach ($datasets as $dataset)
+		<option value="{{$dataset->id}}" {{ $dataset->id == $selected ? 'selected' : '' }}>
+            {{ $dataset->name }}
+		</option>
+	@endforeach
+	</select>
+@else
+        <div class="alert alert-warning">
+        @lang ('messages.no_valid_dataset')
+        </div>
+@endif
+            </div>
+  <div class="col-sm-12">
+    <div id="hint2d" class="panel-collapse collapse">
+	@lang('messages.hint_default_dataset')
     </div>
   </div>
 </div>

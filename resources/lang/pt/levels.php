@@ -64,4 +64,6 @@ return ['access.0' => 'Usuário registrado',
 	'tax.270' => 'Forma',
 	'tax.280' => 'Subforma',
 	'tax.-100' => 'Clado',
+    'imprecise' => 'Imprecisa',
+    'precise' => 'Precisa',
 ];

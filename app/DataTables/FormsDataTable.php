@@ -24,9 +24,7 @@ class FormsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('name', function ($form) {
-            return '<a href="'.url('forms/'.$form->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($form->name).'</a>';
+            return $form->rawLink();
         })
         ->editColumn('measured_type', function ($form) { return Lang::get('classes.'.$form->measured_type); })
         ->addColumn('user', function ($form) {return $form->user->email; })

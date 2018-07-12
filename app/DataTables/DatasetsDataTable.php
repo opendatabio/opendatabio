@@ -24,9 +24,7 @@ class DatasetsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('name', function ($dataset) {
-            return '<a href="'.url('datasets/'.$dataset->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($dataset->name).'</a>';
+            return $dataset->rawLink();
         })
         ->editColumn('privacy', function ($dataset) { return Lang::get('levels.privacy.'.$dataset->privacy); })
         ->addColumn('full_name', function ($dataset) {return $dataset->full_name; })

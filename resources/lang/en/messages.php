@@ -436,4 +436,10 @@ aff. = "affinis", meaning there is evidence that this is a new species, still un
   'no_valid_project' => 'Your user is not authorized in any project. Please correct this, then reload this page.',
   'no_valid_dataset' => 'Your user is not authorized in any dataset. Please correct this, then reload this page.',
   'value_integer' => 'Value must be integer',
+  'default_project' => 'Default Project',
+  'default_dataset' => 'Default Dataset',
+  'hint_default_project' => 'If you select a Project here, this will be used as default on all relevant forms, such as when filling in herbarium samples or plants collected.',
+  'hint_default_dataset' => 'If you select a Dataset here, this will be used as default on all relevant forms, such as when filling in measurements.',
+  'location_precision' => 'Location precision',
+  'location_precision_hint' => 'This indicates whether the coordinates are taken from a precise source (plot or GPS point) or from the administrative region centroid (e.g., the center of the municipality)',
 );

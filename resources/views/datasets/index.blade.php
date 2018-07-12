@@ -43,7 +43,7 @@
                 <div class="panel-body">
 <ul>
 @foreach ($mydatasets as $dataset)
-    <li><a href="{{url('datasets/' . $dataset->id)}}">{{$dataset->name}}</a>
+    <li>{!! $dataset->rawLink() !!}
 (@lang('levels.project.' . $dataset->pivot->access_level )
 )</li>
 @endforeach

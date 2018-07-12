@@ -13,6 +13,11 @@ class Form extends Model
 {
     protected $fillable = ['name', 'measured_type', 'user_id', 'notes'];
 
+    public function rawLink()
+    {
+        return "<a href='".url('forms/'.$this->id)."'>".htmlspecialchars($this->name).'</a>';
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

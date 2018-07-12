@@ -79,6 +79,7 @@ class PlantController extends Controller
         $herbaria = Herbarium::all();
         $persons = Person::all();
         $projects = Auth::user()->projects;
+
         return view('plants.create', compact('persons', 'projects', 'herbaria', 'location'));
     }
 
@@ -233,6 +234,7 @@ class PlantController extends Controller
         $herbaria = Herbarium::all();
         $persons = Person::all();
         $projects = Auth::user()->projects;
+
         return view('plants.create', compact('plant', 'persons', 'projects', 'herbaria'));
     }
 

@@ -18,7 +18,7 @@
 		<br>
 			<ul>
 		@foreach ( $dupes as $dupe)
-			<li><a href="{{url('locations/' . $dupe->id)}}">{{$dupe->fullname}}</a></li>
+			<li>{!! $dupe->rawLink !!}</li>
 		@endforeach
 			</ul>
 		    <!-- Edit Person Form -->

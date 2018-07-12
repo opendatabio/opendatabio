@@ -51,6 +51,11 @@ class ODBTrait extends Model
     protected $fillable = ['type', 'export_name', 'unit', 'range_min', 'range_max', 'link_type'];
     protected $table = 'traits';
 
+    public function rawLink()
+    {
+        return "<a href='".url('traits/'.$this->id)."'>".htmlspecialchars($this->name).'</a>';
+    }
+
     // for use in the trait edit dropdown
     public static function getObjectTypeNames()
     {

@@ -79,7 +79,7 @@
                                 @foreach ($herbaria as $herbarium)
                                     <tr>
 					<td class="table-text"><div>
-					<a href="{{ url('herbaria/'.$herbarium->id) }}">{{ $herbarium->acronym }}</a>
+                    {!! $herbarium->rawLink() !!}
 					</div></td>
                                         <td class="table-text">{{ $herbarium->name }}</td>
 					<td class="table-text">

@@ -24,11 +24,7 @@ class BibReferenceDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-        ->editColumn('bibkey', function ($reference) {
-            return '<a href="'.url('references/'.$reference->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($reference->bibkey).'</a>';
-        })
+        ->editColumn('bibkey', function ($reference) { return $reference->rawLink(); })
         ->addColumn('author', function ($reference) { return $reference->author; })
         ->addColumn('year', function ($reference) { return $reference->year; })
         ->addColumn('title', function ($reference) { return $reference->title; })

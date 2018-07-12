@@ -24,9 +24,7 @@ class PlantsDataTable extends DataTable
     {
         return (new EloquentDataTable($query))
         ->editColumn('tag', function ($plant) {
-            return '<a href="'.url('plants/'.$plant->id).'">'.
-                // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($plant->fullname).'</a>';
+            return $plant->rawLink();
         })
         ->addColumn('project', function ($plant) { return $plant->project->name; })
         ->addColumn('identification', function ($plant) {

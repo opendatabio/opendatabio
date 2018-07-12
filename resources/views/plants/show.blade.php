@@ -14,22 +14,13 @@
 @if (is_null($identification))
         @lang ('messages.unidentified')
 @else
-    <em>        
-    <a href="{{url('taxons/' . $identification->taxon->id)}}">
-        {{ $identification->taxon->fullname }}
-    </a>
-    </em>
-    @if ($identification->modifier)
-        @lang ('levels.identification.' . $identification->modifier)
-    @endif
+{!! $identification->rawLink(); !!}
     </p>
     <p><strong>
     @lang('messages.identified_by')
 :</strong>
 @if ($identification->person)
-    <a href="{{url('persons/' . $identification->person->id)}}">
-        {{ $identification->person->full_name }}
-    </a> ({{ $identification->formatDate }})
+{!! $identification->person->rawLink() !!} ({{ $identification->formatDate }})
 @else
     @lang('messages.not_registered')
 @endif
@@ -39,9 +30,7 @@
     @lang('messages.identification_based_on')
 :</strong>
         @lang('messages.voucher') {{ $identification->herbarium_reference }} /
-    <a href="{{url('herbaria/' . $identification->herbarium_id)}}">
-        {{ $identification->herbarium->acronym }}
-    </a>
+    {!! $identification->herbarium->rawLink() !!}
     </p>
     @endif
     @if ($identification->notes)
@@ -52,15 +41,13 @@
     </a> 
     </p>
     @endif
-
-
 @endif
         
 <p><strong>
 @lang('messages.location')
 : </strong>  
 @if($plant->location)
-<a href="{{url('locations/' . $plant->location->id)}}">{{$plant->location->name}}</a> {{ $plant->locationWithGeom->coordinatesSimple }}
+{!! $plant->location->rawLink() !!} {{ $plant->locationWithGeom->coordinatesSimple }}
 @else
     Unknown location
 @endif
@@ -72,6 +59,16 @@
     @endif
 @endif
 </p>
+@if ($plant->location) 
+    <p><strong>
+    @lang('messages.location_precision')
+:</strong>
+    {{ $plant->location->precision }} <a data-toggle="collapse" href='#hintp'>?</a>
+    </p>
+@endif
+<div id='hintp' class='panel-collapse collapse'>
+    @lang('messages.location_precision_hint')
+</div>
 
 <p><strong>
 @lang('messages.plant_tag')
@@ -82,7 +79,7 @@
 <p><strong>
 @lang('messages.project')
 :</strong>
-<a href="{{url('projects/' . $plant->project->id)}}">{{$plant->project->name}}</a>
+{!! $plant->project->rawLink() !!}
 </p>
 
 <p><strong>
@@ -105,7 +102,7 @@
 @if ($collectors->count())
     <ul>
     @foreach ($collectors as $collector)
-    <li><a href="{{url('persons/' . $collector->person->id)}}">{{$collector->person->full_name}}</a></li>
+    <li>{!! $collector->person->rawLink() !!}</li>
     @endforeach
     </ul>
 @else

@@ -149,6 +149,7 @@ class VoucherController extends Controller
         $herbaria = Herbarium::all();
         $persons = Person::all();
         $projects = Auth::user()->projects;
+
         return view('vouchers.create', compact('persons', 'projects', 'herbaria', 'parent'));
     }
 
@@ -250,6 +251,7 @@ class VoucherController extends Controller
         $persons = Person::all();
         $plants = Plant::with('location')->get();
         $projects = Auth::user()->projects;
+
         return view('vouchers.create', compact('voucher', 'persons', 'projects', 'herbaria', 'plants'));
     }
 

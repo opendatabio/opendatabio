@@ -20,6 +20,11 @@ class Person extends Model
     protected $table = 'persons';
     protected $fillable = ['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id'];
 
+    public function rawLink()
+    {
+        return "<a href='".url('persons/'.$this->id)."'>".htmlspecialchars($this->abbreviation).'</a>';
+    }
+
     protected static function boot()
     {
         parent::boot();

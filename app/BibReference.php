@@ -26,6 +26,11 @@ class BibReference extends Model
     protected $entries = null;
     protected $fillable = ['bibtex', 'doi'];
 
+    public function rawLink()
+    {
+        return "<a href='".url('references/'.$this->id)."'>".htmlspecialchars($this->bibkey).'</a>';
+    }
+
     public function datasets()
     {
         return $this->hasMany(Dataset::class, 'bibreference_id');

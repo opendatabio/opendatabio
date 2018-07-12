@@ -191,7 +191,7 @@ class FormController extends Controller
         // TODO: support link type traits
 
         foreach ($request->value as $line => $elements) {
-            for ($column = 0; $column < count($traits); ++$column ) {
+            for ($column = 0; $column < count($traits); ++$column) {
                 if (array_key_exists($column, $elements) and !is_null($elements[$column])) {
                     $measurement = new Measurement([
                         'trait_id' => $traits[$column],

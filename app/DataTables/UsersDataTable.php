@@ -26,9 +26,7 @@ class UsersDataTable extends DataTable
         return (new EloquentDataTable($query))
         ->editColumn('email', function ($user) {
             if (Auth::user() and Auth::user()->can('update', $user)) {
-                return '<a href="'.url('users/'.$user->id).'">'.
-                    // Needs to escape special chars, as this will be passed RAW
-                    htmlspecialchars($user->email).'</a>';
+                return $user->rawLink();
             }
 
             return htmlspecialchars($user->email);

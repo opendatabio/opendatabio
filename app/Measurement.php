@@ -19,6 +19,13 @@ class Measurement extends Model
         'date', 'dataset_id', 'person_id', 'bibreference_id',
         'value', 'value_i', 'value_a', 'notes', ];
 
+    public function rawLink()
+    {
+        return '<a href="'.url('measurements/'.$this->id).'">'.
+                // Needs to escape special chars, as this will be passed RAW
+                htmlspecialchars($this->valueActual).'</a>';
+    }
+
     public function measured()
     {
         return $this->morphTo();

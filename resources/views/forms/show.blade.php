@@ -32,7 +32,7 @@
 :</strong>
 <ul>
 @foreach ($form->traits as $odbtrait)
-<li><a href="{{url('traits/'.$odbtrait->id)}}">{{ $odbtrait->name }}</a></li>
+<li>{!! $odbtrait->rawLink() !!}</li>
 @endforeach
 </ul>
 </p>
