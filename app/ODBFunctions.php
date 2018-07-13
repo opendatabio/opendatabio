@@ -66,7 +66,7 @@ class ODBFunctions
     {
         $values = explode(',', $value, 2);
         if (count($values) == 1)
-            ODBFunctions::filter($query, trim($field), trim($values[0]), $raw);
+            ODBFunctions::filter($query, trim($field), trim($value), $raw);
         else // count($values) == 2
             $query->where(function ($internalQuery) use ($field, $raw, $values) {
                 ODBFunctions::filter($internalQuery, trim($field), trim($values[0]), $raw);
