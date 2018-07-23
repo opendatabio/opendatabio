@@ -18,30 +18,11 @@ class ImportMeasurements extends AppJob
      */
     public function inner_handle()
     {
-        $sourceType = $this->userjob->data['sourceType'];
-        switch ($this->userjob->data['sourceType']) {
-            case 'location':
-                $sourceType = 'App\\Location';
-                break;
-            case 'taxon':
-                $sourceType = 'App\\Taxon';
-                break;
-            case 'plant':
-                $sourceType = 'App\\Plant';
-                break;
-            case 'sample':
-                $sourceType = 'App\\Voucher';
-                break;
-            default:
-                $this->setError();
-                $this->appendLog('Unknown type of object measured, try location, taxon, plant or sample');
-                return;
-        }
-        $this->setError();
-        $this->appendLog('Import data for '.$sourceType.' is not yet implemented!');
-        /* TODO Implement this
         $data = $this->extractEntrys();
         if (!$this->setProgressMax($data)) {
+            return;
+        }
+        if (!$this->validateHeader()) {
             return;
         }
 
@@ -62,23 +43,75 @@ class ImportMeasurements extends AppJob
                 }
             }
         }
-        */
     }
 
-    protected function validateData(&$measurement)
+    protected function validateHeader()
     {
-        if (!$this->hasRequiredKeys([], $measurement)) {
+        if (!$this->hasRequiredKeys(['object_type', 'person', 'date', 'dataset'], $this->header)) {
             return false;
-        } elseif (!$this->validateSomething($measurement)) {
+        } elseif (!$this->validatePerson()) {
+            return false;
+        } else {
+        } elseif (!$this->validateDataset()) {
             return false;
         } else {
             return true;
         }
     }
 
-    protected function validateSomething(&$measurement)
+    protected function validatePerson()
     {
-        // TODO what needs to validate and return if it is valid
+        $person = $this->header['person'];
+        $valid = ODBFunctions::validRegistry(Person::select('id'), $person, ['id', 'abbreviation', 'full_name', 'email']);
+        if (null === $valid) {
+            $this->appendLog('Error: Header reffers to '.$person.' as who do these measurements, but this person was not found in the database.');
+            return false;
+        } else {
+            $this->header['person'] = $valid->id;
+            return true;
+        }
+    }
+
+    protected function validateDataset()
+    {
+        $valid = Auth::user()->datasets()->where('id', $this->header['dataset'])
+        if (null === $valid) {
+            $this->appendLog('Error: Header reffers to '.$this->header['dataset'].' as dataset, but this dataset was not found in the database.');
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    protected function validateData(&$measurement)
+    {
+        if (!$this->hasRequiredKeys(['object_id'], $measurement)) {
+            return false;
+        } elseif (!$this->validateObject($measurement)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    protected function validateObject(&$measurement)
+    {
+        if ('App\\Location' === $this->header['object_type']) {
+            $query = Location::select('id')->where('id', $measurement['object_id'])->get();
+        } elseif ('App\\Taxon' === $this->header['object_type']) {
+            $query = Taxon::select('id')->where('id', $measurement['object_id'])->get();
+        } elseif ('App\\Plant' === $this->header['object_type']) {
+            $query = Plant::select('plants.id')->where('id', $measurement['object_id'])->get();
+        } elseif ('App\\Sample' === $this->header['object_type']) {
+            $query = Voucher::select('id')->where('id', $measurement['object_id'])->get();
+        } else {
+            return false;
+        }
+        if (count($query)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public function import($measurement)
