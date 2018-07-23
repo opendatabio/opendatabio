@@ -26,6 +26,7 @@ class AppJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     protected $userjob;
     protected $errors;
+    protected $header;
 
     /**
      * Create a new job instance.
@@ -100,7 +101,9 @@ class AppJob implements ShouldQueue
 
     public function extractEntrys()
     {
-        return $this->userjob->data['data'];
+        $data = $this->userjob->data['data'];
+        $this->header = array_key_exists('header', $data) ? $data['header'] : null;
+        return $data['data'];
     }
 
     public function setProgressMax($data)
@@ -126,6 +129,20 @@ class AppJob implements ShouldQueue
         }
 
         return false;
+    }
+
+    public function removeHeaderSuppliedKeys(array $keys)
+    {
+        $notPresent = array();
+        if (is_array($this->header)) {
+            foreach ($keys as $key) {
+                if (!array_key_exists($key, $this->header)) {
+                    $notPresent[] = $key;
+                }
+            }
+        }
+        
+        return $notPresent;
     }
 
     public function hasRequiredKeys($requiredKeys, $entry)

@@ -15,6 +15,8 @@ use App\ODBFunctions;
 
 class ImportSamples extends ImportCollectable
 {
+    private $requiredKeys;
+
     /**
      * Execute the job.
      */
@@ -25,6 +27,8 @@ class ImportSamples extends ImportCollectable
 
             return;
         }
+        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['number', 'date', 'collector']);
+        $this->validateHeader();
         foreach ($data as $sample) {
             if ($this->isCancelled()) {
                 break;
@@ -45,7 +49,7 @@ class ImportSamples extends ImportCollectable
 
     protected function validateData(&$sample)
     {
-        if (!$this->hasRequiredKeys(['number', 'date', 'collector'], $sample)) {
+        if (!$this->hasRequiredKeys($this->requiredKeys, $sample)) {
 
             return false;
         }
@@ -163,7 +167,7 @@ class ImportSamples extends ImportCollectable
     public function import($sample)
     {
         $number = $sample['number'];
-        $date = $sample['date'];
+        $date = array_key_exists('date', $sample) ? $sample['date'] : $this->header['date'];
         $project = $sample['project'];
         $parent_id = $sample['parent_id'];
         $parent_type = $sample['parent_type'];
