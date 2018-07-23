@@ -23,7 +23,10 @@ class ImportCollectable extends AppJob
             $this->validateProject(&$this->header);
         }
         if (array_key_exists($field, $this->header)) {
-            $this->header[$field] = $this->extractCollectors('Header', $this->header, $field);
+            $person = $this->extractCollectors('Header', $this->header, $field);
+            if ($person) {
+                $this->header[$field] = $person;
+            }
         }
     }
 
@@ -58,7 +61,7 @@ class ImportCollectable extends AppJob
 
     protected function extractCollectors($callerName, $registry, $field='collector')
     {
-        if (array_key_exists($field, $this->header)) {
+        if (('Header' !== $callerName) and array_key_exists($field, $this->header)) {
 
             return $this->header[$field];
         }
