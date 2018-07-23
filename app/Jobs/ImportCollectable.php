@@ -17,32 +17,51 @@ use App\ODBFunctions;
 
 class ImportCollectable extends AppJob
 {
+    protected function validateHeader($field='collector')
+    {
+        if (array_key_exists('project', $this->header)) {
+            $this->validateProject(&$this->header);
+        }
+        if (array_key_exists($field, $this->header)) {
+            $this->header[$field] = $this->extractCollectors('Header', $this->header, $field);
+        }
+    }
+
     /*
      * Changes the $fieldName item of the $registry array to the id of valid Project.
      * If this item is not present in the array, it uses the defaultProject of the user.
      * Otherwise it interprets the value of this item as id or name of a project.
      * @retuns true if the project is validated; false if it fails.
      */
-    protected function validateProject(&$registry, $fieldName = 'project')
+    protected function validateProject(&$registry)
     {
-        if (array_key_exists($fieldName, $registry)) {
-            $valid = ODBFunctions::validRegistry(Project::select('id'), $registry[$fieldName]);
-            if (null === $valid) {
-                $this->skipEntry($registry, $fieldName.' '.$registry[$fieldName].' was not found in the database');
-
-                return false;
-            }
-            $registry[$fieldName] = $valid->id;
+        if (array_key_exists('project', $this->header)) {
+            $registry['project'] = $this->header['project'];
 
             return true;
         }
-        $registry[$fieldName] = Auth::user()->defaultProject->id;
+        if (array_key_exists('project', $registry)) {
+            $valid = ODBFunctions::validRegistry(Project::select('id'), $registry['project']);
+            if (null === $valid) {
+                $this->skipEntry($registry, 'project'.' '.$registry['project'].' was not found in the database');
+
+                return false;
+            }
+            $registry['project'] = $valid->id;
+
+            return true;
+        }
+        $registry['project'] = Auth::user()->defaultProject->id;
 
         return true;
     }
 
     protected function extractCollectors($callerName, $registry, $field='collector')
     {
+        if (array_key_exists($field, $this->header)) {
+
+            return $this->header[$field];
+        }
         if (!array_key_exists($field, $registry)) {
 
             return null;
@@ -52,9 +71,9 @@ class ImportCollectable extends AppJob
         foreach ($persons as $person) {
             $valid = ODBFunctions::validRegistry(Person::select('id'), $person, ['id', 'abbreviation', 'full_name', 'email']);
             if (null === $valid) {
-                $this->appendLog('WARNING: '.$callerName.' reffers to '.$person.' as member of tagging team, but this person was not found in the database. Ignoring person '.$person);
+                $this->appendLog('WARNING: '.$callerName.' reffers to '.$person.' as member of '.$field.', but this person was not found in the database. Ignoring person '.$person);
             } else {
-                array_push($ids, $valid->id);
+                $ids[] = $valid->id;
             }
         }
 

@@ -14,6 +14,8 @@ use App\ODBFunctions;
 
 class ImportPlants extends ImportCollectable
 {
+    private $requiredKeys;
+    
     /**
      * Execute the job.
      */
@@ -23,6 +25,8 @@ class ImportPlants extends ImportCollectable
         if (!$this->setProgressMax($data)) {
             return;
         }
+        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['tag', 'date', 'location']);
+        $this->validateHeader('tagging_team');
         foreach ($data as $plant) {
             if ($this->isCancelled()) {
                 break;
@@ -43,7 +47,7 @@ class ImportPlants extends ImportCollectable
 
     protected function validateData(&$plant)
     {
-        if (!$this->hasRequiredKeys(['tag', 'date', 'location'], $plant)) {
+        if (!$this->hasRequiredKeys($this->requiredKeys, $plant)) {
 
             return false;
         }
@@ -68,7 +72,7 @@ class ImportPlants extends ImportCollectable
     {
         $location = $plant['location'];
         $tag = $plant['tag'];
-        $date = $plant['date'];
+        $date = array_key_exists('date', $plant) ? $plant['date'] : $this->header['date'];
         $project = $plant['project'];
         $created_at = array_key_exists('created_at', $plant) ? $plant['created_at'] : null;
         $updated_at = array_key_exists('updated_at', $plant) ? $plant['updated_at'] : null;
