@@ -20,7 +20,7 @@ class ImportCollectable extends AppJob
     protected function validateHeader($field='collector')
     {
         if (array_key_exists('project', $this->header)) {
-            $this->validateProject(&$this->header);
+            $this->validateProject($this->header);
         }
         if (array_key_exists($field, $this->header)) {
             $person = $this->extractCollectors('Header', $this->header, $field);
@@ -38,7 +38,7 @@ class ImportCollectable extends AppJob
      */
     protected function validateProject(&$registry)
     {
-        if (array_key_exists('project', $this->header)) {
+        if (($this->header !== $registry) and array_key_exists('project', $this->header)) {
             $registry['project'] = $this->header['project'];
 
             return true;
@@ -54,7 +54,9 @@ class ImportCollectable extends AppJob
 
             return true;
         }
-        $registry['project'] = Auth::user()->defaultProject->id;
+        if ($this->header !== $registry) {
+            $registry['project'] = Auth::user()->defaultProject->id;
+        }
 
         return true;
     }

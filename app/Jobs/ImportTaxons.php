@@ -67,22 +67,30 @@ class ImportTaxons extends AppJob
         // MOBOT
         $mobotdata['key'] = array_key_exists('mobot', $taxon) ? $taxon['mobot'] : null;
         if (!$mobotdata['key']) {
-            $mobotdata = $apis->getMobot($name);
-            if (!$mobotdata['key']) {
-                $mobotdata['key'] = null;
+            try {
+                $mobotdata = $apis->getMobot($name);
+                if (!$mobotdata['key']) {
+                    $mobotdata['key'] = null;
+                }
+                $taxon['mobot'] = $mobotdata;
+            } catch (\Exception $e) {
+                // Ignore any Excepetion when tring to found mobot information
             }
         }
-        $taxon['mobot'] = $mobotdata;
 
         // IPNI
         $ipnidata['key'] = array_key_exists('ipni', $taxon) ? $taxon['ipni'] : null;
         if (!$ipnidata['key']) {
-            $ipnidata = $apis->getIPNI($name);
-            if (!array_key_exists('key', $ipnidata)) {
-                $ipnidata['key'] = null;
+            try {
+                $ipnidata = $apis->getIPNI($name);
+                if (!array_key_exists('key', $ipnidata)) {
+                    $ipnidata['key'] = null;
+                }
+                $taxon['ipni'] = $ipnidata;
+            } catch (\Exception $e) {
+                // Ignore any Excepetion when tring to found ipni information
             }
         }
-        $taxon['ipni'] = $ipnidata;
 
         return true;
     }
