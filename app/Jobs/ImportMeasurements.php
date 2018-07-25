@@ -8,6 +8,11 @@
 namespace App\Jobs;
 
 use App\Measurement;
+use App\Location;
+use App\Taxon;
+use App\Person;
+use App\Plant;
+use App\Sample;
 
 class ImportMeasurements extends AppJob
 {
@@ -51,8 +56,9 @@ class ImportMeasurements extends AppJob
             return false;
         } elseif (!$this->validatePerson()) {
             return false;
-        } else {
         } elseif (!$this->validateDataset()) {
+            return false;
+        } elseif (!$this->validateObjetType()) {
             return false;
         } else {
             return true;
@@ -83,11 +89,18 @@ class ImportMeasurements extends AppJob
         }
     }
 
+    protected function validateObjetType()
+    {
+        return in_array($this->header['object_type'], ['App\\Location', 'App\\Taxon', 'App\\Plant', 'App\\Sample']);
+    }
+
     protected function validateData(&$measurement)
     {
         if (!$this->hasRequiredKeys(['object_id'], $measurement)) {
             return false;
         } elseif (!$this->validateObject($measurement)) {
+            return false;
+        } elseif (!$this->validateMeasurements($measurement)) {
             return false;
         } else {
             return true;
@@ -104,14 +117,45 @@ class ImportMeasurements extends AppJob
             $query = Plant::select('plants.id')->where('id', $measurement['object_id'])->get();
         } elseif ('App\\Sample' === $this->header['object_type']) {
             $query = Voucher::select('id')->where('id', $measurement['object_id'])->get();
-        } else {
-            return false;
         }
         if (count($query)) {
             return true;
         } else {
+            $this->appendLog('WARNING: Object '.$this->header['object_type'].' - '.$measurement['object_id'].' not found, all of their measurements will be ignored.');
+
             return false;
         }
+    }
+
+    protected function validateMeasurements(&$measurement)
+    {
+        $valids = array ();
+        foreach ($measurement as $key => $value) {
+            if ('object_id' === $key) {
+                $valids[$key] = $value;
+            } else {
+                $trait = $this->getTrait($key);
+                if ($trait) {
+                    $valids[$trait] = $value;
+                    // TODO validate value
+                } else {
+                    $this->appendLog('WARNING: Trait '.$key.' of object '.$measurement['object_id'].' not found, this measurement will be ignored.');
+                }
+            }
+        }
+        if (count($valids)) {
+            $measurement = $valids;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function getTrait($name)
+    {
+        // TODO interpret $name as export_name of an ODBTrait and return the corresponding ODBTrait if exists, otherwise returns null
+        return null;
     }
 
     public function import($measurement)
