@@ -102,7 +102,7 @@ class AppJob implements ShouldQueue
     public function extractEntrys()
     {
         $data = $this->userjob->data['data'];
-        $this->header = array_key_exists('header', $data) ? $data['header'] : null;
+        $this->header = array_key_exists('header', $data) ? $data['header'] : array ();
         return $data['data'];
     }
 
@@ -134,11 +134,9 @@ class AppJob implements ShouldQueue
     public function removeHeaderSuppliedKeys(array $keys)
     {
         $notPresent = array();
-        if (is_array($this->header)) {
-            foreach ($keys as $key) {
-                if (!array_key_exists($key, $this->header)) {
-                    $notPresent[] = $key;
-                }
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $this->header)) {
+                $notPresent[] = $key;
             }
         }
         

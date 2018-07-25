@@ -41,7 +41,7 @@ class ImportSamples extends ImportCollectable
                     $this->import($sample);
                 } catch (\Exception $e) {
                     $this->setError();
-                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on sample '.$sample['collector'].' - '.$sample['number']);
+                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on sample '.$sample['number']);
                 }
             }
         }
@@ -167,8 +167,8 @@ class ImportSamples extends ImportCollectable
     public function import($sample)
     {
         $number = $sample['number'];
-        $date = array_key_exists('date', $sample) ? $sample['date'] : $this->header['date'];
-        $project = $sample['project'];
+        $date = array_key_exists('date', $this->header) ? $this->header['date'] : $sample['date'];
+        $project = array_key_exists('project', $this->header) ? $this->header['project'] : $sample['project'];
         $parent_id = $sample['parent_id'];
         $parent_type = $sample['parent_type'];
         $created_at = array_key_exists('created_at', $sample) ? $sample['created_at'] : null;
