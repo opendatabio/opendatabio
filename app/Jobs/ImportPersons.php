@@ -27,7 +27,6 @@ class ImportPersons extends AppJob
             }
             $this->userjob->tickProgress();
 
-
             if ($this->validateData($person)) {
                 // Arrived here: let's import it!!
                 try {
@@ -62,7 +61,7 @@ class ImportPersons extends AppJob
             $size = count($names);
             $abbreviation = $names[$size - 1];
             for ($i = 0; $i < $size - 1; ++$i) {
-                $abbreviation = $abbreviation.' '.mb_substr ($names[$i], 0, 1);
+                $abbreviation = $abbreviation.' '.mb_substr($names[$i], 0, 1);
             }
             $person['abbreviation'] = $abbreviation;
 

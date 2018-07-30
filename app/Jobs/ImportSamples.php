@@ -24,7 +24,6 @@ class ImportSamples extends ImportCollectable
     {
         $data = $this->extractEntrys();
         if (!$this->setProgressMax($data)) {
-
             return;
         }
         $this->requiredKeys = $this->removeHeaderSuppliedKeys(['number', 'date', 'collector']);
@@ -50,11 +49,9 @@ class ImportSamples extends ImportCollectable
     protected function validateData(&$sample)
     {
         if (!$this->hasRequiredKeys($this->requiredKeys, $sample)) {
-
             return false;
         }
         if (!$this->validateProject($sample)) {
-
             return false;
         }
 
@@ -75,38 +72,35 @@ class ImportSamples extends ImportCollectable
     {
         if (array_key_exists('parent_id', $sample)) {
             if (array_key_exists('parent_type', $sample)) {
-
-                return array (
+                return array(
                     'id' => $sample['parent_id'],
-                    'type' => $sample['parent_type']
+                    'type' => $sample['parent_type'],
                 );
             }
 
             return null; // has id, but not type of parent
         } elseif (array_key_exists('parent_type', $sample)) {
-
             return null; // has type, but not id of parent
         } elseif (array_key_exists('location', $sample)) {
             if (array_key_exists('plant', $sample)) {
                 $valid = $this->validate($sample['location'], $sample['plant']);
                 if (null === $valid) {
-
                     return null;
                 }
 
-                return array (
+                return array(
                     'id' => $valid,
-                    'type' => 'App\Plant'
+                    'type' => 'App\Plant',
                 );
             } else {
                 $valid = ODBFunctions::validRegistry(Location::select('id'), $location);
                 if (null === $valid) {
-
                     return null;
                 }
-                return array (
+
+                return array(
                     'id' => $valid->id,
-                    'type' => 'App\Location'
+                    'type' => 'App\Location',
                 );
             }
         } elseif (array_key_exists('plant', $sample)) {
@@ -114,13 +108,12 @@ class ImportSamples extends ImportCollectable
                     ->where('id', $sample['plant'])
                     ->get();
             if (0 === count($valid)) {
-
                 return null;
             }
 
-            return array (
+            return array(
                 'id' => $valid->first()->id,
-                'type' => 'App\Plant'
+                'type' => 'App\Plant',
             );
         }
     }
@@ -130,7 +123,6 @@ class ImportSamples extends ImportCollectable
     {
         $valid = ODBFunctions::validRegistry(Location::select('id'), $location);
         if (null === $valid) {
-
             return null;
         }
         $location = $valid->id;
@@ -139,7 +131,6 @@ class ImportSamples extends ImportCollectable
                 ->where('plants.tag', $plant)
                 ->get();
         if (0 === count($valid)) {
-
             return null;
         }
 
@@ -153,7 +144,7 @@ class ImportSamples extends ImportCollectable
             if (0 === strpos($key, 'H_')) {
                 $query = Herbarium::select('id');
                 $value = substr($key, 2);
-                $fields = ['id','acronym','name','irn'];
+                $fields = ['id', 'acronym', 'name', 'irn'];
                 $valid = ODBFunctions::validRegistry($query, $value, $fields);
                 if (null !== $valid) {
                     $herbaria[$valid->id] = $value;

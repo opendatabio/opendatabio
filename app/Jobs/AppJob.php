@@ -102,7 +102,8 @@ class AppJob implements ShouldQueue
     public function extractEntrys()
     {
         $data = $this->userjob->data['data'];
-        $this->header = array_key_exists('header', $data) ? $data['header'] : array ();
+        $this->header = array_key_exists('header', $data) ? $data['header'] : array();
+
         return $data['data'];
     }
 
@@ -139,7 +140,7 @@ class AppJob implements ShouldQueue
                 $notPresent[] = $key;
             }
         }
-        
+
         return $notPresent;
     }
 
@@ -164,10 +165,11 @@ class AppJob implements ShouldQueue
 
     public function skipEntry($entry, $cause)
     {
-        if (is_array($entry))
+        if (is_array($entry)) {
             $entry = json_encode($entry);
-        elseif ('object' == gettype($entry))
+        } elseif ('object' == gettype($entry)) {
             $entry = serialize($entry);
+        }
         $this->appendLog('WARNING: '.$cause.'. Skipping import of '.$entry);
     }
 }

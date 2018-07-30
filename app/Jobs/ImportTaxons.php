@@ -211,6 +211,7 @@ class ImportTaxons extends AppJob
         if (count($ref)) {
             return $ref->first()->id;
         }
+
         return null;
     }
 
@@ -245,6 +246,7 @@ class ImportTaxons extends AppJob
         // Is this taxon already imported?
         if (Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count() > 0) {
             $this->skipEntry($taxon, 'taxon '.$name.' already imported to database');
+
             return;
         }
 

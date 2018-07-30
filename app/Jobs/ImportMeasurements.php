@@ -12,7 +12,6 @@ use App\Location;
 use App\Taxon;
 use App\Person;
 use App\Plant;
-use App\Sample;
 use App\ODBFunctions;
 use App\ODBTrait;
 use Auth;
@@ -20,7 +19,7 @@ use Auth;
 class ImportMeasurements extends AppJob
 {
     protected $sourceType;
-    
+
     /**
      * Execute the job.
      */
@@ -39,7 +38,6 @@ class ImportMeasurements extends AppJob
                 break;
             }
             $this->userjob->tickProgress();
-
 
             if ($this->validateData($measurement)) {
                 // Arrived here: let's import it!!
@@ -74,9 +72,11 @@ class ImportMeasurements extends AppJob
         $valid = ODBFunctions::validRegistry(Person::select('id'), $person, ['id', 'abbreviation', 'full_name', 'email']);
         if (null === $valid) {
             $this->appendLog('Error: Header reffers to '.$person.' as who do these measurements, but this person was not found in the database.');
+
             return false;
         } else {
             $this->header['person'] = $valid->id;
+
             return true;
         }
     }
@@ -86,6 +86,7 @@ class ImportMeasurements extends AppJob
         $valid = Auth::user()->datasets()->where('id', $this->header['dataset']);
         if (null === $valid) {
             $this->appendLog('Error: Header reffers to '.$this->header['dataset'].' as dataset, but this dataset was not found in the database.');
+
             return false;
         } else {
             return true;
@@ -132,7 +133,7 @@ class ImportMeasurements extends AppJob
 
     protected function validateMeasurements(&$measurement)
     {
-        $valids = array ();
+        $valids = array();
         foreach ($measurement as $key => $value) {
             if ('object_id' === $key) {
                 $valids[$key] = $value;
@@ -174,7 +175,7 @@ class ImportMeasurements extends AppJob
                 'measured_type' => $this->header['object_type'],
                 'dataset_id' => $this->header['dataset'],
                 'person_id' => $this->header['person'],
-                'bibreference_id' => array_key_exists('bibreference', $this->header) ? $this->header['bibreference'] : null
+                'bibreference_id' => array_key_exists('bibreference', $this->header) ? $this->header['bibreference'] : null,
             ]);
             $measurement->setDate($this->header['date']);
             $measurement->setValueActualAttribute($value);

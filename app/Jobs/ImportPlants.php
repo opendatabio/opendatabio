@@ -15,7 +15,7 @@ use App\ODBFunctions;
 class ImportPlants extends ImportCollectable
 {
     private $requiredKeys;
-    
+
     /**
      * Execute the job.
      */
@@ -48,11 +48,9 @@ class ImportPlants extends ImportCollectable
     protected function validateData(&$plant)
     {
         if (!$this->hasRequiredKeys($this->requiredKeys, $plant)) {
-
             return false;
         }
         if (!$this->validateProject($plant)) {
-
             return false;
         }
 
@@ -81,6 +79,7 @@ class ImportPlants extends ImportCollectable
         $same = Plant::where('location_id', '=', $location)->where('tag', '=', $tag)->get();
         if (count($same)) {
             $this->skipEntry($plant, 'There is another registry of a plant with location '.$location.' and tag '.$tag);
+
             return;
         }
 
@@ -106,6 +105,7 @@ class ImportPlants extends ImportCollectable
 
         // - Then create the related registries (for identification and collector), if requested
         $this->createCollectorsAndIdentification('App\Plant', $plant->id, $collectors, $identification);
+
         return;
     }
 }

@@ -59,7 +59,6 @@ class ImportLocations extends AppJob
     protected function validateGeom(&$location)
     {
         if (array_key_exists('geom', $location)) {
-
             return true;
         }
         $lat = array_key_exists('lat', $location) ? $location['lat'] : null;
@@ -110,7 +109,6 @@ class ImportLocations extends AppJob
             } else {
                 $valid = ODBFunctions::validRegistry(Location::select('id'), $location[$field]);
                 if (null === $valid) {
-
                     return false;
                 } else {
                     $location[$field] = $valid->id;
@@ -150,7 +148,6 @@ class ImportLocations extends AppJob
         $x = array_key_exists('x', $location) ? $location['x'] : null;
         $y = array_key_exists('y', $location) ? $location['y'] : null;
 
-
         // TODO: several other validation checks
         // Is this location already imported?
         if ($parent) {
@@ -160,7 +157,6 @@ class ImportLocations extends AppJob
                 return;
             }
         }
-
 
         $location = new Location([
             'name' => $name,

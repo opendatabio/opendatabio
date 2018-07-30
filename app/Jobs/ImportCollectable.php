@@ -17,7 +17,7 @@ use App\ODBFunctions;
 
 class ImportCollectable extends AppJob
 {
-    protected function validateHeader($field='collector')
+    protected function validateHeader($field = 'collector')
     {
         if (array_key_exists('project', $this->header)) {
             $this->validateProject($this->header);
@@ -61,14 +61,12 @@ class ImportCollectable extends AppJob
         return true;
     }
 
-    protected function extractCollectors($callerName, $registry, $field='collector')
+    protected function extractCollectors($callerName, $registry, $field = 'collector')
     {
         if (('Header' !== $callerName) and array_key_exists($field, $this->header)) {
-
             return $this->header[$field];
         }
         if (!array_key_exists($field, $registry)) {
-
             return null;
         }
         $persons = explode(',', $registry[$field]);
@@ -88,7 +86,6 @@ class ImportCollectable extends AppJob
     protected function extractIdentification($registry)
     {
         if (!array_key_exists('taxon', $registry)) {
-
             return null;
         }
         $taxon = $registry['taxon'];
@@ -106,7 +103,7 @@ class ImportCollectable extends AppJob
         }
         // Map $registry['identifier'] to $identification['person_id']
         if (array_key_exists('identifier', $registry)) {
-            $identification['person_id'] = ODBFunctions::validRegistry(Person::select('id'), $registry['identifier'], ['id', 'abbreviation','full_name','email']);
+            $identification['person_id'] = ODBFunctions::validRegistry(Person::select('id'), $registry['identifier'], ['id', 'abbreviation', 'full_name', 'email']);
             if (null === $identification['person_id']) {
                 $this->appendLog('WARNING: Identifier '.$registry['identifier'].' was not found in the person table.');
             } else {
@@ -116,7 +113,7 @@ class ImportCollectable extends AppJob
             $identification['person_id'] = null;
         }
         if (array_key_exists('identification_based_on_herbarium', $registry) && array_key_exists('herbarium_code', $registry)) {
-            $identification['herbarium_id'] = ODBFunctions::validRegistry(Herbarium::select('id'), $registry['identification_based_on_herbarium'], ['id','acronym','name','irn']);
+            $identification['herbarium_id'] = ODBFunctions::validRegistry(Herbarium::select('id'), $registry['identification_based_on_herbarium'], ['id', 'acronym', 'name', 'irn']);
             if (null === $identification['herbarium_id']) {
                 $this->appendLog("WARNING: Herbarium $herbarium was not found in the herbarium table or their reference is missed! Ignoring this herbarium");
                 $identification['herbarium_reference'] = null;
@@ -135,7 +132,7 @@ class ImportCollectable extends AppJob
         return $identification;
     }
 
-    protected function createCollectorsAndIdentification($object_type, $object_id, $collectors=null, $identification=null)
+    protected function createCollectorsAndIdentification($object_type, $object_id, $collectors = null, $identification = null)
     {
         if ($identification) {
             $date = $identification['date'];
@@ -157,7 +154,7 @@ class ImportCollectable extends AppJob
                 Collector::create([
                         'person_id' => $collector,
                         'object_id' => $object_id,
-                        'object_type' => $object_type
+                        'object_type' => $object_type,
                 ]);
             }
         }
