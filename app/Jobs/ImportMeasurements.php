@@ -13,6 +13,9 @@ use App\Taxon;
 use App\Person;
 use App\Plant;
 use App\Sample;
+use App\ODBFunctions;
+use App\ODBTrait;
+use Auth;
 
 class ImportMeasurements extends AppJob
 {
@@ -38,10 +41,10 @@ class ImportMeasurements extends AppJob
             $this->userjob->tickProgress();
 
 
-            if ($this->validateData($easurement)) {
+            if ($this->validateData($measurement)) {
                 // Arrived here: let's import it!!
                 try {
-                    $this->import($easurement);
+                    $this->import($measurement);
                 } catch (\Exception $e) {
                     $this->setError();
                     $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on measurement '.$measurement['name'].$e->getTraceAsString());
@@ -80,7 +83,7 @@ class ImportMeasurements extends AppJob
 
     protected function validateDataset()
     {
-        $valid = Auth::user()->datasets()->where('id', $this->header['dataset'])
+        $valid = Auth::user()->datasets()->where('id', $this->header['dataset']);
         if (null === $valid) {
             $this->appendLog('Error: Header reffers to '.$this->header['dataset'].' as dataset, but this dataset was not found in the database.');
             return false;
@@ -134,7 +137,7 @@ class ImportMeasurements extends AppJob
             if ('object_id' === $key) {
                 $valids[$key] = $value;
             } else {
-                $trait = $this->getTrait($key);
+                $trait = (string) ODBFunctions::validRegistry(ODBTrait::select('id'), $key, ['id', 'export_name'])->id;
                 if ($trait) {
                     $valids[$trait] = $value;
                     // TODO validate value
@@ -152,41 +155,32 @@ class ImportMeasurements extends AppJob
         return false;
     }
 
-    private function getTrait($name)
+    public function import($measurements)
     {
-        // TODO interpret $name as export_name of an ODBTrait and return the corresponding ODBTrait if exists, otherwise returns null
-        return null;
-    }
-
-    public function import($measurement)
-    {
-        /* TODO Replace this with code to create the new measurement
-        $full_name = $person['full_name'];
-        $abbreviation = $person['abbreviation'];
-        $herbarium = $person['herbarium'];
-        $email = array_key_exists('email', $person) ? $person['email'] : null;
-        $institution = array_key_exists('institution', $person) ? $person['institution'] : null;
-        $dupes = Person::duplicates($full_name, $abbreviation);
-        if (count($dupes)) {
+        $measured_id = $measurements['object_id'];
+        unset($measurements['object_id']);
+        foreach ($measurements as $key => $value) {
+            /* TODO Replace this with code to create the new measurement
             $same = Person::where('abbreviation', '=', $abbreviation)->get();
             if (count($same)) {
                 $this->skipEntry($person, 'There is another registry of a person with abbreviation '.$abbreviation);
 
                 return;
             }
-            $this->appendLog('WARNING: There is another registry of a person with name like '.$full_name.' or abbreviation like '.$abbreviation);
+            */
+            $measurement = new Measurement([
+                'trait_id' => $key,
+                'measured_id' => $measured_id,
+                'measured_type' => $this->header['object_type'],
+                'dataset_id' => $this->header['dataset'],
+                'person_id' => $this->header['person'],
+                'bibreference_id' => array_key_exists('bibreference', $this->header) ? $this->header['bibreference'] : null
+            ]);
+            $measurement->setDate($this->header['date']);
+            $measurement->setValueActualAttribute($value);
+            $measurement->save();
+            $this->affectedId($measurement->id);
         }
-
-        $person = new Person([
-            'full_name' => $full_name,
-            'abbreviation' => $abbreviation,
-            'email' => $email,
-            'institution' => $institution,
-            'herbarium_id' => $herbarium,
-        ]);
-        $person->save();
-        $this->affectedId($person->id);
-        */
 
         return;
     }

@@ -58,11 +58,11 @@ class MeasurementController extends Controller
         return $this->wrap_response($measurements);
     }
 
-    public function store($sourceType, Request $request)
+    public function store(Request $request)
     {
         $this->authorize('create', Measurement::class);
         $this->authorize('create', UserJob::class);
-        $jobid = UserJob::dispatch(ImportMeasurements::class, ['sourceType' => $sourceType, 'data' => $request->post()]);
+        $jobid = UserJob::dispatch(ImportMeasurements::class, ['data' => $request->post()]);
 
         return Response::json(['message' => 'OK', 'userjob' => $jobid]);
     }
