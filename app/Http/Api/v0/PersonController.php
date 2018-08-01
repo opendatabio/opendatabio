@@ -7,11 +7,12 @@
 
 namespace App\Http\Api\v0;
 
-use Illuminate\Http\Request;
 use App\Person;
 use App\UserJob;
-use Response;
+use App\ODBFunctions;
 use App\Jobs\ImportPersons;
+use Illuminate\Http\Request;
+use Response;
 
 class PersonController extends Controller
 {
@@ -27,24 +28,16 @@ class PersonController extends Controller
             $persons->whereIn('id', explode(',', $request->id));
         }
         if ($request->search) {
-            $persons->where(function ($query) use ($request) {
-                $name = clone $query;
-                $this->advancedWhereIn($name, 'full_name', $request->search);
-                $abbrev = clone $query;
-                $this->advancedWhereIn($abbrev, 'abbreviation', $request->search);
-                $email = clone $query;
-                $this->advancedWhereIn($email, 'email', $request->search);
-                $query->union($name)->union($abbrev)->union($email);
-            });
+            ODBFunctions::moreAdvancedWhereIn($persons, ['full_name', 'abbreviation', 'email'], '*'.$request->search.'*');
         }
         if ($request->name) {
-            $this->advancedWhereIn($persons, 'full_name', $request->name);
+            ODBFunctions::advancedWhereIn($persons, 'full_name', $request->name);
         }
         if ($request->abbrev) {
-            $this->advancedWhereIn($persons, 'abbreviation', $request->abbrev);
+            ODBFunctions::advancedWhereIn($persons, 'abbreviation', $request->abbrev);
         }
         if ($request->email) {
-            $this->advancedWhereIn($persons, 'email', $request->email);
+            ODBFunctions::advancedWhereIn($persons, 'email', $request->email);
         }
         if ($request->limit) {
             $persons->limit($request->limit);

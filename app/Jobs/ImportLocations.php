@@ -26,24 +26,120 @@ class ImportLocations extends AppJob
             }
             $this->userjob->tickProgress();
 
-            if (!$this->hasRequiredKeys(['name', 'adm_level'], $location)) {
-                continue;
+            if ($this->validateData($location)) {
+                // Arrived here: let's import it!!
+                try {
+                    $this->import($location);
+                } catch (\Exception $e) {
+                    $this->setError();
+                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on location '.$location['name']);
+                }
             }
-            // Arrived here: let's import it!!
-            try {
-                $this->import($location);
-            } catch (\Exception $e) {
-                $this->setError();
-                $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on location '.$location['name']);
+        }
+    }
+
+    protected function validateData(&$location)
+    {
+        if (!$this->hasRequiredKeys(['name', 'adm_level'], $location)) {
+            return false;
+        }
+        if (!$this->validateGeom($location)) {
+            return false;
+        }
+        if (!$this->validateParent($location)) {
+            return false;
+        }
+        if (!$this->validateUC($location)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function validateGeom(&$location)
+    {
+        if (array_key_exists('geom', $location)) {
+            return true;
+        }
+        $lat = array_key_exists('lat', $location) ? $location['lat'] : null;
+        $long = array_key_exists('long', $location) ? $location['long'] : null;
+        if (is_null($lat) or is_null($long)) {
+            $this->skipEntry($location, "Position for location $name not available");
+
+            return false;
+        }
+        $location['geom'] = "POINT ($long $lat)";
+
+        return true;
+    }
+
+    protected function validateParent(&$location)
+    {
+        if ($this->validateRelatedLocation($location, 'parent')) {
+            return true;
+        } else {
+            $this->skipEntry($location, 'Parent for location '.$location['name'].' is listed as '.$location['parent'].', but this was not found in the database.');
+
+            return false;
+        }
+    }
+
+    protected function validateUC(&$location)
+    {
+        if ($this->validateRelatedLocation($location, 'uc')) {
+            return true;
+        } else {
+            $this->skipEntry($location, 'Conservation unit for location '.$location['name'].' is listed as '.$location['uc'].', but this was not found in the database.');
+
+            return false;
+        }
+    }
+
+    protected function validateRelatedLocation(&$location, $field)
+    {
+        if (!array_key_exists($field, $location)) {
+            $location[$field] = $this->guessParent($location['geom'], $location['adm_level'], 'uc' === $field);
+
+            return true;
+        } else { //If this is given, we need validate it
+            if (0 == $location[$field]) { // forces null if this was explicitly passed as zero
+                $location[$field] = null;
+
+                return true;
+            } else {
+                $valid = ODBFunctions::validRegistry(Location::select('id'), $location[$field]);
+                if (null === $valid) {
+                    return false;
+                } else {
+                    $location[$field] = $valid->id;
+
+                    return true;
+                }
+            }
+        }
+    }
+
+    protected function guessParent($geom, $adm_level, $parent_uc)
+    {
+        if (0 == $adm_level) {
+            return $parent_uc ? null : Location::world()->id;
+        } else { // Autoguess parent
+            $parent = Location::detectParent($geom, $adm_level, $parent_uc);
+            if ($parent) {
+                return $parent->id;
+            } else {
+                return null;
             }
         }
     }
 
     public function import($location)
     {
-        // First, the the independent field.
         $name = $location['name'];
         $adm_level = $location['adm_level'];
+        $geom = $location['geom'];
+        $parent = $location['parent'];
+        $uc = $location['uc'];
         $altitude = array_key_exists('altitude', $location) ? $location['altitude'] : null;
         $datum = array_key_exists('datum', $location) ? $location['datum'] : null;
         $notes = array_key_exists('notes', $location) ? $location['notes'] : null;
@@ -51,67 +147,6 @@ class ImportLocations extends AppJob
         $starty = array_key_exists('starty', $location) ? $location['starty'] : null;
         $x = array_key_exists('x', $location) ? $location['x'] : null;
         $y = array_key_exists('y', $location) ? $location['y'] : null;
-
-        // Check geom
-        $geom = array_key_exists('geom', $location) ? $location['geom'] : null;
-        if (is_null($geom)) {
-            $lat = array_key_exists('lat', $location) ? $location['lat'] : null;
-            $long = array_key_exists('long', $location) ? $location['long'] : null;
-            if (is_null($lat) or is_null($long)) {
-                $this->skipEntry($location, "Position for location $name not available");
-
-                return;
-            }
-            $geom = "POINT ($long $lat)";
-        }
-
-        // Check parent
-        $parent = array_key_exists('parent', $location) ? $location['parent'] : null;
-        if (is_null($parent)) {
-            if (0 == $adm_level) {
-                $parent = Location::world()->id;
-            } else { // Autoguess parent
-                $parent = Location::detectParent($geom, $adm_level, false);
-                if ($parent) {
-                    $parent = $parent->id;
-                }
-            }
-        } else { //If parent is given, we need validate it
-            if (0 == $parent) { // forces null if parent was explicitly passed as zero
-                $parent = null;
-            } else {
-                $valid = $this->validIdOrName(Location::select('id'), $parent);
-                if (null === $valid) {
-                    $this->skipEntry($location, "Parent for location $name is listed as $parent, but this was not found in the database.");
-
-                    return;
-                } else {
-                    $parent = $valid;
-                }
-            }
-        }
-
-        // Similar check UC
-        $uc = array_key_exists('uc', $location) ? $location['uc'] : null;
-        if (is_null($uc)) { // Autoguess UC
-            $uc = Location::detectParent($geom, $adm_level, true);
-            if ($uc) {
-                $uc = $uc->id;
-            }
-        } else { //If UC is given, we need validate it
-            if (0 == $uc) { // forces null if uc was explicitly passed as zero
-                $uc = null;
-            } else {
-                $valid = $this->validIdOrName(Location::select('id'), $uc);
-                if (null === $valid) {
-                    $this->skipEntry($location, "Conservation unit for location $name is listed as $uc, but this was not found in the database.");
-
-                    return;
-                } else {
-                    $uc = $valid;
-                }
-            }
-        }
 
         // TODO: several other validation checks
         // Is this location already imported?

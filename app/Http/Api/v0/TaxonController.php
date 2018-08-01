@@ -11,6 +11,7 @@ use App\Jobs\ImportTaxons;
 use Illuminate\Http\Request;
 use App\Taxon;
 use App\UserJob;
+use App\ODBFunctions;
 use Response;
 
 class TaxonController extends Controller
@@ -31,7 +32,7 @@ class TaxonController extends Controller
             $taxons->whereIn('id', explode(',', $request->id));
         }
         if ($request->name) {
-            $this->advancedWhereIn($taxons,
+            ODBFunctions::advancedWhereIn($taxons,
                     'odb_txname(name, level, parent_id)',
                     $request->name,
                     true);

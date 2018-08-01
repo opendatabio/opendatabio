@@ -50,10 +50,8 @@ class Plant extends Model
         static::addGlobalScope('projectScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->whereRaw('plants.id IN 
-(SELECT p1.id FROM plants AS p1 
-JOIN projects ON (projects.id = p1.project_id)
-WHERE projects.privacy = 2)');
+                return $builder->whereRaw('plants.project_id IN
+(SELECT id FROM projects WHERE projects.privacy = 2)');
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {

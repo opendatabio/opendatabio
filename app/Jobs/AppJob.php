@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\UserJob;
 use DB;
 use Log;
+use Auth;
 
 // All app jobs must extend this:
 // This class intermediates between the jobs dispatched and the UserJob model
@@ -25,6 +26,7 @@ class AppJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     protected $userjob;
     protected $errors;
+    protected $header;
 
     /**
      * Create a new job instance.
@@ -74,6 +76,7 @@ class AppJob implements ShouldQueue
     public function handle()
     {
         // temporarily removing rollback capabilities:
+        Auth::loginUsingId($this->userjob->user_id);
         $this->userjob->setProcessing();
         $this->userjob->job_id = $this->job->getJobId();
         $this->userjob->save();
@@ -98,7 +101,10 @@ class AppJob implements ShouldQueue
 
     public function extractEntrys()
     {
-        return $this->userjob->data['data'];
+        $data = $this->userjob->data['data'];
+        $this->header = array_key_exists('header', $data) ? $data['header'] : array();
+
+        return $data['data'];
     }
 
     public function setProgressMax($data)
@@ -126,6 +132,18 @@ class AppJob implements ShouldQueue
         return false;
     }
 
+    public function removeHeaderSuppliedKeys(array $keys)
+    {
+        $notPresent = array();
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $this->header)) {
+                $notPresent[] = $key;
+            }
+        }
+
+        return $notPresent;
+    }
+
     public function hasRequiredKeys($requiredKeys, $entry)
     {
         // if $entry is not an array it has not the $requiredKeys
@@ -135,7 +153,7 @@ class AppJob implements ShouldQueue
             return false;
         }
         foreach ($requiredKeys as $key) {
-            if (!array_key_exists($key, $entry)) {
+            if (!array_key_exists($key, $entry) or (null === $entry[$key])) {
                 $this->skipEntry($entry, 'entry needs a '.$key);
 
                 return false;
@@ -148,26 +166,10 @@ class AppJob implements ShouldQueue
     public function skipEntry($entry, $cause)
     {
         if (is_array($entry)) {
-            $entry = implode(';', $entry);
+            $entry = json_encode($entry);
         } elseif ('object' == gettype($entry)) {
             $entry = serialize($entry);
         }
         $this->appendLog('WARNING: '.$cause.'. Skipping import of '.$entry);
-    }
-
-    // Extracts the $id of the $query that is equals to the $value or reffers to a $name equals to the $value.
-    public function validIdOrName($query, $value, $id = 'id', $name = 'name')
-    {
-        if (is_numeric($value)) {
-            $query->where($id, '=', $value);
-        } else {
-            $query->where($name, '=', $value);
-        }
-        $query = $query->get();
-        if (count($query)) {
-            return $query->first()[$id];
-        }
-
-        return null;
     }
 }

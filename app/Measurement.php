@@ -78,6 +78,11 @@ class Measurement extends Model
         return $this->hasMany(MeasurementCategory::class);
     }
 
+    public function getTraitNameAttribute()
+    {
+        return $this->odbtrait->export_name;
+    }
+
     // provides a common interface for getting/setting value for different types of measurements
     public function getValueActualAttribute()
     {

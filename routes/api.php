@@ -28,7 +28,10 @@ $v0api = function () {
     Route::post('persons', '\App\Http\Api\v0\PersonController@store');
     Route::get('plants', '\App\Http\Api\v0\PlantController@index');
     Route::post('plants', '\App\Http\Api\v0\PlantController@store');
-    Route::get('vouchers', '\App\Http\Api\v0\VoucherController@index');
+    Route::get('samples', '\App\Http\Api\v0\SampleController@index');
+    Route::post('samples', '\App\Http\Api\v0\SampleController@store');
+    Route::get('measurements', '\App\Http\Api\v0\MeasurementController@index');
+    Route::post('measurements', '\App\Http\Api\v0\MeasurementController@store');
 };
 
 Route::group(['prefix' => 'v0'], $v0api);

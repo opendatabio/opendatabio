@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Response;
 use App\Location;
 use App\UserJob;
+use App\ODBFunctions;
 use App\Jobs\ImportLocations;
 
 class LocationController extends Controller
@@ -34,7 +35,7 @@ class LocationController extends Controller
             $locations->whereIn('parent_id', explode(',', $request->parent_id));
         }
         if ($request->name) {
-            $this->advancedWhereIn($locations, 'name', $request->name);
+            ODBFunctions::advancedWhereIn($locations, 'name', $request->name);
         }
         if (isset($request->adm_level)) {
             $locations->whereIn('adm_level', explode(',', $request->adm_level));
@@ -58,7 +59,7 @@ class LocationController extends Controller
                 }
             }
             if ('closest' == $request->querytype) {
-                $locations->withDistance($geom)->orderBy('distance', 'ASC');
+                $locations = $locations->withDistance($geom)->orderBy('distance', 'ASC');
                 if (!isset($request->limit)) {
                     $locations->limit(10);
                 }
