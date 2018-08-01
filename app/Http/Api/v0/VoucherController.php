@@ -17,8 +17,6 @@ use App\Project;
 use App\Person;
 use App\UserJob;
 use Response;
-use Auth;
-use DB;
 use App\Jobs\ImportVouchers;
 
 class VoucherController extends Controller
@@ -43,16 +41,17 @@ class VoucherController extends Controller
                 $plants = Plant::select('plants.id')->whereIn('location_id', $locations);
                 $this->advancedWhereIn($plants, 'plants.tag', $request->plant);
                 $voucher->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', $plants);
-            } else // gives only vouchers of the specified locations
-            /*
-            */
+            } else { // gives only vouchers of the specified locations
+
                 $voucher->where('parent_type', '=', 'App\\Location')->whereIn('parent_id', $locations);
+            }
         } else {
             if ($request->plant) { // plant without location refers to plant.id
-                if ('*' === $request->plant) // especial case that means all vouchers of plant
+                if ('*' === $request->plant) { // especial case that means all vouchers of plant
                     $voucher->where('parent_type', '=', 'App\\Plant');
-                else
+                } else {
                     $voucher->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', explode(',', $request->plant));
+                }
             }
         }
         if ($request->collector) {
@@ -92,11 +91,13 @@ class VoucherController extends Controller
 
     public static function idListByFullname($variable, $class)
     {
-        if (preg_match("/\d+(,\d+)*/", $variable))
+        if (preg_match("/\d+(,\d+)*/", $variable)) {
             return explode(',', $variable);
-        return array ($class::byFullNameAttribute($variable)->id);
+        }
+
+        return array($class::byFullNameAttribute($variable)->id);
     }
-    
+
     public function store(Request $request)
     {
         $this->authorize('create', Voucher::class);

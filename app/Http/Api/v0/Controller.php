@@ -38,24 +38,27 @@ class Controller extends BaseController
      * Otherwise, this method search the table for registries that has the field $name with value $value. Additinally,
      * $value could be a string containing a comma separeted list of values, and each value could contains the wildcard '*'.
      */
-    public function asIdList($value, $query, $name, $raw=false)
+    public function asIdList($value, $query, $name, $raw = false)
     {
-        if (preg_match("/\A\d+(,\d+)*\z/", $value))
+        if (preg_match("/\A\d+(,\d+)*\z/", $value)) {
             return explode(',', $value);
+        }
         $ids = array();
         $this->advancedWhereIn($query, $name, $value, $raw);
         $query = $query->get();
-        foreach ($query as $registry)
+        foreach ($query as $registry) {
             array_push($ids, $registry->id);
+        }
+
         return array_unique($ids);
     }
 
-    public function advancedWhereIn(&$query, $field, $value, $raw=false)
+    public function advancedWhereIn(&$query, $field, $value, $raw = false)
     {
         $values = explode(',', $value, 2);
-        if (count($values) == 1)
+        if (1 == count($values)) {
             $this->filter($query, $field, $values[0], $raw);
-        else // count($values) == 2
+        } else { // count($values) == 2
             $query->where(function ($internalQuery) use ($field, $raw, $values) {
                 $this->filter($internalQuery, $field, $values[0], $raw);
                 $this->orFilter(
@@ -64,29 +67,32 @@ class Controller extends BaseController
                         explode(',', $values[1]),
                         $raw);
             });
+        }
     }
 
     // Changes the $query that is recieved adding a where statement filtering the $field with the $value. It suports exact match, as soon as 'LIKE' match if the $value contains '*'. It can receive $raw=true to specify that $field is a sql function to be applied
-    private function filter(&$query, $field, $value, $raw=false)
+    private function filter(&$query, $field, $value, $raw = false)
     {
         $treatedValue = $this->treateWildcard($value);
         $op = ($treatedValue === $value) ? '=' : 'LIKE';
-        if ($raw)
+        if ($raw) {
             $query->whereRaw("$field $op ?", [$treatedValue]);
-        else
+        } else {
             $query->where($field, $op, $treatedValue);
+        }
     }
 
     // Changes the $query that is recieved adding a orWhere statement filtering the $field with the $value. It suports exact match, as soon as 'LIKE' match if the $value contains '*'. It can receive $raw=true to specify that $field is a sql function to be applied
-    private function orFilter(&$query, $field, $values, $raw=false)
+    private function orFilter(&$query, $field, $values, $raw = false)
     {
         foreach ($values as $value) {
             $treatedValue = $this->treateWildcard($value);
             $op = ($treatedValue === $value) ? '=' : 'LIKE';
-            if ($raw)
+            if ($raw) {
                 $query->orWhereRaw("$field $op ?", [$treatedValue]);
-            else
+            } else {
                 $query->orWhere($field, $op, $treatedValue);
+            }
         }
     }
 

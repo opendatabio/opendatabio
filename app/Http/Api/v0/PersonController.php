@@ -27,7 +27,7 @@ class PersonController extends Controller
             $persons->whereIn('id', explode(',', $request->id));
         }
         if ($request->search) {
-            $persons->where(function ($query) use ($request->search) {
+            $persons->where(function ($query) use ($request) {
                 $name = clone $query;
                 $this->advancedWhereIn($name, 'full_name', $request->search);
                 $abbrev = clone $query;

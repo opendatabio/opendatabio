@@ -131,11 +131,13 @@ class AppJob implements ShouldQueue
         // if $entry is not an array it has not the $requiredKeys
         if (!is_array($entry)) {
             $this->skipEntry($entry, 'entry is not formatted as array');
+
             return false;
         }
         foreach ($requiredKeys as $key) {
             if (!array_key_exists($key, $entry)) {
                 $this->skipEntry($entry, 'entry needs a '.$key);
+
                 return false;
             }
         }
@@ -145,23 +147,27 @@ class AppJob implements ShouldQueue
 
     public function skipEntry($entry, $cause)
     {
-        if (is_array($entry))
+        if (is_array($entry)) {
             $entry = implode(';', $entry);
-        elseif ('object' == gettype($entry))
+        } elseif ('object' == gettype($entry)) {
             $entry = serialize($entry);
+        }
         $this->appendLog('WARNING: '.$cause.'. Skipping import of '.$entry);
     }
 
     // Extracts the $id of the $query that is equals to the $value or reffers to a $name equals to the $value.
     public function validIdOrName($query, $value, $id = 'id', $name = 'name')
     {
-        if (is_numeric($value))
+        if (is_numeric($value)) {
             $query->where($id, '=', $value);
-        else
-            $query->where($name, '=', $value)
+        } else {
+            $query->where($name, '=', $value);
+        }
         $query = $query->get();
-        if (count($query))
+        if (count($query)) {
             return $query->first()[$id];
+        }
+
         return null;
     }
 }

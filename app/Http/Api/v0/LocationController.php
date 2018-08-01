@@ -45,7 +45,7 @@ class LocationController extends Controller
         // For lat / long searches
         if ($request->querytype and isset($request->lat) and isset($request->long)) {
             $geom = "POINT($request->long $request->lat)";
-            if ($request->querytype=='exact') {
+            if ('exact' == $request->querytype) {
                 $locations->whereRaw('AsText(geom) = ?', [$geom]);
             }
             if ('parent' == $request->querytype) {
@@ -57,7 +57,7 @@ class LocationController extends Controller
                     $locations->whereRaw('1 = 0');
                 }
             }
-            if ($request->querytype=='closest') {
+            if ('closest' == $request->querytype) {
                 $locations->withDistance($geom)->orderBy('distance', 'ASC');
                 if (!isset($request->limit)) {
                     $locations->limit(10);

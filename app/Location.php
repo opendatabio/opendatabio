@@ -30,6 +30,7 @@ class Location extends Node
         if ($this->adm_level <= 99) {
             return Lang::get('levels.imprecise');
         }
+
         return Lang::get('levels.precise');
     }
 

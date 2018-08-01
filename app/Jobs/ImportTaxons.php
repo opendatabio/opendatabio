@@ -50,6 +50,7 @@ class ImportTaxons extends AppJob
         }
         if (is_null($level)) {
             $this->skipEntry($taxon, "Level for taxon $name not available");
+
             return;
         }
         // parent might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
@@ -60,11 +61,13 @@ class ImportTaxons extends AppJob
                 $parent = $parent_obj->first()->id;
             } else {
                 $this->skipEntry($taxon, "Parent for taxon $name is listed as $parent, but this was not found in the database");
+
                 return;
             }
         }
         if ($level > 180 and !$parent) {
             $this->skipEntry($taxon, "Parent for taxon $name is required!");
+
             return;
         }
         // TODO: several other validation checks
@@ -76,6 +79,7 @@ class ImportTaxons extends AppJob
         // Is this taxon already imported?
         if (Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count() > 0) {
             $this->skipEntry($taxon, 'taxon '.$name.' already imported to database');
+
             return;
         }
         // Set the API Keys. If blank, try to get them from the right API

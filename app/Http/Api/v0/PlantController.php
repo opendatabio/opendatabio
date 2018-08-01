@@ -65,7 +65,7 @@ class PlantController extends Controller
 
         return $this->wrap_response($plant);
     }
-    
+
     public function store(Request $request)
     {
         $this->authorize('create', Plant::class);

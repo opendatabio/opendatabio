@@ -26,7 +26,7 @@ class ImportLocations extends AppJob
             }
             $this->userjob->tickProgress();
 
-            if (!$this->hasRequiredKeys(['name', 'adm_level'], $location))
+            if (!$this->hasRequiredKeys(['name', 'adm_level'], $location)) {
                 continue;
             }
             // Arrived here: let's import it!!
@@ -59,6 +59,7 @@ class ImportLocations extends AppJob
             $long = array_key_exists('long', $location) ? $location['long'] : null;
             if (is_null($lat) or is_null($long)) {
                 $this->skipEntry($location, "Position for location $name not available");
+
                 return;
             }
             $geom = "POINT ($long $lat)";
@@ -67,24 +68,26 @@ class ImportLocations extends AppJob
         // Check parent
         $parent = array_key_exists('parent', $location) ? $location['parent'] : null;
         if (is_null($parent)) {
-            if (0 == $adm_level)
+            if (0 == $adm_level) {
                 $parent = Location::world()->id;
-            else { // Autoguess parent
+            } else { // Autoguess parent
                 $parent = Location::detectParent($geom, $adm_level, false);
                 if ($parent) {
                     $parent = $parent->id;
                 }
             }
         } else { //If parent is given, we need validate it
-            if (0 == $parent) // forces null if parent was explicitly passed as zero
+            if (0 == $parent) { // forces null if parent was explicitly passed as zero
                 $parent = null;
-            else {
+            } else {
                 $valid = $this->validIdOrName(Location::select('id'), $parent);
-                if ($valid === null) {
+                if (null === $valid) {
                     $this->skipEntry($location, "Parent for location $name is listed as $parent, but this was not found in the database.");
+
                     return;
-                } else
+                } else {
                     $parent = $valid;
+                }
             }
         }
 
@@ -96,15 +99,17 @@ class ImportLocations extends AppJob
                 $uc = $uc->id;
             }
         } else { //If UC is given, we need validate it
-            if (0 == $uc) // forces null if uc was explicitly passed as zero
+            if (0 == $uc) { // forces null if uc was explicitly passed as zero
                 $uc = null;
-            else {
+            } else {
                 $valid = $this->validIdOrName(Location::select('id'), $uc);
-                if ($valid === null) {
+                if (null === $valid) {
                     $this->skipEntry($location, "Conservation unit for location $name is listed as $uc, but this was not found in the database.");
+
                     return;
-                } else
+                } else {
                     $uc = $valid;
+                }
             }
         }
 
@@ -117,7 +122,6 @@ class ImportLocations extends AppJob
                 return;
             }
         }
-
 
         $location = new Location([
             'name' => $name,

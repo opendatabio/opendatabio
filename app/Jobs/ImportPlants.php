@@ -35,20 +35,23 @@ class ImportPlants extends AppJob
 
             if (!$this->hasRequiredKeys(['tag', 'date', 'location', 'project'], $plant)) {
                 continue;
+            }
             //validate location
             $valid = $this->validIdOrName(Location::select('id'), $plant['location']);
             if ($valid === null) {
                 $this->skipEntry($plant, 'location '.$plant['location'].' was not found in the database');
                 continue;
-            } else
+            } else {
                 $plant['location'] = $valid;
+            }
             //validate project
             $valid = $this->validIdOrName(Project::select('id'), $plant['project']);
             if ($valid === null) {
                 $this->skipEntry($plant, 'project '.$plant['project'].' was not found in the database');
                 continue;
-            } else
+            } else {
                 $plant['project'] = $valid;
+            }
             // Arrived here: let's import it!!
             try {
                 $this->import($plant);
@@ -128,6 +131,7 @@ class ImportPlants extends AppJob
     {
         if (!array_key_exists('tagging_team', $plant)) {
             return null;
+        }
         $tagging_team = explode(',', $plant['tagging_team']);
         $ids = array();
         foreach ($tagging_team as $person) {
