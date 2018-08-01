@@ -28,23 +28,22 @@ class TaxonController extends Controller
             $taxons->where('lft', '>=', $root_tx['lft'])->where('rgt', '<=', $root_tx['rgt'])->orderBy('lft');
         }
         if ($request->id) {
-            $taxons = $taxons->whereIn('id', explode(',', $request->id));
+            $taxons->whereIn('id', explode(',', $request->id));
         }
         if ($request->name) {
-            $treatedName = $this->treateWildcard($request->name);
-            if ($treatedName === $request->name) {
-                $taxons = $taxons->whereRaw('odb_txname(name, level, parent_id) = ?', [$treatedName]);
-            }
-            $taxons = $taxons->whereRaw('odb_txname(name, level, parent_id) LIKE ?', [$treatedName]);
+            $this->advancedWhereIn($taxons,
+                    'odb_txname(name, level, parent_id)',
+                    $request->name,
+                    true);
         }
         if (isset($request->level)) {
-            $taxons = $taxons->where('level', '=', $request->level);
+            $taxons->where('level', '=', $request->level);
         }
         if (isset($request->valid)) {
-            $taxons = $taxons->valid();
+            $taxons->valid();
         }
         if ($request->external) {
-            $taxons = $taxons->with('externalrefs');
+            $taxons->with('externalrefs');
         }
         if ($request->limit) {
             $taxons->limit($request->limit);

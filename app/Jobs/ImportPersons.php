@@ -51,8 +51,7 @@ class ImportPersons extends AppJob
         if (count($dupes)) {
             $same = Person::where('abbreviation', '=', $abbreviation)->get();
             if (count($same)) {
-                $this->setError();
-                $this->appendLog('ERROR: There is another registry of a person with name '.$full_name.' and abbreviation '.$abbreviation);
+                $this->skipEntry($person, 'There is another registry of a person with abbreviation '.$abbreviation);
 
                 return;
             }
@@ -79,9 +78,9 @@ class ImportPersons extends AppJob
         } else {
             $names = explode(' ', strtoupper($person['full_name']));
             $size = count($names);
-            $abbreviation = $names[$size - 1].', ';
+            $abbreviation = $names[$size - 1];
             for ($i = 0; $i < $size - 1; ++$i) {
-                $abbreviation = $abbreviation.$names[$i][0].'. ';
+                $abbreviation = $abbreviation.' '.$names[$i];
             }
 
             return $abbreviation;

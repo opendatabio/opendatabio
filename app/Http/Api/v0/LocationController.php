@@ -28,16 +28,16 @@ class LocationController extends Controller
             $locations->where('lft', '>=', $root_loc['lft'])->where('rgt', '<=', $root_loc['rgt'])->orderBy('lft');
         }
         if ($request->id) {
-            $locations = $locations->whereIn('id', explode(',', $request->id));
+            $locations->whereIn('id', explode(',', $request->id));
         }
         if ($request->parent_id) {
-            $locations = $locations->whereIn('parent_id', explode(',', $request->parent_id));
+            $locations->whereIn('parent_id', explode(',', $request->parent_id));
         }
         if ($request->name) {
-            $locations = $this->filter($locations, 'name', $request->name);
+            $this->advancedWhereIn($locations, 'name', $request->name);
         }
         if (isset($request->adm_level)) {
-            $locations = $locations->whereIn('adm_level', explode(',', $request->adm_level));
+            $locations->whereIn('adm_level', explode(',', $request->adm_level));
         }
         if ($request->limit) {
             $locations->limit($request->limit);
@@ -45,8 +45,8 @@ class LocationController extends Controller
         // For lat / long searches
         if ($request->querytype and isset($request->lat) and isset($request->long)) {
             $geom = "POINT($request->long $request->lat)";
-            if ('exact' == $request->querytype) {
-                $locations = $locations->whereRaw('AsText(geom) = ?', [$geom]);
+            if ($request->querytype=='exact') {
+                $locations->whereRaw('AsText(geom) = ?', [$geom]);
             }
             if ('parent' == $request->querytype) {
                 $parent = Location::detectParent($geom, 100, false);
@@ -57,8 +57,8 @@ class LocationController extends Controller
                     $locations->whereRaw('1 = 0');
                 }
             }
-            if ('closest' == $request->querytype) {
-                $locations = $locations->withDistance($geom)->orderBy('distance', 'ASC');
+            if ($request->querytype=='closest') {
+                $locations->withDistance($geom)->orderBy('distance', 'ASC');
                 if (!isset($request->limit)) {
                     $locations->limit(10);
                 }
