@@ -161,14 +161,6 @@ class ImportMeasurements extends AppJob
         $measured_id = $measurements['object_id'];
         unset($measurements['object_id']);
         foreach ($measurements as $key => $value) {
-            /* TODO Replace this with code to create the new measurement
-            $same = Person::where('abbreviation', '=', $abbreviation)->get();
-            if (count($same)) {
-                $this->skipEntry($person, 'There is another registry of a person with abbreviation '.$abbreviation);
-
-                return;
-            }
-            */
             $measurement = new Measurement([
                 'trait_id' => $key,
                 'measured_id' => $measured_id,

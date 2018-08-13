@@ -70,8 +70,8 @@ class ImportPlants extends ImportCollectable
     {
         $location = $plant['location'];
         $tag = $plant['tag'];
-        $date = array_key_exists('date', $plant) ? $plant['date'] : $this->header['date'];
-        $project = $plant['project'];
+        $date = $this->getValue($plant, 'date');
+        $project = $this->getValue($plant, 'project');
         $created_at = array_key_exists('created_at', $plant) ? $plant['created_at'] : null;
         $updated_at = array_key_exists('updated_at', $plant) ? $plant['updated_at'] : null;
         $notes = array_key_exists('notes', $plant) ? $plant['notes'] : null;

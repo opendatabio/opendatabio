@@ -11,6 +11,8 @@ use App\Location;
 
 class ImportLocations extends AppJob
 {
+    private $requiredKeys;
+
     /**
      * Execute the job.
      */
@@ -20,6 +22,7 @@ class ImportLocations extends AppJob
         if (!$this->setProgressMax($data)) {
             return;
         }
+        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['name', 'adm_level']);
         foreach ($data as $location) {
             if ($this->isCancelled()) {
                 break;
@@ -40,7 +43,7 @@ class ImportLocations extends AppJob
 
     protected function validateData(&$location)
     {
-        if (!$this->hasRequiredKeys(['name', 'adm_level'], $location)) {
+        if (!$this->hasRequiredKeys($this->requiredKeys, $location)) {
             return false;
         }
         if (!$this->validateGeom($location)) {
@@ -98,7 +101,7 @@ class ImportLocations extends AppJob
     protected function validateRelatedLocation(&$location, $field)
     {
         if (!array_key_exists($field, $location)) {
-            $location[$field] = $this->guessParent($location['geom'], $location['adm_level'], 'uc' === $field);
+            $location[$field] = $this->guessParent($location['geom'], $this->getValue($location, 'adm_level'), 'uc' === $field);
 
             return true;
         } else { //If this is given, we need validate it
@@ -136,7 +139,7 @@ class ImportLocations extends AppJob
     public function import($location)
     {
         $name = $location['name'];
-        $adm_level = $location['adm_level'];
+        $adm_level = $this->getValue($location, 'adm_level');
         $geom = $location['geom'];
         $parent = $location['parent'];
         $uc = $location['uc'];

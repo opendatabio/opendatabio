@@ -124,9 +124,9 @@ class ImportTaxons extends AppJob
         return true;
     }
 
-    protected function validateLevel(&$taxon)
+    protected function validateLevel(array &$taxon)
     {
-        $level = array_key_exists('level', $taxon) ? $taxon['level'] : null;
+        $level = $this->getValue($taxon, 'level');
         if (!is_numeric($level) and !is_null($level)) {
             $level = Taxon::getRank($level);
         }

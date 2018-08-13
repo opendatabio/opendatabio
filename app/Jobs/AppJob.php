@@ -132,6 +132,15 @@ class AppJob implements ShouldQueue
         return false;
     }
 
+    protected function getValue(array $array, string $field)
+    {
+        if (array_key_exists($field, $this->header))
+            return $this->header[$field];
+        if (array_key_exists($field, $array))
+            return $array[$field];
+        return null;
+    }
+
     public function removeHeaderSuppliedKeys(array $keys)
     {
         $notPresent = array();

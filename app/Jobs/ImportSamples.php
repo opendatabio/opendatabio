@@ -158,8 +158,8 @@ class ImportSamples extends ImportCollectable
     public function import($sample)
     {
         $number = $sample['number'];
-        $date = array_key_exists('date', $this->header) ? $this->header['date'] : $sample['date'];
-        $project = array_key_exists('project', $this->header) ? $this->header['project'] : $sample['project'];
+        $date = $this->getValue($sample, 'date');
+        $project = $this->getValue($sample, 'project');
         $parent_id = $sample['parent_id'];
         $parent_type = $sample['parent_type'];
         $created_at = array_key_exists('created_at', $sample) ? $sample['created_at'] : null;
