@@ -165,10 +165,10 @@ class ImportTaxons extends AppJob
 
     protected function getTaxonIdFromAPI($taxon, $field)
     {
-        if (array_key_exists($field, $taxon['mobot'])) {
+        if (array_key_exists('mobot', $taxon) and array_key_exists($field, $taxon['mobot'])) {
             return $this->getTaxonId($taxon['mobot']['parent']);
         }
-        if (array_key_exists($field, $taxon['ipni'])) {
+        if (array_key_exists('ipni', $taxon) and array_key_exists($field, $taxon['ipni'])) {
             return $this->getTaxonId($taxon['ipni']['parent']);
         }
 
@@ -241,8 +241,8 @@ class ImportTaxons extends AppJob
         $author = array_key_exists('author', $taxon) ? $taxon['author'] : null;
         $senior = $taxon['senior'];
         $valid = $taxon['valid'];
-        $mobot = $taxon['mobot'];
-        $ipni = $taxon['ipni'];
+        $mobot = array_key_exists('mobot', $taxon) ? $taxon['mobot'] : null;
+        $ipni = array_key_exists('ipni', $taxon) ? $taxon['ipni'] : null;
         // Is this taxon already imported?
         if (Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count() > 0) {
             $this->skipEntry($taxon, 'taxon '.$name.' already imported to database');
@@ -260,10 +260,10 @@ class ImportTaxons extends AppJob
         ]);
         $taxon->fullname = $name;
         $taxon->save();
-        if ($mobot['key']) {
+        if (!is_null($mobot) and $mobot['key']) {
             $taxon->setapikey('Mobot', $mobot['key']);
         }
-        if ($ipni['key']) {
+        if (!is_null($ipni) and $ipni['key']) {
             $taxon->setapikey('IPNI', $ipni['key']);
         }
         $taxon->save();
