@@ -103,6 +103,8 @@ class Taxon extends Node
                 case 'ord.':
                 case 'order':
                         return 90;
+                case 'superfamily':
+                        return 110;
                 case 'fam.':
                 case 'family':
                         return 120;

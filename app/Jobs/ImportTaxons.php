@@ -27,6 +27,10 @@ class ImportTaxons extends AppJob
             }
             $this->userjob->tickProgress();
 
+            if (array_key_exists('parent_name', $taxon) and (null === $taxon['parent_name'])) {
+                unset($taxon['parent_name']);
+            }
+
             if ($this->validateData($taxon)) {
                 // Arrived here: let's import it!!
                 try {
@@ -58,6 +62,13 @@ class ImportTaxons extends AppJob
         return true;
     }
 
+    /**
+    * If taxon['mobot'] exists with a key, replaces it to an array with index 'key' having this value.
+    * If it not exists, try to get it from the external mobot API and creates this field with the obtained
+    * key. If fails to obtain it from the API, set taxon['mobot'] to an empty array.
+    * The same process is applied for taxon['ipni'] with external ipni API.
+    * This is done for use at other fields validation of taxon.
+    */
     protected function validateAPIs(&$taxon)
     {
         // TODO: check / add level, parent, etc from APIs??
@@ -74,7 +85,7 @@ class ImportTaxons extends AppJob
                 }
                 $taxon['mobot'] = $mobotdata;
             } catch (\Exception $e) {
-                // Ignore any Excepetion when tring to found mobot information
+                $taxon['mobot'] = array ();
             }
         }
 
@@ -82,13 +93,14 @@ class ImportTaxons extends AppJob
         $ipnidata['key'] = array_key_exists('ipni', $taxon) ? $taxon['ipni'] : null;
         if (!$ipnidata['key']) {
             try {
+                $taxon['ipni'] = array ();
                 $ipnidata = $apis->getIPNI($name);
                 if (!array_key_exists('key', $ipnidata)) {
                     $ipnidata['key'] = null;
                 }
                 $taxon['ipni'] = $ipnidata;
             } catch (\Exception $e) {
-                // Ignore any Excepetion when tring to found ipni information
+                $taxon['ipni'] = array ();
             }
         }
 
@@ -166,10 +178,10 @@ class ImportTaxons extends AppJob
     protected function getTaxonIdFromAPI($taxon, $field)
     {
         if (array_key_exists($field, $taxon['mobot'])) {
-            return $this->getTaxonId($taxon['mobot']['parent']);
+            return $this->getTaxonId($taxon['mobot'][$field]);
         }
         if (array_key_exists($field, $taxon['ipni'])) {
-            return $this->getTaxonId($taxon['ipni']['parent']);
+            return $this->getTaxonId($taxon['ipni'][$field]);
         }
 
         return null;
