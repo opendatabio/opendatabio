@@ -126,10 +126,38 @@ class ImportCollectable extends AppJob
             $identification['herbarium_reference'] = null;
         }
         $identification['notes'] = array_key_exists('identification_notes', $registry) ? $registry['identification_notes'] : null;
-        $identification['modifier'] = array_key_exists('modifier', $registry) ? $registry['modifier'] : 0;
+        $identification['modifier'] = $this->extractModifier($registry);
         $identification['date'] = array_key_exists('identification_date', $registry) ? $registry['identification_date'] : $registry['date'];
 
         return $identification;
+    }
+
+    protected function extractModifier(array $registry)
+    {
+        $modifier = array_key_exists('modifier', $registry) ? $registry['modifier'] : null;
+        switch ($modifier) {
+                case 'ss':
+                case 'ss.':
+                case 's.s.':
+                    return Identification::SS;
+                case 'sl':
+                case 'sl.':
+                case 's.l.':
+                    return Identification::SL;
+                case 'cf':
+                case 'cf.':
+                case 'c.f.':
+                    return Identification::CF;
+                case 'aff':
+                case 'aff.':
+                    return Identification::AFF;
+                case 'vel aff':
+                case 'vel aff.':
+                case 'vel. aff.':
+                    return Identification::VEL_AFF;
+                default:
+                    return Identification::NONE;
+        }
     }
 
     protected function createCollectorsAndIdentification($object_type, $object_id, $collectors = null, $identification = null)

@@ -174,6 +174,17 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return $this->morphMany(Collector::class, 'object');
     }
 
+    public function getCollectorIdsAttribute()
+    {
+        $ids = array();
+        $query = $this->collectors()->get();
+        foreach ($query as $registry) {
+            $ids[] = $registry->person_id;
+        }
+
+        return implode(",", $ids);
+    }
+
     public function newQuery($excludeDeleted = true)
     {
         // This uses the explicit list to avoid conflict due to global scope
