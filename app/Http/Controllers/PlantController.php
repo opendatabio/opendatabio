@@ -20,6 +20,7 @@ use App\Identification;
 use App\DataTables\PlantsDataTable;
 use Auth;
 use Lang;
+use Response;
 
 class PlantController extends Controller
 {
@@ -31,6 +32,24 @@ class PlantController extends Controller
     public function index(PlantsDataTable $dataTable)
     {
         return $dataTable->render('plants.index', []);
+    }
+
+    // Functions for autocompleting plant names, used in dropdowns. Expects a $request->query input
+    public function autocomplete(Request $request)
+    {
+        $locations = Location::select('id')->where('name', 'LIKE', '%'.$request->input('query').'%')->get();
+        $plants = Plant::with('location:id,name')
+                ->selectRaw('plants.id as data, plants.location_id, plants.tag')
+                ->where('plants.tag', 'LIKE', '%'.$request->input('query').'%')
+                ->orWhereIn('plants.location_id', $locations);
+        $plants = $plants->get();
+        $plants = collect($plants)->transform(function ($plant) {
+            $plant->value = $plant->fullname;
+
+            return $plant;
+        });
+        
+        return Response::json(['suggestions' => $plants]);
     }
 
     /**

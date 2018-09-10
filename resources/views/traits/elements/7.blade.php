@@ -1,11 +1,16 @@
-@if ($odbtrait->link_type == "App\Taxon")
+@if (($odbtrait->link_type == "App\Taxon") || ($odbtrait->link_type == "App\Plant"))
 <div class="form-group">
 <label for="link" class="col-sm-3 control-label">
 @lang('messages.link') 
 </label>
 <div class="col-sm-6">
-    <input type="text" name="link_autocomplete" id="link_autocomplete" class="form-control autocomplete"
-    value="{{ old('link_autocomplete', (isset($measurement) and $measurement->linked) ? $measurement->linked->fullname : '') }}">
+    @if ($odbtrait->link_type == "App\Taxon")
+    <input type="text" name="taxons_link_autocomplete" id="taxons_link_autocomplete" class="form-control autocomplete"
+    value="{{ old('taxons_link_autocomplete', (isset($measurement) and $measurement->linked) ? $measurement->linked->fullname : '') }}">
+    @elseif ($odbtrait->link_type == "App\Plant")
+    <input type="text" name="plants_link_autocomplete" id="plants_link_autocomplete" class="form-control autocomplete"
+    value="{{ old('plants_link_autocomplete', (isset($measurement) and $measurement->linked) ? $measurement->linked->fullname : '') }}">
+    @endif
     <input type="hidden" name="link_id" id="link_id"
     value="{{ old('link_id', isset($measurement) ? $measurement->value_i : null) }}">
 
@@ -24,7 +29,8 @@
 // NOTICE: this will only work if called via AJAX. Set up an alternative for direct loading
 if (typeof jQuery !== 'undefined') {
     $(document).ready(function(){
-    $("#link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+        $("#taxons_link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+        $("#plants_link_autocomplete").odbAutocomplete("{{url('plants/autocomplete')}}","#link_id", "@lang('messages.noresults')");
     });
 }
 </script>

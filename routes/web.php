@@ -56,6 +56,7 @@ Route::get('locations/{id}/plants/create', 'PlantController@createLocations');
 Route::get('taxons/{id}/plants', 'PlantController@indexTaxons');
 Route::get('projects/{id}/plants', 'PlantController@indexProjects');
 Route::get('persons/{id}/plants', 'PlantController@indexPersons');
+Route::get('plants/autocomplete', 'PlantController@autocomplete');
 Route::resource('plants', 'PlantController');
 
 Route::get('plants/{id}/vouchers/create', 'VoucherController@createPlants');
