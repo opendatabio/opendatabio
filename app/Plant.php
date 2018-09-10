@@ -182,7 +182,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
             $ids[] = $registry->person_id;
         }
 
-        return implode(",", $ids);
+        return implode(',', $ids);
     }
 
     public function newQuery($excludeDeleted = true)

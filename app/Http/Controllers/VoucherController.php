@@ -21,6 +21,7 @@ use App\Voucher;
 use App\Taxon;
 use Auth;
 use Lang;
+use Response;
 
 class VoucherController extends Controller
 {
@@ -32,6 +33,24 @@ class VoucherController extends Controller
     public function index(VouchersDataTable $dataTable)
     {
         return $dataTable->render('vouchers.index', []);
+    }
+
+    // Functions for autocompleting plant names, used in dropdowns. Expects a $request->query input
+    public function autocomplete(Request $request)
+    {
+        $persons = Person::select('id')->where('abbreviation', 'LIKE', '%'.$request->input('query').'%')->get();
+        $samples = Voucher::with('person:id,abbreviation')
+                ->selectRaw('vouchers.id as data, person_id, number')
+                ->where('number', 'LIKE', '%'.$request->input('query').'%')
+                ->orWhereIn('person_id', $persons)
+                ->get();
+        $samples = collect($samples)->transform(function ($sample) {
+            $sample->value = $sample->fullname;
+
+            return $sample;
+        });
+
+        return Response::json(['suggestions' => $samples]);
     }
 
     public function indexTaxons($id, VouchersDataTable $dataTable)

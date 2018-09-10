@@ -134,10 +134,13 @@ class AppJob implements ShouldQueue
 
     protected function getValue(array $array, string $field)
     {
-        if (array_key_exists($field, $this->header))
+        if (array_key_exists($field, $this->header)) {
             return $this->header[$field];
-        if (array_key_exists($field, $array))
+        }
+        if (array_key_exists($field, $array)) {
             return $array[$field];
+        }
+
         return null;
     }
 

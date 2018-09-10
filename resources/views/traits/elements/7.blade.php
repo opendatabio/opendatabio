@@ -1,4 +1,4 @@
-@if (($odbtrait->link_type == "App\Taxon") || ($odbtrait->link_type == "App\Plant") || ($odbtrait->link_type == "App\Location"))
+@if (($odbtrait->link_type == "App\Taxon") || ($odbtrait->link_type == "App\Plant") || ($odbtrait->link_type == "App\Location") || ($odbtrait->link_type == "App\Voucher"))
 <div class="form-group">
 <label for="link" class="col-sm-3 control-label">
 @lang('messages.link') 
@@ -13,6 +13,9 @@
     @elseif ($odbtrait->link_type == "App\Location")
     <input type="text" name="locations_link_autocomplete" id="locations_link_autocomplete" class="form-control autocomplete"
     value="{{ old('locations_link_autocomplete', (isset($measurement) and $measurement->linked) ? $measurement->linked->fullname : '') }}">
+    @elseif ($odbtrait->link_type == "App\Voucher")
+    <input type="text" name="samples_link_autocomplete" id="samples_link_autocomplete" class="form-control autocomplete"
+    value="{{ old('samples_link_autocomplete', (isset($measurement) and $measurement->linked) ? $measurement->linked->fullname : '') }}">
     @endif
     <input type="hidden" name="link_id" id="link_id"
     value="{{ old('link_id', isset($measurement) ? $measurement->value_i : null) }}">
@@ -35,6 +38,7 @@ if (typeof jQuery !== 'undefined') {
         $("#taxons_link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
         $("#plants_link_autocomplete").odbAutocomplete("{{url('plants/autocomplete')}}","#link_id", "@lang('messages.noresults')");
         $("#locations_link_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+        $("#samples_link_autocomplete").odbAutocomplete("{{url('vouchers/autocomplete')}}","#link_id", "@lang('messages.noresults')");
     });
 }
 </script>

@@ -66,6 +66,7 @@ Route::get('plants/{id}/vouchers', 'VoucherController@indexPlants');
 Route::get('taxons/{id}/vouchers', 'VoucherController@indexTaxons');
 Route::get('projects/{id}/vouchers', 'VoucherController@indexProjects');
 Route::get('persons/{id}/vouchers', 'VoucherController@indexPersons');
+Route::get('vouchers/autocomplete', 'VoucherController@autocomplete');
 Route::resource('vouchers', 'VoucherController', ['except' => ['create']]);
 
 Route::resource('tags', 'TagController');

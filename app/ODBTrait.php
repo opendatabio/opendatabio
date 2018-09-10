@@ -29,6 +29,7 @@ class ODBTrait extends Model
         Taxon::class,
         Plant::class,
         Location::class,
+        Voucher::class,
     ];
 
     const QUANT_INTEGER = 0;

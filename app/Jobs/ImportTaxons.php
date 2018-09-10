@@ -63,12 +63,12 @@ class ImportTaxons extends AppJob
     }
 
     /**
-    * If taxon['mobot'] exists with a key, replaces it to an array with index 'key' having this value.
-    * If it not exists, try to get it from the external mobot API and creates this field with the obtained
-    * key. If fails to obtain it from the API, set taxon['mobot'] to an empty array.
-    * The same process is applied for taxon['ipni'] with external ipni API.
-    * This is done for use at other fields validation of taxon.
-    */
+     * If taxon['mobot'] exists with a key, replaces it to an array with index 'key' having this value.
+     * If it not exists, try to get it from the external mobot API and creates this field with the obtained
+     * key. If fails to obtain it from the API, set taxon['mobot'] to an empty array.
+     * The same process is applied for taxon['ipni'] with external ipni API.
+     * This is done for use at other fields validation of taxon.
+     */
     protected function validateAPIs(&$taxon)
     {
         // TODO: check / add level, parent, etc from APIs??
@@ -85,7 +85,7 @@ class ImportTaxons extends AppJob
                 }
                 $taxon['mobot'] = $mobotdata;
             } catch (\Exception $e) {
-                $taxon['mobot'] = array ();
+                $taxon['mobot'] = array();
             }
         }
 
@@ -93,14 +93,14 @@ class ImportTaxons extends AppJob
         $ipnidata['key'] = array_key_exists('ipni', $taxon) ? $taxon['ipni'] : null;
         if (!$ipnidata['key']) {
             try {
-                $taxon['ipni'] = array ();
+                $taxon['ipni'] = array();
                 $ipnidata = $apis->getIPNI($name);
                 if (!array_key_exists('key', $ipnidata)) {
                     $ipnidata['key'] = null;
                 }
                 $taxon['ipni'] = $ipnidata;
             } catch (\Exception $e) {
-                $taxon['ipni'] = array ();
+                $taxon['ipni'] = array();
             }
         }
 
