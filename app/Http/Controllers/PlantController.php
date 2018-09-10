@@ -41,14 +41,14 @@ class PlantController extends Controller
         $plants = Plant::with('location:id,name')
                 ->selectRaw('plants.id as data, plants.location_id, plants.tag')
                 ->where('plants.tag', 'LIKE', '%'.$request->input('query').'%')
-                ->orWhereIn('plants.location_id', $locations);
-        $plants = $plants->get();
+                ->orWhereIn('plants.location_id', $locations)
+                ->get();
         $plants = collect($plants)->transform(function ($plant) {
             $plant->value = $plant->fullname;
 
             return $plant;
         });
-        
+
         return Response::json(['suggestions' => $plants]);
     }
 
