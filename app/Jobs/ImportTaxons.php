@@ -8,6 +8,7 @@
 namespace App\Jobs;
 
 use App\Taxon;
+use App\Person;
 use App\ExternalAPIs;
 
 class ImportTaxons extends AppJob
@@ -65,7 +66,7 @@ class ImportTaxons extends AppJob
     /**
      * If taxon['mobot'] exists with a key, replaces it to an array with index 'key' having this value.
      * If it not exists, try to get it from the external mobot API and creates this field with the obtained
-     * key. If fails to obtain it from the API, set taxon['mobot'] to an empty array.
+     * key. If fails to obtain it from the API, set taxon['mobot'] to an array with 'key' = null.
      * The same process is applied for taxon['ipni'] with external ipni API.
      * This is done for use at other fields validation of taxon.
      */
@@ -85,7 +86,7 @@ class ImportTaxons extends AppJob
                 }
                 $taxon['mobot'] = $mobotdata;
             } catch (\Exception $e) {
-                $taxon['mobot'] = array();
+                $taxon['mobot'] = array('key' => null);
             }
         }
 
@@ -100,7 +101,7 @@ class ImportTaxons extends AppJob
                 }
                 $taxon['ipni'] = $ipnidata;
             } catch (\Exception $e) {
-                $taxon['ipni'] = array();
+                $taxon['ipni'] = array('key' => null);
             }
         }
 
@@ -244,22 +245,51 @@ class ImportTaxons extends AppJob
         }
     }
 
+    protected function extractAuthorId($taxon)
+    {
+        if (array_key_exists('author_id', $taxon)) {
+            if (is_numeric($taxon['author_id'])) {
+                return $taxon['author_id'];
+            }
+            $author = Person::select('id')->where('abbreviation', $taxon['author_id'])->get();
+            if (count($author)) {
+                return $author->first()->id;
+            }
+        }
+
+        return null;
+    }
+
     public function import($taxon)
     {
         $name = $taxon['name'];
         $parent = $taxon['parent_name'];
         $level = $taxon['level'];
         $bibreference = array_key_exists('bibreference', $taxon) ? $taxon['bibreference'] : null;
+        $bibreference_id = array_key_exists('bibreference_id', $taxon) ? $taxon['bibreference_id'] : null;
         $author = array_key_exists('author', $taxon) ? $taxon['author'] : null;
+        $author_id = $this->extractAuthorId($taxon);
         $senior = $taxon['senior'];
         $valid = $taxon['valid'];
         $mobot = array_key_exists('mobot', $taxon) ? $taxon['mobot'] : null;
         $ipni = array_key_exists('ipni', $taxon) ? $taxon['ipni'] : null;
         // Is this taxon already imported?
-        if (Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count() > 0) {
-            $this->skipEntry($taxon, 'taxon '.$name.' already imported to database');
+        $dupple = Taxon::select('id', 'name', 'parent_id', 'author_id', 'bibreference_id', 'senior_id')
+                ->whereRaw('odb_txname(name, level, parent_id) = ?', [$name])
+                ->get();
+        if ($dupple->count() > 0) {
+            // filter after get because mysql considers null != null
+            $dupple->filter(function ($found) use ($parent, $senior, $author_id, $bibreference_id) {
+                return ($parent === $found->parent_id) and
+                            ($senior === $found->senior_id) and
+                            ($found->$author_id === $author_id) and
+                            ($bibreference_id === $found->bibreference_id);
+            });
+            if ($dupple->count() > 0) {
+                $this->skipEntry($taxon, 'taxon '.$name.' already imported to database (id='.$dupple->first()->id.')');
 
-            return;
+                return;
+            }
         }
 
         $taxon = new Taxon([
@@ -268,14 +298,16 @@ class ImportTaxons extends AppJob
             'valid' => $valid,
             'senior_id' => $senior,
             'author' => $author,
+            'author_id' => $author_id,
             'bibreference' => $bibreference,
+            'bibreference_id' => $bibreference_id,
         ]);
         $taxon->fullname = $name;
         $taxon->save();
-        if (!is_null($mobot) and $mobot['key']) {
+        if (!is_null($mobot) and !is_null($mobot['key'])) {
             $taxon->setapikey('Mobot', $mobot['key']);
         }
-        if (!is_null($ipni) and $ipni['key']) {
+        if (!is_null($ipni) and !is_null($ipni['key'])) {
             $taxon->setapikey('IPNI', $ipni['key']);
         }
         $taxon->save();
