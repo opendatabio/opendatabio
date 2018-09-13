@@ -167,13 +167,13 @@ class ImportSamples extends ImportCollectable
         $notes = array_key_exists('notes', $sample) ? $sample['notes'] : null;
         $collectors = $this->extractCollectors('Sample '.$number, $sample);
         if (0 === count($collectors)) {
-            $this->skipEntry($sample, 'Can not found any collector of this voucher in the database');
+            $this->skipEntry($sample, 'Can not found any collector of this sample in the database');
 
             return;
         }
-        $same = Voucher::where('person_id', '=', $collectors[0])->where('number', '=', $number)->get();
+        $same = Voucher::select('id')->where('person_id', $collectors[0])->where('number', $number)->get();
         if (count($same)) {
-            $this->skipEntry($sample, 'There is another registry of a voucher with main collector '.$collectors[0].' and number '.$number);
+            $this->skipEntry($sample, 'There is another sample of '.$collectors[0].' with number '.$number, $same->first()->id);
 
             return;
         }
@@ -182,7 +182,7 @@ class ImportSamples extends ImportCollectable
         if ('App\Location' === $parent_type) {
             $identification = $this->extractIdentification($sample);
             if (null === $identification) {
-                $this->skipEntry($sample, 'Vouchers of location must have taxonomic information');
+                $this->skipEntry($sample, 'Samples of location must have taxonomic information');
 
                 return;
             }

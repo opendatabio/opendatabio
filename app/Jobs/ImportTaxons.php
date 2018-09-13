@@ -274,19 +274,19 @@ class ImportTaxons extends AppJob
         $mobot = array_key_exists('mobot', $taxon) ? $taxon['mobot'] : null;
         $ipni = array_key_exists('ipni', $taxon) ? $taxon['ipni'] : null;
         // Is this taxon already imported?
-        $dupple = Taxon::select('id', 'name', 'parent_id', 'author_id', 'bibreference_id', 'senior_id')
+        $same = Taxon::select('id', 'name', 'parent_id', 'author_id', 'bibreference_id', 'senior_id')
                 ->whereRaw('odb_txname(name, level, parent_id) = ?', [$name])
                 ->get();
-        if ($dupple->count() > 0) {
+        if ($same->count() > 0) {
             // filter after get because mysql considers null != null
-            $dupple->filter(function ($found) use ($parent, $senior, $author_id, $bibreference_id) {
+            $same->filter(function ($found) use ($parent, $senior, $author_id, $bibreference_id) {
                 return ($parent === $found->parent_id) and
                             ($senior === $found->senior_id) and
                             ($found->$author_id === $author_id) and
                             ($bibreference_id === $found->bibreference_id);
             });
-            if ($dupple->count() > 0) {
-                $this->skipEntry($taxon, 'taxon '.$name.' already imported to database (id='.$dupple->first()->id.')');
+            if ($same->count() > 0) {
+                $this->skipEntry($taxon, 'taxon '.$name.' already imported to database', $same->first()->id);
 
                 return;
             }

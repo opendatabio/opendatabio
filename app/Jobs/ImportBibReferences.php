@@ -57,8 +57,9 @@ class ImportBibReferences extends AppJob
                 $text = $entry['_original'];
             }
             // is there another bibtex with the same
-            if (BibReference::whereRaw('odb_bibkey(bibtex) = ?', [$slug])->count() > 0) {
-                $this->appendLog('WARNING: key '.$slug.' already imported to database');
+            $same = BibReference::select('id')->whereRaw('odb_bibkey(bibtex) = ?', [$slug])->get();
+            if ($same->count() > 0) {
+                $this->skipEntry($entry, 'key '.$slug.' already imported to database', $same->first()->id);
             } else {
                 $ref = BibReference::create(['bibtex' => $text]);
                 // guesses the DOI from the bibtex and saves it on the relevant database column

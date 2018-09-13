@@ -154,8 +154,9 @@ class ImportLocations extends AppJob
         // TODO: several other validation checks
         // Is this location already imported?
         if ($parent) {
-            if (Location::where('name', '=', $name)->where('parent_id', '=', $parent)->count() > 0) {
-                $this->skipEntry($location, 'location '.$name.' already imported to database');
+            $same = Location::select('id')->where('name', '=', $name)->where('parent_id', '=', $parent)->get();
+            if ($same->count() > 0) {
+                $this->skipEntry($location, 'location '.$name.' already imported to database', $same->first()->id);
 
                 return;
             }

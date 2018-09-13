@@ -67,8 +67,13 @@ class AppJob implements ShouldQueue
 
     public function affectedId($id)
     {
+        $this->addAffectedId(array('status' => 'new', 'id' => $id));
+    }
+
+    private function addAffectedId($event)
+    {
         $ids = json_decode($this->userjob->fresh()->affected_ids, true);
-        array_push($ids, $id);
+        array_push($ids, $event);
         $this->userjob->affected_ids = json_encode($ids);
         $this->userjob->save();
     }
@@ -175,13 +180,19 @@ class AppJob implements ShouldQueue
         return true;
     }
 
-    public function skipEntry($entry, $cause)
+    public function skipEntry($entry, $cause, $id = 'NA')
     {
         if (is_array($entry)) {
             $entry = json_encode($entry);
         } elseif ('object' == gettype($entry)) {
             $entry = serialize($entry);
         }
-        $this->appendLog('WARNING: '.$cause.'. Skipping import of '.$entry);
+        if ('NA' === $id) {
+            $this->addAffectedId(array('status' => 'error', 'id' => $id));
+            $this->appendLog('WARNING: '.$cause.'. Skipping import of '.$entry);
+        } else {
+            $this->addAffectedId(array('status' => 'present', 'id' => $id));
+            $this->appendLog('WARNING: '.$cause.' (id='.$id.'). Skipping import of '.$entry);
+        }
     }
 }

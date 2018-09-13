@@ -98,9 +98,9 @@ class ImportPersons extends AppJob
         $institution = array_key_exists('institution', $person) ? $person['institution'] : null;
         $dupes = Person::duplicates($full_name, $abbreviation);
         if (count($dupes)) {
-            $same = Person::where('abbreviation', '=', $abbreviation)->get();
+            $same = Person::select('id')->where('abbreviation', $abbreviation)->get();
             if (count($same)) {
-                $this->skipEntry($person, 'There is another registry of a person with abbreviation '.$abbreviation);
+                $this->skipEntry($person, 'There is another registry of a person with abbreviation '.$abbreviation, $same->first()->id);
 
                 return;
             }

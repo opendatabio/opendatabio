@@ -76,9 +76,9 @@ class ImportPlants extends ImportCollectable
         $updated_at = array_key_exists('updated_at', $plant) ? $plant['updated_at'] : null;
         $notes = array_key_exists('notes', $plant) ? $plant['notes'] : null;
         $relative_position = array_key_exists('relative_position', $plant) ? $plant['relative_position'] : null;
-        $same = Plant::where('location_id', '=', $location)->where('tag', '=', $tag)->get();
+        $same = Plant::select('plants.id')->where('location_id', $location)->where('tag', $tag)->get();
         if (count($same)) {
-            $this->skipEntry($plant, 'There is another registry of a plant with location '.$location.' and tag '.$tag);
+            $this->skipEntry($plant, 'There is another registry of a plant with location '.$location.' and tag '.$tag, $same->first()->id);
 
             return;
         }
