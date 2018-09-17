@@ -12,8 +12,10 @@ use App\Location;
 use App\Taxon;
 use App\Person;
 use App\Plant;
+use App\Voucher;
 use App\ODBFunctions;
 use App\ODBTrait;
+use App\TraitCategory;
 use Auth;
 
 class ImportMeasurements extends AppJob
@@ -30,6 +32,7 @@ class ImportMeasurements extends AppJob
             return;
         }
         if (!$this->validateHeader()) {
+            $this->setError();
             return;
         }
 
@@ -45,15 +48,17 @@ class ImportMeasurements extends AppJob
                     $this->import($measurement);
                 } catch (\Exception $e) {
                     $this->setError();
-                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on measurement '.$measurement['name'].$e->getTraceAsString());
+                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' TRACE: '.$e->getTraceAsString());
                 }
+            } else {
+                $this->appendLog('WARNING: Invalid data format: '.json_encode($measurement));
             }
         }
     }
 
     protected function validateHeader()
     {
-        if (!$this->hasRequiredKeys(['object_type', 'person', 'date', 'dataset'], $this->header)) {
+        if (!$this->hasRequiredKeys(['object_type', 'measurer', 'date', 'dataset'], $this->header)) {
             return false;
         } elseif (!$this->validatePerson()) {
             return false;
@@ -68,7 +73,7 @@ class ImportMeasurements extends AppJob
 
     protected function validatePerson()
     {
-        $person = $this->header['person'];
+        $person = $this->header['measurer'];
         $valid = ODBFunctions::validRegistry(Person::select('id'), $person, ['id', 'abbreviation', 'full_name', 'email']);
         if (null === $valid) {
             $this->appendLog('Error: Header reffers to '.$person.' as who do these measurements, but this person was not found in the database.');
@@ -83,12 +88,17 @@ class ImportMeasurements extends AppJob
 
     protected function validateDataset()
     {
-        $valid = Auth::user()->datasets()->where('id', $this->header['dataset']);
-        if (null === $valid) {
+        $valid = Auth::user()->datasets()
+                ->where('datasets.id', $this->header['dataset'])
+                ->orWhere('datasets.name', $this->header['dataset'])
+                ->get();
+        if ((null === $valid) or (0 === count($valid))) {
             $this->appendLog('Error: Header reffers to '.$this->header['dataset'].' as dataset, but this dataset was not found in the database.');
 
             return false;
         } else {
+            $this->header['dataset'] = $valid->first()->id;
+
             return true;
         }
     }
@@ -135,25 +145,95 @@ class ImportMeasurements extends AppJob
     {
         $valids = array();
         foreach ($measurement as $key => $value) {
-            if ('object_id' === $key) {
-                $valids[$key] = $value;
-            } else {
-                $trait = (string) ODBFunctions::validRegistry(ODBTrait::select('id'), $key, ['id', 'export_name'])->id;
-                if ($trait) {
-                    $valids[$trait] = $value;
-                    // TODO validate value
+            if (null !== $value) {
+                if ('object_id' === $key) {
+                    $valids[$key] = $value;
                 } else {
-                    $this->appendLog('WARNING: Trait '.$key.' of object '.$measurement['object_id'].' not found, this measurement will be ignored.');
+                    $trait = ODBFunctions::validRegistry(ODBTrait::select('*'), $key, ['id', 'export_name']);
+                    if ($trait and $trait->object_types()->pluck('object_type')->contains($this->header['object_type'])) {
+                        $value = $this->validValue($trait, $value);
+                        if (null !== $value) {
+                            $trait_id = (string) $trait->id;
+                            $valids[$trait_id] = $value;
+                        }
+                    } else {
+                        $this->appendLog('WARNING: Trait '.$key.' of object '.$measurement['object_id'].' not found, this measurement will be ignored.');
+                    }
                 }
             }
         }
-        if (count($valids)) {
+        if (count($valids) > 1) {
             $measurement = $valids;
 
             return true;
         }
 
         return false;
+    }
+
+    private function validValue($trait, $value) {
+        switch ($trait->type) {
+            case ODBTrait::QUANT_INTEGER:
+            case ODBTrait::QUANT_REAL:
+                if (is_numeric($value) and
+                        ((null === $trait->range_min) or ($trait->range_min <= $value)) and
+                        ((null === $trait->range_max) or ($trait->range_max >= $value))) {
+                    return $value;
+                }
+                break;
+            case ODBTrait::CATEGORICAL:
+            case ODBTrait::ORDINAL:
+                return $this->getCategoryId($trait, $value);
+        // TODO validate value
+            case ODBTrait::CATEGORICAL_MULTIPLE:
+                $values = explode(',', $value);
+                $ret = array();
+                foreach ($values as $value) {
+                    $cat = $this->getCategoryId($trait, $value);
+                    if (null === $cat) {
+                        $this->appendLog('WARNING: Category '.$value.' unknown, will be ignored.');
+                    } else {
+                        $ret[] = $cat;
+                    }
+                }
+                if (count($ret)) {
+                    return $ret;
+                }
+                break;
+            case ODBTrait::TEXT:
+            case ODBTrait::COLOR:
+                return $value;
+            case ODBTrait::LINK:
+                $valid = array();
+                switch ($trait->link_type) {
+                    case 'App\\Taxon':
+                        $valid = Taxon::select('id')->where('id', $value)->get();
+                        break;
+                    case 'App\\Plant':
+                        $valid = Plant::select('id')->where('id', $value)->get();
+                        break;
+                    case 'App\\Location':
+                        $valid = Location::select('id')->where('id', $value)->get();
+                        break;
+                    case 'App\\Sample':
+                        $valid = Voucher::select('id')->where('id', $value)->get();
+                        break;
+                }
+                if (count($valid))
+                    return $value;
+        }
+        
+        return null;
+    }
+
+    private function getCategoryId($trait, $name) {
+        foreach ($trait->categories as $cat) {
+            if ($name === $cat->name) {
+                return $cat->id;
+            }
+        }
+        
+        return null;
     }
 
     public function import($measurements)
@@ -170,7 +250,12 @@ class ImportMeasurements extends AppJob
                 'bibreference_id' => array_key_exists('bibreference', $this->header) ? $this->header['bibreference'] : null,
             ]);
             $measurement->setDate($this->header['date']);
-            $measurement->setValueActualAttribute($value);
+            $measurement->save();
+            if (ODBTrait::LINK == $measurement->type) {
+                $measurement->value_i = $value;
+            } else {
+                $measurement->valueActual = $value;
+            }
             $measurement->save();
             $this->affectedId($measurement->id);
         }

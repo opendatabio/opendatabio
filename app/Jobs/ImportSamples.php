@@ -26,23 +26,26 @@ class ImportSamples extends ImportCollectable
         if (!$this->setProgressMax($data)) {
             return;
         }
-        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['number', 'date', 'collector']);
-        $this->validateHeader();
-        foreach ($data as $sample) {
-            if ($this->isCancelled()) {
-                break;
-            }
-            $this->userjob->tickProgress();
+        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['number', 'date', 'collector', 'project']);
+        if ($this->validateHeader()) {
+            foreach ($data as $sample) {
+                if ($this->isCancelled()) {
+                    break;
+                }
+                $this->userjob->tickProgress();
 
-            if ($this->validateData($sample)) {
-                // Arrived here: let's import it!!
-                try {
-                    $this->import($sample);
-                } catch (\Exception $e) {
-                    $this->setError();
-                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on sample '.$sample['number']);
+                if ($this->validateData($sample)) {
+                    // Arrived here: let's import it!!
+                    try {
+                        $this->import($sample);
+                    } catch (\Exception $e) {
+                        $this->setError();
+                        $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on sample '.$sample['number']);
+                    }
                 }
             }
+        } else {
+            $this->setError();
         }
     }
 
@@ -93,7 +96,7 @@ class ImportSamples extends ImportCollectable
                     'type' => 'App\Plant',
                 );
             } else {
-                $valid = ODBFunctions::validRegistry(Location::select('id'), $location);
+                $valid = ODBFunctions::validRegistry(Location::select('id'), $sample['location']);
                 if (null === $valid) {
                     return null;
                 }

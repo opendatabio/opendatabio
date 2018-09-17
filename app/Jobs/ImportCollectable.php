@@ -20,14 +20,58 @@ class ImportCollectable extends AppJob
     protected function validateHeader($field = 'collector')
     {
         if (array_key_exists('project', $this->header)) {
-            $this->validateProject($this->header);
-        }
-        if (array_key_exists($field, $this->header)) {
-            $person = $this->extractCollectors('Header', $this->header, $field);
-            if ($person) {
-                $this->header[$field] = $person;
+            if (!$this->validateHeaderProject()) {
+
+                return false;
             }
         }
+        if (array_key_exists($field, $this->header)) {
+            if (!$validateHeaderCollectors($field = 'collector')) {
+
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private function validateHeaderCollectors($field = 'collector')
+    {
+        $persons = explode(',', $this->header[$field]);
+        $ids = array();
+        foreach ($persons as $person) {
+            $valid = ODBFunctions::validRegistry(Person::select('id'), $person, ['id', 'abbreviation', 'full_name', 'email']);
+            if (null === $valid) {
+                $this->appendLog('WARNING: Header reffers to '.$person.' as member of '.$field.', but this person was not found in the database. Ignoring person '.$person);
+            } else {
+                $ids[] = $valid->id;
+            }
+        }
+        if (count($ids)) {
+            $this->header[$field] = $ids;
+
+            return true;
+        } else {
+            $this->setError();
+            $this->appendLog($field.' '.$this->header[$field].' was not found in the database');
+
+            return false;
+        }
+    }
+
+    private function validateHeaderProject()
+    {
+        if (array_key_exists('project', $this->header)) {
+            $valid = ODBFunctions::validRegistry(Project::select('id'), $this->header['project']);
+            if (null === $valid) {
+                $this->setError();
+                $this->appendLog('Project '.$this->header['project'].' was not found in the database');
+
+                return false;
+            }
+            $this->header['project'] = $valid->id;
+        }
+
+        return true;
     }
 
     /*
@@ -38,32 +82,26 @@ class ImportCollectable extends AppJob
      */
     protected function validateProject(&$registry)
     {
-        if (($this->header !== $registry) and array_key_exists('project', $this->header)) {
-            $registry['project'] = $this->header['project'];
-
+        if (array_key_exists('project', $this->header)) {
             return true;
         }
-        if (array_key_exists('project', $registry)) {
-            $valid = ODBFunctions::validRegistry(Project::select('id'), $registry['project']);
-            if (null === $valid) {
-                $this->skipEntry($registry, 'project'.' '.$registry['project'].' was not found in the database');
-
-                return false;
-            }
-            $registry['project'] = $valid->id;
-
-            return true;
-        }
-        if ($this->header !== $registry) {
+        if (!array_key_exists('project', $registry)) {
             $registry['project'] = Auth::user()->defaultProject->id;
         }
+        $valid = ODBFunctions::validRegistry(Project::select('id'), $registry['project']);
+        if (null === $valid) {
+            $this->skipEntry($registry, 'project '.$registry['project'].' was not found in the database');
+
+            return false;
+        }
+        $registry['project'] = $valid->id;
 
         return true;
     }
 
     protected function extractCollectors($callerName, $registry, $field = 'collector')
     {
-        if (('Header' !== $callerName) and array_key_exists($field, $this->header)) {
+        if (array_key_exists($field, $this->header)) {
             return $this->header[$field];
         }
         if (!array_key_exists($field, $registry)) {

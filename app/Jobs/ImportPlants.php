@@ -25,23 +25,26 @@ class ImportPlants extends ImportCollectable
         if (!$this->setProgressMax($data)) {
             return;
         }
-        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['tag', 'date', 'location']);
-        $this->validateHeader('tagging_team');
-        foreach ($data as $plant) {
-            if ($this->isCancelled()) {
-                break;
-            }
-            $this->userjob->tickProgress();
+        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['tag', 'date', 'location', 'project']);
+        if ($this->validateHeader('tagging_team')) {
+            foreach ($data as $plant) {
+                if ($this->isCancelled()) {
+                    break;
+                }
+                $this->userjob->tickProgress();
 
-            if ($this->validateData($plant)) {
-                // Arrived here: let's import it!!
-                try {
-                    $this->import($plant);
-                } catch (\Exception $e) {
-                    $this->setError();
-                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on plant '.$plant['tag']);
+                if ($this->validateData($plant)) {
+                    // Arrived here: let's import it!!
+                    try {
+                        $this->import($plant);
+                    } catch (\Exception $e) {
+                        $this->setError();
+                        $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on plant '.$plant['tag']);
+                    }
                 }
             }
+        } else {
+            $this->setError();
         }
     }
 
@@ -86,6 +89,11 @@ class ImportPlants extends ImportCollectable
         // Plants' fields is ok, what about related tables?
         $identification = $this->extractIdentification($plant);
         $collectors = $this->extractCollectors('Plant '.$tag, $plant, 'tagging_team');
+        if (0 === count($collectors)) {
+            $this->skipEntry($plant, 'Can not found any collector of this sample in the database');
+
+            return;
+        }
 
         //Finaly create the registries:
         // - First plant's registry, to get their id
