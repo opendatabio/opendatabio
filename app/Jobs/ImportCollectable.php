@@ -21,16 +21,15 @@ class ImportCollectable extends AppJob
     {
         if (array_key_exists('project', $this->header)) {
             if (!$this->validateHeaderProject()) {
-
                 return false;
             }
         }
         if (array_key_exists($field, $this->header)) {
             if (!$validateHeaderCollectors($field = 'collector')) {
-
                 return false;
             }
         }
+
         return true;
     }
 

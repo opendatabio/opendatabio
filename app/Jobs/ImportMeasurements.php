@@ -15,12 +15,12 @@ use App\Plant;
 use App\Voucher;
 use App\ODBFunctions;
 use App\ODBTrait;
-use App\TraitCategory;
 use Auth;
 
 class ImportMeasurements extends AppJob
 {
     protected $sourceType;
+    private $requiredKeys = ['object_type', 'measurer', 'date', 'dataset'];
 
     /**
      * Execute the job.
@@ -33,6 +33,7 @@ class ImportMeasurements extends AppJob
         }
         if (!$this->validateHeader()) {
             $this->setError();
+
             return;
         }
 
@@ -58,7 +59,8 @@ class ImportMeasurements extends AppJob
 
     protected function validateHeader()
     {
-        if (!$this->hasRequiredKeys(['object_type', 'measurer', 'date', 'dataset'], $this->header)) {
+        $this->requiredKeys = $this->removeHeaderSuppliedKeys($this->requiredKeys);
+        if (count($this->requiredKeys) > 1) { // only 'date' could be absent in header
             return false;
         } elseif (!$this->validatePerson()) {
             return false;
@@ -67,6 +69,8 @@ class ImportMeasurements extends AppJob
         } elseif (!$this->validateObjetType()) {
             return false;
         } else {
+            $this->requiredKeys[] = 'object_id';
+
             return true;
         }
     }
@@ -110,7 +114,7 @@ class ImportMeasurements extends AppJob
 
     protected function validateData(&$measurement)
     {
-        if (!$this->hasRequiredKeys(['object_id'], $measurement)) {
+        if (!$this->hasRequiredKeys($this->requiredKeys, $measurement)) {
             return false;
         } elseif (!$this->validateObject($measurement)) {
             return false;
@@ -146,7 +150,7 @@ class ImportMeasurements extends AppJob
         $valids = array();
         foreach ($measurement as $key => $value) {
             if (null !== $value) {
-                if ('object_id' === $key) {
+                if (in_array($key, $this->requiredKeys)) {
                     $valids[$key] = $value;
                 } else {
                     $trait = ODBFunctions::validRegistry(ODBTrait::select('*'), $key, ['id', 'export_name']);
@@ -171,7 +175,8 @@ class ImportMeasurements extends AppJob
         return false;
     }
 
-    private function validValue($trait, $value) {
+    private function validValue($trait, $value)
+    {
         switch ($trait->type) {
             case ODBTrait::QUANT_INTEGER:
             case ODBTrait::QUANT_REAL:
@@ -219,20 +224,22 @@ class ImportMeasurements extends AppJob
                         $valid = Voucher::select('id')->where('id', $value)->get();
                         break;
                 }
-                if (count($valid))
+                if (count($valid)) {
                     return $value;
+                }
         }
-        
+
         return null;
     }
 
-    private function getCategoryId($trait, $name) {
+    private function getCategoryId($trait, $name)
+    {
         foreach ($trait->categories as $cat) {
             if ($name === $cat->name) {
                 return $cat->id;
             }
         }
-        
+
         return null;
     }
 
@@ -240,6 +247,13 @@ class ImportMeasurements extends AppJob
     {
         $measured_id = $measurements['object_id'];
         unset($measurements['object_id']);
+        if (array_key_exists('date', $measurements)) {
+            $date = $measurements['date'];
+            unset($measurements['date']);
+        } else {
+            $date = $this->header['date'];
+        }
+
         foreach ($measurements as $key => $value) {
             $measurement = new Measurement([
                 'trait_id' => $key,
@@ -249,7 +263,7 @@ class ImportMeasurements extends AppJob
                 'person_id' => $this->header['person'],
                 'bibreference_id' => array_key_exists('bibreference', $this->header) ? $this->header['bibreference'] : null,
             ]);
-            $measurement->setDate($this->header['date']);
+            $measurement->setDate($date);
             $measurement->save();
             if (ODBTrait::LINK == $measurement->type) {
                 $measurement->value_i = $value;
