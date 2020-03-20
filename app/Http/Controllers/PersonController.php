@@ -142,6 +142,7 @@ class PersonController extends Controller
         $person = Person::findOrFail($id);
         $this->authorize('update', $person);
         $this->checkValid($request, $id);
+        
         $person->update($request->only(['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes']));
         // add/remove specialists
         $person->taxons()->sync($request->specialist);

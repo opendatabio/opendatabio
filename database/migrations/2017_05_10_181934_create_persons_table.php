@@ -24,6 +24,7 @@ class CreatePersonsTable extends Migration
             $table->unique('abbreviation');
             $table->string('email')->nullable();
             $table->string('institution')->nullable();
+            $table->string('notes')->nullable();
             $table->integer('herbarium_id')->unsigned()->nullable();
             $table->foreign('herbarium_id')->references('id')->on('herbaria');
         });

@@ -39,7 +39,7 @@ class PersonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Person::with('herbarium')->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id']);
+        $query = Person::with('herbarium')->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes']);
 
         return $this->applyScopes($query);
     }
@@ -49,6 +49,7 @@ class PersonsDataTable extends DataTable
      *
      * @return \Yajra\Datatables\Html\Builder
      */
+     
     public function html()
     {
         return $this->builder()
@@ -59,6 +60,7 @@ class PersonsDataTable extends DataTable
                 'email' => ['title' => Lang::get('messages.email'), 'searchable' => true, 'orderable' => true],
                 'institution' => ['title' => Lang::get('messages.institution'), 'searchable' => true, 'orderable' => true],
                 'herbarium' => ['title' => Lang::get('messages.herbarium'), 'searchable' => false, 'orderable' => false],
+                'notes' => ['title' => Lang::get('messages.notes'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',

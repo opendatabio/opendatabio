@@ -29,7 +29,9 @@
 <input type="hidden" name="abbreviation" id="abbreviation" value="{{ old('abbreviation') }}">
 <input type="hidden" name="email" id="email" value="{{ old('email') }}">
 <input type="hidden" name="institution" id="institution" value="{{ old('institution') }}">
+
 <input type="hidden" name="notes" id="notes" value="{{ old('notes')}}">
+
 <input type="hidden" name="herbarium_id" value="{{ old('herbarium_id') }}">
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">

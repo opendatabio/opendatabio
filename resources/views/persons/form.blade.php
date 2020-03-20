@@ -76,6 +76,7 @@
 </div>
 @endif <!-- isset person -->
 
+<!-- notes for person -->
 <div class="form-group">
     <label for="notes" class="col-sm-3 control-label">
 @lang('messages.notes')

@@ -94,7 +94,8 @@ class ImportPersons extends AppJob
         $full_name = $person['full_name'];
         $abbreviation = $person['abbreviation'];
         $herbarium = $person['herbarium'];
-        $notes = $person['notes'];
+
+        $notes = array_key_exists('notes', $person) ? $person['notes'] : null;
         $email = array_key_exists('email', $person) ? $person['email'] : null;
         $institution = array_key_exists('institution', $person) ? $person['institution'] : null;
         $dupes = Person::duplicates($full_name, $abbreviation);
@@ -105,6 +106,7 @@ class ImportPersons extends AppJob
 
                 return;
             }
+            //MAYBE THIS IS TOO MUCH WARNING. SHOW ONLY IF ABBREVIATION IS THE SAME
             $this->appendLog('WARNING: There is another registry of a person with name like '.$full_name.' or abbreviation like '.$abbreviation);
         }
 
