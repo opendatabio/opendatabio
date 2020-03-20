@@ -49,6 +49,13 @@
 @endif
 </p>
 
+@if ($person->notes)
+		    <p><strong>
+@lang('messages.notes')
+: </strong> {{$person->notes}}
+</p>
+@endif
+
 @if ($person->taxons->count())
 <p>
 	<strong>

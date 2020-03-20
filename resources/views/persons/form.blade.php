@@ -36,6 +36,7 @@
 	<input type="text" name="institution" id="institution" class="form-control" value="{{ old('institution', isset($person) ? $person->institution : null) }}">
     </div>
 </div>
+
 <div class="form-group">
     <label for="herbarium_id" class="col-sm-3 control-label">
 @lang('messages.herbarium')
@@ -74,3 +75,12 @@
   </div>
 </div>
 @endif <!-- isset person -->
+
+<div class="form-group">
+    <label for="notes" class="col-sm-3 control-label">
+@lang('messages.notes')
+</label>
+	    <div class="col-sm-6">
+	<textarea name="notes" id="notes" class="form-control">{{ old('notes', isset($person) ? $person->notes : null) }}</textarea>
+            </div>
+</div>

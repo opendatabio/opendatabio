@@ -94,6 +94,7 @@ class ImportPersons extends AppJob
         $full_name = $person['full_name'];
         $abbreviation = $person['abbreviation'];
         $herbarium = $person['herbarium'];
+        $notes = $person['notes'];
         $email = array_key_exists('email', $person) ? $person['email'] : null;
         $institution = array_key_exists('institution', $person) ? $person['institution'] : null;
         $dupes = Person::duplicates($full_name, $abbreviation);
@@ -113,6 +114,7 @@ class ImportPersons extends AppJob
             'email' => $email,
             'institution' => $institution,
             'herbarium_id' => $herbarium,
+            'notes' => $notes,
         ]);
         $person->save();
         $this->affectedId($person->id);
