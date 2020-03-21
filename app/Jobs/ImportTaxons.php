@@ -76,6 +76,9 @@ class ImportTaxons extends AppJob
             } catch (\Exception $e) {
                 // Ignore any Excepetion when tring to found mobot information
             }
+        } else {
+          // code...
+          $taxon['mobot'] = $mobotdata;
         }
 
         // IPNI
@@ -90,6 +93,9 @@ class ImportTaxons extends AppJob
             } catch (\Exception $e) {
                 // Ignore any Excepetion when tring to found ipni information
             }
+        } else {
+          // code...
+          $taxon['ipni'] = $ipnidata;
         }
 
         return true;
@@ -231,7 +237,6 @@ class ImportTaxons extends AppJob
             return !$taxon['valid'];
         }
     }
-
     public function import($taxon)
     {
         $name = $taxon['name'];
@@ -249,6 +254,11 @@ class ImportTaxons extends AppJob
 
             return;
         }
+        $banana = 1;
+        if ($banana>0) {
+          $this->skipEntry($taxon, 'taxon '.$name.' has mobot key '.$mobot['key']);
+          return;
+        }
 
         $taxon = new Taxon([
             'level' => $level,
@@ -259,15 +269,15 @@ class ImportTaxons extends AppJob
             'bibreference' => $bibreference,
         ]);
         $taxon->fullname = $name;
-        $taxon->save();
+        //$taxon->save();
         if ($mobot['key']) {
             $taxon->setapikey('Mobot', $mobot['key']);
         }
         if ($ipni['key']) {
             $taxon->setapikey('IPNI', $ipni['key']);
         }
-        $taxon->save();
-        $this->affectedId($taxon->id);
+        //$taxon->save();
+        //$this->affectedId($taxon->id);
 
         return;
     }
