@@ -52,7 +52,7 @@ class TaxonController extends Controller
         $taxons = $taxons->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $taxons = $this->setFields($taxons, $fields, ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id']);
+        $taxons = $this->setFields($taxons, $fields, ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','author_id','notes']);
 
         return $this->wrap_response($taxons);
     }

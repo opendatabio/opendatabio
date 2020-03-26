@@ -9,6 +9,8 @@ namespace App\Jobs;
 
 use App\Taxon;
 use App\ExternalAPIs;
+use App\Person;
+
 
 class ImportTaxons extends AppJob
 {
@@ -33,7 +35,7 @@ class ImportTaxons extends AppJob
                     $this->import($taxon);
                 } catch (\Exception $e) {
                     $this->setError();
-                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on taxon '.$taxon['name']);
+                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+On line'.$e->getLine().' on taxon '.$taxon['name']);
                 }
             }
         }
@@ -44,6 +46,7 @@ class ImportTaxons extends AppJob
         if (!$this->hasRequiredKeys(['name'], $taxon)) {
             return false;
         }
+        //if is unpublished, then there is no need to validade APIs
         if (!$this->validateAPIs($taxon)) {
             return false;
         }
@@ -51,6 +54,10 @@ class ImportTaxons extends AppJob
             return false;
         }
         if (!$this->validateSeniorAndValid($taxon)) {
+            return false;
+        }
+        //for unpublished names validation must include a check of persons id
+        if (!$this->validadeAuthorID($taxon)) {
             return false;
         }
         // TODO: several other validation checks
@@ -75,9 +82,10 @@ class ImportTaxons extends AppJob
                 $taxon['mobot'] = $mobotdata;
             } catch (\Exception $e) {
                 // Ignore any Excepetion when tring to found mobot information
+                //$taxon['mobot'] = $mobotdata;
             }
         } else {
-          // code...
+          //if  a value was informed add it in an array format into the current position, otherwise, import will fail because 'mobot' is not an array
           $taxon['mobot'] = $mobotdata;
         }
 
@@ -92,9 +100,11 @@ class ImportTaxons extends AppJob
                 $taxon['ipni'] = $ipnidata;
             } catch (\Exception $e) {
                 // Ignore any Excepetion when tring to found ipni information
+                //but add empty field if not exists, othewise will fail the importation
+                //$taxon['ipni'] = $ipnidata;
             }
         } else {
-          // code...
+          //if  a value was informed add it in an array format into the current position, otherwise, import will fail because 'ipni' is not an array
           $taxon['ipni'] = $ipnidata;
         }
 
@@ -130,6 +140,44 @@ class ImportTaxons extends AppJob
         return true;
     }
 
+    protected function validadeAuthorID(&$taxon)
+    {
+        //check if exists in persons table
+       if (array_key_exists("author_id",$taxon)) {
+        $pess = $this->getAuthorId($taxon['author_id']);
+        if (null === $pess) {
+            $name = $taxon['name'];
+            $pess = $taxon['author_id'];
+            $this->skipEntry($taxon, "Author_id for unpublished taxon $name is listed as $pess, but this was not found in the database");
+            return false;
+        } else {
+            $taxon['author_id'] = $pess;
+            return true;
+        }
+      } else {
+        //is not a morphotype
+        return true;
+      }
+
+    }
+    //validate person if informed as taxon author
+    protected function getAuthorId($ref)
+    {
+        if (is_null($ref)) {
+            return null;
+        }
+        // ref might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
+        if (is_numeric($ref)) {
+            $ref = Person::select('id')->where('id', '=', $ref)->get();
+        } else {
+            return null;
+        }
+        if (count($ref)) {
+            return $ref->first()->id;
+        }
+        return null;
+    }
+
     protected function validateLevel(&$taxon)
     {
         $level = array_key_exists('level', $taxon) ? $taxon['level'] : null;
@@ -139,7 +187,6 @@ class ImportTaxons extends AppJob
         if (is_null($level)) {
             $name = $taxon['name'];
             $this->skipEntry($taxon, "Level for taxon $name not available");
-
             return false;
         }
         $taxon['level'] = $level;
@@ -171,13 +218,16 @@ class ImportTaxons extends AppJob
 
     protected function getTaxonIdFromAPI($taxon, $field)
     {
-        if (array_key_exists($field, $taxon['mobot'])) {
-            return $this->getTaxonId($taxon['mobot']['parent']);
+        if (array_key_exists("mobot",$taxon)) {
+          if (array_key_exists($field, $taxon['mobot'])) {
+              return $this->getTaxonId($taxon['mobot']['parent']);
+          }
         }
-        if (array_key_exists($field, $taxon['ipni'])) {
-            return $this->getTaxonId($taxon['ipni']['parent']);
+        if (array_key_exists("ipni",$taxon)) {
+          if (array_key_exists($field, $taxon['ipni'])) {
+              return $this->getTaxonId($taxon['ipni']['parent']);
+          }
         }
-
         return null;
     }
 
@@ -185,7 +235,6 @@ class ImportTaxons extends AppJob
     {
         if (!array_key_exists('senior', $taxon)) {
             $taxon['senior'] = $this->getTaxonIdFromAPI($taxon, 'senior');
-
             return true;
         }
         // parent might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
@@ -227,37 +276,33 @@ class ImportTaxons extends AppJob
             if (!array_key_exists('valid', $taxon)) {
                 $taxon['valid'] = true;
             }
-
             return $taxon['valid'];
         } else {
             if (!array_key_exists('valid', $taxon)) {
                 $taxon['valid'] = false;
             }
-
             return !$taxon['valid'];
         }
     }
+
     public function import($taxon)
     {
         $name = $taxon['name'];
         $parent = $taxon['parent_name'];
         $level = $taxon['level'];
+        $valid = $taxon['valid'];
         $bibreference = array_key_exists('bibreference', $taxon) ? $taxon['bibreference'] : null;
         $author = array_key_exists('author', $taxon) ? $taxon['author'] : null;
-        $senior = $taxon['senior'];
-        $valid = $taxon['valid'];
-        $mobot = $taxon['mobot'];
-        $ipni = $taxon['ipni'];
+        $author_id = array_key_exists('author_id', $taxon) ? $taxon['author_id'] : null;
+        $senior = array_key_exists('senior', $taxon) ? $taxon['senior'] : null;
+        $notes = array_key_exists('notes', $taxon) ? $taxon['notes'] : null;
+        $mobot = array_key_exists('mobot', $taxon) ? $taxon['mobot'] : null;
+        $ipni = array_key_exists('ipni', $taxon) ? $taxon['ipni'] : null;
         // Is this taxon already imported?
         if (Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count() > 0) {
             $this->skipEntry($taxon, 'taxon '.$name.' already imported to database');
 
             return;
-        }
-        $banana = 1;
-        if ($banana>0) {
-          $this->skipEntry($taxon, 'taxon '.$name.' has mobot key '.$mobot['key']);
-          return;
         }
 
         $taxon = new Taxon([
@@ -266,18 +311,24 @@ class ImportTaxons extends AppJob
             'valid' => $valid,
             'senior_id' => $senior,
             'author' => $author,
+            'author_id' => $author_id,
             'bibreference' => $bibreference,
+            'notes' => $notes,
         ]);
         $taxon->fullname = $name;
-        //$taxon->save();
-        if ($mobot['key']) {
-            $taxon->setapikey('Mobot', $mobot['key']);
+        $taxon->save();
+        if (is_array($mobot)) {
+          if ($mobot['key']) {
+              $taxon->setapikey('Mobot', $mobot['key']);
+            }
         }
-        if ($ipni['key']) {
-            $taxon->setapikey('IPNI', $ipni['key']);
+        if (is_array($ipni)) {
+          if ($ipni['key']) {
+              $taxon->setapikey('IPNI', $ipni['key']);
+          }
         }
-        //$taxon->save();
-        //$this->affectedId($taxon->id);
+        $taxon->save();
+        $this->affectedId($taxon->id);
 
         return;
     }
