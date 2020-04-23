@@ -4,4 +4,5 @@ return [
     'App\Plant' => 'Plant',
     'App\Voucher' => 'Herbarium sample',
     'App\Taxon' => 'Taxon',
+    'App\Person' => 'Person'
 ];

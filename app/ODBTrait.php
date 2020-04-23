@@ -9,6 +9,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Lang;
+use DB;
 
 // class name needs to be different as Trait is a PHP reserved word
 class ODBTrait extends Model
@@ -27,6 +28,7 @@ class ODBTrait extends Model
     // NOTE: all link_types must support a "fullname" method
     const LINK_TYPES = [
         Taxon::class,
+        Person::class,
     ];
 
     const QUANT_INTEGER = 0;
@@ -232,4 +234,6 @@ class ODBTrait extends Model
 
         return $ret;
     }
+
+
 }
