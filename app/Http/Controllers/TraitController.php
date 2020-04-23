@@ -40,6 +40,8 @@ class TraitController extends Controller
         $odbtrait = ODBTrait::findOrFail($request->id);
         if ($request->measurement) {
             $measurement = Measurement::findOrFail($request->measurement);
+        } else {
+            $measurement = NULL;
         }
         $html = view('traits.elements.'.$odbtrait->type, compact('odbtrait', 'measurement'))->render();
 
