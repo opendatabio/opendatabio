@@ -32,6 +32,8 @@ $v0api = function () {
     Route::post('samples', '\App\Http\Api\v0\SampleController@store');
     Route::get('measurements', '\App\Http\Api\v0\MeasurementController@index');
     Route::post('measurements', '\App\Http\Api\v0\MeasurementController@store');
+    Route::get('traits', '\App\Http\Api\v0\TraitController@index');
+    Route::post('traits', '\App\Http\Api\v0\TraitController@store');
 };
 
 Route::group(['prefix' => 'v0'], $v0api);
