@@ -8,10 +8,13 @@
 namespace App\DataTables;
 
 use App\ODBTrait;
+use App\UserTranslation;
+use Lang;
+
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
-use Lang;
+#use Lang;
 
 class TraitsDataTable extends DataTable
 {
@@ -29,7 +32,12 @@ class TraitsDataTable extends DataTable
         ->editColumn('type', function ($odbtrait) { return Lang::get('levels.traittype.'.$odbtrait->type); })
         ->addColumn('details', function ($odbtrait) {return $odbtrait->details(); })
         ->addColumn('measurements', function ($odbtrait) {return $odbtrait->measurements_count; })
+        ->filterColumn('name', function ($query, $keyword) {
+            $translations = UserTranslation::where('translation', 'like', '%'.$keyword.'%')->where('translatable_type','like','%ODBTrait%')->get()->pluck('translatable_id')->toArray();
+            $query->whereIn('id', $translations);
+        })
         ->rawColumns(['name']);
+
     }
 
     /**
@@ -39,9 +47,8 @@ class TraitsDataTable extends DataTable
      */
     public function query()
     {
-        $query = ODBTrait::withCount(['measurements'])->with(['categories.translations', 'translations']);
-
-        return $this->applyScopes($query);
+      $query = ODBTrait::with(['translations','categories.translations'])->withCount("measurements")->orderBy('export_name', 'asc');
+      return $this->applyScopes($query);
     }
 
     /**
@@ -53,7 +60,7 @@ class TraitsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'name' => ['title' => Lang::get('messages.name'), 'searchable' => false, 'orderable' => false],
+                'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'type' => ['title' => Lang::get('messages.type'), 'searchable' => false, 'orderable' => true],
                 'details' => ['title' => Lang::get('messages.details'), 'searchable' => false, 'orderable' => false],
