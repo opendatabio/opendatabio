@@ -37,11 +37,27 @@ class TraitController extends Controller
         if ($request->limit) {
             $traits->limit($request->limit);
         }
+
         $traits = $traits->get();
 
+        #add categories for categorical $traits
+        foreach ($traits as $thetrait) {
+              if (in_array(  $thetrait->type,[ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
+                    $cats = $thetrait->categories;
+                    $catarr = array();
+                    foreach($cats as $cat) {
+                      $catarr[] = array($cat->id,$cat->name,$cat->description);
+                    }
+                    $thetrait->categoria = json_encode($catarr);
+              } else {
+                    $thetrait->categoria = "";
+              }
+              unset($thetrait->categories);
+        }
         $fields = ($request->fields ? $request->fields : 'simple');
-        $traits = $this->setFields($traits, $fields, ['id', 'type', 'typename','export_name','unit', 'range_min', 'range_max', 'link_type','name','description']);
+        $traits = $this->setFields($traits, $fields, ['id', 'type', 'typename','export_name','unit', 'range_min', 'range_max', 'link_type','name','description',"categoria"]);
         return $this->wrap_response($traits);
+        #return $this->toJson($traits);
     }
 
 
