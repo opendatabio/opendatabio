@@ -31,7 +31,7 @@ class Taxon extends Node
     // for use in selects, lists the most common tax levels
     public static function TaxLevels()
     {
-        return [0, 30, 60, 70, 90, 100, 120, 130, 150, 180, 210, 220, 240, 270, -100];
+        return [0, 10, 30, 40, 60, 70, 80, 90, 100, 120, 130, 150, 180, 190, 210, 220, 240, 270, -100];
     }
 
     public function newQuery($excludeDeleted = true)
@@ -89,20 +89,34 @@ class Taxon extends Node
         switch ($rank) {
                 case 'kingdom':
                     return 0;
+                case 'subkingdom':
+                case 'subkingd.':
+                    return 10;
                 case 'div.':
                 case 'phyl.':
                 case 'phylum':
                 case 'division':
                         return 30;
+                case 'subdiv.':
+                case 'subphyl.':
+                case 'subphylum':
+                case 'subdivision':
+                        return 40;
                 case 'cl.':
                 case 'class':
                         return 60;
                 case 'subcl.':
                 case 'subclass':
                         return 70;
+                case 'superord.':
+                case 'superorder':
+                        return 80;
                 case 'ord.':
                 case 'order':
                         return 90;
+                case 'subord.':
+                case 'suborder':
+                        return 100;
                 case 'fam.':
                 case 'family':
                         return 120;
@@ -117,6 +131,8 @@ class Taxon extends Node
                         return 180;
                 case 'subg.':
                 case 'subgenus':
+                case 'sect.':
+                case 'section':
                         return 190;
                 case 'sp.':
                 case 'spec.':
