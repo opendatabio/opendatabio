@@ -53,7 +53,6 @@ class ImportPlants extends ImportCollectable
         if (!$this->validateProject($plant)) {
             return false;
         }
-
         //validate location
         $valid = ODBFunctions::validRegistry(Location::select('id'), $plant['location']);
         if (null === $valid) {
@@ -95,9 +94,11 @@ class ImportPlants extends ImportCollectable
             'project_id' => $project,
             'created_at' => $created_at,
             'updated_at' => $updated_at,
-            'notes' => $notes,
-            'relative_position' => $relative_position,
+            'notes' => $notes,            
         ]);
+        if (!is_null($relative_position)) {
+            $plant->setRelativePosition($relative_position['x'], $relative_position['y']);
+        }
         //date can not be set into constructor due to IncompleteDate compatibility
         $plant->setDate($date);
         $plant->save();
