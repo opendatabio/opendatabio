@@ -26,6 +26,10 @@ class PlantsDataTable extends DataTable
         ->editColumn('tag', function ($plant) {
             return $plant->rawLink();
         })
+        ->filterColumn('tag', function ($query, $keyword) {
+            $sql = " tag='".$keyword."' OR tag like '%-".$keyword."'";
+            $query->whereRaw($sql);
+        })
         ->addColumn('project', function ($plant) { return $plant->project->name; })
         ->addColumn('identification', function ($plant) {
             return $plant->taxonName == Lang::get('messages.unidentified') ?
@@ -92,7 +96,7 @@ class PlantsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'tag' => ['title' => Lang::get('messages.location_and_tag'), 'searchable' => false, 'orderable' => true],
+                'tag' => ['title' => Lang::get('messages.location_and_tag'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
@@ -102,7 +106,7 @@ class PlantsDataTable extends DataTable
                 'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
-                'dom' => 'Brtip',
+                'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
                 'buttons' => [
