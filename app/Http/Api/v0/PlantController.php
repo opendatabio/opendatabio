@@ -55,11 +55,14 @@ class PlantController extends Controller
             $projects = ODBFunctions::asIdList($request->project, Project::select('id'), 'name');
             $plant->whereIn('project_id', $projects);
         }
-        if ($request->limit) {
+        if ($request->limit && $request->offset) {
+            $plant->offset($request->offset)->limit($request->limit);
+        } else {
+          if ($request->limit) {
             $plant->limit($request->limit);
+          }
         }
         $plant = $plant->get();
-
         $fields = ($request->fields ? $request->fields : 'simple');
         $plant = $this->setFields($plant, $fields, ['fullName', 'taxonName', 'id', 'location_id', 'locationName', 'tag', 'date', 'notes', 'projectName', 'relativePosition',
         ]);
