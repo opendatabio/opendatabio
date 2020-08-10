@@ -27,5 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->app->when(MigrationCreator::class)->needs('$customStubPath')->give(function ($app) {
+              return $app->basePath('stubs');
+        });
     }
+
+
+
 }

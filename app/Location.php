@@ -24,6 +24,10 @@ class Location extends Node
     protected $long;
     protected $geom_array = [];
     protected $isSimplified = false;
+    protected $leftColumnName = 'lft';
+    protected $rightColumnName = 'rgt';
+    protected $depthColumnName = 'depth';
+
 
     public function getPrecisionAttribute()
     {

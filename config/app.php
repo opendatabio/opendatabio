@@ -237,7 +237,7 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
-        Baum\Providers\BaumServiceProvider::class,
+        Baum\BaumServiceProvider::class,
         Fx3costa\LaravelChartJs\Providers\ChartjsServiceProvider::class,
         Barryvdh\TranslationManager\ManagerServiceProvider::class,
 

@@ -13,6 +13,11 @@ use Lang;
 
 class Taxon extends Node
 {
+    public $table = "taxons";
+    protected $leftColumnName = 'lft';
+    protected $rightColumnName = 'rgt';
+    protected $depthColumnName = 'depth';
+
     protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
                 'bibreference', 'bibreference_id', 'parent_id', 'notes', ];
 
