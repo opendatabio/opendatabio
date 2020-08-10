@@ -32,28 +32,27 @@ class ExternalAPIs
 
     public function getIndexHerbariorum($acronym)
     {
-        $base_uri = 'http://sweetgum.nybg.org/science/ih/';
+        $base_uri = "http://sweetgum.nybg.org/science/api/v1/institutions/";
+        //$client = new Guzzle();
         $client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
-        //# STEP ONE, get to the list of herbaria
-        // URL updated 01/09/2017
-        $response = $client->request('GET', 'herbarium_list.php?NamOrganisationAcronym='.$acronym);
+        try {
+            $response = $client->request('GET', 'search?code='.$acronym);
+        } catch (ClientException $e) {
+            return null; //FAILED
+        }
         if (200 != $response->getStatusCode()) {
             return null;
         } // FAILED
-        $body = (string) $response->getBody();
-        if (!preg_match("/herbarium_details.php\?irn=(\d+)/", $body, $matches)) {
-            return null;
-        } // NO RESULTS
-        $IRN = $matches[1];
-        //# STEP TWO, get the herbarium details
-        $response = $client->request('GET', 'herbarium.txt.php?irn='.$IRN);
-        if (200 != $response->getStatusCode()) {
-            return null;
-        } // FAILED
-        $body = explode("\n", (string) $response->getBody());
-        $name = $body[0];
-
-        return [$IRN, $name];
+        $answer = json_decode($response->getBody());
+        //Log::warning("".serialize($answer));
+        if ($answer->meta->hits == 1) {
+          $IRN = $answer->data[0]->irn;
+          $name = $answer->data[0]->organization;
+          return [$IRN, $name];
+        } else {
+          return null;
+        }
+        //
     }
 
     public function getMobot($searchstring)
