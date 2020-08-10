@@ -44,7 +44,7 @@ if (isset($parent) and get_class($parent) == "App\Location")
     $is_location = true;
 ?>
 @if ($is_location)
-<div class="form-group"> 
+<div class="form-group">
     <label for="parent_location_id" class="col-sm-3 control-label">
 @lang('messages.parent_location')
 </label>
@@ -52,7 +52,7 @@ if (isset($parent) and get_class($parent) == "App\Location")
 	    <div class="col-sm-6">
         {{ isset($voucher) ? $voucher->parent->fullname : $parent->fullname }}
     <input type="hidden" name="parent_type" value="App\Location">
-    <input type="hidden" name="parent_location_id" 
+    <input type="hidden" name="parent_location_id"
     value="{{ old('parent_location_id', isset($voucher) ? $voucher->parent_id : $parent->id) }}">
             </div>
   <div class="col-sm-12">
@@ -68,14 +68,14 @@ if (isset($parent) and get_class($parent) == "App\Location")
 </label>
         <a data-toggle="collapse" href="#hintpp" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-<?php 
+<?php
 $p = isset($voucher) ? $voucher->parent : $parent;
 echo $p->fullname;
 if ($p->identification)
     echo " <em>(" . $p->identification->taxon->fullname . ")</em>";
 ?>
     <input type="hidden" name="parent_type" value="App\Plant">
-    <input type="hidden" name="parent_plant_id" 
+    <input type="hidden" name="parent_plant_id"
     value="{{ old('parent_plant_id', isset($voucher) ? $voucher->parent_id : $parent->id) }}">
             </div>
   <div class="col-sm-12">
@@ -127,8 +127,8 @@ if ($p->identification)
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 {!! Multiselect::autocomplete(
-    'collector', 
-    $persons->pluck('abbreviation', 'id'), 
+    'collector',
+    $persons->pluck('abbreviation', 'id'),
     isset($voucher) ? $voucher->collectors->pluck('person_id') : [],
     ['class' => 'multiselect form-control']
 ) !!}
@@ -190,9 +190,15 @@ if ($p->identification)
     <label for="notes" class="col-sm-3 control-label">
 @lang('messages.notes')
 </label>
+      <a data-toggle="collapse" href="#hintnotes" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<textarea name="notes" id="notes" class="form-control">{{ old('notes', isset($voucher) ? $voucher->notes : null) }}</textarea>
-            </div>
+  </div>
+  <div class="col-sm-12">
+    <div id="hintnotes" class="panel-collapse collapse">
+	@lang('messages.voucher_note_hint')
+    </div>
+  </div>
 </div>
 
 @if ($is_location)
@@ -221,7 +227,7 @@ if ($p->identification)
         <a data-toggle="collapse" href="#hint9" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<?php $selected = old('modifier', (isset($voucher) and $voucher->identification) ? $voucher->identification->modifier : null); ?>
-    
+
 @foreach (App\Identification::MODIFIERS as $modifier)
         <span>
     		<input type = "radio" name="modifier" value="{{$modifier}}" {{ $modifier == $selected ? 'checked' : '' }}>
@@ -261,7 +267,7 @@ if ($p->identification)
         <a data-toggle="collapse" href="#hint8" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 {!! View::make('common.incompletedate')->with([
-    'object' => (isset($voucher) and $voucher->identification) ? $voucher->identification : null, 
+    'object' => (isset($voucher) and $voucher->identification) ? $voucher->identification : null,
     'field_name' => 'identification_date'
 ]) !!}
             </div>
@@ -319,40 +325,80 @@ if ($p->identification)
 <label for="herbaria" class="col-sm-3 control-label">
 @lang ('messages.herbaria')
 </label>
-    <div class="col-sm-6">
-<table class="table table-striped">
-<thead>
-    <th>
-@lang('messages.herbarium')
-    </th>
-    <th>
-@lang('messages.herbarium_number')
-    </th>
-</thead>
-<tbody>
-@foreach ($herbaria as $herbarium) 
-    <tr>
-        <td>{{$herbarium->acronym}}</td>
-        <td><input name="herbarium[{{$herbarium->id}}]" value="{{ old('herbarium.' . $herbarium->id, (isset($voucher) and $voucher->herbaria->find($herbarium->id)) ? $voucher->herbaria->find($herbarium->id)->pivot->herbarium_number : null ) }}
-"></td>
-    </tr>
-@endforeach
-    <tr>
+<a data-toggle="collapse" href="#hint_voucher_herbaria" class="btn btn-default">?</a>
+<div class="col-sm-6">
+  <select name="herbaria_repos" id="herbaria_repos" class="form-control" >
+    <option value='' >&nbsp;</option>
+    @foreach ($herbaria as $herbarium)
+    <option value="{{$herbarium->id}}" {{ $herbarium->id == $selected ? 'selected' : '' }}>
+      {{ $herbarium->acronym }}
+    </option>
+  @endforeach
+  </select>
+</div>
+<div class="col-sm-12">
+  <div id="hint_voucher_herbaria" class="panel-collapse collapse">
+    @lang('messages.voucher_herbaria_deposited_hint')
+  </div>
+</div>
+</div>
+<div class="form-group">
+<div class="col-sm-6">
+  <table  id='herbaria_table' class="table table-striped">
+    <thead>
+      <th>
+        @lang('messages.herbarium')
+      </th>
+      <th>
+        @lang('messages.herbarium_number')
+      </th>
+      <th>
+        @lang('messages.voucher_isnomenclatural_type')
+      </th>
+      <th>
+        @lang('messages.actions')
+      </th>
+    </thead>
+    <tbody >
+      @foreach ($herbaria as $herbarium)
+        @if((isset($voucher) and $voucher->herbaria->find($herbarium->id)))
+        <tr id="herbarium_{{$herbarium->id}}">
+          <td>{{$herbarium->acronym}}</td>
+          <td><input name="herbarium[{{$herbarium->id}}]['herbarium_number']" value="{{ old('herbarium.' . $herbarium->id, (isset($voucher) and $voucher->herbaria->find($herbarium->id)) ? $voucher->herbaria->find($herbarium->id)->pivot->herbarium_number : null ) }}"></td>
+          <td>
+            <select name="herbarium[{{$herbarium->id}}]['herbarium_type']" class="form-control" style="width:auto;">
+              <?php $ovtype = old('herbarium.' . $herbarium->id, (isset($voucher) and $voucher->herbaria->find($herbarium->id)) ? $voucher->herbaria->find($herbarium->id)->pivot->herbarium_type : null ); ?>
+              @foreach (\App\herbarium::NOMENCLATURE_TYPE as $vtype)
+              <option value="{{ $vtype }}" {{ $vtype == $ovtype ? 'selected' : '' }}>
+                @lang('levels.vouchertype.' . $vtype)
+              </option>
+              @endforeach
+            </select>
+          </td>
+          <td><button  onclick="onClickDelete('herbarium_{{$herbarium->id}}')">@lang('messages.remove')</button></td>
+        </tr>
+        @endif
+      @endforeach
 </tbody>
 </table>
     </div>
+<div class="col-sm-12">
+  <div id="hint_voucher_herbaria2" class="panel-collapse collapse">
+    @lang('messages.voucher_herbaria_depositedtable_hint')
+  </div>
 </div>
-		        <div class="form-group">
-			    <div class="col-sm-offset-3 col-sm-6">
-                <button type="submit" class="btn btn-success" name="submit" value="submit"
-@if(!count($projects))
-disabled
-@endif
->
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.add')
 
-				</button>
+</div>
+<div class="form-group">
+<div class="col-sm-offset-3 col-sm-6">
+    <button type="submit" class="btn btn-success" name="submit" value="submit"
+    @if(!count($projects))
+      disabled
+      @endif
+>
+<i class="fa fa-btn fa-plus"></i>
+  @lang('messages.add')
+</button>
 				<a href="{{url()->previous()}}" class="btn btn-warning">
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.back')
@@ -381,7 +427,41 @@ $("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#tax
         });
 $("#identifier_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#identifier_id", "@lang('messages.noresults')");
 $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
+
+
+
+
 });
+
+$("#herbaria_repos").change(function(){
+    var id = $('#herbaria_repos option:selected').val();
+    if ("undefined" === typeof id) {
+        return; // nothing to do here...
+    }
+    var acronym = $("#herbaria_repos option:selected").text();
+    var markup = "<tr  id=\"herbarium_"+id+"\" >\
+    <td>"+acronym+"</td>\
+    <td><input name=\"herbarium["+id+"]['herbarium_number']\" value=\"\"></td>\
+    <td>\
+     <select name=\"herbarium[{{$herbarium->id}}]['herbarium_type']\" class=\"form-control\" style=\"width:auto;\">\
+      @foreach (\App\herbarium::NOMENCLATURE_TYPE as $vtype)\
+      <option value=\"{{ $vtype }}\" {{ 0 == $vtype ? 'selected' : '' }}>\
+      @lang('levels.vouchertype.'.$vtype)\
+      </option>\
+      @endforeach\
+      </select>\
+    </td>\
+    <td><button  onclick=\"onClickDelete('herbarium_"+id+"')\" >@lang('messages.remove')</button></td></tr>";
+    $("#herbaria_table").append(markup);
+});
+
+
+function onClickDelete(event) {
+  $('#'+event).remove();
+}
+
+
+
 function setIdentificationFields(vel) {
     var adm = $('#herbarium_id option:selected').val();
     if ("undefined" === typeof adm) {
@@ -395,6 +475,7 @@ function setIdentificationFields(vel) {
         $(".herbarium_reference").show(vel);
     }
 }
+
 $("#herbarium_id").change(function() { setIdentificationFields(400); });
 // trigger this on page load
 setIdentificationFields(0);
