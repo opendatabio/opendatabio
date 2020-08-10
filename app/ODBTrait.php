@@ -29,6 +29,7 @@ class ODBTrait extends Model
     const LINK_TYPES = [
         Taxon::class,
         Person::class,
+        Plant::class,
     ];
 
     const QUANT_INTEGER = 0;

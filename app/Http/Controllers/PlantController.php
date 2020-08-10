@@ -19,10 +19,19 @@ use App\Herbarium;
 use App\Identification;
 use App\DataTables\PlantsDataTable;
 use Auth;
+use Response;
 use Lang;
 
 class PlantController extends Controller
 {
+    // Functions for autocompleting in dropdowns. Expects a $request->query input
+    public function autocomplete(Request $request)
+    {
+      $busca = Plant::whereRaw('tag LIKE ?', ["'".$request->input('query')."%'"])
+      ->selectRaw("id as data, tag as value")
+      ->take(30)->get();
+      return Response::json(['suggestions' => $busca]);
+    }
     /**
      * Display a listing of the resource.
      *

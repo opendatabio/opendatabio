@@ -1,7 +1,7 @@
-@if ($odbtrait->link_type == "App\Taxon" || $odbtrait->link_type == "App\Person") <!-- other link types need separate elements!! -->
+@if ($odbtrait->link_type == "App\Taxon" || $odbtrait->link_type == "App\Person" || $odbtrait->link_type=="App\Plant") <!-- other link types need separate elements!! -->
     @if (!isset ($index))
         <div class="form-group">
-        <label for="link" class="col-sm-3 control-label">
+        <label for="link" class="col-sm-3 control-label mandatory">
         @lang('messages.link')
         </label>
         <div class="col-sm-6">
@@ -76,6 +76,18 @@ if (typeof jQuery !== 'undefined') {
 </script>
     @endif
 
+    @if (!isset($index) && $odbtrait->link_type == "App\Plant")
+  </div>
+  </div>
+  <script>
+  // NOTICE: this will only work if called via AJAX. Set up an alternative for direct loading
+  if (typeof jQuery !== 'undefined') {
+    $(document).ready(function(){
+      $("#link_autocomplete").odbAutocomplete("{{url('plants/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+    });
+  }
+  </script>
+    @endif
 
 @if (isset($index) and isset($measurement))
 <span style="float:right">
