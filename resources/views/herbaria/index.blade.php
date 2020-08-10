@@ -42,6 +42,10 @@
 
 				</button>
 				<div class="spinner" id="spinner"> </div>
+				<div class="btn btn-link" id="noih" >
+				    <i class="fa fa-btn fa-plus"></i>
+@lang('messages.noih')
+</div>
 			    </div>
 			</div>
 		        <div class="form-group">
@@ -83,15 +87,46 @@
 					</div></td>
                                         <td class="table-text">{{ $herbarium->name }}</td>
 					<td class="table-text">
+          @if($herbarium->irn >0)
 					<a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn={{$herbarium->irn}}">Details</a>
+          @else
+          @lang('messages.noih')
+          @endif
 					</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
-			 {{ $herbaria->links() }} 
+			 {{ $herbaria->links() }}
                     </div>
                 </div>
         </div>
     </div>
 @endsection
+
+@push ('scripts')
+<script>
+$("#noih").click(
+  function() {
+    var currentclass = $(this).hasClass('btn-link');
+    if (currentclass) {
+        $("#checkih").removeClass("btn-link");
+        $("#checkih").addClass("btn-link");
+        $(this).removeClass("btn-link");
+        $(this).addClass("btn-primary");
+        $('#name').attr("readonly", false);
+        $('#name').val(null);
+        $('#irn').val(-1);
+    } else {
+        $("#checkih").removeClass("btn-link");
+        $("#checkih").addClass("btn-primary");
+        $(this).removeClass("btn-primary");
+        $(this).addClass("btn-link");
+        $('#name').attr("readonly", true);
+        $('#name').val(null);
+        $('#irn').val(null);
+    }
+  }
+);
+</script>
+@endpush

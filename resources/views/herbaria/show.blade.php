@@ -17,9 +17,15 @@
 		    <p><strong>
 @lang('messages.institution')
 : </strong> {{ $herbarium->name }} </p>
-		    <p><a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn={{$herbarium->irn}}">
+		    <p>
+          @if($herbarium->irn >0)
+          <a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn={{$herbarium->irn}}">
 @lang('messages.details')
-</a></p>
+</a>
+          @else
+          @lang('messages.noih')
+          @endif
+</p>
 @can ('delete', $herbarium)
 		    <form action="{{ url('herbaria/'.$herbarium->id) }}" method="POST" class="form-horizontal">
 			 {{ csrf_field() }}
