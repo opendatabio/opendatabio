@@ -1,19 +1,19 @@
 @if (!isset($index))
-<label for="value" class="col-sm-3 control-label">
+<label for="value" class="col-sm-3 control-label mandatory">
 @lang('messages.value')
 </label>
 <div class="col-sm-6">
 @endif
-<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' type="text" class="form-control" value="{{ 
-    isset($index) ? 
-    old('value.' . $index . '.' . $traitorder, isset($measurement) ? $measurement->valueActual : null) : 
+<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' type="text" class="form-control" value="{{
+    isset($index) ?
+    old('value.' . $index . '.' . $traitorder, isset($measurement) ? $measurement->valueActual : null) :
     old('value', isset($measurement) ? $measurement->valueActual : null)
 }}"
-@if (isset($index) and isset($measurement)) 
+@if (isset($index) and isset($measurement))
     disabled
 @endif
 >
-@if (isset($index) and isset($measurement)) 
+@if (isset($index) and isset($measurement))
 <span style="float:right">
     <a href="{{url('measurements/' . $measurement->id . '/edit')}}" target="_blank">
             @lang('messages.edit')
@@ -30,4 +30,3 @@
 @if (!isset($index))
 </div>
 @endif
-
