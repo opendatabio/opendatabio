@@ -28,7 +28,15 @@ class BibReferenceDataTable extends DataTable
         ->addColumn('author', function ($reference) { return $reference->author; })
         ->addColumn('year', function ($reference) { return $reference->year; })
         ->addColumn('title', function ($reference) { return $reference->title; })
-        ->addColumn('doi', function ($reference) { return '<a href="https://dx.doi.org/'.$reference->doi.'">'.$reference->doi.'</a>'; })
+        ->addColumn('doi', function ($reference) {
+          if (!empty($reference->doi)) {
+            return '<a href="https://dx.doi.org/'.$reference->doi.'">'.Lang::get('messages.externallink').'</a>';
+          } else {
+            if (!empty($reference->url)) {
+              return '<a href="'.$reference->url.'">'.Lang::get('messages.externallink').'</a>';
+            }
+          }
+        })
         ->filterColumn('title', function ($query, $keyword) {
             $query->where('bibtex', 'like', ["%{$keyword}%"]);
         })
@@ -66,12 +74,12 @@ class BibReferenceDataTable extends DataTable
                 'author' => ['title' => Lang::get('messages.authors'), 'searchable' => false, 'orderable' => false],
                 'year' => ['title' => Lang::get('messages.year'), 'searchable' => false, 'orderable' => false],
                 'title' => ['title' => Lang::get('messages.title'), 'searchable' => true, 'orderable' => false],
-                'doi' => ['title' => Lang::get('messages.doi'), 'searchable' => true, 'orderable' => false],
+                'doi' => ['title' => Lang::get('messages.linktobib'), 'searchable' => true, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
-                'order' => [[0, 'asc']],
+                //'order' => [[0, 'asc']],
                 'buttons' => [
                     'csv',
                     'excel',

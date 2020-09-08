@@ -48,6 +48,17 @@
 <div class="col-sm-6">
 <a href="https://dx.doi.org/{{ $reference->doi }}">{{$reference->doi}}</a>&nbsp;
 </div>
+@else
+@if ($reference->url)
+<div class="col-sm-6">
+<strong>
+@lang('messages.externallink')
+</strong>
+</div>
+<div class="col-sm-6">
+<a href="{{ $reference->url}}">{{$reference->url}}</a>&nbsp;
+</div>
+@endif
 @endif
 
 <div class="col-sm-6">

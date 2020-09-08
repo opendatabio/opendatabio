@@ -11,6 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 use RenanBr\BibTexParser\Listener;
 use RenanBr\BibTexParser\Parser;
 use RenanBr\BibTexParser\ParseException;
+use RenanBr\BibTexParser\Processor;
+//use RenanBr\BibTexParser\Processor\LatexToUnicodeProcessor as LatexToUnicode;
+use App\BibLatexTitleToUnicode;
+//use RenanBr\BibTexParser\Exception\ProcessorException;
 use Pandoc\Pandoc;
 use Pandoc\PandocException;
 use DB;
@@ -60,13 +64,21 @@ class BibReference extends Model
         return true;
     }
 
+
     private function parseBibtex()
     {
         $listener = new Listener();
-        $listener->setTagNameCase(CASE_LOWER);
+        $listener->addProcessor(new Processor\TagNameCaseProcessor(CASE_LOWER));
+        //$listener->setTagNameCase(CASE_LOWER);
+
+        $listener->addProcessor(new BibLatexTitleToUnicode());
+
+        //OLD SOLUTION
+        /*
         try {
             $pandoc = new Pandoc();
-            $listener->addTagValueProcessor(function (&$value, $tag) use ($pandoc) {
+            $listener->addProcessor(function (&$value, $tag) use ($pandoc) {
+            //$listener->addTagValueProcessor(function (&$value, $tag) use ($pandoc) {
                 if ('author' != $tag and 'title' != $tag) {
                     return;
                 }
@@ -77,14 +89,15 @@ class BibReference extends Model
             });
         } catch (PandocException $e) {
         } // pandoc is not installed
+        */
         $parser = new Parser();
         $parser->addListener($listener);
+
         try {
             $parser->parseString($this->bibtex);
         } catch (ParseException $e) {
             Log::error('Error handling bibtex:'.$e->getMessage());
             $this->entries[0] = ['author' => null, 'title' => null, 'year' => null, 'citation-key' => 'Invalid'];
-
             return;
         }
         $this->entries = $listener->export();
@@ -102,6 +115,19 @@ class BibReference extends Model
         }
         if (count($this->entries) > 0 and array_key_exists('doi', $this->entries[0])) {
             return $this->entries[0]['doi'];
+        } else {
+            return '';
+        }
+    }
+
+    public function getUrlAttribute()
+    {
+        // falls back to the bibtex "doi" field in case the database column is absent
+        if (is_null($this->entries)) {
+            $this->parseBibtex();
+        }
+        if (count($this->entries) > 0 and array_key_exists('url', $this->entries[0])) {
+            return $this->entries[0]['url'];
         } else {
             return '';
         }

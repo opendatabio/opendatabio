@@ -9,7 +9,8 @@ namespace App\Jobs;
 
 use RenanBr\BibTexParser\Listener;
 use RenanBr\BibTexParser\Parser;
-use RenanBr\BibTexParser\Processor\NamesProcessor as AuthorProcessor;
+use RenanBr\BibTexParser\Processor;
+//\NamesProcessor as AuthorProcessor;
 use App\BibReference;
 
 class ImportBibReferences extends AppJob
@@ -73,8 +74,10 @@ class ImportBibReferences extends AppJob
     {
         $contents = $this->userjob->data['contents'];
         $listener = new Listener();
-        $listener->setTagNameCase(CASE_LOWER);
-        $listener->addTagValueProcessor(new AuthorProcessor());
+        //$listener->setTagNameCase(CASE_LOWER);
+        $listener->addProcessor(new Processor\TagNameCaseProcessor(CASE_LOWER));
+        //$listener->addTagValueProcessor(new AuthorProcessor());
+        $listener->addProcessor(new Processor\NamesProcessor());
         $parser = new Parser();
         $parser->addListener($listener);
         $parser->parseString($contents);
