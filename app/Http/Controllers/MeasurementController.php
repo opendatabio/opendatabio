@@ -68,8 +68,9 @@ class MeasurementController extends Controller
 
     public function indexDatasets($id, MeasurementsDataTable $dataTable)
     {
-        $dataset = Dataset::findOrFail($id);
+        //$dataset = Dataset::with(['measurements.measured', 'measurements.odbtrait'])->findOrFail($id);
 
+        $dataset = Dataset::findOrFail($id);
         return $dataTable->with([
             'dataset' => $id,
         ])->render('measurements.index', compact('dataset'));
@@ -165,11 +166,18 @@ class MeasurementController extends Controller
             if (!Measurement::beforeOrSimilar($colldate, date('Y-m-d'))) {
                 $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
             }
-            if (isset($odbtrait->range_min) and $request->value < $odbtrait->range_min) {
+            if (ODBTrait::SPECTRAL !== $odbtrait->type and isset($odbtrait->range_min) and $request->value < $odbtrait->range_min) {
                 $validator->errors()->add('value', Lang::get('messages.value_out_of_range'));
             }
-            if (isset($odbtrait->range_max) and $request->value > $odbtrait->range_max) {
+            if (ODBTrait::SPECTRAL !== $odbtrait->type and isset($odbtrait->range_max) and $request->value > $odbtrait->range_max) {
                 $validator->errors()->add('value', Lang::get('messages.value_out_of_range'));
+            }
+            // Checks if spectral has the correct number of values and if values are numeric
+            if (ODBTrait::SPECTRAL == $odbtrait->type) {
+               $spectrum = explode(";",$request->value);
+               if (count($spectrum) != $odbtrait->value_length or count($spectrum) != count(array_filter($spectrum, "is_numeric"))) {
+                $validator->errors()->add('value', Lang::get('messages.value_spectral').": ".count(explode(";",$request->value))." v.s. ".$odbtrait->value_length);
+               }
             }
             // Checks if integer variable is integer type
             if (ODBTrait::QUANT_INTEGER == $odbtrait->type and strval($request->value) != strval(intval($request->value))) {

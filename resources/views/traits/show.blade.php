@@ -10,8 +10,13 @@
 		<div class="panel-body">
 <p><strong>
 @lang('messages.name')
-: </strong>
+:</strong>
 {{ $odbtrait->name }}
+</p>
+<p><strong>
+@lang('messages.id')
+: </strong>
+{{ $odbtrait->id }}
 </p>
 <p><strong>
 @lang('messages.description')
@@ -29,7 +34,7 @@
 {{ $odbtrait->export_name }}
 </p>
 
-@if ($odbtrait->object_types) 
+@if ($odbtrait->object_types)
 <p><strong>
     @lang('messages.object_types')
 :</strong><ul>
@@ -56,29 +61,48 @@
     @endif
 @endif
 
+@if ( in_array( $odbtrait->type, [\App\ODBTrait::SPECTRAL]))
+    @if ($odbtrait->range_min or $odbtrait->range_max or $odbtrait->value_length)
+    <p><strong>
+    @lang('messages.wavenumber_start') cm<sup>-1</sup>
+    : </strong>
+    {{ $odbtrait->range_min }}
+    </p>
+    <p><strong>
+    @lang('messages.wavenumber_end') cm<sup>-1</sup>
+    : </strong>
+    {{ $odbtrait->range_max }}
+    </p>
+    <p><strong>
+    @lang('messages.wavenumber_step')
+    : </strong>
+    {{ $odbtrait->value_length }}
+    </p>
+    @endif
+@endif
+
 @if ( in_array( $odbtrait->type, [\App\ODBTrait::CATEGORICAL, \App\ODBTrait::CATEGORICAL_MULTIPLE, \App\ODBTrait::ORDINAL]) and $odbtrait->categories)
 <p><strong>@lang('messages.categories'):</strong></p>
 <table class="table table-striped"> <thead>
+ <th>
+   @lang('messages.name')
+  </th>
+  <th>
+   @lang('messages.description')
+  </th>
 @if ($odbtrait->type == \App\ODBTrait::ORDINAL)
     <th>
 @lang('messages.rank')</th>
 @endif
- <th>
- @lang('messages.name')
-</th>
- <th>
- @lang('messages.description')
-</th>
-
 </thead>
 <tbody>
 @foreach ($odbtrait->categories as $cat)
 <tr>
-@if ($odbtrait->type == \App\ODBTrait::ORDINAL)
-    <td>{{$cat->rank}}</td>
-@endif
     <td> {{$cat->name}}</td>
     <td> {{$cat->description}}</td>
+    @if ($odbtrait->type == \App\ODBTrait::ORDINAL)
+        <td>{{$cat->rank}}</td>
+    @endif
 </tr>
 @endforeach
 </tbody>

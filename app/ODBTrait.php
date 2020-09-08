@@ -40,6 +40,7 @@ class ODBTrait extends Model
     const TEXT = 5;
     const COLOR = 6;
     const LINK = 7; // may include genomic / spectral??
+    const SPECTRAL =8;
     const TRAIT_TYPES = [
         self::QUANT_INTEGER,
         self::QUANT_REAL,
@@ -49,9 +50,10 @@ class ODBTrait extends Model
         self::TEXT,
         self::COLOR,
         self::LINK,
+        self::SPECTRAL
     ];
 
-    protected $fillable = ['type', 'export_name', 'unit', 'range_min', 'range_max', 'link_type'];
+    protected $fillable = ['type', 'export_name', 'unit', 'range_min', 'range_max', 'link_type', 'value_length', 'bibreference_id'];
     protected $table = 'traits';
 
     public function rawLink()
@@ -97,12 +99,15 @@ class ODBTrait extends Model
                 'cat_name.1' => 'required_if:type,2,3,4',
                 'cat_name.1.1' => 'required_if:type,2,3,4',
                 'link_type' => 'required_if:type,7',
+                'value_length' => 'required_if:type,8',
+                'range_min' => 'required_if:type,8',
+                'range_max' => 'required_if:type,8',
             ], $merge);
     }
 
-    protected function makeCategory($rank, $names, $descriptions)
+    protected function makeCategory($rank, $names, $descriptions,$bibreference)
     {
-        $cat = $this->categories()->create(['rank' => $rank]);
+        $cat = $this->categories()->create(['rank' => $rank, 'bibreference_id' => $bibreference]);
         foreach ($names as $key => $translation) {
             $cat->setTranslation(UserTranslation::NAME, $key, $translation);
         }
@@ -130,6 +135,7 @@ class ODBTrait extends Model
         if (in_array($this->type, [self::CATEGORICAL, self::CATEGORICAL_MULTIPLE, self::ORDINAL])) {
             $names = $request->cat_name;
             $descriptions = $request->cat_description;
+            $bibreference = $request->cat_bibreference;
             // counts the number of skipped entries, so the ranks will be matched to the names/description
             $skips = 0;
             for ($i = 1; $i <= sizeof($names); ++$i) {
@@ -138,7 +144,7 @@ class ODBTrait extends Model
                     ++$skips;
                     continue;
                 }
-                $this->makeCategory($i - $skips, $names[$i], $descriptions[$i]);
+                $this->makeCategory($i - $skips, $names[$i], $descriptions[$i],$bibreference);
             }
         }
         // Set link type
@@ -147,12 +153,20 @@ class ODBTrait extends Model
         } else {
             $this->link_type = null;
         }
+        //Set spectral type
+        if (in_array($this->type, [self::SPECTRAL]))
+        {
+           $this->range_max = $request->range_max;
+           $this->range_min = $request->range_min;
+           $this->value_length = $request->value_length;
+        }
 
         // Set object types
         $this->object_types()->delete();
         foreach ($request->objects as $key) {
             $this->object_types()->create(['object_type' => self::OBJECT_TYPES[$key]]);
         }
+        //Translations for name and trait descriptions
         foreach ($request->name as $key => $translation) {
             $this->setTranslation(UserTranslation::NAME, $key, $translation);
         }
@@ -195,6 +209,11 @@ class ODBTrait extends Model
         }
     }
 
+
+
+
+
+
     public function valid_type($type)
     {
         return in_array($type, $this->object_types->pluck('object_type')->all());
@@ -236,5 +255,17 @@ class ODBTrait extends Model
         return $ret;
     }
 
+    public function getSpectralNamesAttribute()
+    {
+        $ret = array();
+        if (isset($this->range_min) & isset($this->range_max) & isset($this->value_length)) {
+            $min = $this->range_min;
+            $max = $this->range_max;
+            $length = $this->value_length;
+            $step = ($max-$min)/($length-1);
+            $ret = range($min,$max,$step);
+        }
+        return $ret;
+    }
 
 }

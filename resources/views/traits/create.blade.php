@@ -39,24 +39,35 @@
 <?php
 // TODO: should be moved to be PSR compliant
 function genInputTranslationTable($odbtrait, $type, $language, $order) {
-    $text = "<td><input name='cat_" . $type . "[". $order . "][" . $language . "]' value='";
-    if (is_numeric($order)) {
-        if (isset($odbtrait)) {
-            $cat = $odbtrait->categories->where('rank', $order)->first();
-            if($cat) {
-                switch($type) {
-                case "name":
-                    $get_old = $cat->translate(\App\UserTranslation::NAME, $language);
-                    break;
-                case "description":
-                    $get_old = $cat->translate(\App\UserTranslation::DESCRIPTION, $language);
-                }
-            }
+  switch($type) {
+  case "name":
+      $text = "<td><input name='cat_" . $type . "[". $order . "][" . $language . "]' value='";
+      if (is_numeric($order)) {
+          if (isset($odbtrait)) {
+              $cat = $odbtrait->categories->where('rank', $order)->first();
+              if($cat) {
+                 $get_old = $cat->translate(\App\UserTranslation::NAME, $language);
+              }
         }
         $text .= old('cat_' . $type .'.' . $order . '.' . $language, isset($get_old) ? $get_old : null);
+      }
+      $text .= "'></td>";
+      break;
+    case "description":
+      $text = "<td><textarea name='cat_" . $type . "[". $order . "][" . $language . "]' rows='2'>";
+      if (is_numeric($order)) {
+          if (isset($odbtrait)) {
+              $cat = $odbtrait->categories->where('rank', $order)->first();
+              if($cat) {
+                $get_old = $cat->translate(\App\UserTranslation::DESCRIPTION, $language);
+              }
+          }
+          $text .= old('cat_' . $type .'.' . $order . '.' . $language, isset($get_old) ? $get_old : null);
+      }
+      $text .= "</textarea></td>";
+      break;
     }
-    $text .= "'></td>";
-    return $text;
+  return $text;
 }
 
 // call this function with order = int to use OLD values, order = null produces a blank category (for use in js)
@@ -64,25 +75,24 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     if (is_null($order)) $order = "__PLACEHOLDER__";
     $TH = "<table class='table table-striped'> <thead>" .
         "<th class='table-ordinal'>" . Lang::get('messages.category_order') . " </th>" .
-        "<th>" . Lang::get('messages.language') . " </th>" . 
+        "<th>" . Lang::get('messages.language') . " </th>" .
         "<th class='mandatory'>" . Lang::get('messages.name') . " </th>" .
-        "<th>" . Lang::get('messages.description') . " </th>" . 
-        "</thead> <tbody>"; 
+        "<th>" . Lang::get('messages.description') . " </th>" .
+        "</thead> <tbody>";
     $TB = '';
     $languages = \App\Language::all();
     $first = true;
     foreach ($languages as $language) {
         $TB .="<tr>";
         if ($first) {
-            $TB .= "<td class='table-ordinal' rowspan=" . sizeof($languages) .  
+            $TB .= "<td class='table-ordinal' rowspan=" . sizeof($languages) .
                 " style='vertical-align: middle; text-align: center;'>" . $order . "</td>";
-            $first = false;
         }
         $TB .= "<td>" .$language->name. "</td>";
         $TB .= genInputTranslationTable($odbtrait, "name", $language->id, $order);
         $TB .= genInputTranslationTable($odbtrait, "description", $language->id, $order);
         $TB .="</tr>";
-    } 
+    }
     $TF = "</tbody></table>";
     return $TH . $TB . $TF;
 }
@@ -100,11 +110,12 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </th>
 </thead>
 <tbody>
-@foreach ($languages as $language) 
+@foreach ($languages as $language)
     <tr>
         <td>{{$language->name}}</td>
         <td><input name="name[{{$language->id}}]" value="{{ old('name.' . $language->id, isset($odbtrait) ? $odbtrait->translate(\App\UserTranslation::NAME, $language->id) : null) }}"></td>
-        <td><input name="description[{{$language->id}}]" value="{{ old('description.' . $language->id, isset($odbtrait) ? $odbtrait->translate(\App\UserTranslation::DESCRIPTION, $language->id) : null) }}"></td>
+        <td><textarea name="description[{{$language->id}}]" rows='2'>{{ old('description.' . $language->id, isset($odbtrait) ? $odbtrait->translate(\App\UserTranslation::DESCRIPTION, $language->id) : null) }}</textarea></td>
+
     </tr>
 @endforeach
     <tr>
@@ -128,7 +139,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </div>
   </div>
 </div>
-    
+
 <div class="form-group">
     <label for="type" class="col-sm-3 control-label mandatory">
 @lang('messages.type')
@@ -158,8 +169,8 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 {!! Multiselect::select(
-    'objects', 
-    \App\ODBTrait::getObjectTypeNames(), 
+    'objects',
+    \App\ODBTrait::getObjectTypeNames(),
     isset($odbtrait) ? $odbtrait->getObjectKeys() : [],
     ['class' => 'multiselect form-control']
 ) !!}
@@ -170,6 +181,24 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </div>
   </div>
 </div>
+<div class="form-group">
+    <label for="bibreference_id" class="col-sm-3 control-label">
+@lang('messages.trait_bibreference')
+</label>
+        <a data-toggle="collapse" href="#hintr" class="btn btn-default">?</a>
+<div class="col-sm-6">
+    <input type="text" name="bibreference_autocomplete" id="bibreference_autocomplete" class="form-control autocomplete"
+    value="{{ old('bibreference_autocomplete', (isset($odbtrait) and $odbtrait->bibreference) ? $odbtrait->bibreference->bibkey : null) }}">
+    <input type="hidden" name="bibreference_id" id="bibreference_id"
+    value="{{ old('bibreference_id', isset($odbtrait) ? $odbtrait->bibreference_id : null) }}">
+</div>
+  <div class="col-sm-12">
+    <div id="hintr" class="panel-collapse collapse">
+	@lang('messages.trait_bibreference_hint')
+    </div>
+  </div>
+</div>
+
 <div class="form-group trait-number">
     <label for="unit" class="col-sm-3 control-label mandatory">
 @lang('messages.unit')
@@ -212,33 +241,76 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </div>
   </div>
 </div>
+<div class="form-group trait-spectral">
+    <label for="range_min" class="col-sm-3 control-label mandatory">
+@lang('messages.wavenumber_start')
+</label>
+        <a data-toggle="collapse" href="#hint13" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+     	<input type="text" name="range_min" id="range_min" class="form-control" value="{{ old('range_min', isset($odbtrait) ? $odbtrait->range_min : null) }}">
+      </div>
+  <div class="col-sm-12">
+    <div id="hint13" class="panel-collapse collapse">
+@lang('messages.hint_wavenumber_start')
+    </div>
+  </div>
+</div>
+
+<div class="form-group trait-spectral">
+    <label for="range_max" class="col-sm-3 control-label mandatory">
+@lang('messages.wavenumber_end') cm<sup>-1</sup>
+</label>
+        <a data-toggle="collapse" href="#hint14" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+     	<input type="text" name="range_max" id="range_max" class="form-control" value="{{ old('range_max', isset($odbtrait) ? $odbtrait->range_max : null) }}">
+      </div>
+  <div class="col-sm-12">
+    <div id="hint14" class="panel-collapse collapse">
+@lang('messages.hint_wavenumber_end') cm<sup>-1</sup>
+    </div>
+  </div>
+</div>
+<div class="form-group trait-spectral">
+    <label for="value_length" class="col-sm-3 control-label mandatory">
+@lang('messages.wavenumber_step')
+</label>
+        <a data-toggle="collapse" href="#hint15" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+     	<input type="text" name="value_length" id="value_length" class="form-control" value="{{ old('value_length', isset($odbtrait) ? $odbtrait->value_length : null) }}">
+      </div>
+  <div class="col-sm-12">
+    <div id="hint15" class="panel-collapse collapse">
+@lang('messages.hint_wavenumber_step')
+    </div>
+  </div>
+</div>
 <div class="form-group trait-category">
 <div class="col-sm-12" id="to_append_categories">
 <h3> @lang('messages.categories') </h3>
-<?php 
+<?php
 if (isset($odbtrait)) {
     // do we have "old" input?
     if (empty(old()) or empty(old("cat_name"))) {
         foreach($odbtrait->categories as $category) {
-            echo genTraitCategoryTranslationTable($category->rank, $odbtrait); 
+            echo genTraitCategoryTranslationTable($category->rank, $odbtrait);
         }
     } else {
         foreach(array_keys(old("cat_name")) as $rank) {
-            echo genTraitCategoryTranslationTable($rank, $odbtrait); 
+            echo genTraitCategoryTranslationTable($rank, $odbtrait);
         }
     }
 } else { // no odbtrait, so we're creating a new
     // do we have "old" input?
     if (empty(old()) or empty(old("cat_name"))) {
         foreach([1,2,3] as $rank) {
-            echo genTraitCategoryTranslationTable($rank, null); 
+            echo genTraitCategoryTranslationTable($rank, null);
         }
     } else {
         foreach(array_keys(old("cat_name")) as $rank) {
-            echo genTraitCategoryTranslationTable($rank, null); 
+            echo genTraitCategoryTranslationTable($rank, null);
         }
     }
-} 
+}
 ?>
 </div>
 <div class="col-sm-12">
@@ -292,6 +364,8 @@ if (isset($odbtrait)) {
 @push ('scripts')
 <script>
 $(document).ready(function() {
+  $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
+
 	function setFields(vel) {
 		var adm = $('#type option:selected').val();
 		if ("undefined" === typeof adm) {
@@ -303,6 +377,7 @@ $(document).ready(function() {
 				$(".trait-number").show(vel);
 				$(".trait-category").hide(vel);
 				$(".trait-link").hide(vel);
+        $(".trait-spectral").hide(vel);
 				break;
 			case "2": // categories
 			case "3": // categories FALL THROUGH
@@ -310,23 +385,34 @@ $(document).ready(function() {
 				$(".trait-category").show(vel);
 				$(".table-ordinal").hide(vel);
 				$(".trait-link").hide(vel);
+        $(".trait-spectral").hide(vel);
 				break;
 			case "4": // ordinal
 				$(".trait-number").hide(vel);
 				$(".trait-category").show(vel);
 				$(".table-ordinal").show(vel);
 				$(".trait-link").hide(vel);
+        $(".trait-spectral").hide(vel);
 				break;
-            case "7": // link
+      case "7": // link
 				$(".trait-number").hide(vel);
 				$(".trait-category").hide(vel);
 				$(".table-ordinal").hide(vel);
 				$(".trait-link").show(vel);
-                break;
+        $(".trait-spectral").hide(vel);
+        break;
+      case "8": // spectral
+        $(".trait-number").hide(vel);
+        $(".trait-category").hide(vel);
+        $(".table-ordinal").hide(vel);
+        $(".trait-link").hide(vel);
+        $(".trait-spectral").show(vel);
+        break;
 			default: // other
 				$(".trait-number").hide(vel);
 				$(".trait-category").hide(vel);
 				$(".trait-link").hide(vel);
+        $(".trait-spectral").hide(vel);
 		}
 	}
 	$("#type").change(function() { setFields(400); });
@@ -339,7 +425,7 @@ $(document).ready(function() {
         var newcat = $('th.table-ordinal').length + 1;
         text = text.replace(/__PLACEHOLDER__/g, newcat);
         $('#to_append_categories').append(text);
-        setFields(0); 
+        setFields(0);
     });
 });
 </script>

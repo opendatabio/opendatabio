@@ -81,7 +81,7 @@ class TraitController extends Controller
     {
         $this->authorize('create', ODBTrait::class);
         $this->validate($request, ODBTrait::rules());
-        $odbtrait = ODBTrait::create($request->only(['export_name', 'type']));
+        $odbtrait = ODBTrait::create($request->only(['export_name', 'type','bibreference_id']));
         $odbtrait->setFieldsFromRequest($request);
 
         return redirect('traits/'.$odbtrait->id)->withStatus(Lang::get('messages.stored'));
