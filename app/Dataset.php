@@ -8,6 +8,8 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Lang;
+use App\User;
 
 class Dataset extends Model
 {
@@ -49,8 +51,32 @@ class Dataset extends Model
         return $ret;
     }
 
+    public function getTaggedWidthAttribute()
+    {
+        if (empty($this->tags)) {
+            return '';
+        }
+        $ret = '';
+        foreach ($this->tags as $tag) {
+            $ret .= $tag->name;
+        }
+
+        return $ret;
+    }
+
     public function reference()
     {
         return $this->belongsTo(BibReference::class, 'bibreference_id');
+    }
+
+    // for use in the trait edit dropdown
+    public function getPrivacyLevelAttribute()
+    {
+        return Lang::get('levels.privacy.'.$this->privacy);
+    }
+
+    public function getContactEmailAttribute()
+    {
+        return $this->users()->wherePivot('access_level', '=', User::ADMIN)->first()->email;
     }
 }

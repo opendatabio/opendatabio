@@ -35,6 +35,9 @@ $v0api = function () {
     Route::get('traits', '\App\Http\Api\v0\TraitController@index');
     Route::post('traits', '\App\Http\Api\v0\TraitController@store');
     Route::get('herbaria', '\App\Http\Api\v0\HerbariumController@index');
+    Route::get('projects', '\App\Http\Api\v0\ProjectController@index');
+    Route::get('datasets', '\App\Http\Api\v0\DatasetController@index');
+    Route::get('bibreferences', '\App\Http\Api\v0\BibReferenceController@index');
 };
 
 Route::group(['prefix' => 'v0'], $v0api);

@@ -8,6 +8,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Lang;
 
 class Project extends Model
 {
@@ -44,4 +45,16 @@ class Project extends Model
     {
         return $this->name;
     }
+
+    // for use in the trait edit dropdown
+    public function getPrivacyLevelAttribute()
+    {
+        return Lang::get('levels.privacy.'.$this->privacy);
+    }
+
+    public function getContactEmailAttribute()
+    {
+        return $this->users()->wherePivot('access_level', '=', self::ADMIN)->first()->email;
+    }
+
 }
