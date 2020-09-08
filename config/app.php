@@ -103,7 +103,7 @@ return [
      * resources/lang/[language]/levels.php file
      */
 
-    'adm_levels' => [0, 1, 2],
+    'adm_levels' => [0,1,2,3,4],
 
     /*
      * This string represents a regular expression describing what is a valid

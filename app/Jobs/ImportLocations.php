@@ -8,6 +8,7 @@
 namespace App\Jobs;
 
 use App\Location;
+use App\ODBFunctions;
 
 class ImportLocations extends AppJob
 {
@@ -78,7 +79,7 @@ class ImportLocations extends AppJob
         if ($this->validateRelatedLocation($location, 'parent')) {
             return true;
         } else {
-            $this->skipEntry($location, 'Parent for location '.$location['name'].' is listed as '.$location['parent'].', but this was not found in the database.');
+            $this->skipEntry($location, 'Parent for location '.$location['name'].' is listed as '.$location['parent'].', but this was not found in the database, or locations does not fall within it ');
 
             return false;
         }
@@ -89,31 +90,33 @@ class ImportLocations extends AppJob
         if ($this->validateRelatedLocation($location, 'uc')) {
             return true;
         } else {
-            $this->skipEntry($location, 'Conservation unit for location '.$location['name'].' is listed as '.$location['uc'].', but this was not found in the database.');
-
+            $this->skipEntry($location, 'Conservation unit for location '.$location['name'].' is listed as '.$location['uc'].', but this was not found in the database or is not a valid UC for the location.');
             return false;
         }
     }
 
     protected function validateRelatedLocation(&$location, $field)
     {
+        $guessedParent = $this->guessParent($location['geom'], $location['adm_level'], 'uc' === $field);
         if (!array_key_exists($field, $location)) {
-            $location[$field] = $this->guessParent($location['geom'], $location['adm_level'], 'uc' === $field);
-
+            $location[$field] = $guessedParent;
             return true;
         } else { //If this is given, we need validate it
-            if (0 == $location[$field]) { // forces null if this was explicitly passed as zero
+            if (0 == $location[$field]) {  // forces null if this was explicitly passed as zero
                 $location[$field] = null;
-
                 return true;
             } else {
                 $valid = ODBFunctions::validRegistry(Location::select('id'), $location[$field]);
                 if (null === $valid) {
                     return false;
                 } else {
-                    $location[$field] = $valid->id;
-
-                    return true;
+                    //use guessed if different
+                    if ($guessedParent == $valid->id) {
+                      $location[$field] = $valid->id;
+                      return true;
+                    } else {
+                      return false;
+                    }
                 }
             }
         }
@@ -152,10 +155,14 @@ class ImportLocations extends AppJob
         // Is this location already imported?
         if ($parent) {
             if (Location::where('name', '=', $name)->where('parent_id', '=', $parent)->count() > 0) {
-                $this->skipEntry($location, 'location '.$name.' already imported to database');
-
+                $this->skipEntry($location, 'location '.$name.' already exists in database at same parent location. Must be unique within parent');
                 return;
             }
+        }
+        //this is important to prevent duplicated values
+        if (Location::where('geom', '=', $geom)->count() > 0) {
+          $this->skipEntry($location, 'location '.$name.' identical geometry already exists in database');
+          return;
         }
 
         $location = new Location([
@@ -172,8 +179,14 @@ class ImportLocations extends AppJob
             'uc_id' => $uc,
         ]);
         $location->geom = $geom;
-
         $location->save();
+
+        /*
+        $parentnode = Location::where('id', '=', $parent)->first();
+        $location->makeChildOf($parentnode);
+        $location->save();
+        */
+
         $this->affectedId($location->id);
 
         return;
