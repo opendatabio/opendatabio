@@ -31,6 +31,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 namespace App;
+use Illuminate\Support\Arr;
+
 
 /**
  * Revisionable.
@@ -212,7 +214,8 @@ trait Revisionable
                     'revisionable_type' => $this->getMorphClass(),
                     'revisionable_id' => $this->getKey(),
                     'key' => $key,
-                    'old_value' => array_get($this->originalData, $key),
+                    //'old_value' => array_get($this->originalData, $key),
+                    'old_value' => Arr::get($this->originalData, $key),
                     'new_value' => $this->updatedData[$key],
                     'user_id' => $this->getSystemUserId(),
                     'created_at' => new \DateTime(),
@@ -228,7 +231,7 @@ trait Revisionable
                 }
                 $revision = new Revision();
                 \DB::table($revision->getTable())->insert($revisions);
-                \Event::fire('revisionable.saved', array('model' => $this, 'revisions' => $revisions));
+                \Event::dispatch('revisionable.saved', array('model' => $this, 'revisions' => $revisions));
             }
         }
     }
@@ -257,7 +260,7 @@ trait Revisionable
             );
             $revision = new Revision();
             \DB::table($revision->getTable())->insert($revisions);
-            \Event::fire('revisionable.created', array('model' => $this, 'revisions' => $revisions));
+            \Event::dispatch('revisionable.created', array('model' => $this, 'revisions' => $revisions));
         }
     }
 

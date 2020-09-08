@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use App\Person;
 use App\Herbarium;
 use Illuminate\Support\Facades\Lang;
-use Illuminate\Support\Facades\Input;
+//use Illuminate\Support\Facades\Request;
 use App\DataTables\PersonsDataTable;
 use App\DataTables\HistoryDataTable;
 use Response;
@@ -75,7 +75,7 @@ class PersonController extends Controller
         if (!$request->confirm) {
             $dupes = Person::duplicates($request->full_name, $request->abbreviation);
             if (sizeof($dupes)) {
-                Input::flash();
+                $request->flash();
 
                 return view('persons.confirm', compact('dupes'));
             }
@@ -104,13 +104,18 @@ class PersonController extends Controller
     public function show($id)
     {
         $person = Person::findOrFail($id);
+        /*
+        // TODO: obtaining collected is complicated when number of records is too large
+        The portion below was commented and it may not be needed except for the count of
+        collected.objects. So, this could be modified to show only counts.
         $person->load('collected.object');
         $vouchers = $person->vouchers;
         $vouchers->load(['identification', 'parent']);
         $collected = collect($person->vouchers)->merge($person->collected->map(function ($x) {return $x->object; }));
         $collected = $collected->reject(function ($x) {return is_null($x); });
-
         return view('persons.show', compact('person', 'collected'));
+        */
+        return view('persons.show', compact('person'));
     }
 
     /**
@@ -142,7 +147,7 @@ class PersonController extends Controller
         $person = Person::findOrFail($id);
         $this->authorize('update', $person);
         $this->checkValid($request, $id);
-        
+
         $person->update($request->only(['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes']));
         // add/remove specialists
         $person->taxons()->sync($request->specialist);
