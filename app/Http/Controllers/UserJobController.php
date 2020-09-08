@@ -22,7 +22,7 @@ class UserJobController extends Controller
 
     public function index()
     {
-        $jobs = Auth::user()->userjobs()->paginate(20);
+        $jobs = Auth::user()->userjobs()->orderBy('id', 'DESC')->paginate(20);
 
         return view('userjobs.index', compact('jobs'));
     }
