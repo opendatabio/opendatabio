@@ -85,8 +85,8 @@ class DatasetController extends Controller
      */
     public function show($id)
     {
-        $dataset = Dataset::with(['measurements.measured', 'measurements.odbtrait'])->findOrFail($id);
-
+        $dataset = Dataset::findOrFail($id);
+        //with(['measurements.measured', 'measurements.odbtrait'])->
         return view('datasets.show', compact('dataset'));
     }
 

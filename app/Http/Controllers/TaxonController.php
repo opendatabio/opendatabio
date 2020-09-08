@@ -35,9 +35,10 @@ class TaxonController extends Controller
     // MAY receive optional "$request->full" to return all names; default is to return only valid names
     public function autocomplete(Request $request)
     {
+       //orderBy('fullname', 'ASC')
         $taxons = Taxon::with('parent')->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%'.$request->input('query').'%'])
             ->selectRaw('id as data, odb_txname(name, level, parent_id) as fullname, level, valid')
-            ->orderBy('fullname', 'ASC')->take(30);
+            ->take(30);
         if (!$request->full) {
             $taxons = $taxons->valid();
         }

@@ -54,6 +54,8 @@ class MeasurementsDataTable extends DataTable
      */
     public function query()
     {
+        // TODO:: THIS QUERY RESULTS IN AN OBJECT THAT DATATABLE IS FAILING TO RENDER PROPERLY WHEN TOO MANY RECORDS ARE REQUESTED
+
         $query = Measurement::query()->with(['categories', 'odbtrait.translations', 'person', 'dataset', 'measured'])
             ->select([
                 'measurements.id',
@@ -78,6 +80,8 @@ class MeasurementsDataTable extends DataTable
             $query = $query->where('trait_id', $this->odbtrait);
         }
         $query = $this->applyScopes($query);
+        
+        //$query = $query->limit(100);
 
         return collect($query->get())->filter(function ($item) {
             // This relies on the global scopes for the "measured" items to trigger. If the measured object is, eg, a Plant, and the plant is not accessible by the current user, the following relation will return "null", and the if() will evaluate to false
@@ -96,17 +100,17 @@ class MeasurementsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'trait_id' => ['title' => Lang::get('messages.trait'), 'searchable' => false, 'orderable' => false],
+                'trait_id' => ['title' => Lang::get('messages.trait'), 'searchable' => true, 'orderable' => false],
                 'value' => ['title' => Lang::get('messages.value'), 'searchable' => false, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'measured_id' => ['title' => Lang::get('messages.object'), 'searchable' => false, 'orderable' => false],
                 'unit' => ['title' => Lang::get('messages.unit'), 'searchable' => false, 'orderable' => false],
                 'dataset_id' => ['title' => Lang::get('messages.dataset'), 'searchable' => false, 'orderable' => false],
                 'person_id' => ['title' => Lang::get('messages.measurement_measurer'), 'searchable' => false, 'orderable' => false],
-                'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
+                'date' => ['title' => Lang::get('messages.date'), 'searchable' => true, 'orderable' => true],
             ])
             ->parameters([
-                'dom' => 'Brtip',
+                'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
                 'buttons' => [
