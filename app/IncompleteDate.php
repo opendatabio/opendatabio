@@ -32,8 +32,11 @@ trait IncompleteDate
     // This can be used to set the date if you have separate numbers
     public function setDate($month, $day = null, $year = null)
     {
-        if (strlen($month) > 2) {
+        //for some reason sometimes issues is array even when not (not clear why.)
+        if (!is_array($month)) {
+          if (strlen($month) > 2) {
             return $this->setDateFromString($month);
+          }
         }
         $year = (int) $year;
         $month = (int) $month;
@@ -86,6 +89,8 @@ trait IncompleteDate
             return false;
         }
         // if date is incomplete, we only require 0 <= $month <= 12
+        // TODO: MUST ALLOW ONLY year BUT is required so add or (0==$day and 0==$month and $year>0
+        //otherwise will fail)
         if (0 == $day and $month <= 12 and $month >= 0) {
             return true;
         }

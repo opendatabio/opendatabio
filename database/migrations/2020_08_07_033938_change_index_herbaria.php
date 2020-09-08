@@ -26,8 +26,9 @@ class ChangeIndexHerbaria extends Migration
      */
     public function down()
     {
+      Schema::table('herbaria', function (Blueprint $table) {
         $table->dropUnique('herbaria_unique');
         $table->unique('irn','herbaria_irn_unique');
-
+      });
     }
 }

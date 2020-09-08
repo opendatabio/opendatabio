@@ -47,8 +47,8 @@ class Voucher extends Model
         static::addGlobalScope('projectScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->whereRaw('vouchers.id IN 
-(SELECT p1.id FROM vouchers AS p1 
+                return $builder->whereRaw('vouchers.id IN
+(SELECT p1.id FROM vouchers AS p1
 JOIN projects ON (projects.id = p1.project_id)
 WHERE projects.privacy = 2)');
             }
@@ -61,7 +61,7 @@ WHERE projects.privacy = 2)');
 (SELECT p1.id FROM vouchers AS p1
 JOIN projects ON (projects.id = p1.project_id)
 WHERE projects.privacy > 0
-UNION 
+UNION
 SELECT p1.id FROM vouchers AS p1
 JOIN projects ON (projects.id = p1.project_id)
 JOIN project_user ON (projects.id = project_user.project_id)
@@ -140,23 +140,26 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 
     public function herbaria()
     {
-        return $this->belongsToMany(Herbarium::class)->withPivot('herbarium_number');
+        return $this->belongsToMany(Herbarium::class)->withPivot('herbarium_number','herbarium_type')->withTimestamps();
     }
 
     public function setHerbariaNumbers($herbaria)
     {
         // drop "null" values
-        $herbaria = array_filter($herbaria);
+       $herbaria = array_filter($herbaria);
         if (empty($herbaria)) {
             $this->herbaria()->detach();
 
             return;
         }
         // transforms the array to be Laravel-friendly
-        foreach ($herbaria as $key => &$value) {
-            $value = ['herbarium_number' => $value];
-        }
-        // syncs the data
+        //foreach ($herbaria as $key => &$value) {
+        //    $value = ['herbarium_number' => $value];
+        //}
+        //Commented above: value is a now an array that must have keys: herbarium_type and herbarium_number
+        //which are directly provided in create.blade.php in the herbarium key or in the importsample api
+
+        // syncs the data (will remove deleted if is the case)
         $this->herbaria()->sync($herbaria);
     }
 

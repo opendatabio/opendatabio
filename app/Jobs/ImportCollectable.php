@@ -14,9 +14,11 @@ use App\Collector;
 use App\Herbarium;
 use App\Project;
 use App\ODBFunctions;
+use Auth;
 
 class ImportCollectable extends AppJob
 {
+
     protected function validateHeader($field = 'collector')
     {
         if (array_key_exists('project', $this->header)) {
@@ -69,7 +71,13 @@ class ImportCollectable extends AppJob
         if (!array_key_exists($field, $registry)) {
             return null;
         }
-        $persons = explode(',', $registry[$field]);
+        #explode comma will fail when abbreviation is provided and contain commas
+        #replace by | which is gbif standard
+        if (strpos($registry[$field], '|') !== false) {
+            $persons = explode('|', $registry[$field]);
+        } else {
+            $persons = explode(',', $registry[$field]);
+        }
         $ids = array();
         foreach ($persons as $person) {
             $valid = ODBFunctions::validRegistry(Person::select('id'), $person, ['id', 'abbreviation', 'full_name', 'email']);
@@ -126,8 +134,48 @@ class ImportCollectable extends AppJob
             $identification['herbarium_reference'] = null;
         }
         $identification['notes'] = array_key_exists('identification_notes', $registry) ? $registry['identification_notes'] : null;
-        $identification['modifier'] = array_key_exists('modifier', $registry) ? $registry['modifier'] : 0;
-        $identification['date'] = array_key_exists('identification_date', $registry) ? $registry['identification_date'] : $registry['date'];
+
+        //modifier must be a valid code else is false
+        $identification['modifier'] = 0;
+        if (array_key_exists('modifier', $registry) && !empty($registry['modifier'])) {
+           if (!in_array($registry['modifier'],Identification::MODIFIERS)) {
+              $this->appendLog("WARNING: Identification modifier informed ".$registry['modifier']." is not a valid numeric code");
+              return null;
+           }
+           $identification['modifier'] = $registry['modifier'];
+
+        }
+
+        //implemented to account for incomplete dates in identification (most commom)
+        $identification['date'] =  $registry['date'];
+        if (array_key_exists('identification_date', $registry)) {
+              $date = $registry['identification_date'];
+              if (empty($date)) {
+                $date = $registry['date'];
+              } else {
+                if (is_array($date)) {
+                  $year = array_key_exists('year', $date) ? $date['year'] : null;
+                  $month = array_key_exists('month', $date) ? $date['month'] : null;
+                  $day = array_key_exists('day', $date) ? $date['day'] : null;
+                  $date = array($month,$day,$year);
+                } else {
+                  //assumes YYYY-MM-DD
+                  $date = explode("-",$date);
+                  if (3 === count($date)) {
+                    $date = array($date[1],$date[2],$date[0]);
+                  } else {
+                    //in this case is empty
+                    $date = $registry['date'];
+                  }
+                }
+                if (!Identification::checkDate($date[0],$date[1],$date[2])) {
+                  $this->appendLog("WARNING: identification_date YYY=".$date[2]." MM=".$date[0]." DD=".$date[1]." is invalid and was replace by registry date");
+                  $date = $registry['date'];
+                }
+            }
+            $identification['date'] = $date;
+        }
+        //$identification['date'] = array_key_exists('identification_date', $registry) ? $registry['identification_date'] : $registry['date'];
 
         return $identification;
     }
@@ -146,7 +194,7 @@ class ImportCollectable extends AppJob
                 'notes' => $identification['notes'],
                 'modifier' => $identification['modifier'],
             ]);
-            $identification->setDate($date);
+            $identification->setDate($date[0],$date[1],$date[2]);
             $identification->save();
         }
         if ($collectors) {

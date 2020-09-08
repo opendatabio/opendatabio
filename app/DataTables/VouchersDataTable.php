@@ -114,17 +114,17 @@ class VouchersDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => false, 'orderable' => true],
+                'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
-                'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => false, 'orderable' => false],
+                'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => true, 'orderable' => false],
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
                 'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
-                'dom' => 'Brtip',
+                'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
                 'buttons' => [

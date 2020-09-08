@@ -12,6 +12,8 @@ use App\Location;
 use App\Plant;
 use App\Project;
 use App\ODBFunctions;
+use App\Herbarium;
+use Lang;
 
 class ImportSamples extends ImportCollectable
 {
@@ -137,26 +139,44 @@ class ImportSamples extends ImportCollectable
         return $valid->first()->plant_id;
     }
 
-    public function extractHerbariaNumers($sample)
+    public function extractHerbariaNumbers($herbarios)
     {
         $herbaria = array();
-        foreach ($sample as $key => $value) {
-            if (0 === strpos($key, 'H_')) {
-                $query = Herbarium::select('id');
-                $value = substr($key, 2);
-                $fields = ['id', 'acronym', 'name', 'irn'];
-                $valid = ODBFunctions::validRegistry($query, $value, $fields);
-                if (null !== $valid) {
-                    $herbaria[$valid->id] = $value;
-                }
+        if (!is_array($herbarios)) {
+          if (!empty($herbarios)) {
+            $herbarios = explode(";",$herbarios);
+          } else {
+            $herbarios = array();
+          }
+        }
+        foreach ($herbarios as $key => $value) {
+            //validate acronym or id
+            if (!array_key_exists('herbarium_code',$value) && !is_array($value)) {
+                $herbarium_code = $value;
+                $value = array('herbarium_type' => 0);
+            } else {
+                $herbarium_code = $value['herbarium_code'];
+                $value = $value;
+            }
+            $query = Herbarium::select(['id', 'acronym', 'name', 'irn']);
+            $fields = ['id', 'acronym', 'name', 'irn'];
+            $valid = ODBFunctions::validRegistry($query, $herbarium_code, $fields);
+            if (null !== $valid) {
+              unset($value['herbarium_code']);
+              if (array_key_exists('herbarium_number',$value) && 0 == $value['herbarium_number']) {
+                unset($value['herbarium_number']);
+              }
+              $herbaria[$valid->id] = $value;
             }
         }
-
         return $herbaria;
     }
 
+
+
     public function import($sample)
     {
+
         $number = $sample['number'];
         $date = array_key_exists('date', $this->header) ? $this->header['date'] : $sample['date'];
         $project = array_key_exists('project', $this->header) ? $this->header['project'] : $sample['project'];
@@ -166,31 +186,69 @@ class ImportSamples extends ImportCollectable
         $updated_at = array_key_exists('updated_at', $sample) ? $sample['updated_at'] : null;
         $notes = array_key_exists('notes', $sample) ? $sample['notes'] : null;
         $collectors = $this->extractCollectors('Sample '.$number, $sample);
+
+        //validate herbaria
+        $herbaria = null;
+        if (array_key_exists("herbaria",$sample) && !empty($sample['herbaria'])) {
+            $herbaria = $this->extractHerbariaNumbers($sample['herbaria']);
+            if (count($herbaria)==0 && count($sample['herbaria'])>0) {
+              $this->skipEntry($sample, Lang::get('messages.invalid_herbaria'));
+              return;
+            }
+        }
+
         if (0 === count($collectors)) {
             $this->skipEntry($sample, 'Can not found any collector of this voucher in the database');
-
             return;
         }
         $same = Voucher::where('person_id', '=', $collectors[0])->where('number', '=', $number)->get();
         if (count($same)) {
-            $this->skipEntry($sample, 'There is another registry of a voucher with main collector '.$collectors[0].' and number '.$number);
-
+            $this->skipEntry($sample, 'There is another registry of a voucher with main collector '.$collectors[0].' and number '.$number.' and this must be UNIQUE');
             return;
+        }
+
+        if (is_array($date)) {
+          if (!$this->hasRequiredKeys(['year'], $date)) {
+              $this->skipEntry($value, Lang::get('messages.invalid_date_error')." Date is array and at least year key must exist");
+              return ;
+          } else {
+            $year = array_key_exists('year', $date) ? $date['year'] : null;
+            $month = array_key_exists('month', $date) ? $date['month'] : null;
+            $day = array_key_exists('day', $date) ? $date['day'] : null;
+            $date = array($month,$day,$year);
+          }
+        } else {
+           //format MUST BE YYYY-MM-DD
+           $date = explode("-",$date);
+           if (3 === count($date)) {
+             $date = array($date[1],$date[2],$date[0]);
+           } else {
+             $date = array();
+           }
+        }
+        if (!Voucher::checkDate($date)) {
+            $this->skipEntry($sample, Lang::get('messages.invalid_date_error'));
+            return ;
+        }
+        // collection date must be in the past or today
+        if (!Voucher::beforeOrSimilar($date, date('Y-m-d'))) {
+            $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
+            return ;
         }
 
         // vouchers' fields is ok, what about related tables?
         if ('App\Location' === $parent_type) {
+          // add corrected date if need to be used as identification date WHEN MISSING
+            $sample['date'] = $date;
             $identification = $this->extractIdentification($sample);
             if (null === $identification) {
                 $this->skipEntry($sample, 'Vouchers of location must have taxonomic information');
-
                 return;
             }
         } else {
             $identification = null;
         }
 
-        $herbaria = $this->extractHerbariaNumers($sample);
         //Finaly create the registries:
         // - First voucher's registry, to get their id
         $sample = new Voucher([
@@ -204,9 +262,19 @@ class ImportSamples extends ImportCollectable
             'notes' => $notes,
         ]);
         //date can not be set into constructor due to IncompleteDate compatibility
-        $sample->setDate($date);
-        $sample->setHerbariaNumbers($herbaria);
+        $sample->setDate($date[0],$date[1],$date[2]);
+        /*
+        if (is_array($date[0])) {
+          $this->appendLog("nao passou aqui mm ".serialize($date[0]));
+        } else {
+          $this->appendLog("NOT ARRAY ".serialize($date));
+        }
+        return;
+        */
         $sample->save();
+        if (!is_null($herbaria)) {
+          $sample->setHerbariaNumbers($herbaria);
+        }
         $this->affectedId($sample->id);
 
         // - Then create the related registries (for identification and collector), if requested
