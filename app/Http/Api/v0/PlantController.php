@@ -28,7 +28,7 @@ class PlantController extends Controller
      */
     public function index(Request $request)
     {
-        $plant = Plant::select('plants.id', 'plants.created_at', 'plants.updated_at', 'plants.location_id', 'plants.tag', 'plants.date', 'plants.notes', DB::raw('AsText(plants.relative_position) as relativePosition'), 'plants.project_id')->with(['location']);
+        $plant = Plant::select('*', DB::raw('AsText(plants.relative_position) as relativePosition'))->with(['location']);
         if ($request->id) {
             $plant->whereIn('plants.id', explode(',', $request->id));
         }
@@ -64,8 +64,7 @@ class PlantController extends Controller
         }
         $plant = $plant->get();
         $fields = ($request->fields ? $request->fields : 'simple');
-        $plant = $this->setFields($plant, $fields, ['fullName', 'taxonName', 'id', 'location_id', 'locationName', 'tag', 'date', 'notes', 'projectName', 'relativePosition',
-        ]);
+        $plant = $this->setFields($plant, $fields, ['id','fullName', 'taxonName', 'taxonFamily','location_id', 'locationName', 'locationParentName','tag', 'date', 'notes', 'projectName', 'relativePosition','xInParentLocation','yInParentLocation']);
 
         return $this->wrap_response($plant);
     }

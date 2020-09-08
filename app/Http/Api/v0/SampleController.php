@@ -78,8 +78,12 @@ class SampleController extends Controller
                 });
             });
         }
-        if ($request->limit) {
+        if ($request->limit && $request->offset) {
+            $sample->offset($request->offset)->limit($request->limit);
+        } else {
+          if ($request->limit) {
             $sample->limit($request->limit);
+          }
         }
         $sample = $sample->get();
 

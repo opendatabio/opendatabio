@@ -62,7 +62,7 @@ class Plant extends Model
 (SELECT p1.id FROM plants AS p1
 JOIN projects ON (projects.id = p1.project_id)
 WHERE projects.privacy > 0
-UNION 
+UNION
 SELECT p1.id FROM plants AS p1
 JOIN projects ON (projects.id = p1.project_id)
 JOIN project_user ON (projects.id = project_user.project_id)
@@ -114,6 +114,15 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return Lang::get('messages.unidentified');
     }
 
+    public function getTaxonFamilyAttribute()
+    {
+        if ($this->identification and $this->identification->taxon) {
+            return $this->identification->taxon->family;
+        }
+
+        return Lang::get('messages.unidentified');
+    }
+
     public function location()
     {
         return $this->belongsTo(Location::class);
@@ -122,11 +131,34 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     public function getLocationNameAttribute()
     {
         if ($this->location) {
-            return $this->location->name.' ('.$this->location->latitudeSimple.', '.$this->location->longitudeSimple.')';
+            return $this->location->name;
+            //.' ('.$this->locationWithGeom->latitudeSimple.', '.$this->locationWithGeom->longitudeSimple.')';
         }
 
         return 'Unknown location';
     }
+
+    public function getLocationParentNameAttribute()
+    {
+        if ($this->location) {
+            return $this->location->parentName;
+        }
+        return 'Unknown parent location';
+    }
+
+    public function getLocationCentroidLatitudeAttribute() {
+      if ($this->location) {
+          return (float) $this->locationWithGeom->centroid["y"];
+      }
+      return null;
+    }
+    public function getLocationCentroidLongitudeAttribute() {
+      if ($this->location) {
+        return (float) $this->locationWithGeom->centroid["x"];
+      }
+      return null;
+    }
+
 
     public function getProjectNameAttribute()
     {
@@ -187,6 +219,19 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
             'plants.location_id',
             DB::raw('AsText(relative_position) as relativePosition')
         );
+    }
+
+    public function getXInParentLocationAttribute()
+    {
+       $x = (float) $this->getXAttribute();
+       return $x + ($this->location->startx);
+
+    }
+
+    public function getYInParentLocationAttribute()
+    {
+       $y = (float) $this->getYAttribute();
+       return $y + ($this->location->starty);
     }
 
     // getters for the Relative Position

@@ -47,13 +47,12 @@
 </ul>
 </p>
 
-@if ($project->notes) 
+@if ($project->notes)
 		    <p><strong>
 @lang('messages.notes')
 : </strong> {{$project->notes}}
 </p>
 @endif
-
 
 @if ($project->vouchers()->count())
 <div class="col-sm-3">
@@ -76,7 +75,7 @@
 @endif
 
 @can ('update', $project)
-			    <div class="col-sm-6">
+			    <div class="col-sm-offset-1 col-sm-3">
 				<a href="{{ url('projects/'. $project->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')

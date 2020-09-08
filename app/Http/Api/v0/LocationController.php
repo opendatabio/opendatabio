@@ -76,7 +76,7 @@ class LocationController extends Controller
 
         $fields = ($request->fields ? $request->fields : 'simple');
         // NOTE that "distance" as a field is only defined for querytype='closest', but it is ignored for other queries
-        $locations = $this->setFields($locations, $fields, ['id', 'name', 'levelName', 'geom', 'distance']);
+        $locations = $this->setFields($locations, $fields, ['id', 'name', 'levelName', 'geom', 'distance','parentName','parent_id','x','y','startx','starty','centroid_raw','area']);
 
         return $this->wrap_response($locations);
     }

@@ -24,7 +24,7 @@ class MeasurementController extends Controller
      */
     public function index(Request $request)
     {
-        $measurements = Measurement::select('*');
+        $measurements = Measurement::select('*','measurements.date as valueDate');
         if ($request->id) {
             $measurements->whereIn('id', explode(',', $request->id));
         }
@@ -34,6 +34,9 @@ class MeasurementController extends Controller
                     'export_name',
                     $request->name);
             $measurements->whereIn('trait_id', $traits->get());
+        }
+        if ($request->dataset) {
+          $measurements->where('dataset_id',$request->dataset);
         }
         if ($request->taxon) {
             $measurements->where('measured_type', 'App\\Taxon')->whereIn('measured_id', explode(',', $request->taxon));
@@ -47,14 +50,17 @@ class MeasurementController extends Controller
         if ($request->sample) {
             $measurements->where('measured_type', 'App\\Sample')->whereIn('measured_id', explode(',', $request->sample));
         }
-        if ($request->limit) {
+        if ($request->limit && $request->offset) {
+            $measurements->offset($request->offset)->limit($request->limit);
+        } else {
+          if ($request->limit) {
             $measurements->limit($request->limit);
+          }
         }
         $measurements = $measurements->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $measurements = $this->setFields($measurements, $fields, ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual']);
-
+        $measurements = $this->setFields($measurements, $fields, ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual','valueDate','traitUnit','datasetName','measuredFullname', 'measuredTaxonName','measuredTaxonFamily','measuredProject']);
         return $this->wrap_response($measurements);
     }
 

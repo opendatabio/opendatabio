@@ -167,6 +167,12 @@ class Location extends Node
         return $str.$this->name;
     }
 
+    public function getParentNameAttribute()
+    {
+      $parent = $this->getAncestors()->last();
+      return $parent->name;
+    }
+
     public function setGeomAttribute($value)
     {
         if (is_null($value)) {
@@ -299,10 +305,10 @@ class Location extends Node
         $lat = $values['lat1'] + $values['lat2'] / 60 + $values['lat3'] / 3600;
         $long = $values['long1'] + $values['long2'] / 60 + $values['long3'] / 3600;
         if (0 == $values['longO']) {
-            $long *= -1;
+            $long = abs($long)*(-1);
         }
         if (0 == $values['latO']) {
-            $lat *= -1;
+            $lat = abs($lat)*(-1);
         }
 
         return 'POINT('.$long.' '.$lat.')';

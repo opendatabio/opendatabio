@@ -31,6 +31,31 @@ class Measurement extends Model
         return $this->morphTo();
     }
 
+    public function getMeasuredFullnameAttribute()
+    {
+      return $this->measured->fullname;
+    }
+
+    public function getMeasuredTaxonNameAttribute()
+    {
+      return $this->measured->taxonName;
+    }
+
+    public function getMeasuredTaxonFamilyAttribute()
+    {
+      return $this->measured->taxonFamily;
+    }
+
+    public function getMeasuredProjectAttribute()
+    {
+      return $this->measured->projectName;
+    }
+
+    public function getDatasetNameAttribute()
+    {
+      return $this->dataset->name;
+    }
+
     // These functions use Laravel magic to create a "linked_id" and "linked_type"
     // fields, used by the $measurement->linked() function below
     public function getLinkedTypeAttribute()
@@ -83,6 +108,12 @@ class Measurement extends Model
         return $this->odbtrait->export_name;
     }
 
+    public function getTraitUnitAttribute()
+    {
+        return $this->odbtrait->unit;
+    }
+
+
     // provides a common interface for getting/setting value for different types of measurements
     public function getValueActualAttribute()
     {
@@ -95,6 +126,7 @@ class Measurement extends Model
             break;
         case ODBTrait::TEXT:
         case ODBTrait::COLOR:
+        case ODBTrait::SPECTRAL:
             return $this->value_a;
             break;
         case ODBTrait::CATEGORICAL:
@@ -123,6 +155,7 @@ class Measurement extends Model
         }
     }
 
+    //this is used only in import_jobs
     public function setValueActualAttribute($value)
     {
         switch ($this->type) {
@@ -134,15 +167,19 @@ class Measurement extends Model
             break;
         case ODBTrait::TEXT:
         case ODBTrait::COLOR:
+        case ODBTrait::SPECTRAL:
             $this->value_a = $value;
             break;
         case ODBTrait::CATEGORICAL:
         case ODBTrait::ORDINAL:
             $this->categories()->delete();
-            $this->categories()->create(['category_id' => $value]);
+            $this->categories()->create(['category_id' => $value,'measurement_id' => $this->measured_id]);
             break;
         case ODBTrait::CATEGORICAL_MULTIPLE:
             $this->categories()->delete();
+            if (!is_array($value)) {
+                $value = explode(";",$value);
+            }
             if (is_array($value)) {
                 foreach ($value as $v) {
                     $this->categories()->create(['category_id' => $v]);
@@ -176,7 +213,7 @@ class Measurement extends Model
 (SELECT p1.id FROM measurements AS p1
 JOIN datasets ON (datasets.id = p1.dataset_id)
 WHERE datasets.privacy > 0
-UNION 
+UNION
 SELECT p1.id FROM measurements AS p1
 JOIN datasets ON (datasets.id = p1.dataset_id)
 JOIN dataset_user ON (datasets.id = dataset_user.dataset_id)

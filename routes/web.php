@@ -87,7 +87,7 @@ Route::get('plants/{id}/measurements', 'MeasurementController@indexPlants');
 Route::get('locations/{id}/measurements', 'MeasurementController@indexLocations');
 Route::get('taxons/{id}/measurements', 'MeasurementController@indexTaxons');
 Route::get('vouchers/{id}/measurements', 'MeasurementController@indexVouchers');
-Route::get('datasets/{id}/measurements', 'MeasurementController@indexDatasets');
+Route::get('datasets/{id}/measurements', 'MeasurementController@indexDatasets')->name('ajax.measurementdataset');
 Route::get('traits/{id}/measurements', 'MeasurementController@indexTraits');
 Route::resource('measurements', 'MeasurementController', ['only' => ['show', 'store', 'edit', 'update']]);
 

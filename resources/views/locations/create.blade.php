@@ -93,7 +93,7 @@
 @lang('messages.longitude')
 </label>
 	    <div class="col-sm-6">
-	<input type="text" name="long1" id="long1" class="form-control latlongpicker" value="{{ old('long1', isset($location) ? $location->long1 : null) }}"><span style="font-size: 140%">&#176;</span> 
+	<input type="text" name="long1" id="long1" class="form-control latlongpicker" value="{{ old('long1', isset($location) ? $location->long1 : null) }}"><span style="font-size: 140%">&#176;</span>
 	<input type="text" name="long2" id="long2" class="form-control latlongpicker" value="{{ old('long2', isset($location) ? $location->long2 : null) }}">'
 	<input type="text" name="long3" id="long3" class="form-control latlongpicker" value="{{ old('long3', isset($location) ? $location->long3 : null) }}">''
 	<input type="radio" name="longO" value="1" @if (old('longO', isset($location) ? $location->longO : 1)) checked @endif > E
@@ -263,7 +263,7 @@
 <script>
 $(document).ready(function() {
     $("#parent_autocomplete").odbAutocomplete(
-        "{{url('locations/autocomplete')}}","#parent_id", "@lang('messages.noresults')", undefined, {'scope':  'exceptucs'}, 
+        "{{url('locations/autocomplete')}}","#parent_id", "@lang('messages.noresults')", undefined, {'scope':  'exceptucs'},
         function (suggestion) {
             $("#parent_type").val(suggestion.adm_level);
             setLocationFields(400);
@@ -358,11 +358,11 @@ $(document).ready(function() {
                 'lat1': $('input[name="lat1"]').val(),
                 'lat2': $('input[name="lat2"]').val(),
                 'lat3': $('input[name="lat3"]').val(),
-                'latO': $('#latO checked').val(),
+                'latO': $("input[name='latO']:checked").val(),
                 'long1': $('input[name="long1"]').val(),
                 'long2': $('input[name="long2"]').val(),
                 'long3': $('input[name="long3"]').val(),
-                'longO': $('#longO checked').val(),
+                'longO': $("input[name='longO']:checked").val(),
                 'geom_type': $('#geom_type').val()
             },
 			success: function (data) {
@@ -379,7 +379,7 @@ $(document).ready(function() {
 					$("#uc_id").val(data.detectdata[3]);
 				}
 			},
-			error: function(e){ 
+			error: function(e){
 				$( "#spinner" ).hide();
 				$( "#ajax-error" ).collapse("show");
 				$( "#ajax-error" ).text('Error sending AJAX request');
