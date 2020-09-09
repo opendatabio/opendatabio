@@ -11,19 +11,19 @@
 @lang('messages.object')
 : </strong>
 {!! $measurement->measured->rawLink(true) !!}
-        
+
 <p><strong>
 @lang('messages.trait')
-: </strong>  
+: </strong>
 {!! $measurement->odbtrait->rawLink() !!}
-<br><em>  
+<br><em>
 {{$measurement->odbtrait->description}}</em>
 </p>
 <p><strong>
 @lang('messages.value')
-: </strong>  
-{{$measurement->valueActual}} {{ $measurement->odbtrait->unit }}
-@if ($measurement->type == \App\ODBTrait::COLOR) 
+: </strong>
+{{$measurement->valueDisplay}} {{ $measurement->odbtrait->unit }}
+@if ($measurement->type == \App\ODBTrait::COLOR)
 &nbsp;<span class="measurement-thumb" style="background-color: {{$measurement->valueActual}}">
 @endif
 </p>

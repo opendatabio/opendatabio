@@ -240,6 +240,7 @@ class ImportMeasurements extends AppJob
           case 8:
              $values = explode(";",$value['value']);
              if (count($values)!= $trait->value_length) {
+               $this->appendLog('WARNING: length '.$trait->value_length.' different than'.count($values));
                return false;
              }
         }
@@ -250,7 +251,7 @@ class ImportMeasurements extends AppJob
     {
         $valids = array();
         //check that trait exists;
-        $trait = ODBFunctions::validRegistry(ODBTrait::with('categories')->select('id','type','link_type'), $measurement['trait_id'], ['id', 'export_name']);
+        $trait = ODBFunctions::validRegistry(ODBTrait::with('categories')->select('*'), $measurement['trait_id'], ['id', 'export_name']);
         if (!$trait->id) {
           $this->appendLog('WARNING: Trait_id for trait '.$trait->id.' not found, this measurement will be ignored.');
           return false;
@@ -348,22 +349,8 @@ class ImportMeasurements extends AppJob
         //prevent duplications unless specified
         $allowDuplication = array_key_exists('duplicated', $measurements) ? $measurements['duplicated'] : 0;
         if (!$this->checkDuplicateMeasurement($measurement,$measurements) && $allowDuplication==0) {
-          $entry = array
-          (
-            'trait_id' => $measurement->trait_id,
-            'measured_id' => $measurement->measured_id,
-            'measured_type' => $measurement->measured_type,
-            'dataset_id' => $measurement->dataset_id,
-            'person_id' => $measurement->person_id,
-            'value' => array_key_exists('value', $measurements) ? $measurements['value'] : null,
-            'link_id' => array_key_exists('link_id', $measurements) ? $measurements['link_id'] : null,
-            'date' => $measurements['date']
-          );
-          $this->skipEntry($entry, "Duplicated measurement. To allow duplicated values for the same date and object include a 'duplicated' element of the measurement list with a 1 value");
+          $this->skipEntry($measurements, "Duplicated measurement. To allow duplicated values for the same date and object include a 'duplicated' with 1 value in your data table");
         } else {
-          if ($allowDuplication==1) {
-                $this->appendLog('WARNING: Duplicated measurement ACCEPTED for object '.$measured_id.' with '.serialize($measurements));
-          }
           /*if categorical must save beforehand to be able to save Categories */
           if (in_array($measurement->type, [ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
                 $measurement->save();

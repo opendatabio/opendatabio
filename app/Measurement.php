@@ -23,7 +23,7 @@ class Measurement extends Model
     {
         return '<a href="'.url('measurements/'.$this->id).'">'.
                 // Needs to escape special chars, as this will be passed RAW
-                htmlspecialchars($this->valueActual).'</a>';
+                htmlspecialchars($this->valueDisplay).'</a>';
     }
 
     public function measured()
@@ -113,6 +113,56 @@ class Measurement extends Model
         return $this->odbtrait->unit;
     }
 
+    //ge value for display in pages and tables
+    public function getValueDisplayAttribute()
+    {
+        switch ($this->type) {
+        case ODBTrait::QUANT_INTEGER:
+            return $this->value_i;
+            break;
+        case ODBTrait::QUANT_REAL:
+            return $this->value;
+            break;
+        case ODBTrait::TEXT:
+            if (strlen($this->value_a)>191) {
+              $val = substr($this->value_a,0,191)."...";
+            } else {
+              $val = $this->value_a;
+            }
+            return $val;
+            break;
+        case ODBTrait::COLOR:
+            return $this->value_a;
+            break;
+        case ODBTrait::CATEGORICAL:
+            return $this->categories()->first()->traitCategory->name;
+            break;
+        case ODBTrait::CATEGORICAL_MULTIPLE:
+            $cats = collect($this->categories)->map(function ($newcat) {
+                return $newcat->traitCategory->name;
+            })->all();
+
+            return implode(', ', $cats);
+            break;
+        case ODBTrait::ORDINAL:
+            $tcat = $this->categories()->first()->traitCategory;
+
+            return $tcat->rank.' - '.$tcat->name;
+            break;
+        case ODBTrait::LINK:
+            $val = '';
+            if (!empty($this->value)) {
+                $val = $this->value;
+            }
+
+            return $val.' '.(empty($this->linked) ? 'ERROR' : $this->linked->fullname);
+            break;
+       case ODBTrait::SPECTRAL:
+            $val = explode(";",$this->value_a);
+            return 'Spectrum with '.count($val).' values';
+            break;
+        }
+    }
 
     // provides a common interface for getting/setting value for different types of measurements
     public function getValueActualAttribute()
