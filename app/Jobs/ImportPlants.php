@@ -94,10 +94,21 @@ class ImportPlants extends ImportCollectable
             'project_id' => $project,
             'created_at' => $created_at,
             'updated_at' => $updated_at,
-            'notes' => $notes,            
+            'notes' => $notes,
         ]);
         if (!is_null($relative_position)) {
-            $plant->setRelativePosition($relative_position['x'], $relative_position['y']);
+            if (!is_array($relative_position)) {
+                $xy = explode(',',$relative_position);
+            }  else {
+                $xy = $relative_position;
+            }
+            if (count($xy)==2) {
+                $plant->setRelativePosition($relative_position['x'], $relative_position['y']);
+            } else {
+                $this->skipEntry($plant, 'Relative position  for '.$location.' and tag '.$tag.' is wrong. Must have only two values');
+                return;
+            }
+
         }
         //date can not be set into constructor due to IncompleteDate compatibility
         $plant->setDate($date);
