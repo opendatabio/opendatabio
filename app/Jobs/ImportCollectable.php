@@ -120,14 +120,14 @@ class ImportCollectable extends AppJob
         } else {
             $identification['person_id'] = null;
         }
-        if (array_key_exists('identification_based_on_herbarium', $registry) && array_key_exists('herbarium_code', $registry)) {
+        if (array_key_exists('identification_based_on_herbarium', $registry) && array_key_exists('identification_based_on_herbarium_id', $registry)) {
             $identification['herbarium_id'] = ODBFunctions::validRegistry(Herbarium::select('id'), $registry['identification_based_on_herbarium'], ['id', 'acronym', 'name', 'irn']);
             if (null === $identification['herbarium_id']) {
                 $this->appendLog("WARNING: Herbarium $herbarium was not found in the herbarium table or their reference is missed! Ignoring this herbarium");
                 $identification['herbarium_reference'] = null;
             } else {
                 $identification['herbarium_id'] = $identification['herbarium_id']->id;
-                $identification['herbarium_reference'] = $registry['herbarium_code'];
+                $identification['herbarium_reference'] = $registry['identification_based_on_herbarium_id'];
             }
         } else {
             $identification['herbarium_id'] = null;
