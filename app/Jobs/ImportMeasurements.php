@@ -87,13 +87,14 @@ class ImportMeasurements extends AppJob
             return true;
         }
     }
-    protected function validateBibReference($bibreference)
+    protected function validateBibReference(&$bibreference)
     {
-      $valid = BibReference::whereRaw('odb_bibkey(bibtex) = ?', [$bibreference])->count();
-      if ($valid!=1) {
+      $valid = BibReference::whereRaw('odb_bibkey(bibtex) = ?', [$bibreference])->get();
+      if (null === $valid) {
         $this->appendLog('Bibreference '.$bibreference.' not found in database');
         return false;
       }
+      $bibreference = $valid->id;
       return true;
     }
     protected function validateDataset($dataset)

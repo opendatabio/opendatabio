@@ -60,6 +60,13 @@ class ImportTaxons extends AppJob
         if (!$this->validadeAuthorID($taxon)) {
             return false;
         }
+        //IF BIBKEY PROVIDED VALIDATE
+        if (array_key_exists('bibkey',$taxon)) {
+          if (!$this->validateBibKey($taxon['bibkey']))
+          {
+              return false;
+          }
+        }
         // TODO: several other validation checks
 
         return true;
@@ -270,6 +277,17 @@ class ImportTaxons extends AppJob
         return null;
     }
 
+    protected function validateBibKey(&$bibkey)
+    {
+      $valid = BibReference::whereRaw('odb_bibkey(bibtex) = ?', [$bibkey])->get();
+      if (null === $valid) {
+        $this->appendLog('Provided bibkey '.$bibkey.' not found in database');
+        return false;
+      }
+      $bibkey = $valid->id;
+      return true;
+    }
+
     protected function validateValid(&$taxon)
     {
         if (null === $taxon['senior']) {
@@ -313,6 +331,7 @@ class ImportTaxons extends AppJob
             'author' => $author,
             'author_id' => $author_id,
             'bibreference' => $bibreference,
+            'bibreference_id' => array_key_exists('bibkey', $taxon) ? $taxon['bibkey'] : null,
             'notes' => $notes,
         ]);
         $taxon->fullname = $name;
