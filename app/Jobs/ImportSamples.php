@@ -72,14 +72,15 @@ class ImportSamples extends ImportCollectable
 
     private function validParent($sample)
     {
+
+        $validtypes = array('Plant' => Plant::class,'Location' => Location::class);
         if (array_key_exists('parent_id', $sample)) {
-            if (array_key_exists('parent_type', $sample)) {
+            if (array_key_exists('parent_type', $sample) and array_key_exists($sample['parent_type'],$validtypes)) {
                 return array(
                     'id' => $sample['parent_id'],
-                    'type' => $sample['parent_type'],
+                    'type' => $validtypes[$sample['parent_type']],
                 );
             }
-
             return null; // has id, but not type of parent
         } elseif (array_key_exists('parent_type', $sample)) {
             return null; // has type, but not id of parent
