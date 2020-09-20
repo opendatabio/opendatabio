@@ -39,7 +39,7 @@ class PersonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Person::with('herbarium')->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes']);
+        $query = Person::query()->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes'])->with('herbarium');
 
         return $this->applyScopes($query);
     }
@@ -49,7 +49,7 @@ class PersonsDataTable extends DataTable
      *
      * @return \Yajra\Datatables\Html\Builder
      */
-     
+
     public function html()
     {
         return $this->builder()

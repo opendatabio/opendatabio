@@ -9,7 +9,7 @@ namespace App\DataTables;
 
 use App\Measurement;
 use Yajra\DataTables\Services\DataTable;
-use Yajra\DataTables\CollectionDataTable;
+use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
 
@@ -22,7 +22,8 @@ class MeasurementsDataTable extends DataTable
      */
     public function dataTable(DataTables $dataTables, $query)
     {
-        return (new CollectionDataTable($query))
+        return (new EloquentDataTable($query))
+        //return (new CollectionDataTable($query))
         ->editColumn('value', function ($measurement) {
             return $measurement->rawLink();
         })
@@ -54,9 +55,9 @@ class MeasurementsDataTable extends DataTable
      */
     public function query()
     {
-        // TODO:: THIS QUERY RESULTS IN AN OBJECT THAT DATATABLE IS FAILING TO RENDER PROPERLY WHEN TOO MANY RECORDS ARE REQUESTED
 
-        $query = Measurement::query()->with(['categories', 'odbtrait.translations', 'person', 'dataset', 'measured'])
+        //->with(['categories', 'odbtrait.translations', 'person', 'dataset', 'measured'])
+        $query = Measurement::query()
             ->select([
                 'measurements.id',
                 'value',
@@ -79,16 +80,15 @@ class MeasurementsDataTable extends DataTable
         if ($this->odbtrait) {
             $query = $query->where('trait_id', $this->odbtrait);
         }
-        $query = $this->applyScopes($query);
-        
-        //$query = $query->limit(100);
+        return $this->applyScopes($query);
 
-        return collect($query->get())->filter(function ($item) {
+        //return collect($query->get())->filter(function ($item) {
             // This relies on the global scopes for the "measured" items to trigger. If the measured object is, eg, a Plant, and the plant is not accessible by the current user, the following relation will return "null", and the if() will evaluate to false
-            if ($item->measured) {
-                return true;
-            }
-        });
+          //  if ($item->measured) {
+            //    return true;
+            //}
+        //});
+        // $query;
     }
 
     /**
@@ -101,7 +101,7 @@ class MeasurementsDataTable extends DataTable
         return $this->builder()
             ->columns([
                 'trait_id' => ['title' => Lang::get('messages.trait'), 'searchable' => true, 'orderable' => false],
-                'value' => ['title' => Lang::get('messages.value'), 'searchable' => false, 'orderable' => true],
+                'value' => ['title' => Lang::get('messages.value'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'measured_id' => ['title' => Lang::get('messages.object'), 'searchable' => false, 'orderable' => false],
                 'unit' => ['title' => Lang::get('messages.unit'), 'searchable' => false, 'orderable' => false],

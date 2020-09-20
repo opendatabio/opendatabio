@@ -47,7 +47,7 @@ class TraitsDataTable extends DataTable
      */
     public function query()
     {
-      $query = ODBTrait::with(['translations','categories.translations'])->withCount("measurements")->orderBy('export_name', 'asc');
+      $query = ODBTrait::query()->with(['translations','categories.translations'])->withCount("measurements")->orderBy('export_name', 'asc');
       return $this->applyScopes($query);
     }
 

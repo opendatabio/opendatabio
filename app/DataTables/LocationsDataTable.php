@@ -47,7 +47,8 @@ class LocationsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Location::select([
+        $query = Location::query()
+        ->select([
             'locations.name',
             'locations.adm_level',
             'locations.rgt',
