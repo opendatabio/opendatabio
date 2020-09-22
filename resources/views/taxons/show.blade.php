@@ -30,7 +30,7 @@
 @if ($author)
 {!! $author->rawLink() !!}
 @else
-{{ $taxon->author }} 
+{{ $taxon->author }}
 @endif
 </p>
 
@@ -41,24 +41,24 @@
 @if ($bibref)
 {!! $bibref->rawLink() !!}
 @else
-{{ $taxon->bibreference }} 
+{{ $taxon->bibreference }}
 @endif
 </p>
 @endif
 
 		    <p><strong>
 @lang('messages.level')
-: </strong> 
+: </strong>
 @lang ('levels.tax.' . $taxon->level)
 </p>
 
 
 <p><strong>
 @lang('messages.valid_status')
-: </strong> 
+: </strong>
 @if ($taxon->author_id)
 @lang ('messages.unpublished')
-@elseif ($taxon->valid) 
+@elseif ($taxon->valid)
 @lang ('messages.isvalid')
 @else
         @lang ('messages.notvalid')
@@ -68,7 +68,7 @@
 @if ($taxon->persons->count())
 <p><strong>
 @lang('messages.specialists')
-: </strong> 
+: </strong>
 <ul>
 @foreach ($taxon->persons as $person)
 <li>{!! $person->rawLink() !!}</li>
@@ -77,7 +77,7 @@
 </p>
 @endif
 
-@if ($taxon->notes) 
+@if ($taxon->notes)
 		    <p><strong>
 @lang('messages.notes')
 : </strong> {{$taxon->notes}}
@@ -85,7 +85,7 @@
 @endif
 
 @if ($taxon->measurements()->count())
-<div class="col-sm-6">
+<div class="col-sm-4">
     <a href="{{ url('taxons/'. $taxon->id. '/measurements')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $taxon->measurements()->count() }}
@@ -94,16 +94,16 @@
 </div>
 @else
     @can ('create', App\Measurement::class)
-<div class="col-sm-6">
+<div class="col-sm-4">
     <a href="{{ url('taxons/'. $taxon->id. '/measurements/create')  }}" class="btn btn-default">
-        <i class="fa fa-btn fa-search"></i>
+        <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_measurements')
     </a>
 </div>
  @endcan
 @endif
 @if ($plants->count())
-<div class="col-sm-6">
+<div class="col-sm-4">
     <a href="{{ url('taxons/'. $taxon->id. '/plants')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $plants->count() }}
@@ -112,7 +112,7 @@
 </div>
 @endif
 @if ($vouchers->count())
-<div class="col-sm-6">
+<div class="col-sm-3">
     <a href="{{ url('taxons/'. $taxon->id. '/vouchers')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $vouchers->count() }}
@@ -120,19 +120,19 @@
     </a>
 </div>
 @endif
+<br><br>
 @can ('update', $taxon)
-			    <div class="col-sm-6">
+			    <div class="col-sm-3">
 				<a href="{{ url('taxons/'. $taxon->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')
 
 				</a>
 			    </div>
 @endcan
     @can ('create', App\Picture::class)
-<div class="col-sm-6">
+<div class="col-sm-3">
     <a href="{{ url('taxons/'. $taxon->id. '/pictures/create')  }}" class="btn btn-success">
-        <i class="fa fa-btn fa-search"></i>
+        <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_picture')
     </a>
 </div>

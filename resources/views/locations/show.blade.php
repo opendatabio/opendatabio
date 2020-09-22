@@ -10,11 +10,11 @@
                 <div class="panel-body">
 		    <strong>
 @lang('messages.location_name')
-:</strong> {{ $location->name }} {{ $location->coordinatesSimple }} 
+:</strong> {{ $location->name }} {{ $location->coordinatesSimple }}
 <br>
 		    <strong>
 @lang('messages.adm_level')
-:</strong> @lang ('levels.adm.' . $location->adm_level) 
+:</strong> @lang ('levels.adm.' . $location->adm_level)
 <br>
 @if ($location->altitude)
 <strong>
@@ -48,7 +48,7 @@
 :</strong> {!! $location->uc->rawLink() !!}
 <br>
 @endif
-<strong> 
+<strong>
 @lang('messages.total_descendants')
 :</strong> {{ $location->getDescendants()->count() }}
 <br>
@@ -61,18 +61,18 @@
 @endif
 <br>
 @if ($location->measurements()->count())
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('locations/'. $location->id. '/measurements')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $location->measurements()->count() }}
 @lang('messages.measurements')
     </a>
 </div>
-@else 
+@else
     @can ('create', App\Measurement::class)
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('locations/'. $location->id. '/measurements/create')  }}" class="btn btn-default">
-        <i class="fa fa-btn fa-search"></i>
+        <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_measurements')
     </a>
 </div>
@@ -80,7 +80,7 @@
 @endif
 
 @if ($location->vouchers()->count())
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('locations/'. $location->id. '/vouchers')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $location->vouchers()->count() }}
@@ -99,7 +99,7 @@
 @endif
 
 @if ($location->plants()->count())
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('locations/'. $location->id. '/plants')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $location->plants()->count() }}
@@ -116,20 +116,18 @@
 </div>
 @endcan
 @endif
-
+<br><br>
 @can ('update', $location)
-			    <div class="col-sm-3">
+			    <div class="col-sm-4">
 				<a href="{{ url('locations/'. $location->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')
-
 				</a>
 			    </div>
 @endcan
-    @can ('create', App\Picture::class)
-<div class="col-sm-6">
+@can ('create', App\Picture::class)
+<div class="col-sm-4">
     <a href="{{ url('locations/'. $location->id. '/pictures/create')  }}" class="btn btn-success">
-        <i class="fa fa-btn fa-search"></i>
+        <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_picture')
     </a>
 </div>
@@ -202,7 +200,7 @@
         </div>
     </div>
 
-<?php 
+<?php
 function getZoomLevel($area) {
 	if ($area > 400)
 		return 3;
@@ -236,7 +234,7 @@ function getZoomLevel($area) {
           center: uluru
 	});
         // display the main object
-@if (in_array($location->geomType, ['polygon', 'multipolygon'])) 
+@if (in_array($location->geomType, ['polygon', 'multipolygon']))
 @foreach ($location->geomArray as $polygon)
 	new google.maps.Polygon({
 	paths: [

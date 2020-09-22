@@ -55,7 +55,7 @@
 @endif
 
 @if ($project->vouchers()->count())
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('projects/'. $project->id. '/vouchers')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $project->vouchers()->count() }}
@@ -65,7 +65,7 @@
 @endif
 
 @if ($project->plants()->count())
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('projects/'. $project->id. '/plants')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $project->plants()->count() }}
@@ -73,11 +73,10 @@
     </a>
 </div>
 @endif
-
+<br><br>
 @can ('update', $project)
-			    <div class="col-sm-offset-1 col-sm-3">
+<div class="col-sm-4">
 				<a href="{{ url('projects/'. $project->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')
 
 				</a>

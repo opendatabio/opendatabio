@@ -34,18 +34,18 @@
     @lang('messages.identification_notes')
 :</strong>
         {{ $identification->notes }}
-    </a> 
+    </a>
     </p>
     @endif
 
 
 @endif <!-- identification -->
-        
+
 @if ($voucher->parent instanceof App\Plant)
     <p><strong>
     @lang('messages.plant')
-: </strong> 
-    {!! $voucher->parent->rawLink() !!} 
+: </strong>
+    {!! $voucher->parent->rawLink() !!}
     {{ $voucher->parent->location ? $voucher->parent->locationWithGeom->coordinatesSimple : ''}}
     </p>
     <p><strong>
@@ -56,9 +56,9 @@
 @elseif ($voucher->parent instanceof App\Location)
     <p><strong>
     @lang('messages.location')
-: </strong>  
-    {!! $voucher->parent->rawLink() !!} 
-    {{ $voucher->locationWithGeom->coordinatesSimple }} 
+: </strong>
+    {!! $voucher->parent->rawLink() !!}
+    {{ $voucher->locationWithGeom->coordinatesSimple }}
     </p>
     <p><strong>
     @lang('messages.location_precision')
@@ -68,7 +68,7 @@
 @else
     <p><strong>
     @lang('messages.voucher_parent_missing_error')
-    </strong>  
+    </strong>
     </p>
 @endif
 <div id='hintp' class='panel-collapse collapse'>
@@ -131,7 +131,7 @@
 
 
 @if ($voucher->measurements()->count())
-<div class="col-sm-6">
+<div class="col-sm-4">
     <a href="{{ url('vouchers/'. $voucher->id. '/measurements')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $voucher->measurements()->count() }}
@@ -140,27 +140,27 @@
 </div>
 @else
     @can ('create', App\Measurement::class)
-<div class="col-sm-6">
+<div class="col-sm-4">
     <a href="{{ url('vouchers/'. $voucher->id. '/measurements/create')  }}" class="btn btn-default">
-        <i class="fa fa-btn fa-search"></i>
+        <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_measurements')
     </a>
 </div>
 @endcan
 @endif
+<br><br>
 @can ('update', $voucher)
-			    <div class="col-sm-6">
+			    <div class="col-sm-4">
 				<a href="{{ url('vouchers/'. $voucher->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')
 
 				</a>
 			    </div>
 @endcan
     @can ('create', App\Picture::class)
-<div class="col-sm-6">
+<div class="col-sm-4">
     <a href="{{ url('vouchers/'. $voucher->id. '/pictures/create')  }}" class="btn btn-success">
-        <i class="fa fa-btn fa-search"></i>
+        <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_picture')
     </a>
 </div>

@@ -38,14 +38,14 @@
     @lang('messages.identification_notes')
 :</strong>
         {{ $identification->notes }}
-    </a> 
+    </a>
     </p>
     @endif
 @endif
-        
+
 <p><strong>
 @lang('messages.location')
-: </strong>  
+: </strong>
 @if($plant->location)
 {!! $plant->location->rawLink() !!} {{ $plant->locationWithGeom->coordinatesSimple }}
 @else
@@ -59,7 +59,7 @@
     @endif
 @endif
 </p>
-@if ($plant->location) 
+@if ($plant->location)
     <p><strong>
     @lang('messages.location_precision')
 :</strong>
@@ -110,7 +110,7 @@
 @endif
 </p>
 @if ($plant->measurements()->count())
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('plants/'. $plant->id. '/measurements')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $plant->measurements()->count() }}
@@ -119,7 +119,7 @@
 </div>
 @else
     @can ('create', App\Measurement::class)
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('plants/'. $plant->id. '/measurements/create')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 @lang('messages.create_measurements')
@@ -128,7 +128,7 @@
 @endcan
 @endif
 @if ($plant->vouchers()->count())
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('plants/'. $plant->id. '/vouchers')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $plant->vouchers()->count() }}
@@ -146,19 +146,19 @@
 </div>
 @endcan
 @endif
+<br><br>
 @can ('update', $plant)
 			    <div class="col-sm-3">
 				<a href="{{ url('plants/'. $plant->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')
 
 				</a>
 			    </div>
 @endcan
     @can ('create', App\Picture::class)
-<div class="col-sm-6">
+<div class="col-sm-3">
     <a href="{{ url('plants/'. $plant->id. '/pictures/create')  }}" class="btn btn-success">
-        <i class="fa fa-btn fa-search"></i>
+        <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_picture')
     </a>
 </div>

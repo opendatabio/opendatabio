@@ -74,15 +74,14 @@
 @lang('messages.plants')
     </a>
 </div>
-<div class="col-sm-3">
+<div class="col-sm-4">
     <a href="{{ url('persons/'. $person->id. '/vouchers')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 @lang('messages.vouchers')
     </a>
 </div>
 @can ('update', $person)
-				<a class="btn btn-success" href="{{url ('persons/' . $person->id . '/edit')}}">
-				    <i class="fa fa-btn fa-plus"></i>
+				<a class="btn btn-success" href="{{url ('persons/' . $person->id . '/edit')}}">				   
 @lang('messages.edit_person')
 				</a>
 @endcan

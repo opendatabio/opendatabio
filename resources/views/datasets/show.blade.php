@@ -48,14 +48,14 @@
 </ul>
 </p>
 
-@if ($dataset->notes) 
+@if ($dataset->notes)
 		    <p><strong>
 @lang('messages.notes')
 : </strong> {{$dataset->notes}}
 </p>
 @endif
 
-@if ($dataset->bibreference_id) 
+@if ($dataset->bibreference_id)
 		    <p><strong>
 @lang('messages.dataset_bibreference')
 : </strong>{!! $dataset->reference->rawLink() !!}
@@ -71,20 +71,19 @@
 @endif
 
 @if ($dataset->measurements()->count())
-			    <div class="col-sm-6">
+			    <div class="col-sm-4">
 				<a href="{{ url('datasets/'. $dataset->id. '/measurements')  }}" class="btn btn-success" name="submit" value="submit">
-                    <i class="fa fa-btn fa-plus"></i>
+                    <i class="fa fa-btn fa-search"></i>
 {{ $dataset->measurements()->count() }}
 @lang('messages.measurements')
 				</a>
 			    </div>
 @endif
 @can ('update', $dataset)
-			    <div class="col-sm-6">
+			    <div class="col-sm-4">
 				<a href="{{ url('datasets/'. $dataset->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.edit')
-
 				</a>
 			    </div>
 @endcan
