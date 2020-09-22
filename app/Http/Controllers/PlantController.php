@@ -21,10 +21,16 @@ use App\DataTables\PlantsDataTable;
 use Auth;
 use Response;
 use Lang;
+use App\UserJob;
+use App\Jobs\BatchUpdatePlants;
+
+
 
 class PlantController extends Controller
 {
-    // Functions for autocompleting in dropdowns. Expects a $request->query input
+    /**
+      * Autocompleting in dropdowns. Expects a $request->query input
+    **/
     public function autocomplete(Request $request)
     {
       $busca = Plant::whereRaw('tag LIKE ?', ["'".$request->input('query')."%'"])
@@ -32,6 +38,24 @@ class PlantController extends Controller
       ->take(30)->get();
       return Response::json(['suggestions' => $busca]);
     }
+
+    /**
+      * Batch update identifications through the web interfa
+    **/
+    public function batchidentifications(Request $request)
+    {
+        $this->authorize('create', Plant::class);
+        $this->authorize('create', UserJob::class);
+        UserJob::dispatch(BatchUpdatePlants::class,
+        [
+          'data' => ['data' => $request->all(),
+          'header' => ['not_external' => 1]
+          ]
+        ]);
+        return redirect('plants')->withStatus(Lang::get('messages.dispatched'));
+    }
+
+
     /**
      * Display a listing of the resource.
      *
@@ -39,7 +63,10 @@ class PlantController extends Controller
      */
     public function index(PlantsDataTable $dataTable)
     {
-        return $dataTable->render('plants.index', []);
+        $herbaria = Herbarium::all();
+
+
+        return $dataTable->render('plants.index',compact('herbaria'));
     }
 
     /**
@@ -210,6 +237,9 @@ class PlantController extends Controller
 
         return redirect('plants/'.$plant->id)->withStatus(Lang::get('messages.stored'));
     }
+
+
+
 
     /**
      * Display the specified resource.

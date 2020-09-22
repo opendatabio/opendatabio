@@ -94,9 +94,14 @@ class ImportCollectable extends AppJob
     protected function extractIdentification($registry)
     {
         if (!array_key_exists('taxon', $registry)) {
-            return null;
+            if (!array_key_exists('taxon_id',$registry)) {
+                return null;
+            }
+            $taxon = $registry['taxon_id'];
+        } else {
+          $taxon = $registry['taxon'];
         }
-        $taxon = $registry['taxon'];
+
         if (is_numeric($taxon)) {
             $taxon_id = Taxon::select('id')->where('id', '=', $taxon)->get();
         } else {
@@ -106,10 +111,12 @@ class ImportCollectable extends AppJob
             $identification['taxon_id'] = $taxon_id->first()->id;
         } else {
             $this->appendLog("WARNING: Taxon $taxon was not found in the database.");
-
             return null;
         }
         // Map $registry['identifier'] to $identification['person_id']
+        if (!array_key_exists('identifier', $registry) && array_key_exists('identifier_id', $registry)) {
+            $registry = array_merge($registry,array('identifier' => $registry['identifier_id']));
+        }
         if (array_key_exists('identifier', $registry)) {
             $identification['person_id'] = ODBFunctions::validRegistry(Person::select('id'), $registry['identifier'], ['id', 'abbreviation', 'full_name', 'email']);
             if (null === $identification['person_id']) {
@@ -147,10 +154,21 @@ class ImportCollectable extends AppJob
         }
 
         //implemented to account for incomplete dates in identification (most commom)
-        $identification['date'] =  $registry['date'];
+        if (array_key_exists('date',$registry)) {
+          $identification['date'] =  $registry['date'];
+        } 
+        if (array_key_exists('identification_date_year',$registry)) {
+          $registry['identification_date'] =  array('year' => $registry['identification_date_year']);
+        }
+        if (array_key_exists('identification_date_month',$registry) && isset($registry['identification_date_year'])) {
+          $registry['identification_date']['month'] =  $registry['identification_date_month'];
+        }
+        if (array_key_exists('identification_date_day',$registry) && isset($registry['identification_date_month'])) {
+          $registry['identification_date']['day'] =  $registry['identification_date_day'];
+        }
         if (array_key_exists('identification_date', $registry)) {
               $date = $registry['identification_date'];
-              if (empty($date)) {
+              if (empty($date) && isset($registry['date'])) {
                 $date = $registry['date'];
               } else {
                 if (is_array($date)) {

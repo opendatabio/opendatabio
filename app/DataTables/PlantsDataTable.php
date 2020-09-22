@@ -7,14 +7,21 @@
 
 namespace App\DataTables;
 
+use Baum\Node;
 use App\Plant;
+use App\Location;
+use App\HasAuthLevels;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
+use App\User;
+use Auth;
+
 
 class PlantsDataTable extends DataTable
 {
+
     /**
      * Build DataTable class.
      *
@@ -37,7 +44,6 @@ class PlantsDataTable extends DataTable
         })
         ->addColumn('tag_team', function ($plant) {
             $col = $plant->collectors;
-
             return implode(', ', $col->map(function ($c) {return $c->person->fullname; })->all());
         })
         ->editColumn('date', function ($plant) { return $plant->formatDate; })
@@ -49,6 +55,9 @@ class PlantsDataTable extends DataTable
             }
 
             return $loc->coordinatesSimple;
+        })
+        ->addColumn('select_plants',  function ($plant) {
+            return $plant->id;
         })
         ->rawColumns(['tag', 'identification']);
     }
@@ -70,7 +79,9 @@ class PlantsDataTable extends DataTable
             ])->withCount('measurements');
         // customizes the datatable query
         if ($this->location) {
-            $query = $query->where('location_id', '=', $this->location);
+            $locationsids = Location::where('id', '=', $this->location)->first()->getDescendantsAndSelf()->pluck('id');
+            //$locationsids = array_merge((array)$this->location,$locationsids);
+            $query = $query->whereIn('location_id',$locationsids);
         }
         if ($this->project) {
             $query = $query->where('project_id', '=', $this->project);
@@ -96,8 +107,9 @@ class PlantsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
+                'select_plants' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
+                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'tag' => ['title' => Lang::get('messages.location_and_tag'), 'searchable' => true, 'orderable' => true],
-                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
                 'tag_team' => ['title' => Lang::get('messages.tag_team'), 'searchable' => false, 'orderable' => false],
@@ -114,13 +126,26 @@ class PlantsDataTable extends DataTable
                     'excel',
                     'print',
                     'reload',
-                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
+                    ['extend' => 'colvis',  'columns' => ':gt(0)', 'collectionLayout' => 'two-column'],
                 ],
-                'columnDefs' => [[
-                    'targets' => [1, 4, 5, 7],
+                'columnDefs' => [
+                  [
+                    'targets' => [ 5, 6, 8],
                     'visible' => false,
-                ]],
+                  ],
+                  [
+                    'targets' => 0,
+                    'checkboxes' => [
+                    'selectRow' => true
+                    ]
+                  ]
+                ],
+              'select' => [
+                    'style' => 'multi',
+              ]
             ]);
+
+
     }
 
     /**

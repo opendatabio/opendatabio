@@ -51,6 +51,7 @@ Route::resource('projects', 'ProjectController');
 
 Route::resource('datasets', 'DatasetController');
 
+Route::post('batchidentifications', 'PlantController@batchidentifications');
 Route::get('locations/{id}/plants', 'PlantController@indexLocations');
 Route::get('locations/{id}/plants/create', 'PlantController@createLocations');
 Route::get('taxons/{id}/plants', 'PlantController@indexTaxons');
