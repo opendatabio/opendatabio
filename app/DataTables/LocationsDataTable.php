@@ -26,10 +26,14 @@ class LocationsDataTable extends DataTable
         ->editColumn('name', function ($location) {
             return $location->rawLink();
         })
+        ->filterColumn('name', function ($query, $keyword) {
+            $sql = " name LIKE '".$keyword."%' ";
+            $query->whereRaw($sql);
+        })
         ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm.'.$location->adm_level); })
         ->addColumn('full_name', function ($location) {return $location->full_name; })
-        ->addColumn('plants', function ($location) {return '<a href="'.url('locations/'.$location->id.'/plants').'">'.$location->plants_count.'</a>'; })
-        ->addColumn('vouchers', function ($location) {return '<a href="'.url('locations/'.$location->id.'/vouchers').'">'.$location->vouchers_count.'</a>'; })
+        ->addColumn('plants', function ($location) {return '<a href="'.url('locations/'.$location->id.'/plants').'">'.$location->all_plants.'</a>'; })
+        ->addColumn('vouchers', function ($location) {return '<a href="'.url('locations/'.$location->id.'/vouchers').'">'.$location->all_vouchers.'</a>'; })
         ->addColumn('measurements', function ($location) {return '<a href="'.url('locations/'.$location->id.'/measurements').'">'.$location->measurements_count.'</a>'; })
         ->addColumn('pictures', function ($location) {return '<a href="'.url('locations/'.$location->id).'">'.$location->pictures_count.'</a>'; })
         ->addColumn('latitude', function ($location) {return $location->latitudeSimple; })
@@ -76,7 +80,7 @@ class LocationsDataTable extends DataTable
             ->columns([
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
-                'adm_level' => ['title' => Lang::get('messages.adm_level'), 'searchable' => true, 'orderable' => true],
+                'adm_level' => ['title' => Lang::get('messages.adm_level'), 'searchable' => false, 'orderable' => true],
                 'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
                 'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => false, 'orderable' => false],
                 'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],

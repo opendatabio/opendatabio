@@ -28,6 +28,7 @@ class Location extends Node
     protected $rightColumnName = 'rgt';
     protected $depthColumnName = 'depth';
 
+    protected $appends = ['all_plants','all_vouchers'];
 
     public function getPrecisionAttribute()
     {
@@ -324,10 +325,31 @@ class Location extends Node
         return $this->hasMany(Plant::class);
     }
 
+    public function getAllPlantsAttribute() {
+      $nplants = $this->plants()->count();
+      foreach($this->getDescendants() as $descendant) {
+        $nplants = $nplants+($descendant->plants()->count());
+      }
+      //must count all related plant
+      return $nplants;
+
+    }
+
     public function vouchers()
     {
         return $this->morphMany(Voucher::class, 'parent');
     }
+
+    public function getAllVouchersAttribute() {
+      $nvouchers = $this->vouchers()->count();
+      foreach($this->getDescendants() as $descendant) {
+        $nvouchers = $nvouchers+($descendant->vouchers()->count());
+      }
+      //must count all related plant
+      return $nvouchers;
+
+    }
+
 
     // getter method for parts of latitude/longitude
     public function getLat1Attribute()
