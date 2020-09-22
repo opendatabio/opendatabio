@@ -40,7 +40,7 @@ class TraitController extends Controller
 
         $traits = $traits->get();
 
-        #add categories for categorical $traits
+        //add categories for categorical $traits
         foreach ($traits as $thetrait) {
               if (in_array(  $thetrait->type,[ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
                     $cats = $thetrait->categories;
