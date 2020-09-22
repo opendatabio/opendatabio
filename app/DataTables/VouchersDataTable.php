@@ -7,7 +7,9 @@
 
 namespace App\DataTables;
 
+use Baum\Node;
 use App\Voucher;
+use App\Location;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
@@ -33,26 +35,12 @@ class VouchersDataTable extends DataTable
         })
         ->addColumn('collectors', function ($voucher) {
             $col = $voucher->collectors;
-
-            return implode(', ', array_merge([$voucher->person->fullname],
-                $col->map(function ($c) {return $c->person->fullname; })->all()
-            ));
+            return implode(', ',$col->map(function ($c) {return $c->person->fullname; })->all()
+          );
         })
         ->editColumn('date', function ($voucher) { return $voucher->formatDate; })
         ->addColumn('measurements', function ($voucher) {return $voucher->measurements_count; })
-        ->addColumn('location', function ($voucher) {
-            if (!$voucher->parent) {
-                return;
-            }
-            if ($voucher->locationWithGeom) {
-                return $voucher->locationWithGeom->name.' '.$voucher->locationWithGeom->coordinatesSimple;
-            }
-            // else, parent is a plant
-            if ($voucher->parent->locationWithGeom) {
-                return $voucher->parent->locationWithGeom->name.' '.$voucher->parent->locationWithGeom->coordinatesSimple;
-            }
-        })
-        ->rawColumns(['number', 'identification']);
+        ->rawColumns(['number', 'identification','location_show','linked_planttag','measurements_count']);
     }
 
     /**
@@ -62,7 +50,8 @@ class VouchersDataTable extends DataTable
      */
     public function query()
     {
-        $query = Voucher::query()->with(['identification.taxon', 'person', 'collectors.person', 'project', 'parent'])
+        //This slows down and is not needed here
+        $query = Voucher::query()
             ->select([
                 'vouchers.id',
                 'number',
@@ -71,10 +60,13 @@ class VouchersDataTable extends DataTable
                 'parent_id',
                 'parent_type',
                 'date',
-            ])->withCount('measurements');
+            ]);
+            //->with(['identification.taxon', 'person', 'collectors.person']);
+            //->withCount('measurements');
         // customizes the datatable query
         if ($this->location) {
-            $query = $query->where('parent_type', 'App\Location')->where('parent_id', '=', $this->location);
+            $locationsids = Location::where('id', '=', $this->location)->first()->getDescendantsAndSelf()->pluck('id');
+            $query = $query->where('parent_type', 'App\Location')->whereIn('parent_id',$locationsids);
         }
         if ($this->plant) {
             $query = $query->where('parent_type', 'App\Plant')->where('parent_id', '=', $this->plant);
@@ -117,16 +109,18 @@ class VouchersDataTable extends DataTable
                 'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
+                'linked_planttag' => ['title' => Lang::get('messages.planttag'), 'searchable' => false, 'orderable' => true],
+                'location_show' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
+                //'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
+                'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
                 'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => true, 'orderable' => false],
-                'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
-                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
-                'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
+                'pageLength' => 10,
                 'buttons' => [
                     'csv',
                     'excel',
@@ -135,7 +129,7 @@ class VouchersDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1, 4, 5, 7],
+                    'targets' => [1, 6],
                     'visible' => false,
                 ]],
             ]);
@@ -148,6 +142,6 @@ class VouchersDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_samples_'.time();
+        return 'odb_vouchers_'.time();
     }
 }

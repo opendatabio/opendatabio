@@ -22,6 +22,8 @@ class Plant extends Model
 
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
 
+    protected $appends = ['format_date','location_parentname','taxon_name','taxon_family','project_name','measurements_count'];
+
     public function rawLink($addId = false)
     {
         $text = "<a href='".url('plants/'.$this->id)."'>".htmlspecialchars($this->fullname).'</a>';
@@ -195,6 +197,15 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     {
         return $this->morphMany(Measurement::class, 'measured');
     }
+
+
+    public function getMeasurementsCountAttribute()
+    {
+        return $this->morphMany(Measurement::class, 'measured')->count();
+    }
+
+
+
 
     public function identification()
     {

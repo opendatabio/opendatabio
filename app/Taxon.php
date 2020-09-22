@@ -18,8 +18,12 @@ class Taxon extends Node
     protected $rightColumnName = 'rgt';
     protected $depthColumnName = 'depth';
 
+
     protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
                 'bibreference', 'bibreference_id', 'parent_id', 'notes', ];
+
+    protected $appends = ['family'];
+
 
     // for use when receiving this as part of a morph relation
     // TODO: maybe can be changed to get_class($p)?

@@ -18,6 +18,10 @@ class Voucher extends Model
 
     protected $fillable = ['parent_id', 'parent_type', 'person_id', 'number', 'date', 'notes', 'project_id'];
 
+    //add attributes for automatic use in datatabe
+    protected $appends = ['linked_planttag', 'location_show'];
+
+
     public function rawLink($addId = false)
     {
         $text = "<a href='".url('vouchers/'.$this->id)."'>".htmlspecialchars($this->fullname).'</a>';
@@ -82,6 +86,15 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return Lang::get('messages.unidentified');
     }
 
+    public function getLinkedPlanttagAttribute()
+    {
+        if (Plant::class == $this->parent_type) {
+            return $this->parent->rawLink();
+        }
+        return '';
+    }
+
+
     public function newQuery($excludeDeleted = true)
     {
         // This uses the explicit list to avoid conflict due to global scope
@@ -138,6 +151,23 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return Location::withGeom()->addSelect('id', 'name')->find($loc->id);
     }
 
+
+    public function getLocationShowAttribute()
+    {
+        if (!$this->parent) {
+            return;
+        }
+        if ($this->locationWithGeom) {
+            return  $this->locationWithGeom->name.' '.$this->locationWithGeom->coordinatesSimple;
+        }
+        // else, parent is a plant
+        if ($this->parent->locationWithGeom) {
+            return $this->parent->locationWithGeom->name.' '.$this->parent->locationWithGeom->coordinatesSimple;
+        }
+    }
+
+
+
     public function herbaria()
     {
         return $this->belongsToMany(Herbarium::class)->withPivot('herbarium_number','herbarium_type')->withTimestamps();
@@ -172,6 +202,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     {
         return $this->morphMany(Collector::class, 'object');
     }
+
 
     public function getLocation()
     {
