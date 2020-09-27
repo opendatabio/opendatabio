@@ -28,7 +28,7 @@
 @if ($picture->tags->count())
 <p> <strong> @lang('messages.tags') :</strong>
     <ul>
-    @foreach ($picture->tags as $tag) 
+    @foreach ($picture->tags as $tag)
     <li><a href="{{url('tags/'. $tag->id)}}">{{$tag->name}}</a></li>
     @endforeach
     </ul>
@@ -37,8 +37,8 @@
 @if ($picture->collectors->count())
 <p> <strong> @lang('messages.credits') :</strong>
     <ul>
-    @foreach ($picture->collectors as $collector) 
-    <li>{!! $collector->rawLink() !!}</li>
+    @foreach ($picture->collectors as $collector)
+    <li>{!! $collector->person->rawLink() !!}</li>
     @endforeach
     </ul>
 </p>

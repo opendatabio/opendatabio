@@ -18,9 +18,58 @@ use App\Tag;
 use App\Location;
 use App\Voucher;
 use App\Plant;
+use App\UserJob;
+use Log;
+use Filepond;
+use Illuminate\Support\Facades\Storage;
+use App\Jobs\ImportPictures;
+
 
 class PictureController extends Controller
 {
+
+    public function uploadForm(){
+
+      return view('pictures.upload');
+
+    }
+
+    /*
+      Controll for batch upload of images
+
+    */
+    public function uploadSubmit(Request $request){
+
+      $this->authorize('create', Picture::class);
+      $this->authorize('create', UserJob::class);
+      /* file is the list of filepond ServerIDs values that allows to retrieve the filepond uploaded images */
+      $pictures = $request->input('file');
+      if (!$request->hasFile('pictures_attribute_table') || count($pictures)==0) {
+          $message = Lang::get('messages.pictures_upload_missingfiles');
+      } else {
+        /*
+            Validate attribute file
+            Validate file extension and maintain original if valid or else
+            Store may save a csv as a txt, and then the Reader will fail
+        */
+        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
+        $ext = $request->file('pictures_attribute_table')->getClientOriginalExtension();
+        if (!in_array($ext,$valid_ext)) {
+          $message = Lang::get('messages.upload_data_invalid_fileextension');
+        } else {
+          /* store file for later use and get path */
+          $newname =  uniqid().".".$ext;
+          $path = $request->file('pictures_attribute_table')->storeAs('temp', $newname);
+          $path = Storage::path($path);
+          /* send request as job */
+          UserJob::dispatch(ImportPictures::class, ['data' => ['pictures_paths' => $pictures, 'pictures_attribute_table' => $path]]);
+          $message = Lang::get('messages.dispatched');
+        }
+      }
+      return redirect('pictures/uploadForm')->withStatus($message);
+    }
+
+
     public function createTaxons($id)
     {
         $object = Taxon::findOrFail($id);

@@ -47,7 +47,7 @@
                     @else
                         <ul>
 @foreach (json_decode($job->log, true) as $item)
-<li> {{ $item }} </li>
+<li> {{ serialize($item) }} </li>
 @endforeach
 				@endif
                 </ul>

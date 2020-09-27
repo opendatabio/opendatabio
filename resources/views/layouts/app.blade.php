@@ -95,6 +95,9 @@
 			<li><a href="{{ route('forms.index') }}">
 @lang('messages.forms')
 </a></li>
+<li><a href="{{ route('uploadPictures') }}">
+@lang('messages.pictures_upload')
+</a></li>
 
                                 </ul>
                             </li>
