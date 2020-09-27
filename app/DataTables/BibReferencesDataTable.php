@@ -14,7 +14,7 @@ use Yajra\DataTables\DataTables;
 use Lang;
 use DB;
 
-class BibReferenceDataTable extends DataTable
+class BibReferencesDataTable extends DataTable
 {
     /**
      * Build DataTable class.

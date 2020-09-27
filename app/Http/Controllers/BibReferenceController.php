@@ -13,7 +13,7 @@ use App\UserJob;
 use Validator;
 use Illuminate\Support\Facades\Lang;
 use App\Jobs\ImportBibReferences;
-use App\DataTables\BibReferenceDataTable;
+use App\DataTables\BibReferencesDataTable;
 use App\DataTables\HistoryDataTable;
 use Response;
 
@@ -35,7 +35,7 @@ class BibReferenceController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index(BibReferenceDataTable $dataTable)
+    public function index(BibReferencesDataTable $dataTable)
     {
         return $dataTable->render('references.index', []);
     }
