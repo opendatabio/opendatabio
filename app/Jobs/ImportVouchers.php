@@ -15,7 +15,7 @@ use App\ODBFunctions;
 use App\Herbarium;
 use Lang;
 
-class ImportSamples extends ImportCollectable
+class ImportVouchers extends ImportCollectable
 {
     private $requiredKeys;
 
@@ -30,63 +30,63 @@ class ImportSamples extends ImportCollectable
         }
         $this->requiredKeys = $this->removeHeaderSuppliedKeys(['number', 'date', 'collector']);
         $this->validateHeader();
-        foreach ($data as $sample) {
+        foreach ($data as $voucher) {
             if ($this->isCancelled()) {
                 break;
             }
             $this->userjob->tickProgress();
 
-            if ($this->validateData($sample)) {
+            if ($this->validateData($voucher)) {
                 // Arrived here: let's import it!!
                 try {
-                    $this->import($sample);
+                    $this->import($voucher);
                 } catch (\Exception $e) {
                     $this->setError();
-                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on sample '.$sample['number']);
+                    $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on voucher '.$voucher['number']);
                 }
             }
         }
     }
 
-    protected function validateData(&$sample)
+    protected function validateData(&$voucher)
     {
-        if (!$this->hasRequiredKeys($this->requiredKeys, $sample)) {
+        if (!$this->hasRequiredKeys($this->requiredKeys, $voucher)) {
             return false;
         }
-        if (!$this->validateProject($sample)) {
+        if (!$this->validateProject($voucher)) {
             return false;
         }
 
         //validate parent
-        $parent = $this->validParent($sample);
+        $parent = $this->validParent($voucher);
         if (null === $parent) {
-            $this->skipEntry($sample, 'especified parent was not found in the database');
+            $this->skipEntry($voucher, 'especified parent was not found in the database');
 
             return false;
         }
-        $sample['parent_id'] = $parent['id'];
-        $sample['parent_type'] = $parent['type'];
+        $voucher['parent_id'] = $parent['id'];
+        $voucher['parent_type'] = $parent['type'];
 
         return true;
     }
 
-    private function validParent($sample)
+    private function validParent($voucher)
     {
 
         $validtypes = array('Plant' => Plant::class,'Location' => Location::class);
-        if (array_key_exists('parent_id', $sample)) {
-            if (array_key_exists('parent_type', $sample) and array_key_exists($sample['parent_type'],$validtypes)) {
+        if (array_key_exists('parent_id', $voucher)) {
+            if (array_key_exists('parent_type', $voucher) and array_key_exists($voucher['parent_type'],$validtypes)) {
                 return array(
-                    'id' => $sample['parent_id'],
-                    'type' => $validtypes[$sample['parent_type']],
+                    'id' => $voucher['parent_id'],
+                    'type' => $validtypes[$voucher['parent_type']],
                 );
             }
             return null; // has id, but not type of parent
-        } elseif (array_key_exists('parent_type', $sample)) {
+        } elseif (array_key_exists('parent_type', $voucher)) {
             return null; // has type, but not id of parent
-        } elseif (array_key_exists('location', $sample)) {
-            if (array_key_exists('plant', $sample)) {
-                $valid = $this->validate($sample['location'], $sample['plant']);
+        } elseif (array_key_exists('location', $voucher)) {
+            if (array_key_exists('plant', $voucher)) {
+                $valid = $this->validate($voucher['location'], $voucher['plant']);
                 if (null === $valid) {
                     return null;
                 }
@@ -106,9 +106,9 @@ class ImportSamples extends ImportCollectable
                     'type' => 'App\Location',
                 );
             }
-        } elseif (array_key_exists('plant', $sample)) {
+        } elseif (array_key_exists('plant', $voucher)) {
             $valid = Plant::select('id')
-                    ->where('id', $sample['plant'])
+                    ->where('id', $voucher['plant'])
                     ->get();
             if (0 === count($valid)) {
                 return null;
@@ -175,36 +175,36 @@ class ImportSamples extends ImportCollectable
 
 
 
-    public function import($sample)
+    public function import($voucher)
     {
 
-        $number = $sample['number'];
-        $date = array_key_exists('date', $this->header) ? $this->header['date'] : $sample['date'];
-        $project = array_key_exists('project', $this->header) ? $this->header['project'] : $sample['project'];
-        $parent_id = $sample['parent_id'];
-        $parent_type = $sample['parent_type'];
-        $created_at = array_key_exists('created_at', $sample) ? $sample['created_at'] : null;
-        $updated_at = array_key_exists('updated_at', $sample) ? $sample['updated_at'] : null;
-        $notes = array_key_exists('notes', $sample) ? $sample['notes'] : null;
-        $collectors = $this->extractCollectors('Sample '.$number, $sample);
+        $number = $voucher['number'];
+        $date = array_key_exists('date', $this->header) ? $this->header['date'] : $voucher['date'];
+        $project = array_key_exists('project', $this->header) ? $this->header['project'] : $voucher['project'];
+        $parent_id = $voucher['parent_id'];
+        $parent_type = $voucher['parent_type'];
+        $created_at = array_key_exists('created_at', $voucher) ? $voucher['created_at'] : null;
+        $updated_at = array_key_exists('updated_at', $voucher) ? $voucher['updated_at'] : null;
+        $notes = array_key_exists('notes', $voucher) ? $voucher['notes'] : null;
+        $collectors = $this->extractCollectors('Voucher '.$number, $voucher);
 
         //validate herbaria
         $herbaria = null;
-        if (array_key_exists("herbaria",$sample) && !empty($sample['herbaria'])) {
-            $herbaria = $this->extractHerbariaNumbers($sample['herbaria']);
-            if (count($herbaria)==0 && count($sample['herbaria'])>0) {
-              $this->skipEntry($sample, Lang::get('messages.invalid_herbaria'));
+        if (array_key_exists("herbaria",$voucher) && !empty($voucher['herbaria'])) {
+            $herbaria = $this->extractHerbariaNumbers($voucher['herbaria']);
+            if (count($herbaria)==0 && count($voucher['herbaria'])>0) {
+              $this->skipEntry($voucher, Lang::get('messages.invalid_herbaria'));
               return;
             }
         }
 
         if (0 === count($collectors)) {
-            $this->skipEntry($sample, 'Can not found any collector of this voucher in the database');
+            $this->skipEntry($voucher, 'Can not found any collector of this voucher in the database');
             return;
         }
         $same = Voucher::where('person_id', '=', $collectors[0])->where('number', '=', $number)->get();
         if (count($same)) {
-            $this->skipEntry($sample, 'There is another registry of a voucher with main collector '.$collectors[0].' and number '.$number.' and this must be UNIQUE');
+            $this->skipEntry($voucher, 'There is another registry of a voucher with main collector '.$collectors[0].' and number '.$number.' and this must be UNIQUE');
             return;
         }
 
@@ -228,7 +228,7 @@ class ImportSamples extends ImportCollectable
            }
         }
         if (!Voucher::checkDate($date)) {
-            $this->skipEntry($sample, Lang::get('messages.invalid_date_error'));
+            $this->skipEntry($voucher, Lang::get('messages.invalid_date_error'));
             return ;
         }
         // collection date must be in the past or today
@@ -240,10 +240,10 @@ class ImportSamples extends ImportCollectable
         // vouchers' fields is ok, what about related tables?
         if ('App\Location' === $parent_type) {
           // add corrected date if need to be used as identification date WHEN MISSING
-            $sample['date'] = $date;
-            $identification = $this->extractIdentification($sample);
+            $voucher['date'] = $date;
+            $identification = $this->extractIdentification($voucher);
             if (null === $identification) {
-                $this->skipEntry($sample, 'Vouchers of location must have taxonomic information');
+                $this->skipEntry($voucher, 'Vouchers of location must have taxonomic information');
                 return;
             }
         } else {
@@ -252,7 +252,7 @@ class ImportSamples extends ImportCollectable
 
         //Finaly create the registries:
         // - First voucher's registry, to get their id
-        $sample = new Voucher([
+        $voucher = new Voucher([
             'person_id' => $collectors[0],
             'number' => $number,
             'project_id' => $project,
@@ -263,7 +263,7 @@ class ImportSamples extends ImportCollectable
             'notes' => $notes,
         ]);
         //date can not be set into constructor due to IncompleteDate compatibility
-        $sample->setDate($date[0],$date[1],$date[2]);
+        $voucher->setDate($date[0],$date[1],$date[2]);
         /*
         if (is_array($date[0])) {
           $this->appendLog("nao passou aqui mm ".serialize($date[0]));
@@ -272,14 +272,14 @@ class ImportSamples extends ImportCollectable
         }
         return;
         */
-        $sample->save();
+        $voucher->save();
         if (!is_null($herbaria)) {
-          $sample->setHerbariaNumbers($herbaria);
+          $voucher->setHerbariaNumbers($herbaria);
         }
-        $this->affectedId($sample->id);
+        $this->affectedId($voucher->id);
 
         // - Then create the related registries (for identification and collector), if requested
-        $this->createCollectorsAndIdentification('App\Voucher', $sample->id, $collectors, $identification);
+        $this->createCollectorsAndIdentification('App\Voucher', $voucher->id, $collectors, $identification);
 
         return;
     }

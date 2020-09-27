@@ -47,8 +47,8 @@ class MeasurementController extends Controller
         if ($request->plant) {
             $measurements->where('measured_type', 'App\\Plant')->whereIn('measured_id', explode(',', $request->plant));
         }
-        if ($request->sample) {
-            $measurements->where('measured_type', 'App\\Sample')->whereIn('measured_id', explode(',', $request->sample));
+        if ($request->voucher) {
+            $measurements->where('measured_type', 'App\\Voucher')->whereIn('measured_id', explode(',', $request->voucher));
         }
         if ($request->limit && $request->offset) {
             $measurements->offset($request->offset)->limit($request->limit);
