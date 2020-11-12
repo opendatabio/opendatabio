@@ -18,13 +18,18 @@ use App\Location;
 use App\Herbarium;
 use App\Identification;
 use App\DataTables\PlantsDataTable;
+use App\Dataset;
 use Auth;
 use Response;
 use Lang;
 use App\UserJob;
 use App\Jobs\BatchUpdatePlants;
+use App\Jobs\ImportPlants;
+use Spatie\SimpleExcel\SimpleExcelReader;
 
-
+use Activity;
+use App\ActivityFunctions;
+use App\DataTables\ActivityDataTable;
 
 class PlantController extends Controller
 {
@@ -33,10 +38,15 @@ class PlantController extends Controller
     **/
     public function autocomplete(Request $request)
     {
-      $busca = Plant::whereRaw('tag LIKE ?', ["'".$request->input('query')."%'"])
-      ->selectRaw("id as data, tag as value")
-      ->take(30)->get();
-      return Response::json(['suggestions' => $busca]);
+      $plants = Plant::selectRaw("plants.id as data, tag as value")
+                ->where('tag','like',$request->input('query')."%")
+                ->take(30)->get();
+      $plants = collect($plants)->transform(function ($plant) {
+          $plant->value = $plant->fullname;
+          return $plant;
+      });
+
+      return Response::json(['suggestions' => $plants]);
     }
 
     /**
@@ -102,6 +112,13 @@ class PlantController extends Controller
         return $dataTable->with('person', $id)->render('plants.index', compact('object'));
     }
 
+
+    public function indexDatasets($id, PlantsDataTable $dataTable)
+    {
+        $object = Dataset::findOrFail($id);
+
+        return $dataTable->with('dataset', $id)->render('plants.index',compact('object'));
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -308,12 +325,17 @@ class PlantController extends Controller
 
         // "sync" collectors. See app/Project.php / setusers()
         $current = $plant->collectors->pluck('person_id');
+        //$oldcollectors = $current->all();
+
         $detach = $current->diff($request->collector)->all();
         $attach = collect($request->collector)->diff($current)->all();
         $plant->collectors()->whereIn('person_id', $detach)->delete();
         foreach ($attach as $collector) {
             $plant->collectors()->create(['person_id' => $collector]);
         }
+
+        //log changes in collectors if any
+        ActivityFunctions::logCustomPivotChanges($plant,$current->all(),$request->collector,'plant','collector updated',$pivotkey='person');
 
         $identifiers = [
             'person_id' => $request->identifier_id,
@@ -324,14 +346,24 @@ class PlantController extends Controller
             'notes' => $request->identification_notes,
         ];
         if ($plant->identification) {
+            $oldidentification = $plant->identification()->first()->toArray();
+
+            //update
             $plant->identification()->update($identifiers);
         } else {
+            $oldidentification = null;
             $plant->identification = new Identification(array_merge($identifiers, ['object_id' => $plant->id, 'object_type' => 'App\Plant']));
         }
         $plant->identification->setDate($request->identification_date_month,
             $request->identification_date_day,
             $request->identification_date_year);
+
         $plant->identification->save();
+
+        //log identification changes if any
+        $identifiers['date'] = $plant->identification->date;
+        ActivityFunctions::logCustomChanges($plant,$oldidentification,$identifiers,'plant','identification updated',null);
+
 
         return redirect('plants/'.$id)->withStatus(Lang::get('messages.saved'));
     }
@@ -345,5 +377,43 @@ class PlantController extends Controller
      */
     public function destroy($id)
     {
+    }
+
+
+    public function activity($id, ActivityDataTable $dataTable)
+    {
+        $object = Plant::findOrFail($id);
+        return $dataTable->with('plant', $id)->render('common.activity',compact('object'));
+    }
+
+    public function importJob(Request $request)
+    {
+      $this->authorize('create', Plant::class);
+      $this->authorize('create', UserJob::class);
+      if (!$request->hasFile('data_file')) {
+          $message = Lang::get('messages.invalid_file_missing');
+      } else {
+        /*
+            Validate attribute file
+            Validate file extension and maintain original if valid or else
+            Store may save a csv as a txt, and then the Reader will fail
+        */
+        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
+        $ext = $request->file('data_file')->getClientOriginalExtension();
+        if (!in_array($ext,$valid_ext)) {
+          $message = Lang::get('messages.invalid_file_extension');
+        } else {
+          $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
+          if (count($data)>0) {
+            UserJob::dispatch(ImportPlants::class,[
+              'data' => $data,
+            ]);
+            $message = Lang::get('messages.dispatched');
+          } else {
+            $message = 'Something wrong with file';
+          }
+        }
+      }
+      return redirect('import/plants')->withStatus($message);
     }
 }

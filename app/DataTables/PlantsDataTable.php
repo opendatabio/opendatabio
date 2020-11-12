@@ -10,6 +10,7 @@ namespace App\DataTables;
 use Baum\Node;
 use App\Plant;
 use App\Location;
+use App\Taxon;
 use App\HasAuthLevels;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
@@ -47,7 +48,9 @@ class PlantsDataTable extends DataTable
             return implode(', ', $col->map(function ($c) {return $c->person->fullname; })->all());
         })
         ->editColumn('date', function ($plant) { return $plant->formatDate; })
-        ->addColumn('measurements', function ($plant) {return $plant->measurements_count; })
+        ->addColumn('measurements', function ($plant) {
+            return '<a href="'.url('plants/'.$plant->id.'/measurements').'">'.$plant->measurements()->count().'</a>';
+        })
         ->addColumn('location', function ($plant) {
             $loc = $plant->locationWithGeom;
             if (!$loc) {
@@ -59,7 +62,10 @@ class PlantsDataTable extends DataTable
         ->addColumn('select_plants',  function ($plant) {
             return $plant->id;
         })
-        ->rawColumns(['tag', 'identification']);
+        ->addColumn('vouchers',function($plant) {
+            return $plant->vouchers()->count();
+        })
+        ->rawColumns(['tag', 'identification','measurements','location']);
     }
 
     /**
@@ -69,7 +75,7 @@ class PlantsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Plant::query()->with(['identification.taxon', 'project', 'location', 'collectors.person'])
+        $query = Plant::query()->with(['identification', 'project', 'location', 'collectors.person'])
             ->select([
                 'plants.id',
                 'tag',
@@ -87,12 +93,17 @@ class PlantsDataTable extends DataTable
             $query = $query->where('project_id', '=', $this->project);
         }
         if ($this->taxon) {
-            $taxon = $this->taxon;
-            $query = $query->whereHas('identification', function ($q) use ($taxon) {$q->where('taxon_id', '=', $taxon); });
+            $taxons = Taxon::where('id',$this->taxon)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+            $query = $query->whereHas('identification', function ($q) use ($taxons) {$q->whereIn('taxon_id',$taxons); });
         }
         if ($this->person) {
             $person = $this->person;
             $query = $query->whereHas('collectors', function ($q) use ($person) {$q->where('person_id', '=', $person); });
+        }
+        if ($this->dataset) {
+            $dataset  = $this->dataset;
+            $query = $query->whereHas('measurements', function ($q) use ($dataset) {$q->where('dataset_id', '=', $dataset); });
+
         }
 
         return $this->applyScopes($query);
@@ -116,6 +127,7 @@ class PlantsDataTable extends DataTable
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
                 'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
+                'vouchers' => ['title' => Lang::get('messages.voucher'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -130,7 +142,7 @@ class PlantsDataTable extends DataTable
                 ],
                 'columnDefs' => [
                   [
-                    'targets' => [ 5, 6, 8],
+                    'targets' => [ 1,5, 6, 8],
                     'visible' => false,
                   ],
                   [

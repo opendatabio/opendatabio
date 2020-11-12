@@ -1,10 +1,18 @@
 <?php
+/*
+ * This file is part of the OpenDataBio app.
+ * (c) OpenDataBio development team https://github.com/opendatabio
+ */
 
 namespace App\Jobs;
 
 use App\Plant;
 use App\ODBFunctions;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Activity;
+use App\ActivityFunctions;
+//use Spatie\Activitylog\Traits\LogsActivity;
+
 
 class BatchUpdatePlants extends ImportCollectable
 {
@@ -53,13 +61,20 @@ class BatchUpdatePlants extends ImportCollectable
                 $this->appendLog('WARNING: You do not have permission to alter identification of plant'.$plant->fullname);
               } else {
                 if ($plant->identification) {
+                    $oldidentification = $plant->identification->toArray();
                     $plant->identification()->update($identifiers_nodate);
                   } else {
+                    $oldidentification = null;
                     $plant->identification = new Identification(array_merge($identifiers_nodate, ['object_id' => $plant->id, 'object_type' => 'App\Plant']));
                   }
                   $date = $identifiers['date'];
                   $plant->identification->setDate($date[0],$date[1],$date[2]);
                   $plant->identification->save();
+
+                  //log identification changes if any
+                  $identifiers_nodate['date'] = $plant->identification->date;
+                  ActivityFunctions::logCustomChanges($plant,$oldidentification,$identifiers_nodate,'plant','identification updated',null);
+
                   $this->affectedId($plant->id);
               }
            }

@@ -12,17 +12,30 @@ use Illuminate\Database\Eloquent\Builder;
 use DB;
 use Auth;
 use Lang;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Plant extends Model
 {
-    use IncompleteDate;
+    use IncompleteDate, LogsActivity;
+
 
     // NOTICE regarding attributes!! relative_position is the name of the database column, so this should be called when writing to database
     // (ie, setRelativePosition), but this is read as position, so this should be called on read context
 
     protected $fillable = ['location_id', 'tag', 'date', 'relative_position', 'notes', 'project_id'];
 
-    protected $appends = ['format_date','location_parentname','taxon_name','taxon_family','project_name','measurements_count'];
+    protected $appends = ['format_date','location_parentname','taxon_name','taxon_family','project_name'];
+
+    //activity log trait
+    protected static $logName = 'plant';
+    protected static $recordEvents = ['updated','deleted'];
+    protected static $ignoreChangedAttributes = ['updated_at','notes'];
+    protected static $logAttributes = ['tag', 'location_id','project_id','date','notes'];
+    protected static $logOnlyDirty = true;
+    protected static $submitEmptyLogs = false;
+    //protected $casts = ['identification' => 'collection' ];// casting the JSON database column
+
+
 
     public function rawLink($addId = false)
     {
@@ -48,7 +61,6 @@ class Plant extends Model
     protected static function boot()
     {
         parent::boot();
-
         static::addGlobalScope('projectScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
@@ -60,7 +72,9 @@ class Plant extends Model
                 return $builder;
             }
             // now the complex case: the regular user
-            return $builder->whereRaw('plants.id IN
+            return $builder->whereRaw('plants.id IN (SELECT plants.id FROM plants JOIN projects ON projects.id=plants.project_id JOIN project_user ON project_user.project_id=projects.id WHERE projects.privacy>0 OR project_user.user_id='.Auth::user()->id.')');
+
+/*
 (SELECT p1.id FROM plants AS p1
 JOIN projects ON (projects.id = p1.project_id)
 WHERE projects.privacy > 0
@@ -70,6 +84,7 @@ JOIN projects ON (projects.id = p1.project_id)
 JOIN project_user ON (projects.id = project_user.project_id)
 WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 )');
+*/
         });
     }
 
@@ -185,7 +200,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::class);        
     }
 
     public function vouchers()

@@ -35,12 +35,12 @@
 		    <form action="{{ url('plants')}}" method="POST" class="form-horizontal">
 @endif
              {{ csrf_field() }}
-<?php 
+<?php
 // sets here the location type, name and id, as this is somewhat convoluted. This must take into account:
 // - are we editing a plant?
 // - are we adding a plant to a registered location?
 
-$ltype = isset($plant) ? $plant->location->adm_level : (is_null($location) ? '' : $location->adm_level); 
+$ltype = isset($plant) ? $plant->location->adm_level : (is_null($location) ? '' : $location->adm_level);
 $lname = (isset($plant) and $plant->location) ? $plant->location->fullname : (is_null($location) ? '' : $location->fullname);
 $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($location) ? '' : $location->id);
 ?>
@@ -118,7 +118,7 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
         <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 {!! View::make('common.incompletedate')->with([
-    'object' => isset($plant) ? $plant : null, 
+    'object' => isset($plant) ? $plant : null,
     'field_name' => 'date'
 ]) !!}
             </div>
@@ -165,12 +165,12 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
 </label>
         <a data-toggle="collapse" href="#hint5" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-{!! Multiselect::autocomplete('collector', 
-    $persons->pluck('abbreviation', 'id'), 
-    isset($plant) ? $plant->collectors->pluck('person_id') : 
+{!! Multiselect::autocomplete('collector',
+    $persons->pluck('abbreviation', 'id'),
+    isset($plant) ? $plant->collectors->pluck('person_id') :
     (empty(Auth::user()->person_id) ? '' : [Auth::user()->person_id] )
-, 
-    ['class' => 'multiselect form-control']) 
+,
+    ['class' => 'multiselect form-control'])
 !!}
             </div>
   <div class="col-sm-12">
@@ -205,11 +205,11 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
         <a data-toggle="collapse" href="#hint9" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<?php $selected = old('modifier', (isset($plant) and $plant->identification) ? $plant->identification->modifier : null); ?>
-    
+
 @foreach (App\Identification::MODIFIERS as $modifier)
         <span>
     		<input type = "radio" name="modifier" value="{{$modifier}}" {{ $modifier == $selected ? 'checked' : '' }}>
-            @lang('levels.identification.' . $modifier)
+            @lang('levels.modifier.' . $modifier)
 		</span>
 	@endforeach
             </div>
@@ -245,7 +245,7 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
         <a data-toggle="collapse" href="#hint8" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 {!! View::make('common.incompletedate')->with([
-    'object' => (isset($plant) and $plant->identification) ? $plant->identification : null, 
+    'object' => (isset($plant) and $plant->identification) ? $plant->identification : null,
     'field_name' => 'identification_date'
 ]) !!}
             </div>
@@ -266,7 +266,6 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
 
 	<select name="herbarium_id" id="herbarium_id" class="form-control" >
 		<option value='' >&nbsp;</option>
-
 	@foreach ($herbaria as $herbarium)
 		<option value="{{$herbarium->id}}" {{ $herbarium->id == $selected ? 'selected' : '' }}>
             {{ $herbarium->acronym }}
@@ -323,20 +322,22 @@ disabled
 <script>
 $(document).ready(function() {
     $("#location_autocomplete").odbAutocomplete(
-        "{{url('locations/autocomplete')}}", "#location_id", "@lang('messages.noresults')", null, undefined, 
-        function(suggestion) { 
+        "{{url('locations/autocomplete')}}", "#location_id", "@lang('messages.noresults')", null, undefined,
+        function(suggestion) {
             $("#location_type").val(suggestion.adm_level);
             setAngXYFields(400);
         });
-$("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#taxon_id","@lang('messages.noresults')",
+      $("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#taxon_id","@lang('messages.noresults')",
         function() {
             // When the identification of a plant or voucher is changed, all related fields are reset
             $('input:radio[name=modifier][value=0]').trigger('click');
             $("#identifier_id").val('');
+            $('#identifier_autocomplete').val('');
             $("#identification_date_year").val((new Date).getFullYear());
-            $("#identification_date_month").val(0);
-            $("#identification_date_day").val(0);
+            $("#identification_date_month").val((new Date).getMonth());
+            $("#identification_date_day").val((new Date).getDay());
             $("#herbarium_id").val('');
+            $("#herbarium_reference").val('');
             $("#identification_notes").val('');
         });
 $("#identifier_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#identifier_id", "@lang('messages.noresults')");

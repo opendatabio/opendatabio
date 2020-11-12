@@ -6,6 +6,11 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.plant')
+                    <span class="history" style="float:right">
+                    <a href="{{url("plants/$plant->id/activity")}}">
+                    @lang ('messages.see_history')
+                    </a>
+                    </span>
                 </div>
 		<div class="panel-body">
 <p><strong>
@@ -29,7 +34,7 @@
     <p><strong>
     @lang('messages.identification_based_on')
 :</strong>
-        @lang('messages.voucher') {{ $identification->herbarium_reference }} /
+        @lang('messages.voucher') {{ $identification->herbarium_reference }} &#64;
     {!! $identification->herbarium->rawLink() !!}
     </p>
     @endif
@@ -47,7 +52,7 @@
 @lang('messages.location')
 : </strong>
 @if($plant->location)
-{!! $plant->location->rawLink() !!} {{ $plant->locationWithGeom->coordinatesSimple }}
+{!! $plant->location->rawLink() !!} {!! $plant->locationWithGeom->coordinatesSimple !!}
 @else
     Unknown location
 @endif

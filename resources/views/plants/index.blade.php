@@ -3,6 +3,8 @@
 @section('content')
     <div class="container-fluid">
         <div class="col-sm-offset-2 col-sm-8">
+
+@if (!isset($object))
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
@@ -18,21 +20,28 @@
     </div>
   </div>
 
-@if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
-        <div class="panel panel-default">
-            <div class="panel-heading">
-  @lang('messages.plant_list')
-            </div>
-            <div class="panel-body">
-    <p><strong>
-    @lang('messages.plant_list_for'):</strong>
-    {{ $object->fullname }}
-    </p>
-            </div>
-        </div>
+@else  <!-- we're inside a Location, Project or Taxon view -->
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      @lang('messages.plant_list_for')
+    </div>
+    <div class="panel-body">
+      <div class="col-sm-12">
+        <p>
+          <strong>
+          {{ str_replace("App\\","",get_class($object)) }}
+          </strong>
+          &nbsp;
+          {!! $object->rawLink() !!}
+          &nbsp;&nbsp;
+          <a href="#" id='about_list' class="btn btn-default">?</a>
+        </p>
+      </div>
+      <div id='about_list_text' class="col-sm-12"></div>
+    </div>
+  </div>
+@endif
 
-
-@else
 @can ('create', App\Plant::class)
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -53,8 +62,8 @@
             </div>
           </div>
         </div>
-    @endcan
-@endif
+@endcan
+
 
 <!--- Batch Identification of plants hidden only registered users will see and project collaborators will be able to use-->
 <?php // TODO: Perhaps make only collaborators of any project having plants to see it. ?>
@@ -101,7 +110,7 @@
     @foreach (App\Identification::MODIFIERS as $modifier)
         <span>
     		<input type = "radio" name="modifier" value="{{$modifier}}" >
-            @lang('levels.identification.' . $modifier)
+            @lang('levels.modifier.' . $modifier)
 		    </span>
 	 @endforeach
             </div>
@@ -212,7 +221,7 @@
                         @lang('messages.plants')
                     </div>
                     <div class="panel-body">
-{!! $dataTable->table([],true) !!}
+                      {!! $dataTable->table([],true) !!}
                 </div>
                 </div>
         </div>
@@ -225,6 +234,19 @@
 <script>
 
 $(document).ready(function() {
+
+$("#about_list").on('click',function(){
+  if ($('#about_list_text').is(':empty')){
+    var records = $('#dataTableBuilder').DataTable().ajax.json().recordsTotal;
+    if (records == 0) {
+      $('#about_list_text').html("@lang('messages.no_permission_list')");
+    } else {
+      $('#about_list_text').html("@lang('messages.plant_object_list')");
+    }
+  } else {
+    $('#about_list_text').html(null);
+  }
+});
 
 $("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#taxon_id","@lang('messages.noresults')",
         function() {
@@ -270,6 +292,7 @@ $('#batch_identify').on('click', function(e){
 });
 
 
+
 $('#submit_batch_identifications').on('click',function(e){
     //check if mandatory fields are filled
     var table =  $('#dataTableBuilder').DataTable();
@@ -290,9 +313,14 @@ $('#submit_batch_identifications').on('click',function(e){
     }
 });
 
+//$('#teste').on('click',function(){
+//});
 
 
 });
+
+
+
 
 </script>
 @endpush
