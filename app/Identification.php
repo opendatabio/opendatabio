@@ -12,7 +12,7 @@ use Lang;
 
 class Identification extends Model
 {
-    use IncompleteDate;
+    use IncompleteDate; 
 
     // Possible modifiers for the identification
     const NONE = 0;
@@ -32,6 +32,7 @@ class Identification extends Model
 
     protected $fillable = ['person_id', 'taxon_id', 'object_id', 'object_type', 'date', 'modifier', 'herbarium_id', 'herbarium_reference', 'notes'];
 
+
     public function object()
     {
         return $this->morphTo('object');
@@ -41,7 +42,7 @@ class Identification extends Model
     {
         if ($this->taxon) {
             return $this->taxon->rawLink().
-                ($this->modifier ? ' '.Lang::get('levels.identification.'.$this->modifier) : '');
+                ($this->modifier ? ' '.Lang::get('levels.modifier.'.$this->modifier) : '');
         }
 
         return Lang::get('messages.unidentified');

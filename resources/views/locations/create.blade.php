@@ -43,7 +43,7 @@
 	<select name="adm_level" id="adm_level" class="form-control" >
 	@foreach (App\Location::AdmLevels() as $level)
 		<option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
-			@lang ('levels.adm.' . $level )
+			@lang ('levels.adm_level.' . $level )
 		</option>
 	@endforeach
 	</select>
