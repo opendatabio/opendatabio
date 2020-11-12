@@ -18,11 +18,12 @@
 @if (isset($picture))
 		    <form action="{{ url('pictures/' . $picture->id)}}" method="POST" class="form-horizontal" enctype="multipart/form-data">
 {{ method_field('PUT') }}
-
 @else
 		    <form action="{{ url('pictures')}}" method="POST" class="form-horizontal" enctype="multipart/form-data">
 @endif
-		     {{ csrf_field() }}
+
+<!-- csrf protection -->
+{{ csrf_field() }}
 <div class="form-group">
     <p><strong>
 @lang('messages.picture_of')

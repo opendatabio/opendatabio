@@ -22,7 +22,7 @@ use App\UserJob;
 use Log;
 use Filepond;
 use Illuminate\Support\Facades\Storage;
-use App\Jobs\ImportPictures;
+//use App\Jobs\ImportPictures;
 
 
 class PictureController extends Controller
@@ -45,7 +45,7 @@ class PictureController extends Controller
       /* file is the list of filepond ServerIDs values that allows to retrieve the filepond uploaded images */
       $pictures = $request->input('file');
       if (!$request->hasFile('pictures_attribute_table') || count($pictures)==0) {
-          $message = Lang::get('messages.pictures_upload_missingfiles');
+          $message = Lang::get('messages.invalid_file_missing');
       } else {
         /*
             Validate attribute file
@@ -55,7 +55,7 @@ class PictureController extends Controller
         $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
         $ext = $request->file('pictures_attribute_table')->getClientOriginalExtension();
         if (!in_array($ext,$valid_ext)) {
-          $message = Lang::get('messages.upload_data_invalid_fileextension');
+          $message = Lang::get('messages.invalid_file_extension');
         } else {
           /* store file for later use and get path */
           $newname =  uniqid().".".$ext;
