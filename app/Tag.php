@@ -13,6 +13,12 @@ class Tag extends Model
 {
     use Translatable;
 
+    public function rawLink()
+    {
+      return "<a href='".url('tags/'.$this->id)."'>".htmlspecialchars($this->name).'</a>';
+      // code...
+    }
+
     public function datasets()
     {
         return $this->belongsToMany(Dataset::class);
@@ -21,5 +27,9 @@ class Tag extends Model
     public function pictures()
     {
         return $this->belongsToMany(Picture::class);
+    }
+    public function projects()
+    {
+      return $this->belongsToMany(Project::class);
     }
 }

@@ -18,46 +18,36 @@
     </div>
   </div>
 
+
 @can ('create', App\Tag::class)
-            <div class="panel panel-default">
-                <div class="panel-heading">
-
-                    @lang('messages.create_tag')
-                </div>
-
-                <div class="panel-body">
-                <a href="{{url('tags/create')}}" class="btn btn-success">
-@lang ('messages.create')
-                </a>
-                </div>
-            </div>
+  <div class="panel panel-default">
+      <div class="panel-heading">
+        @lang('messages.create_tag')
+      </div>
+      <div class="panel-body">
+      <a href="{{url('tags/create')}}" class="btn btn-success">
+        @lang ('messages.create')
+      </a>
+      </div>
+  </div>
 @endcan
 
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        @lang('messages.tags')
-                    </div>
 
-                    <div class="panel-body">
-                        <table class="table table-striped" id="references-table">
-                            <thead>
-                                <th>
-@lang('messages.name')
-</th>
-			    </thead>
-<tbody>
-                                @foreach ($tags as $tag)
-                                    <tr>
-					<td class="table-text">
-					<a href="{{ url('tags/'.$tag->id) }}">{{ $tag->name }}</a>
-					</td>
-                                    </tr>
-				    @endforeach
-				    </tbody>
-                        </table>
- {{ $tags->links() }}
-                    </div>
-                </div>
-        </div>
+<div class="panel panel-default">
+    <div class="panel-heading">
+        @lang('messages.tags')
     </div>
+    <div class="panel-body">
+      <div class="panel-body">
+        {!! $dataTable->table() !!}
+  </div>
+    </div>
+</div>
+
+
+    </div>
+</div>
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

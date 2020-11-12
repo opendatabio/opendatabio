@@ -9,6 +9,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Tag;
+use App\DataTables\TagsDataTable;
 use App\Language;
 use App\UserTranslation;
 use Lang;
@@ -20,11 +21,13 @@ class TagController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
-    {
-        $tags = Tag::with('translations')->paginate(10);
 
-        return view('tags.index', compact('tags'));
+
+    public function index(TagsDataTable $dataTable)
+    {
+        return $dataTable->render('tags.index');
+        //$tags = Tag::with('translations')->paginate(10);
+        //return view('tags.index', compact('tags'));
     }
 
     /**
@@ -73,11 +76,14 @@ class TagController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    {
+    {      
         $tag = Tag::with('datasets')->findOrFail($id);
-
         return view('tags.show', compact('tag'));
     }
+
+
+
+
 
     /**
      * Show the form for editing the specified resource.
