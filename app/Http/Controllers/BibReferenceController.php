@@ -14,7 +14,7 @@ use Validator;
 use Illuminate\Support\Facades\Lang;
 use App\Jobs\ImportBibReferences;
 use App\DataTables\BibReferencesDataTable;
-use App\DataTables\HistoryDataTable;
+use App\DataTables\ActivityDataTable;
 use Response;
 
 class BibReferenceController extends Controller
@@ -38,11 +38,6 @@ class BibReferenceController extends Controller
     public function index(BibReferencesDataTable $dataTable)
     {
         return $dataTable->render('references.index', []);
-    }
-
-    public function history($id, HistoryDataTable $dataTable)
-    {
-        return $dataTable->with('reference', $id)->render('history.index');
     }
 
     /**
@@ -165,5 +160,13 @@ class BibReferenceController extends Controller
         }
 
         return redirect('references')->withStatus(Lang::get('messages.removed'));
+    }
+
+
+
+    public function activity($id, ActivityDataTable $dataTable)
+    {
+      $object = BibReference::findOrFail($id);
+      return $dataTable->with('bibreference', $id)->render('common.activity',compact('object'));
     }
 }

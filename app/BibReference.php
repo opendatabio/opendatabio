@@ -13,22 +13,31 @@ use RenanBr\BibTexParser\Parser;
 use RenanBr\BibTexParser\ParseException;
 use RenanBr\BibTexParser\Processor;
 //use RenanBr\BibTexParser\Processor\LatexToUnicodeProcessor as LatexToUnicode;
-use App\BibLatexTitleToUnicode;
 //use RenanBr\BibTexParser\Exception\ProcessorException;
+use App\BibLatexTitleToUnicode;
 use Pandoc\Pandoc;
 use Pandoc\PandocException;
 use DB;
-
 use Illuminate\Support\Facades\Log;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 
 class BibReference extends Model
 {
-    use Revisionable;
-    protected $revisionCreationsEnabled = true;
+    use LogsActivity;
 
     // "cached" entries, so we don't need to parse the bibtex for every call
     protected $entries = null;
     protected $fillable = ['bibtex', 'doi'];
+
+    //activity log trait
+    protected static $logName = 'bibreference';
+    protected static $recordEvents = ['updated','deleted'];
+    protected static $ignoreChangedAttributes = ['updated_at'];
+    protected static $logFillable = true;
+    protected static $logOnlyDirty = true;
+    protected static $submitEmptyLogs = false;
+
 
     public function rawLink()
     {
@@ -179,6 +188,32 @@ class BibReference extends Model
         }
     }
 
+    public function getFirstAuthorAttribute()
+    {
+        if (is_null($this->entries)) {
+            $this->parseBibtex();
+        }
+        if (count($this->entries) > 0 and array_key_exists('author', $this->entries[0])) {
+            $author = $this->entries[0]['author'];
+            $authors =  explode(" and ",$author);
+            if (count($authors)>2) {
+              return $authors[0]." et al.";
+            } else {
+              return $author;
+            }
+
+        } else {
+            return '';
+        }
+    }
+
+    public function identifiableName()
+    {
+        $name =  $this->getFirstAuthorAttribute()." ".$this->getYearAttribute();
+        return "<a href='".url('references/'.$this->id)."'>".htmlspecialchars($name)."</a>";
+    }
+
+
     public function getTitleAttribute()
     {
         if (is_null($this->entries)) {
@@ -223,4 +258,8 @@ class BibReference extends Model
             DB::raw('odb_bibkey(bibtex) as bibkey')
         );
     }
+
+
+
+
 }
