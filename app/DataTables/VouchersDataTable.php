@@ -14,7 +14,7 @@ use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
-
+use DB;
 class VouchersDataTable extends DataTable
 {
     /**
@@ -38,9 +38,27 @@ class VouchersDataTable extends DataTable
             return implode(', ',$col->map(function ($c) {return $c->person->fullname; })->all()
           );
         })
+        ->editColumn('parent_type', function ($voucher) {
+            $text = 'Linked to location';
+            if ($voucher->parent_type ==  'App\Plant') {
+              $text = $voucher->parent->rawLink();
+            }
+            return $text;
+        })
+        ->addColumn('location',function($voucher) {
+            $text = "";
+            if (null !== $voucher->locationWithGeom) {
+                $text = $voucher->locationWithGeom->rawLink();
+                $text .= "<br>".$voucher->locationWithGeom->coordinatesSimple;
+            }
+            return $text;
+        })
         ->editColumn('date', function ($voucher) { return $voucher->formatDate; })
-        ->addColumn('measurements', function ($voucher) {return $voucher->measurements_count; })
-        ->rawColumns(['number', 'identification','location_show','linked_planttag','measurements_count']);
+        ->addColumn('measurements', function ($voucher) {
+            return '<a href="'.url('vouchers/'.$voucher->id.'/measurements').'">'.$voucher->measurements()->count().'</a>';
+        })
+
+        ->rawColumns(['number', 'identification','location','measurements','parent_type']);
     }
 
     /**
@@ -90,10 +108,19 @@ class VouchersDataTable extends DataTable
                     'parent_id',
                     'parent_type',
                     'date',
-                ])->withCount('measurements');
+                ]);
+                //->withCount('measurements');
             $query = $query2->where('person_id', $person)->union($q1);
         }
+        if ($this->dataset) {
+            $dataset  = $this->dataset;
+            $query = $query->whereHas('measurements', function ($q) use ($dataset) {$q->where('dataset_id', '=', $dataset); });
 
+        }
+        if ($this->herbarium_id) {
+            $herbid =$this->herbarium_id;
+            $query = $query->whereHas('herbaria', function ($q) use ($herbid) {$q->where('herbarium_id', '=', $herbid); });          
+        }
         return $this->applyScopes($query);
     }
 
@@ -109,9 +136,9 @@ class VouchersDataTable extends DataTable
                 'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
-                'linked_planttag' => ['title' => Lang::get('messages.planttag'), 'searchable' => false, 'orderable' => true],
-                'location_show' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
-                //'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
+                'parent_type' => ['title' => Lang::get('messages.planttag'), 'searchable' => false, 'orderable' => true],
+                'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
+                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
                 'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => true, 'orderable' => false],
@@ -129,7 +156,7 @@ class VouchersDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1, 6],
+                    'targets' => [1,3,8],
                     'visible' => false,
                 ]],
             ]);

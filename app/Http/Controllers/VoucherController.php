@@ -19,8 +19,18 @@ use App\Herbarium;
 use App\Identification;
 use App\Voucher;
 use App\Taxon;
+use App\Dataset;
 use Auth;
 use Lang;
+use Activity;
+use App\ActivityFunctions;
+use App\DataTables\ActivityDataTable;
+
+use App\UserJob;
+use App\Jobs\ImportVouchers;
+use Spatie\SimpleExcel\SimpleExcelReader;
+
+
 
 class VoucherController extends Controller
 {
@@ -67,6 +77,12 @@ class VoucherController extends Controller
         $object = Plant::findOrFail($id);
 
         return $dataTable->with('plant', $id)->render('vouchers.index', compact('object'));
+    }
+
+    public function indexDatasets($id, VouchersDataTable $dataTable)
+    {
+        $object = Dataset::findOrFail($id);
+        return $dataTable->with('dataset', $id)->render('vouchers.index',compact('object'));
     }
 
     public function customValidate(Request $request, Voucher $voucher = null)
@@ -249,10 +265,10 @@ class VoucherController extends Controller
         $voucher = Voucher::findOrFail($id);
         $herbaria = Herbarium::all();
         $persons = Person::all();
-        $plants = Plant::with('location')->get();
+        //$plants = Plant::with('location')->get();
         $projects = Auth::user()->projects;
-
-        return view('vouchers.create', compact('voucher', 'persons', 'projects', 'herbaria', 'plants'));
+        //, 'plants'
+        return view('vouchers.create', compact('voucher', 'persons', 'projects', 'herbaria'));
     }
 
     /**
@@ -292,14 +308,22 @@ class VoucherController extends Controller
                 'notes' => $request->identification_notes,
             ];
             if ($voucher->identification()->count()) {
+                $voucherolddet = $voucher->identification()->first()->toArray();
                 $voucher->identification()->update($ident_array);
             } else {
+                $voucherolddet = null;
                 $voucher->identification = new Identification($ident_array);
             }
             $voucher->identification->setDate($request->identification_date_month,
                 $request->identification_date_day,
                 $request->identification_date_year);
             $voucher->identification->save();
+
+
+            //log identification changes if any
+            $ident_array['date'] = $voucher->identification->date;
+            ActivityFunctions::logCustomChanges($voucher,$voucherolddet,$ident_array,'voucher','identification updated',null);
+
         } else { // Plant
             $plant = Plant::findOrFail($request->parent_plant_id);
             $voucher->update(array_merge(
@@ -324,9 +348,14 @@ class VoucherController extends Controller
             foreach ($attach as $collector) {
                 $voucher->collectors()->create(['person_id' => $collector]);
             }
+
+            //log changes in voucher collectors
+            ActivityFunctions::logCustomPivotChanges($voucher,$current->all(),$request->collector,'voucher','collector updated',$pivotkey='person');
+
         }
 
         $voucher->setHerbariaNumbers($request->herbarium);
+        //activity()->log(serialize($request->herbarium));
 
         return redirect('vouchers/'.$voucher->id)->withStatus(Lang::get('messages.saved'));
     }
@@ -341,4 +370,45 @@ class VoucherController extends Controller
     public function destroy($id)
     {
     }
+
+
+
+    public function activity($id, ActivityDataTable $dataTable)
+    {
+      $object = Voucher::findOrFail($id);
+      return $dataTable->with('voucher', $id)->render('common.activity',compact('object'));
+    }
+
+
+        public function importJob(Request $request)
+        {
+          $this->authorize('create', Voucher::class);
+          $this->authorize('create', UserJob::class);
+          if (!$request->hasFile('data_file')) {
+              $message = Lang::get('messages.invalid_file_missing');
+          } else {
+            /*
+                Validate attribute file
+                Validate file extension and maintain original if valid or else
+                Store may save a csv as a txt, and then the Reader will fail
+            */
+            $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
+            $ext = $request->file('data_file')->getClientOriginalExtension();
+            if (!in_array($ext,$valid_ext)) {
+              $message = Lang::get('messages.invalid_file_extension');
+            } else {
+              $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
+              if (count($data)>0) {
+                UserJob::dispatch(ImportVouchers::class,[
+                  'data' => $data,
+                ]);
+                $message = Lang::get('messages.dispatched');
+              } else {
+                $message = 'Something wrong with file';
+              }
+            }
+          }
+          return redirect('import/taxons')->withStatus($message);
+        }
+
 }

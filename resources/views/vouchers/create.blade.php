@@ -50,6 +50,7 @@ if (isset($parent) and get_class($parent) == "App\Location")
 </label>
         <a data-toggle="collapse" href="#hintpl" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
+        <?php // TODO: need to allow change in parent location if user has permission. If voucher is misplaced ?>
         {{ isset($voucher) ? $voucher->parent->fullname : $parent->fullname }}
     <input type="hidden" name="parent_type" value="App\Location">
     <input type="hidden" name="parent_location_id"
@@ -68,6 +69,7 @@ if (isset($parent) and get_class($parent) == "App\Location")
 </label>
         <a data-toggle="collapse" href="#hintpp" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
+        <?php // TODO: need to allow change in parent plant if user has permission. If voucher is misplaced ?>
 <?php
 $p = isset($voucher) ? $voucher->parent : $parent;
 echo $p->fullname;
@@ -231,7 +233,7 @@ if ($p->identification)
 @foreach (App\Identification::MODIFIERS as $modifier)
         <span>
     		<input type = "radio" name="modifier" value="{{$modifier}}" {{ $modifier == $selected ? 'checked' : '' }}>
-            @lang('levels.identification.' . $modifier)
+            @lang('levels.modifier.' . $modifier)
 		</span>
 	@endforeach
             </div>
@@ -330,7 +332,7 @@ if ($p->identification)
   <select name="herbaria_repos" id="herbaria_repos" class="form-control" >
     <option value='' >&nbsp;</option>
     @foreach ($herbaria as $herbarium)
-    <option value="{{$herbarium->id}}" {{ $herbarium->id == $selected ? 'selected' : '' }}>
+    <option value="{{$herbarium->id}}" >
       {{ $herbarium->acronym }}
     </option>
   @endforeach
@@ -364,9 +366,9 @@ if ($p->identification)
         @if((isset($voucher) and $voucher->herbaria->find($herbarium->id)))
         <tr id="herbarium_{{$herbarium->id}}">
           <td>{{$herbarium->acronym}}</td>
-          <td><input name="herbarium[{{$herbarium->id}}]['herbarium_number']" value="{{ old('herbarium.' . $herbarium->id, (isset($voucher) and $voucher->herbaria->find($herbarium->id)) ? $voucher->herbaria->find($herbarium->id)->pivot->herbarium_number : null ) }}"></td>
+          <td><input name="herbarium[{{$herbarium->id}}][herbarium_number]" value="{{ old('herbarium.' . $herbarium->id, (isset($voucher) and $voucher->herbaria->find($herbarium->id)) ? $voucher->herbaria->find($herbarium->id)->pivot->herbarium_number : null ) }}"></td>
           <td>
-            <select name="herbarium[{{$herbarium->id}}]['herbarium_type']" class="form-control" style="width:auto;">
+            <select name="herbarium[{{$herbarium->id}}][herbarium_type]" class="form-control" style="width:auto;">
               <?php $ovtype = old('herbarium.' . $herbarium->id, (isset($voucher) and $voucher->herbaria->find($herbarium->id)) ? $voucher->herbaria->find($herbarium->id)->pivot->herbarium_type : null ); ?>
               @foreach (\App\herbarium::NOMENCLATURE_TYPE as $vtype)
               <option value="{{ $vtype }}" {{ $vtype == $ovtype ? 'selected' : '' }}>
@@ -413,7 +415,7 @@ if ($p->identification)
 @push ('scripts')
 <script>
 $(document).ready(function() {
-$("#location_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}", "#location_id", "@lang('messages.noresults')");
+//$("#location_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}", "#location_id", "@lang('messages.noresults')");
 $("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#taxon_id","@lang('messages.noresults')",
         function() {
             // When the identification of a plant or voucher is changed, all related fields are reset
@@ -441,11 +443,11 @@ $("#herbaria_repos").change(function(){
     var acronym = $("#herbaria_repos option:selected").text();
     var markup = "<tr  id=\"herbarium_"+id+"\" >\
     <td>"+acronym+"</td>\
-    <td><input name=\"herbarium["+id+"]['herbarium_number']\" value=\"\"></td>\
+    <td><input name=\"herbarium["+id+"][herbarium_number]\" value=\"\"></td>\
     <td>\
-     <select name=\"herbarium[{{$herbarium->id}}]['herbarium_type']\" class=\"form-control\" style=\"width:auto;\">\
+     <select name=\"herbarium["+id+"][herbarium_type]\" class=\"form-control\" style=\"width:auto;\">\
       @foreach (\App\herbarium::NOMENCLATURE_TYPE as $vtype)\
-      <option value=\"{{ $vtype }}\" {{ 0 == $vtype ? 'selected' : '' }}>\
+      <option value={{ $vtype }} {{ 0 == $vtype ? 'selected' : '' }}>\
       @lang('levels.vouchertype.'.$vtype)\
       </option>\
       @endforeach\

@@ -40,16 +40,15 @@
             <!-- Registered Vouchers -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        @lang('messages.vouchers')
+                        @if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
+                            @lang('messages.voucher_list_for')<strong> {{ class_basename($object) }}</strong>
+                            {!! $object->rawLink() !!}
+                        @else
+                          @lang('messages.vouchers')
+                        @endif
                     </div>
                     <div class="panel-body">
-@if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
-    <p><strong>
-    @lang('messages.voucher_list_for'):</strong>
-    {!! $object->rawLink() !!}
-    </p>
-@endif
-{!! $dataTable->table() !!}
+                      {!! $dataTable->table([],true) !!}
                     </div>
                 </div>
         </div>

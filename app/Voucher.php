@@ -11,15 +11,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Auth;
 use Lang;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Voucher extends Model
 {
-    use IncompleteDate;
+    use IncompleteDate, LogsActivity;
 
     protected $fillable = ['parent_id', 'parent_type', 'person_id', 'number', 'date', 'notes', 'project_id'];
 
     //add attributes for automatic use in datatabe
-    protected $appends = ['linked_planttag', 'location_show'];
+    //protected $appends = ['location_id'];
+    //activity log trait (parent, uc and geometry are logged in controller)
+    protected static $logName = 'voucher';
+    protected static $recordEvents = ['updated','deleted'];
+    protected static $ignoreChangedAttributes = ['updated_at'];
+    protected static $logFillable = true;
+    //$logAttributes = ['name','altitude','adm_level','datum','x','y','startx','starty','notes'];
+    protected static $logOnlyDirty = true;
+    protected static $submitEmptyLogs = false;
 
 
     public function rawLink($addId = false)
@@ -124,6 +133,12 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return 'Not registered-'.$this->number;
     }
 
+    /* Used in ActivityDataTable change display */
+    public function identifiableName()
+    {
+        return $this->getFullnameAttribute();
+    }
+
     public function person()
     {
         return $this->belongsTo(Person::class);
@@ -145,7 +160,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         // This is ugly as hell, but simpler alternatives are "intercepted" by Baum, which does not respect the added scope...
         $loc = $this->parent;
         if (!$loc or Location::class != get_class($loc)) {
-            return;
+            return $this->parent->locationWithGeom;
         }
 
         return Location::withGeom()->addSelect('id', 'name')->find($loc->id);
@@ -166,11 +181,9 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         }
     }
 
-
-
     public function herbaria()
     {
-        return $this->belongsToMany(Herbarium::class)->withPivot('herbarium_number','herbarium_type')->withTimestamps();
+        return $this->belongsToMany(Herbarium::class)->withPivot(['herbarium_number','herbarium_type'])->withTimestamps();
     }
 
     public function setHerbariaNumbers($herbaria)
@@ -179,7 +192,6 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
        $herbaria = array_filter($herbaria);
         if (empty($herbaria)) {
             $this->herbaria()->detach();
-
             return;
         }
         // transforms the array to be Laravel-friendly
@@ -188,8 +200,6 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         //}
         //Commented above: value is a now an array that must have keys: herbarium_type and herbarium_number
         //which are directly provided in create.blade.php in the herbarium key or in the importsample api
-
-        // syncs the data (will remove deleted if is the case)
         $this->herbaria()->sync($herbaria);
     }
 
