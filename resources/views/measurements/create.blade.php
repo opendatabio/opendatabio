@@ -24,15 +24,21 @@
 @endif
 		     {{ csrf_field() }}
 <div class="form-group">
+  <div class="col-sm-12">
     <p><strong>
 @lang('messages.measurement_for')
-:</strong> {{ $object->fullname }}
+:</strong>
+@php
+  echo str_replace("App\\","",get_class($object))." ";
+  echo $object->rawLink();
+@endphp
 @if ($object->identification)
     (<em>{{$object->identification->taxon->fullname}}</em>)
 @endif
     </p>
     <input type="hidden"  name="measured_id" value="{{$object->id}}">
     <input type="hidden"  name="measured_type" value="{{get_class($object)}}">
+  </div>
 </div>
 <div class="form-group">
     <label for="trait_id" class="col-sm-3 control-label mandatory">
@@ -53,7 +59,7 @@
         <a data-toggle="collapse" href="#hintdate" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 {!! View::make('common.incompletedate')->with([
-    'object' => isset($measurement) ? $measurement : null, 
+    'object' => isset($measurement) ? $measurement : null,
     'field_name' => 'date'
 ]) !!}
             </div>
@@ -132,14 +138,14 @@
 
 <div class="form-group" id="append_value">
 <?php if (isset($measurement)) {
-echo View::make('traits.elements.' . $measurement->type, 
+echo View::make('traits.elements.' . $measurement->type,
 [
     'odbtrait' => $measurement->odbtrait,
     'measurement' => $measurement,
 ]);
     } elseif (!empty(old())) {
         $odbtrait = \App\ODBTrait::find(old('trait_id'));
-        echo View::make('traits.elements.' . $odbtrait->type, 
+        echo View::make('traits.elements.' . $odbtrait->type,
             [
                 'odbtrait' => $odbtrait,
                 'measurement' => null,
@@ -150,7 +156,7 @@ echo View::make('traits.elements.' . $measurement->type,
 </div>
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-                <button type="submit" class="btn btn-success" name="submit" value="submit" 
+                <button type="submit" class="btn btn-success" name="submit" value="submit"
 @if (!count($datasets))
 disabled
 @endif
@@ -172,7 +178,17 @@ disabled
 <script>
 $(document).ready(function() {
     $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
-    $("#link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+    @if (isset($measurement) and $measurement->type==7)
+     @if ($measurement->odbtrait->link_type == "App\Taxon")
+          $("#link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+     @endif
+     @if ($measurement->odbtrait->link_type == "App\Person")
+          $("#link_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+     @endif
+     @if ($measurement->odbtrait->link_type == "App\Plant")
+          $("#link_autocomplete").odbAutocomplete("{{url('plants/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+     @endif
+    @endif
     $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");
     $("#trait_autocomplete").devbridgeAutocomplete({
         serviceUrl: "{{url('traits/autocomplete')}}",
@@ -191,7 +207,7 @@ $(document).ready(function() {
                     $("#ajax-error").collapse("hide");
                     $("#append_value").html(data.html);
                 },
-                error: function(e){ 
+                error: function(e){
                     $("#spinner").hide();
                     $("#ajax-error").collapse("show");
                     $("#ajax-error").text('Error sending AJAX request');

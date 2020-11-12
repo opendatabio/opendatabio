@@ -6,6 +6,11 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.measurement')
+                    <span class="history" style="float:right">
+                    <a href="{{url("measurements/$measurement->id/activity")}}">
+                    @lang ('messages.see_history')
+                    </a>
+                    </span>
 		<div class="panel-body">
 <p><strong>
 @lang('messages.object')

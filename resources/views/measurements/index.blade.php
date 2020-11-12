@@ -39,24 +39,36 @@
             <!-- Registered Vouchers -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        @lang('messages.measurements')
-                    </div>
-
-                    <div class="panel-body">
-<p><strong>
-@lang('messages.measurements_for')
-:</strong>
+<p>
 @if (isset($object))
-{!! $object->rawLink(true) !!}
+  <strong>
+    @lang('messages.measurements_for')
+    {{ class_basename($object )}}
+  </strong>
+  {!! $object->rawLink(true) !!}
 @elseif (isset($dataset))
-{!! $dataset->rawLink() !!}
-@else <!-- the only left object is trait -->
-{!! $odbtrait->rawLink() !!}
+  <strong>
+    @lang('messages.measurements_for')
+    {{ class_basename($dataset)}}
+  </strong>
+  {!! $dataset->rawLink() !!}
+@elseif(isset($odbtrait))
+  <strong>
+    @lang('messages.measurements_for')
+    {{ class_basename($odbtrait)}}
+  </strong>
+  {!! $odbtrait->rawLink() !!}
+@else
+  <strong>
+  @lang('messages.measurements')
+  </strong>
 @endif
 </p>
-{!! $dataTable->table() !!}
-        </div>
-    </div>
+</div>
+  <div class="panel-body">
+    {!! $dataTable->table() !!}
+  </div>
+</div>
 @endsection
 @push ('scripts')
 {!! $dataTable->scripts() !!}

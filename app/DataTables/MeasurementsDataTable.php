@@ -12,6 +12,7 @@ use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
+use App\Taxon;
 
 class MeasurementsDataTable extends DataTable
 {
@@ -25,7 +26,11 @@ class MeasurementsDataTable extends DataTable
         return (new EloquentDataTable($query))
         //return (new CollectionDataTable($query))
         ->editColumn('value', function ($measurement) {
-            return $measurement->rawLink();
+            $text = $measurement->rawLink();
+            if ($measurement->type == \App\ODBTrait::COLOR) {
+              $text .= '&nbsp;<span class="measurement-thumb" style="background-color:'.$measurement->valueActual.'">';
+            }
+            return $text;
         })
         ->editColumn('trait_id', function ($measurement) {
             return $measurement->odbtrait->rawLink();
@@ -37,9 +42,9 @@ class MeasurementsDataTable extends DataTable
             }
 
             return $object->taxonName ?
-                htmlspecialchars($object->fullname).' (<em>'.
-                htmlspecialchars($object->taxonName).'</em>)' :
-                htmlspecialchars($object->fullname);
+                    $object->rawLink().' (<em>'.
+                    htmlspecialchars($object->taxonName).'</em>)' :
+                    $object->rawLink();
         })
         ->editColumn('dataset_id', function ($measurement) { return $measurement->dataset->name; })
         ->addColumn('unit', function ($measurement) { return $measurement->odbtrait->unit; })
@@ -73,6 +78,10 @@ class MeasurementsDataTable extends DataTable
         // customizes the datatable query
         if ($this->measured) {
             $query = $query->where('measured_id', '=', $this->measured)->where('measured_type', $this->measured_type);
+        } else {
+          if ($this->measured_type) {
+            $query = $query->where('measured_type', 'like', "%".$this->measured_type."%");
+          }
         }
         if ($this->dataset) {
             $query = $query->where('dataset_id', $this->dataset);
@@ -80,6 +89,12 @@ class MeasurementsDataTable extends DataTable
         if ($this->odbtrait) {
             $query = $query->where('trait_id', $this->odbtrait);
         }
+        if ($this->taxon) {
+          $taxon_list = Taxon::findOrFail($this->taxon)->getDescendantsAndSelf()->pluck('id')->toArray();
+          $query = $query->whereHasMorph('measured',['App\Plant','App\Voucher'],function($mm) use($taxon_list) { $mm->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
+          $query = $query->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$this->taxon);
+        }
+
         return $this->applyScopes($query);
 
         //return collect($query->get())->filter(function ($item) {
@@ -124,7 +139,10 @@ class MeasurementsDataTable extends DataTable
                     'targets' => [2, 4, 5, 6],
                     'visible' => false,
                 ]],
-            ]);
+            ])
+            ->buttons(
+              Button::make('custom_export'),
+            );
     }
 
     /**

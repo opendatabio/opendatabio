@@ -10,14 +10,26 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Auth;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Measurement extends Model
 {
-    use IncompleteDate;
+    use IncompleteDate, LogsActivity;
 
     protected $fillable = ['trait_id', 'measured_id', 'measured_type',
         'date', 'dataset_id', 'person_id', 'bibreference_id',
         'value', 'value_i', 'value_a', 'notes', ];
+
+    protected $appends = ['taxon_id','location_id'];
+
+    //activity log trait (parent, uc and geometry are logged in controller)
+    protected static $logName = 'measurement';
+    protected static $recordEvents = ['updated','deleted'];
+    protected static $ignoreChangedAttributes = ['updated_at'];
+    protected static $logFillable = true;
+    //protected static $logAttributes = ['name','altitude','adm_level','datum','x','y','startx','starty','notes'];
+    protected static $logOnlyDirty = true;
+    protected static $submitEmptyLogs = false;
 
     public function rawLink()
     {
@@ -29,6 +41,43 @@ class Measurement extends Model
     public function measured()
     {
         return $this->morphTo();
+    }
+
+    public function getLocationIdAttribute()
+    {
+      if ($this->measured_type == Plant::class) {
+        return $this->measured->location_id;
+      }
+      if ($this->measured_type == Location::class) {
+        return $this->measured_id;
+      }
+      if ($this->measured_type == Voucher::class) {
+        if ($this->measured->parent_type == Location::class) {
+           return $this->measured->parent_id;
+        } else {
+           return $this->measured->parent->location->id;
+        }
+      }
+      return NULL;
+    }
+
+    public function getTaxonIdAttribute()
+    {
+      if ($this->measured_type == Plant::class && isset($this->measured->identification)) {
+        return $this->measured->identification->taxon_id;
+      }
+      if ($this->measured_type == Voucher::class) {
+          if ($this->measured->parent_type == Location::class && isset($this->measured->identification)) {
+            return $this->measured->identification->taxon_id;
+          }
+          if ($this->measured->parent_type == Plant::class && isset($this->measured->parent->identification)) {
+            return $this->measured->parent->identification->taxon_id;
+          }
+      }
+      if ($this->measured_type == Taxon::class) {
+          return $this->measured_id;
+      }
+      return NULL;
     }
 
     public function getMeasuredFullnameAttribute()
