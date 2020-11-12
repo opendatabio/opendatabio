@@ -28,14 +28,45 @@
 	<input type="text" name="name" id="name" class="form-control" value="{{ old('name', isset($dataset) ? $dataset->name : null) }}">
     </div>
 </div>
+
+
+
 <div class="form-group">
-    <label for="notes" class="col-sm-3 control-label">
-@lang('messages.notes')
+    <label for="description" class="col-sm-3 control-label">
+@lang('messages.dataset_short_description')
 </label>
-	    <div class="col-sm-6">
-	<textarea name="notes" id="notes" class="form-control">{{ old('notes', isset($dataset) ? $dataset->notes : null) }}</textarea>
-            </div>
+<a data-toggle="collapse" href="#dataset_short_description_hint" class="btn btn-default">?</a>
+<div class="col-sm-6">
+  <textarea name="description" id="description" class="form-control" maxlength="500">{{ old('description', isset($dataset) ? $dataset->description : null) }}</textarea>
 </div>
+<div class="col-sm-12">
+  <div id="dataset_short_description_hint" class="panel-collapse collapse">
+@lang('messages.dataset_short_description_hint')
+  </div>
+</div>
+</div>
+
+<div class="form-group">
+<label for="tags" class="col-sm-3 control-label">
+@lang('messages.tags')
+</label>
+<a data-toggle="collapse" href="#tags_hint" class="btn btn-default">?</a>
+<div class="col-sm-6">
+{!! Multiselect::select(
+    'tags',
+    $tags->pluck('name', 'id'), isset($dataset) ? $dataset->tags->pluck('id') : [],
+     ['class' => 'multiselect form-control']
+) !!}
+</div>
+<div class="col-sm-12">
+  <div id="tags_hint" class="panel-collapse collapse">
+@lang('messages.tags_hint')
+  </div>
+</div>
+</div>
+
+<hr>
+
 <div class="form-group">
     <label for="privacy" class="col-sm-3 control-label mandatory">
 @lang('messages.privacy')
@@ -58,35 +89,88 @@
     </div>
   </div>
 </div>
+
+
 <div class="form-group">
-<label for="tags" class="col-sm-3 control-label">
-@lang('messages.tags')
+    <label for="policy" class="col-sm-3 control-label">
+@lang('messages.dataset_policy')
 </label>
+<a data-toggle="collapse" href="#dataset_policy_hint" class="btn btn-default">?</a>
+<div class="col-sm-6">
+	<textarea name="policy" id="policy" class="form-control">{{ old('policy', isset($dataset) ? $dataset->policy : null) }}</textarea>
+</div>
+<div class="col-sm-12">
+  <div id="dataset_policy_hint" class="panel-collapse collapse">
+@lang('messages.dataset_policy_hint')
+  </div>
+</div>
+</div>
+
+<hr>
+
+
+<div class="form-group">
+    <label for="metadata" class="col-sm-3 control-label">
+@lang('messages.dataset_metadata')
+</label>
+<a data-toggle="collapse" href="#dataset_metadata_hint" class="btn btn-default">?</a>
+<div class="col-sm-6">
+	<textarea name="metadata" id="metadata" class="form-control">{{ old('metadata', isset($dataset) ? $dataset->metadata : null) }}</textarea>
+</div>
+<div class="col-sm-12">
+  <div id="dataset_metadata_hint" class="panel-collapse collapse">
+@lang('messages.dataset_metadata_hint')
+  </div>
+</div>
+</div>
+
+
+
+
+
+<hr>
+
+
+
+<div class="form-group">
+<label for="references" class="col-sm-3 control-label">
+@lang('messages.dataset_bibreferences_mandatory')
+</label>
+<a data-toggle="collapse" href="#hint_bib_mandatory" class="btn btn-default">?</a>
 <div class="col-sm-6">
 {!! Multiselect::select(
-    'tags', 
-    $tags->pluck('name', 'id'), isset($dataset) ? $dataset->tags->pluck('id') : [],
+    'references',
+    $references->pluck('bibkey', 'id'), isset($dataset) ? $dataset->references->where('mandatory',1)->pluck('bib_reference_id') : [],
      ['class' => 'multiselect form-control']
 ) !!}
 </div>
-</div>
-<div class="form-group">
-    <label for="bibreference_id" class="col-sm-3 control-label">
-@lang('messages.dataset_bibreference')
-</label>
-        <a data-toggle="collapse" href="#hintr" class="btn btn-default">?</a>
-<div class="col-sm-6">
-    <input type="text" name="bibreference_autocomplete" id="bibreference_autocomplete" class="form-control autocomplete"
-    value="{{ old('bibreference_autocomplete', (isset($taxon) and $taxon->bibreference) ? $taxon->bibreference->bibkey : null) }}">
-    <input type="hidden" name="bibreference_id" id="bibreference_id"
-    value="{{ old('bibreference_id', isset($taxon) ? $taxon->bibreference_id : null) }}">
-</div>
-  <div class="col-sm-12">
-    <div id="hintr" class="panel-collapse collapse">
-	@lang('messages.dataset_bibreference_hint')
-    </div>
+<div class="col-sm-12">
+  <div id="hint_bib_mandatory" class="panel-collapse collapse">
+@lang('messages.dataset_bibreferences_mandatory_hint')
   </div>
 </div>
+</div>
+
+<div class="form-group">
+<label for="references_aditional" class="col-sm-3 control-label">
+@lang('messages.dataset_bibreferences_aditional')
+</label>
+<a data-toggle="collapse" href="#hint_bib_aditional" class="btn btn-default">?</a>
+<div class="col-sm-6">
+{!! Multiselect::select(
+    'references_aditional',
+    $references->pluck('bibkey', 'id'), isset($dataset) ? $dataset->references->where('mandatory',0)->pluck('bib_reference_id') : [],
+     ['class' => 'multiselect form-control']
+) !!}
+</div>
+<div class="col-sm-12">
+  <div id="hint_bib_aditional" class="panel-collapse collapse">
+@lang('messages.dataset_bibreferences_additional_hint')
+  </div>
+</div>
+</div>
+
+<hr>
 
 <div class="form-group">
 <label for="admins" class="col-sm-3 control-label mandatory">
@@ -95,7 +179,7 @@
 <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 <div class="col-sm-6">
 {!! Multiselect::autocomplete(
-    'admins', 
+    'admins',
     $fullusers->pluck('email', 'id'), isset($dataset) ? $dataset->admins->pluck('id') : [Auth::user()->id],
      ['class' => 'multiselect form-control']
 ) !!}
@@ -106,7 +190,7 @@
 </label>
 <div class="col-sm-6">
 {!! Multiselect::autocomplete(
-    'collabs', 
+    'collabs',
     $fullusers->pluck('email', 'id'), isset($dataset) ? $dataset->collabs->pluck('id') : [],
      ['class' => 'multiselect form-control']
 ) !!}
@@ -117,7 +201,7 @@
 </label>
 <div class="col-sm-6">
 {!! Multiselect::autocomplete(
-    'viewers', 
+    'viewers',
     $allusers->pluck('email', 'id'), isset($dataset) ? $dataset->viewers->pluck('id') : [],
      ['class' => 'multiselect form-control']
 ) !!}
@@ -150,7 +234,7 @@ $(document).ready(function() {
     $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
 });
 </script>
-{!! Multiselect::scripts('admins', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
-{!! Multiselect::scripts('collabs', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
+{!! Multiselect::scripts('admins', url('users/autocomplete_all'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
+{!! Multiselect::scripts('collabs', url('users/autocomplete_all'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 {!! Multiselect::scripts('viewers', url('users/autocomplete_all'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 @endpush

@@ -47,7 +47,11 @@
                     @else
                         <ul>
 @foreach (json_decode($job->log, true) as $item)
-<li> {{ serialize($item) }} </li>
+@if(is_array($item))
+  <li> {{ serialize($item) }} </li>
+@else
+  <li> {{!! $item !!}} </li>
+@endif
 @endforeach
 				@endif
                 </ul>

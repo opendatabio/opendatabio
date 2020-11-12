@@ -9,6 +9,8 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use File;
+use Storage;
 
 class Kernel extends ConsoleKernel
 {
@@ -28,6 +30,17 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        //delete prepared downloads older than 15 days
+        $schedule->command(
+          collect(File::files(public_path('downloads_temp')))->each(function($file) {
+              if ($file->getMTime() < now()->subdays(15)->getTimeStamp()) {
+                unlink($file->getRealPath());
+      	       }
+             })
+          )
+          ->dailyAt('04:00');
+
+
         // $schedule->command('inspire')
         //          ->hourly();
     }

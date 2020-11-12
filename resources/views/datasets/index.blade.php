@@ -21,7 +21,6 @@
 @can ('create', App\Dataset::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-
                     @lang('messages.create_dataset')
                 </div>
 
@@ -36,11 +35,10 @@
 @if ($mydatasets)
             <div class="panel panel-default">
                 <div class="panel-heading">
-
-                    @lang('messages.my_datasets')
+      <a data-toggle="collapse" href="#mydatasets" class="btn btn-default">@lang('messages.my_datasets')</a>
                 </div>
-
-                <div class="panel-body">
+                <div class="panel-collapse collapse" id='mydatasets'>
+                  <br>
 <ul>
 @foreach ($mydatasets as $dataset)
     <li>{!! $dataset->rawLink() !!}
@@ -52,11 +50,20 @@
             </div>
 @endif
 
+
             <!-- Registered Datasets -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
                         @lang('messages.datasets')
+                        @if(isset($object))
+                          @lang('messages.for')
+                          <strong>
+                          {{ class_basename($object) }}
+                          </strong>
+                          {!! $object->rawLink() !!}
+                        @endif
                     </div>
+
 
                     <div class="panel-body">
 {!! $dataTable->table() !!}

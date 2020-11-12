@@ -20,9 +20,16 @@ class DatasetPolicy
         return $user->access_level >= User::USER;
     }
 
+    // TODO: shouldn collaborators also allowed to update datasets? else what are collabs for?
     public function update(User $user, Dataset $dataset)
     {
         return User::ADMIN == $user->access_level or
             (User::USER == $user->access_level and $dataset->isAdmin($user));
+    }
+
+    public function export(User $user, Dataset $dataset)
+    {
+      $valid_users = $dataset->users()->pluck('users.id')->toArray();
+      return User::ADMIN == $user->access_level or in_array($user->id,$valid_users) or $dataset->privacy == 2;
     }
 }
