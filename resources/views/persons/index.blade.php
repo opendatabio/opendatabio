@@ -20,10 +20,12 @@
 @can ('create', App\Person::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-      @lang('messages.new_person')
+      <a data-toggle="collapse" href="#createform" class="btn btn-success"><i class="fa fa-btn fa-plus"></i>
+  @lang('messages.new_person')
+      </a>
                 </div>
 
-                <div class="panel-body">
+                <div class="panel-collapse collapse" id='createform'>
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
 

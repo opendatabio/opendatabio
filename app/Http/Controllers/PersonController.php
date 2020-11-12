@@ -14,7 +14,7 @@ use App\Herbarium;
 use Illuminate\Support\Facades\Lang;
 //use Illuminate\Support\Facades\Request;
 use App\DataTables\PersonsDataTable;
-use App\DataTables\HistoryDataTable;
+use App\DataTables\ActivityDataTable;
 use Response;
 
 class PersonController extends Controller
@@ -43,11 +43,6 @@ class PersonController extends Controller
         return $dataTable->render('persons.index', [
             'herbaria' => $herbaria,
     ]);
-    }
-
-    public function history($id, HistoryDataTable $dataTable)
-    {
-        return $dataTable->with('person', $id)->render('history.index');
     }
 
     /**
@@ -174,5 +169,12 @@ class PersonController extends Controller
         }
 
         return redirect('persons')->withStatus(Lang::get('messages.removed'));
+    }
+
+
+    public function activity($id, ActivityDataTable $dataTable)
+    {
+      $object = Person::findOrFail($id);
+      return $dataTable->with('person', $id)->render('common.activity',compact('object'));
     }
 }

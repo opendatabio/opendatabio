@@ -10,16 +10,27 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use FuzzyWuzzy\Fuzz;
 use Illuminate\Database\Eloquent\Builder;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 
 class Person extends Model
 {
-    use Revisionable;
-    protected $revisionCreationsEnabled = true;
+    use LogsActivity;
+    //protected $revisionCreationsEnabled = true;
 
     // Gramatically incorrect, but helps development
     protected $table = 'persons';
-    
+
     protected $fillable = ['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes'];
+
+    //activity log
+    protected static $logName = 'person';
+    protected static $recordEvents = ['updated','deleted'];
+    protected static $ignoreChangedAttributes = ['updated_at'];
+    protected static $logFillable = true;
+    protected static $logOnlyDirty = true;
+    protected static $submitEmptyLogs = false;
+
 
     public function rawLink()
     {
@@ -29,7 +40,7 @@ class Person extends Model
     protected static function boot()
     {
         parent::boot();
-        static::bootRevisionableTrait();
+        //static::bootRevisionableTrait();
         static::addGlobalScope('order', function (Builder $builder) {
             $builder->orderBy('abbreviation', 'asc');
         });
@@ -98,5 +109,11 @@ class Person extends Model
     public function getFullnameAttribute()
     {
         return $this->attributes['full_name'];
+    }
+
+    //for activity log
+    public function identifiableName()
+    {
+        return $this->abbreviation;
     }
 }
