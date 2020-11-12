@@ -10,9 +10,14 @@ namespace App;
 use Baum\Node;
 use DB;
 use Lang;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 
 class Location extends Node
 {
+    use LogsActivity;
+
+
     // The "special" adm levels
     const LEVEL_UC = 99;
     const LEVEL_PLOT = 100;
@@ -28,7 +33,16 @@ class Location extends Node
     protected $rightColumnName = 'rgt';
     protected $depthColumnName = 'depth';
 
-    protected $appends = ['all_plants','all_vouchers'];
+    //protected $appends = ['all_plants','all_vouchers'];
+
+    //activity log trait (parent, uc and geometry are logged in controller)
+    protected static $logName = 'location';
+    protected static $recordEvents = ['updated','deleted'];
+    protected static $ignoreChangedAttributes = ['updated_at','lft','rgt','depth','parent_id','uc_id','geom'];
+    protected static $logAttributes = ['name','altitude','adm_level','datum','x','y','startx','starty','notes'];
+    protected static $logOnlyDirty = true;
+    protected static $submitEmptyLogs = false;
+
 
     public function getPrecisionAttribute()
     {
@@ -80,6 +94,9 @@ class Location extends Node
         return $query->addSelect(DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
             ->where('adm_level', '>', 99);
     }
+
+
+
 
     public function measurements()
     {
@@ -153,7 +170,7 @@ class Location extends Node
 
     public function getLevelNameAttribute()
     {
-        return Lang::get('levels.adm.'.$this->adm_level);
+        return Lang::get('levels.adm_level.'.$this->adm_level);
     }
 
     public function getFullNameAttribute()
@@ -340,6 +357,13 @@ class Location extends Node
         return $this->morphMany(Voucher::class, 'parent');
     }
 
+    public function plantvouchers()
+    {
+      return $this->hasManyThrough('App\Voucher', 'App\Plant', 'id','parent_id','id','location_id')->where('parent_type','App\Plant');
+      //array_search(static::class, Relation::morphMap()) ?: static::class);
+    }
+
+
     public function getAllVouchersAttribute() {
       $nvouchers = $this->vouchers()->count();
       foreach($this->getDescendants() as $descendant) {
@@ -349,6 +373,7 @@ class Location extends Node
       return $nvouchers;
 
     }
+
 
 
     // getter method for parts of latitude/longitude
@@ -421,4 +446,22 @@ class Location extends Node
     {
         return $this->morphMany(Picture::class, 'object');
     }
+
+    public function plants_public_count()
+    {
+        $ids = $this->getDescendantsAndSelf()->pluck('id')->toArray();
+        $query = DB::table('plants')->whereIn('plants.location_id',$ids);
+        return $query->count();
+    }
+    public function vouchers_public_count()
+    {
+        $ids = $this->getDescendantsAndSelf()->pluck('id')->toArray();
+        $query = DB::table('vouchers')->whereIn('parent_id',$ids)->where('parent_type',"App\Location");
+        $n1 = $query->count();
+        $query = DB::table('vouchers')->join('plants','plants.id','=','vouchers.parent_id')->whereIn('plants.location_id',$ids)->where('parent_type',"App\Plant");
+        $n2 = $query->count();
+        return $n1+$n2;
+    }
+
+
 }

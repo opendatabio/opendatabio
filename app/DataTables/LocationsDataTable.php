@@ -11,8 +11,10 @@ use App\Location;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
+use DB;
+use App\Voucher;
 use Lang;
-
+use Log;
 class LocationsDataTable extends DataTable
 {
     /**
@@ -27,13 +29,17 @@ class LocationsDataTable extends DataTable
             return $location->rawLink();
         })
         ->filterColumn('name', function ($query, $keyword) {
-            $sql = " name LIKE '".$keyword."%' ";
+            $sql = " name LIKE '%".$keyword."%' ";
             $query->whereRaw($sql);
         })
-        ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm.'.$location->adm_level); })
+        ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm_level.'.$location->adm_level); })
         ->addColumn('full_name', function ($location) {return $location->full_name; })
-        ->addColumn('plants', function ($location) {return '<a href="'.url('locations/'.$location->id.'/plants').'">'.$location->all_plants.'</a>'; })
-        ->addColumn('vouchers', function ($location) {return '<a href="'.url('locations/'.$location->id.'/vouchers').'">'.$location->all_vouchers.'</a>'; })
+        ->addColumn('plants', function ($location) {
+              return '<a href="'.url('locations/'.$location->id.'/plants').'">'.$location->plants_public_count().'</a>';
+        })
+        ->addColumn('vouchers', function ($location) {
+              return '<a href="'.url('locations/'.$location->id.'/vouchers').'">'.$location->vouchers_public_count().'</a>';
+        })
         ->addColumn('measurements', function ($location) {return '<a href="'.url('locations/'.$location->id.'/measurements').'">'.$location->measurements_count.'</a>'; })
         ->addColumn('pictures', function ($location) {return '<a href="'.url('locations/'.$location->id).'">'.$location->pictures_count.'</a>'; })
         ->addColumn('latitude', function ($location) {return $location->latitudeSimple; })
@@ -41,7 +47,7 @@ class LocationsDataTable extends DataTable
         ->addColumn('parent', function ($location) {
             return empty($location->parent) ? '' : $location->parent->name;
         })
-        ->rawColumns(['name', 'pictures', 'plants', 'vouchers', 'measurements']);
+        ->rawColumns(['name', 'pictures', 'plants','vouchers', 'measurements','latitude','longitude']);
     }
 
     /**
@@ -64,7 +70,15 @@ class LocationsDataTable extends DataTable
             'locations.y',
             'locations.startx',
             'locations.starty',
-        ])->withCount(['plants', 'vouchers', 'measurements', 'pictures'])->withGeom()->noWorld();
+        ])->withCount(['measurements', 'pictures'])->noWorld();
+
+        if ($this->project) {
+          $query = $query->whereHas('plants',function($plant) { $plant->where('project_id',$this->project);})->orWhereHas('vouchers',function($voucher) { $voucher->where('project_id',$this->project);});
+        }
+        if ($this->location_id) {
+            $locations = Location::find($this->location_id)->getDescendants()->pluck('id')->toArray();
+            $query = $query->whereIn('id',$locations);
+        }
 
         return $this->applyScopes($query);
     }
@@ -99,17 +113,26 @@ class LocationsDataTable extends DataTable
                 'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
+                'lengthMenu' => [3,5,10,15,20,50,100],
                 'buttons' => [
+                    'pageLength',
                     'csv',
                     'excel',
-                    'print',
                     'reload',
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
-                'columnDefs' => [[
-                    'targets' => [1, 3, 9, 10, 11, 12, 13, 14, 15],
+                'pageLength' => 10,
+                'autoWidth' => false,
+                'columnDefs' => [
+                  [
+                    'targets' => [1, 4,7, 8,9, 10, 11, 12, 13, 14, 15],
                     'visible' => false,
-                ]],
+                ],
+                [
+                  "width" => "20%",
+                  "targets" => [0]
+                ]
+              ],
             ]);
     }
 

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container">
         <div class="col-sm-offset-1 col-sm-10">
   <div class="panel panel-default">
     <div class="panel-heading">
@@ -38,7 +38,15 @@
             <!-- Registered Locations -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
-@lang('messages.registered_locations')
+                      @lang('messages.registered_locations')
+                      @if(isset($object))
+                        @lang('messages.for')
+                        <strong>
+                        {{ class_basename($object) }}
+                        </strong>
+                        &nbsp;
+                        {!! $object->rawLink() !!}
+                      @endif
                     </div>
                 <div class="panel-body">
 {!! $dataTable->table() !!}
