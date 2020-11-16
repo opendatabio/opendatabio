@@ -10,6 +10,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Taxon;
 use App\Person;
+use App\Project;
 use App\BibReference;
 use App\ExternalAPIs;
 use Response;
@@ -17,6 +18,15 @@ use Lang;
 use Validator;
 use Illuminate\Support\MessageBag;
 use App\DataTables\TaxonsDataTable;
+use Activity;
+use App\ActivityFunctions;
+use App\DataTables\ActivityDataTable;
+
+use App\UserJob;
+use App\Jobs\ImportTaxons;
+use Spatie\SimpleExcel\SimpleExcelReader;
+
+
 
 class TaxonController extends Controller
 {
@@ -31,13 +41,22 @@ class TaxonController extends Controller
     ]);
     }
 
+    public function indexProjects($id, TaxonsDataTable $dataTable)
+    {
+        $object = Project::findOrFail($id);
+        return $dataTable->with([
+            'project_id' => $id
+        ])->render('taxons.index', compact('object'));
+    }
+
+
     // Functions for autocompleting taxon names, used in dropdowns. Expects a $request->query input
     // MAY receive optional "$request->full" to return all names; default is to return only valid names
     public function autocomplete(Request $request)
     {
        //orderBy('fullname', 'ASC')
-        $taxons = Taxon::with('parent')->whereRaw('odb_txname(name, level, parent_id) LIKE ?', ['%'.$request->input('query').'%'])
-            ->selectRaw('id as data, odb_txname(name, level, parent_id) as fullname, level, valid')
+        $taxons = Taxon::with('parent')->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) LIKE ?', ['%'.$request->input('query').'%'])
+            ->selectRaw('id as data, odb_txname(taxons.name, taxons.level, taxons.parent_id) as fullname, taxons.level, taxons.valid')
             ->take(30);
         if (!$request->full) {
             $taxons = $taxons->valid();
@@ -124,10 +143,12 @@ class TaxonController extends Controller
                 $validator->errors()->add('author_id', Lang::get('messages.taxon_author_error'));
             });
         }
-        if (($request->bibreference_id and $request->bibreference)
-                or
-             (!$request->bibreference_id and !$request->bibreference and 'on' != $request->unpublished)
-        ) {
+
+        //no reason why not to allow both
+        //if (($request->bibreference_id and $request->bibreference)
+          //      or
+        if (!$request->bibreference_id and !$request->bibreference and 'on' != $request->unpublished)
+        {
             $validator->after(function ($validator) {
                 $validator->errors()->add('bibreference_id', Lang::get('messages.taxon_bibref_error'));
             });
@@ -213,11 +234,10 @@ class TaxonController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id,TaxonsDataTable $dataTable)
     {
+
         $taxon = Taxon::with('identifications.object')->findOrFail($id);
-        $plants = $taxon->getPlants();
-        $vouchers = $taxon->getVouchers();
         if ($taxon->author_id) {
             $author = Person::findOrFail($taxon->author_id);
         } else {
@@ -229,7 +249,9 @@ class TaxonController extends Controller
             $bibref = null;
         }
 
-        return view('taxons.show', compact('taxon', 'author', 'bibref', 'plants', 'vouchers'));
+        return $dataTable->with([
+            'taxon_id' => $id
+        ])->render('taxons.show', compact('taxon', 'author', 'bibref'));
     }
 
     /**
@@ -289,14 +311,16 @@ class TaxonController extends Controller
             $taxon->save();
         } else {
             $request['author_id'] = null;
-            $taxon->update($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author', 'author_id',
-                        'bibreference', 'bibreference_id', 'notes', ]));
+            $taxon->update($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author', 'author_id','bibreference', 'bibreference_id', 'notes', ]));
             $taxon->fullname = $request['name'];
-            // update external keys
             $taxon->setapikey('Mobot', $request['mobotkey']);
             $taxon->setapikey('IPNI', $request['ipnikey']);
             $taxon->setapikey('Mycobank', $request['mycobankkey']);
+
             $taxon->save();
+
+            //$newexternal = Taxon::findOrFail($id)->externalrefs()->get()->toArray();
+
         }
 
         return redirect('taxons/'.$id)->withStatus(Lang::get('messages.saved'));
@@ -429,7 +453,7 @@ class TaxonController extends Controller
 
         $senior = null;
         if (!is_null($mobotdata) && array_key_exists('senior', $mobotdata) and !is_null($mobotdata['senior'])) {
-            $tosenior = Taxon::valid()->whereRaw('odb_txname(name, level, parent_id) = ?', [$mobotdata['senior']])->first();
+            $tosenior = Taxon::valid()->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) = ?', [$mobotdata['senior']])->first();
             if ($tosenior) {
                 $senior = [$tosenior->id, $tosenior->fullname];
             } else {
@@ -437,7 +461,7 @@ class TaxonController extends Controller
             }
         }
         if (!is_null($mycobankdata) && array_key_exists('senior', $mycobankdata) and !is_null($mycobankdata['senior'])) {
-            $tosenior = Taxon::valid()->whereRaw('odb_txname(name, level, parent_id) = ?', [$mycobankdata['senior']])->first();
+            $tosenior = Taxon::valid()->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) = ?', [$mycobankdata['senior']])->first();
             if ($tosenior) {
                 $senior = [$tosenior->id, $tosenior->fullname];
             } else {
@@ -472,4 +496,44 @@ class TaxonController extends Controller
                     ],
             ]);
     }
+
+
+    public function activity($id, ActivityDataTable $dataTable)
+    {
+        $object = Taxon::findOrFail($id);
+        return $dataTable->with('taxon', $id)->render('common.activity',compact('object'));
+    }
+
+
+    public function importJob(Request $request)
+    {
+      $this->authorize('create', Taxon::class);
+      $this->authorize('create', UserJob::class);
+      if (!$request->hasFile('data_file')) {
+          $message = Lang::get('messages.invalid_file_missing');
+      } else {
+        /*
+            Validate attribute file
+            Validate file extension and maintain original if valid or else
+            Store may save a csv as a txt, and then the Reader will fail
+        */
+        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
+        $ext = $request->file('data_file')->getClientOriginalExtension();
+        if (!in_array($ext,$valid_ext)) {
+          $message = Lang::get('messages.invalid_file_extension');
+        } else {
+          $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
+          if (count($data)>0) {
+            UserJob::dispatch(ImportTaxons::class,[
+              'data' => $data,
+            ]);
+            $message = Lang::get('messages.dispatched');
+          } else {
+            $message = 'Something wrong with file';
+          }
+        }
+      }
+      return redirect('import/taxons')->withStatus($message);
+    }
+
 }

@@ -16,9 +16,18 @@
 @if ($taxon->mycobank)
 <a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec={{$taxon->mycobank}}&Fields=All" target="_blank"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
 @endif
-                </div>
+&nbsp;
+<span class="history" style="float:right">
+<a href="{{url("taxons/$taxon->id/activity")}}">
+@lang ('messages.see_history')
+</a>
+</span>
 
-		<div class="panel-body">
+</div>
+
+<div class="panel-body">
+  <div class="col-sm-12">
+
                     <!-- Display Validation Errors -->
 		    <p><strong>
 @lang('messages.name')
@@ -38,10 +47,11 @@
 <p><strong>
 @lang('messages.bibreference')
 :</strong>
+@if ( $taxon->bibreference)
+{{ $taxon->bibreference }}
+@endif
 @if ($bibref)
 {!! $bibref->rawLink() !!}
-@else
-{{ $taxon->bibreference }}
 @endif
 </p>
 @endif
@@ -84,59 +94,60 @@
 </p>
 @endif
 
+</div>
+
+
+<div class="col-sm-12">
+<br>
 @if ($taxon->measurements()->count())
-<div class="col-sm-4">
-    <a href="{{ url('taxons/'. $taxon->id. '/measurements')  }}" class="btn btn-default">
-        <i class="fa fa-btn fa-search"></i>
+<a href="{{ url('taxons/'. $taxon->id. '/measurements')  }}" class="btn btn-default">
+<i class="fa fa-btn fa-search"></i>
 {{ $taxon->measurements()->count() }}
 @lang('messages.measurements')
+</a>
+&nbsp;&nbsp;
+@endif
+@if ($taxon->plantsCount())
+<a href="{{ url('taxons/'. $taxon->id. '/plants')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $taxon->plantsCount() }}
+@lang('messages.plants')
     </a>
+&nbsp;&nbsp;
+@endif
+@if ($taxon->vouchersCount())
+<a href="{{ url('taxons/'. $taxon->id. '/vouchers')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+{{ $taxon->vouchersCount() }}
+@lang('messages.vouchers')
+    </a>
+&nbsp;&nbsp;
+@endif
 </div>
-@else
-    @can ('create', App\Measurement::class)
-<div class="col-sm-4">
-    <a href="{{ url('taxons/'. $taxon->id. '/measurements/create')  }}" class="btn btn-default">
+
+
+<div class="col-sm-12">
+<br>
+@can ('create', App\Measurement::class)
+<a href="{{ url('taxons/'. $taxon->id. '/measurements/create')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_measurements')
     </a>
-</div>
- @endcan
-@endif
-@if ($plants->count())
-<div class="col-sm-4">
-    <a href="{{ url('taxons/'. $taxon->id. '/plants')  }}" class="btn btn-default">
-        <i class="fa fa-btn fa-search"></i>
-{{ $plants->count() }}
-@lang('messages.plants')
-    </a>
-</div>
-@endif
-@if ($vouchers->count())
-<div class="col-sm-3">
-    <a href="{{ url('taxons/'. $taxon->id. '/vouchers')  }}" class="btn btn-default">
-        <i class="fa fa-btn fa-search"></i>
-{{ $vouchers->count() }}
-@lang('messages.vouchers')
-    </a>
-</div>
-@endif
-<br><br>
-@can ('update', $taxon)
-			    <div class="col-sm-3">
-				<a href="{{ url('taxons/'. $taxon->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
-@lang('messages.edit')
-
-				</a>
-			    </div>
+&nbsp;&nbsp;
 @endcan
-    @can ('create', App\Picture::class)
-<div class="col-sm-3">
-    <a href="{{ url('taxons/'. $taxon->id. '/pictures/create')  }}" class="btn btn-success">
+@can ('update', $taxon)
+<a href="{{ url('taxons/'. $taxon->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
+@lang('messages.edit')
+</a>
+&nbsp;&nbsp;
+@endcan
+@can ('create', App\Picture::class)
+<a href="{{ url('taxons/'. $taxon->id. '/pictures/create')  }}" class="btn btn-success">
         <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_picture')
     </a>
-</div>
  @endcan
+</div>
                 </div>
             </div>
         </div>
@@ -145,44 +156,61 @@
 {!! View::make('pictures.index', ['pictures' => $taxon->pictures]) !!}
 @endif
 
-<!-- Other details (specialist, herbarium, collects, etc?) -->
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.taxon_ancestors_and_children')
-                </div>
 
-                <div class="panel-body">
-        @if ($taxon->senior)
-        <p>
-        @lang ('messages.accepted_name'):
-        {!! $taxon->senior->rawLink() !!}
-        </p>
-        @endif
-        @if ($taxon->juniors->count())
-        <p>
-        @lang ('messages.juniors'):
-        <ul>
-        @foreach ($taxon->juniors as $junior)
+
+<!-- Other details (specialist, herbarium, collects, etc?) -->
+@if ($taxon->senior or $taxon->juniors->count())
+<div class="panel panel-default">
+  <div class="panel-heading">
+    @lang('messages.taxon_sinonimia')
+  </div>
+  <div class="panel-body">
+    @if ($taxon->senior)
+      <p>
+      @lang ('messages.accepted_name'):
+      {!! $taxon->senior->rawLink() !!}
+      </p>
+    @endif
+    @if ($taxon->juniors->count())
+      <p>
+      @lang ('messages.juniors'):
+      <ul>
+      @foreach ($taxon->juniors as $junior)
         <li>{!! $junior->rawLink() !!}</li>
-        @endforeach
-        </ul>
-        @endif
-        @if ($taxon->getAncestors()->count())
-        @foreach ($taxon->getAncestors() as $ancestor)
+      @endforeach
+      </ul>
+    @endif
+</div>
+</div>
+@endif
+
+<!-- RELATED TAXA BLOCK-->
+<div class="panel panel-default">
+  <div class="panel-heading">
+    @lang('messages.taxon_ancestors_and_children')
+  </div>
+  <div class="panel-body">
+    @if ($taxon->getAncestors()->count())
+      @foreach ($taxon->getAncestors() as $ancestor)
         {!! $ancestor->rawLink() !!} &gt;
-        @endforeach
-        @endif
-        {{ $taxon->qualifiedFullname }}
-        @if ($taxon->getDescendants()->count())
-        <ul>
-        @foreach ($taxon->children->sortBy('fullname') as $child)
-        <li> {!! $child->rawLink() !!}
-            {{ $child->getDescendants()->count() ? '(+' . $child->getDescendants()->count() . ')' : ''}}
-        </li>
-        @endforeach
-        </ul>
-        @endif
-                </div>
-            </div>
-    </div>
+      @endforeach
+      @endif
+      <strong>{{ $taxon->qualifiedFullname }}</strong>
+  </div>
+    @if ($taxon->getDescendants()->count())
+      <hr>
+      <div class="panel-body">
+        {!! $dataTable->table() !!}
+        </div>
+    @endif
+
+</div>
+
+
+</div>
+
+</div>
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush

@@ -116,13 +116,13 @@
     <div class="col-md-6 col-md-offset-3">
         <div class="checkbox">
             <label>
-                <input type="checkbox" name="unpublished" id="unpublished" 
+                <input type="checkbox" name="unpublished" id="unpublished"
 <?php // we have to do this the looooong way
 if (empty(old())) { // no "old" value, we're just arriving
     if (isset($taxon)) {
         if ($taxon->author_id)
             echo 'checked';
-    } 
+    }
 } else { // "old" value is available, work with it
     if (!empty(old('unpublished'))) {
         echo 'checked';
@@ -141,7 +141,7 @@ if (empty(old())) { // no "old" value, we're just arriving
     <div class="col-md-6 col-md-offset-3">
         <div class="checkbox">
             <label>
-                <input type="checkbox" name="valid" id="valid" 
+                <input type="checkbox" name="valid" id="valid"
 
 <?php // we have to do this the looooong way
 if (empty(old())) { // no "old" value, we're just arriving
@@ -223,7 +223,7 @@ if (empty(old())) { // no "old" value, we're just arriving
         <a data-toggle="collapse" href="#hint5" class="btn btn-default">?</a>
 	    <div class="col-sm-6 group-together">
 	<input type="text" name="bibreference" id="bibreference" class="form-control" value="{{ old('bibreference', isset($taxon) ? $taxon->bibreference : null) }}">
-<div style="text-align:center;">- or -</div>
+<div style="text-align:center;">- @lang('messages.andor') -</div>
     <input type="text" name="bibreference_autocomplete" id="bibreference_autocomplete" class="form-control autocomplete"
     value="{{ old('bibreference_autocomplete', (isset($taxon) and $taxon->reference) ? $taxon->reference->bibkey : null) }}">
     <input type="hidden" name="bibreference_id" id="bibreference_id"
@@ -268,7 +268,7 @@ if (empty(old())) { // no "old" value, we're just arriving
   </div>
 </div>
 
-<!-- notes --> 
+<!-- notes -->
 <div class="form-group">
     <label for="notes" class="col-sm-3 control-label">
 @lang('messages.notes')
@@ -306,7 +306,7 @@ $(document).ready(function() {
 function setFields(vel) {
     var unpublished = $('#unpublished').is(":checked");
     switch (unpublished) {
-    case true: 
+    case true:
         $('#super-senior').hide(vel);
         $('.super-valid').hide(vel);
         $('.super-author').hide(vel);
@@ -315,7 +315,7 @@ function setFields(vel) {
         $('.super-author_id').show(vel);
         return null; // so these instructions will not be overriden by "valid" below
         break;
-    case false: 
+    case false:
         $('.super-valid').show(vel);
         $('.super-author').show(vel);
         $('.super-reference').show(vel);
@@ -326,10 +326,10 @@ function setFields(vel) {
 
     var valid = $('#valid').is(":checked");
     switch (valid) {
-    case false: 
+    case false:
         $('#super-senior').show(vel);
         break;
-    case true: 
+    case true:
         $('#super-senior').hide(vel);
         break;
     }
@@ -403,7 +403,7 @@ $("#checkapis").click(function(e) {
                 setFields(0);
             }
         },
-        error: function(e){ 
+        error: function(e){
             $( "#spinner" ).hide();
             $( "#ajax-error" ).collapse("show");
             $( "#ajax-error" ).text('Error sending AJAX request');
