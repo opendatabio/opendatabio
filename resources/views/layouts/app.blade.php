@@ -25,142 +25,244 @@
     </script>
 </head>
 <body>
-    <div id="app">
-        <nav class="navbar navbar-default navbar-static-top">
-            <div class="container">
-                <div class="navbar-header">
+<div id="app">
+  <nav class="navbar navbar-default navbar-static-top">
+    <div class="container">
+      <div class="navbar-header">
 
-                    <!-- Collapsed Hamburger -->
-                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#app-navbar-collapse">
-                        <span class="sr-only">Toggle Navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
+        <!-- Collapsed Hamburger -->
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#app-navbar-collapse">
+            <span class="sr-only">Toggle Navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
 
-                    <!-- Branding Image -->
-                    <a class="navbar-brand" href="{{ url('/') }}">
-                        {{ config('app.name', 'OpenDataBio') }}
-                    </a>
-                </div>
+        <!-- Branding Image -->
+        <a class="navbar-brand" href="{{ url('/') }}">
+            {{ config('app.name', 'OpenDataBio') }}
+        </a>
+      </div>
+      <div class="collapse navbar-collapse" id="app-navbar-collapse">
+        <!-- Left Side Of Navbar -->
+        <ul class="nav navbar-nav">
+  			<li>
+          <a href="{{ route('locations.index') }}">
+            @lang('messages.locations')
+          </a>
+        </li>
+  			<li>
+          <a href="{{ route('taxons.index') }}">
+            @lang('messages.taxons')
+          </a>
+        </li>
+  			<li>
+          <a href="{{ route('plants.index') }}">
+            @lang('messages.plants')
+          </a>
+        </li>
+  			<li>
+          <a href="{{ route('vouchers.index') }}">
+            @lang('messages.vouchers')
+          </a>
+        </li>
+  			<li>
+          <a href="{{ route('projects.index') }}">
+            @lang('messages.projects')
+          </a>
+        </li>
+        <li>
+          <a href="{{ route('datasets.index') }}">
+            @lang('messages.datasets')
+          </a>
+        </li>
 
-                <div class="collapse navbar-collapse" id="app-navbar-collapse">
-                    <!-- Left Side Of Navbar -->
-                    <ul class="nav navbar-nav">
-			<li><a href="{{ route('locations.index') }}">
-@lang('messages.locations')
-</a></li>
-			<li><a href="{{ route('taxons.index') }}">
-@lang('messages.taxons')
-</a></li>
-			<li><a href="{{ route('plants.index') }}">
-@lang('messages.plants')
-</a></li>
-			<li><a href="{{ route('vouchers.index') }}">
-@lang('messages.vouchers')
-</a></li>
-			<li><a href="{{ route('projects.index') }}">
-@lang('messages.projects')
-</a></li>
-			<li><a href="{{ route('datasets.index') }}">
-@lang('messages.datasets')
-</a></li>
+        @if(Auth::user())
 
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                                    @lang('messages.auxiliary') <span class="caret"></span>
-                                </a>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                @lang('messages.auxiliary') <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+        			<li>
+                <a href="{{ route('persons.index') }}">
+                  @lang('messages.persons')
+                </a>
+              </li>
+        			<li>
+                <a href="{{ route('references.index') }}">
+                  @lang('messages.references')
+                </a>
+              </li>
+        			<li>
+                <a href="{{ route('herbaria.index') }}">
+                  @lang('messages.herbaria')
+                </a>
+              </li>
 
-                                <ul class="dropdown-menu" role="menu">
-			<li><a href="{{ route('persons.index') }}">
-@lang('messages.persons')
-</a></li>
-			<li><a href="{{ route('references.index') }}">
-@lang('messages.references')
-</a></li>
-			<li><a href="{{ route('herbaria.index') }}">
-@lang('messages.herbaria')
-</a></li>
-@can ('show', App\User::class)
-			<li><a href="{{ route('users.index') }}">
-@lang('messages.users')
-</a></li>
-@endcan
-			<li><a href="{{ route('tags.index') }}">
-@lang('messages.tags')
-</a></li>
-			<li><a href="{{ route('traits.index') }}">
-@lang('messages.traits')
-</a></li>
-			<li><a href="{{ route('forms.index') }}">
-@lang('messages.forms')
-</a></li>
-<li><a href="{{ route('uploadPictures') }}">
-@lang('messages.pictures_upload')
-</a></li>
+              @can ('show', App\User::class)
+              <li>
+                <a href="{{ route('users.index') }}">
+                  @lang('messages.users')
+                </a>
+              </li>
+              @endcan
 
-                                </ul>
-                            </li>
-                        &nbsp;
-                    </ul>
+        			<li>
+                <a href="{{ route('tags.index') }}">
+                  @lang('messages.tags')
+                </a>
+              </li>
+        			<li>
+                <a href="{{ route('traits.index') }}">
+                  @lang('messages.traits')
+                </a>
+              </li>
+        			<li>
+                <a href="{{ route('forms.index') }}">
+                  @lang('messages.forms')
+                </a>
+              </li>
+            </ul>
+          </li>
 
-                    <!-- Right Side Of Navbar -->
-                    <ul class="nav navbar-nav navbar-right">
-                        <!-- Authentication Links -->
-                        @if (Auth::guest())
-                            <li><a href="{{ route('login') }}">
-@lang('messages.login')
-</a></li>
-                            <li><a href="{{ route('register') }}">
-@lang('messages.register')
-</a></li>
-                        @else
-                            <li class="dropdown">
-                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                                    {{ Auth::user()->email }} <span class="caret"></span>
-                                </a>
+          &nbsp;
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                @lang('messages.imports') <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="{{ url('import/locations') }}">
+                @lang('messages.locations')
+              </a></li>
+              <li><a href="{{ url('import/plants') }}">
+                @lang('messages.plants')
+              </a></li>
+              <li><a href="{{ route('uploadPictures') }}">
+                @lang('messages.pictures')
+              </a></li>
+              <li><a href="{{ url('import/traits') }}">
+                @lang('messages.traits')
+              </a></li>
+              <li><a href="{{ url('import/measurements') }}">
+                @lang('messages.measurements')
+              </a></li>
+              <li><a href="{{ url('import/taxons') }}">
+                @lang('messages.taxons')
+              </a></li>
+              <li><a href="{{ url('import/vouchers') }}">
+                @lang('messages.vouchers')
+              </a></li>
+            </ul>
+          </li>
+          &nbsp;
+        @endif
 
-                                <ul class="dropdown-menu" role="menu">
-			    <li><a href="{{ route('selfedit') }}">
-@lang('messages.edit_profile')
-</a></li>
-			    <li><a href="{{ url('token') }}">
-@lang('messages.api_token')
-</a></li>
-@can ('index', App\UserJob::class)
-			<li><a href="{{ route('userjobs.index') }}">
-@lang('messages.userjobs')
-</a></li>
-@endcan
-                                    <li>
-                                        <a href="{{ route('logout') }}"
-                                            onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                            Logout
-                                        </a>
 
-                                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                            {{ csrf_field() }}
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
-                        @endif
-                    </ul>
-                </div>
-            </div>
-        </nav>
-@if (session('status'))
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+              @php
+                if (Session::has('applocale')) {
+                  $flag_class = "flag-icon flag-icon-".Config::get('languages_flags')[Session::get('applocale')];
+                } else {
+                  $flag_class = "flag-icon flag-icon-".array_values(Config::get('languages_flags'))[0];
+                }
+              @endphp
+              <span class="{{$flag_class}}"></span>
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+              @foreach (Config::get('languages') as $lang => $language)
+                @if(Session::get('applocale') !== $lang)
+                <li>
+                  @if(Auth::user())
+                    <a href="{{ url('home/'.$lang) }}">
+                  @else
+                    <a href="{{ url('welcome/'.$lang) }}">
+                  @endif
+                    <span class="flag-icon flag-icon-{{ Config::get('languages_flags')[$lang]}}"></span>
+                    {{ $language }}</a></li>
+                @endif
+              @endforeach
+            </ul>
+          </li>
+      </ul>
+
+
+        <!-- Right Side Of Navbar -->
+        <ul class="nav navbar-nav navbar-right">
+        <!-- Authentication Links -->
+        @if (Auth::guest())
+          <li>
+            <a href="{{ route('login') }}">
+              @lang('messages.login')
+            </a>
+          </li>
+          <li>
+            <a href="{{ route('register') }}">
+              @lang('messages.register')
+            </a>
+          </li>
+        @else
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                {{ Auth::user()->email }} <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+              <li>
+                <a href="{{ route('selfedit') }}">
+                  @lang('messages.edit_profile')
+                </a>
+              </li>
+              <li>
+                <a href="{{ url('token') }}">
+                  @lang('messages.api_token')
+                </a>
+              </li>
+
+              @can ('index', App\UserJob::class)
+              <li>
+                <a href="{{ route('userjobs.index') }}">
+                  @lang('messages.userjobs')
+                </a>
+              </li>
+              @endcan
+
+              <li>
+                <a href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                  Logout
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                  {{ csrf_field() }}
+                </form>
+              </li>
+            </ul>
+          </li>
+        @endif
+        </ul>
+
+
+
+      </div>
+    </div>
+
+
+
+
+
+  </nav>
+  @if (session('status'))
     <div class="col-sm-5 col-sm-offset-3 alert alert-success"><!-- TODO: positioning! -->
         {{ session('status') }}
     </div>
-@endif
-        @yield('content')
-    </div>
+  @endif
+  @yield('content')
+</div>
 
-    <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}"></script>
-    <!-- page-specific scripts -->
-    @stack('scripts')
+<!-- Scripts -->
+<script src="{{ asset('js/app.js') }}"></script>
+<!-- page-specific scripts -->
+@stack('scripts')
+
 </body>
 </html>

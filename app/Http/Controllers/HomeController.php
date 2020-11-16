@@ -9,6 +9,11 @@ namespace App\Http\Controllers;
 
 use App\Plant;
 use App\Voucher;
+use App\Project;
+use App\Dataset;
+use App\Measurement;
+use Config;
+use Session;
 
 class HomeController extends Controller
 {
@@ -29,7 +34,21 @@ class HomeController extends Controller
     {
         $nplants = Plant::withoutGlobalScopes()->count();
         $nvouchers = Voucher::withoutGlobalScopes()->count();
+        $nprojects = Project::withoutGlobalScopes()->count();
+        $ndatasets = Dataset::withoutGlobalScopes()->count();
+        $nmeasurements = Measurement::withoutGlobalScopes()->count();
 
-        return view('home', compact('nplants', 'nvouchers'));
+        return view('home', compact('nplants', 'nvouchers','nprojects','ndatasets','nmeasurements'));
+    }
+
+
+    // This method sets the locale for the session:
+    public function setAppLocale($locale)
+    {
+        if (array_key_exists($locale, Config::get('languages'))) {
+            Session::put('applocale', $locale);
+        }
+
+        return redirect()->back();
     }
 }

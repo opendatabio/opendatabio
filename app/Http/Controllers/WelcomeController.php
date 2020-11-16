@@ -24,6 +24,6 @@ class WelcomeController extends Controller
             Session::put('applocale', $locale);
         }
 
-        return redirect('/');
+        return redirect()->back();
     }
 }

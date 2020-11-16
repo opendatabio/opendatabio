@@ -94,7 +94,7 @@
 		    @lang ('messages.version', ['version' => config('app.version')])
                 </div>
                 <div class="subtitle m-b-md">
-		@lang ('messages.tag')
+		@lang ('messages.subtitle')
                 </div>
 
                 <div class="links">
@@ -106,6 +106,8 @@
 </a>
                     <a href="https://github.com/opendatabio/opendatabio" target="_blank">GitHub</a>
                 </div>
+                
+
 		<div class="links" style="margin-top:20px;">
     <div class="links">
         @foreach (Config::get('languages') as $lang => $language)
