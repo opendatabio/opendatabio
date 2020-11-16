@@ -36,11 +36,10 @@
 @if ($myprojects)
             <div class="panel panel-default">
                 <div class="panel-heading">
-
-                    @lang('messages.my_projects')
+                  <a data-toggle="collapse" href="#myprojects" class="btn btn-default">@lang('messages.my_projects')</a>
                 </div>
-
-                <div class="panel-body">
+                <div class="panel-collapse collapse" id='myprojects'>
+                  <br>
 <ul>
 @foreach ($myprojects as $project)
 

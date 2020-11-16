@@ -25,4 +25,11 @@ class ProjectPolicy
         return User::ADMIN == $user->access_level or
             (User::USER == $user->access_level and $project->isAdmin($user));
     }
+
+    public function view_details(User $user, Project $project)
+    {
+        return in_array($user->id,$project->users()->get()->pluck('id')->toArray());
+    }
+
+
 }

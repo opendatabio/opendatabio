@@ -22,6 +22,7 @@ use App\Location;
 use App\Measurement;
 use App\Dataset;
 use App\BibReference;
+use App\Project;
 use Lang;
 
 
@@ -104,6 +105,10 @@ class ActivityDataTable extends DataTable
         if ($this->person) {
             $query = $query->where('subject_type' , Person::class)->where('subject_id',$this->person);
         }
+        if ($this->project) {
+            $query = $query->where('subject_type' , Project::class)->where('subject_id',$this->project);
+        }
+
         $query = $query->orderby('created_at','DESC');
         return $this->applyScopes($query);
     }
