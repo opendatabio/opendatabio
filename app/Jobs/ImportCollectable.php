@@ -127,19 +127,21 @@ class ImportCollectable extends AppJob
         } else {
             $identification['person_id'] = null;
         }
+        $identification['herbarium_id'] = null;
+        $identification['herbarium_reference'] = null;
         if (array_key_exists('identification_based_on_herbarium', $registry) && array_key_exists('identification_based_on_herbarium_id', $registry)) {
+           if (null !== $registry['identification_based_on_herbarium']) {  
             $identification['herbarium_id'] = ODBFunctions::validRegistry(Herbarium::select('id'), $registry['identification_based_on_herbarium'], ['id', 'acronym', 'name', 'irn']);
             if (null === $identification['herbarium_id']) {
-                $this->appendLog("WARNING: Herbarium $herbarium was not found in the herbarium table or their reference is missed! Ignoring this herbarium");
+                $this->appendLog("WARNING: Herbarium ".$registry['identification_based_on_herbarium']." was not found in the herbarium table or their reference is missed! Ignoring this herbarium");
                 $identification['herbarium_reference'] = null;
             } else {
                 $identification['herbarium_id'] = $identification['herbarium_id']->id;
                 $identification['herbarium_reference'] = $registry['identification_based_on_herbarium_id'];
             }
-        } else {
-            $identification['herbarium_id'] = null;
-            $identification['herbarium_reference'] = null;
+          }
         }
+
         $identification['notes'] = array_key_exists('identification_notes', $registry) ? $registry['identification_notes'] : null;
 
         //modifier must be a valid code else is false
@@ -156,7 +158,7 @@ class ImportCollectable extends AppJob
         //implemented to account for incomplete dates in identification (most commom)
         if (array_key_exists('date',$registry)) {
           $identification['date'] =  $registry['date'];
-        } 
+        }
         if (array_key_exists('identification_date_year',$registry)) {
           $registry['identification_date'] =  array('year' => $registry['identification_date_year']);
         }
