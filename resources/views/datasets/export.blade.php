@@ -95,8 +95,8 @@
         @lang('messages.dataset_request_use')
       </label>
       <div class="col-sm-7">
-          <input type="radio" name="dataset_use_type" value="@lang('messages.dataset_request_use_exploratory')">&nbsp;@lang('messages.dataset_request_use_exploratory')
-          <input type="radio" name="dataset_use_type" value="@lang('messages.dataset_request_use_inpublications')" >&nbsp;@lang('messages.dataset_request_use_inpublications')
+          <input type="radio" name="dataset_use_type" value="@lang('messages.dataset_request_use_exploratory')" required >&nbsp;@lang('messages.dataset_request_use_exploratory')
+          <input type="radio" name="dataset_use_type" value="@lang('messages.dataset_request_use_inpublications')" required >&nbsp;@lang('messages.dataset_request_use_inpublications')
       </div>
      </div>
     <div class="form-group">
@@ -105,7 +105,7 @@
       </label>
       <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
       <div class="col-sm-7">
-        <textarea name="dataset_use_description" ></textarea>
+        <textarea name="dataset_use_description" required></textarea>
       </div>
       <div class="col-sm-12">
         <div id="hint6" class="panel-collapse collapse">
@@ -120,13 +120,14 @@
        <div class="col-sm-7">
          @lang('messages.dataset_request_agreement_text')
          <br><br>
-         <input type="checkbox" name="dataset_agreement[]"  value="@lang('messages.dataset_request_distribution_agreement')">&nbsp;@lang('messages.dataset_request_distribution_agreement')
+         <input type="checkbox" name="dataset_agreement[]"  value="@lang('messages.dataset_request_distribution_agreement')" required >&nbsp;@lang('messages.dataset_request_distribution_agreement')
          <br>
          @if($dataset->policy)
-         <input type="checkbox" name="dataset_agreement[]"  value="@lang('messages.dataset_request_policy_agreement')" >&nbsp;@lang('messages.dataset_request_policy_agreement')
+         <input type="checkbox" name="dataset_agreement[]"  value="@lang('messages.dataset_request_policy_agreement')" required >&nbsp;@lang('messages.dataset_request_policy_agreement')
           @endif
+          <br>
           @if($dataset->references->where('mandatory',1)->count())
-          <input type="checkbox" name="dataset_agreement[]"  value="@lang('messages.dataset_request_citation_agreement')" >&nbsp;@lang('messages.dataset_request_citation_agreement')
+          <input type="checkbox" name="dataset_agreement[]"  value="@lang('messages.dataset_request_citation_agreement')" required >&nbsp;@lang('messages.dataset_request_citation_agreement')
           @endif
        </div>
       </div>

@@ -33,9 +33,9 @@ class DatasetsDataTable extends DataTable
         ->editColumn('privacy', function ($dataset) { return Lang::get('levels.privacy.'.$dataset->privacy); })
         ->addColumn('full_name', function ($dataset) {return $dataset->full_name; })
         ->addColumn('measurements', function ($dataset) {
-            $meas_counts = DB::table('measurements')->selectRaw('COUNT(*) as count')->where('dataset_id',$dataset->id)->get();
-            if ($meas_counts->first()->count >0) {
-              return '<a href="'.url('datasets/'.$dataset->id.'/measurements').'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measurements').'" >'.$meas_counts->first()->count.'</a>';
+            $meas_counts = $dataset->measurements()->withoutGlobalScopes()->count();
+            if ($meas_counts) {
+              return '<a href="'.url('datasets/'.$dataset->id.'/measurements').'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measurements').'" >'.$meas_counts.'</a>';
             } else {
               return 0;
             }
@@ -57,17 +57,19 @@ class DatasetsDataTable extends DataTable
         })
         ->addColumn('tags', function ($dataset) { return $dataset->tagLinks; })
         ->addColumn('plants', function ($dataset) {
-            $plcounts = DB::table('measurements')->selectRaw('COUNT(DISTINCT measured_id) as count')->where('measured_type','App\Plant')->where('dataset_id',$dataset->id)->get()->first()->count;
+            $plcounts = $dataset->plants_ids()->count();
             if ($plcounts>0) {
-            return '<a href="'.url('plants/'.$dataset->id."/datasets").'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measured_plants').'" >'.$plcounts.'</a>';
-          } else { return 0;}
+              return '<a href="'.url('plants/'.$dataset->id."/datasets").'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measured_plants').'" >'.$plcounts.'</a>';
+            } else {
+              return 0;
+            }
         })
         ->addColumn('vouchers', function ($dataset) {
-            $vccounts = DB::table('measurements')->selectRaw('COUNT(DISTINCT measured_id) as count')->where('measured_type','App\Voucher')->where('dataset_id',$dataset->id)->get()->first()->count;
+            $vccounts = $dataset->vouchers_ids()->count();
             if ($vccounts>0) {
-            return '<a href="'.url('vouchers/'.$dataset->id.'/datasets').'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measured_vouchers').'" >'.$vccounts.'</a>';
+              return '<a href="'.url('vouchers/'.$dataset->id.'/datasets').'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measured_vouchers').'" >'.$vccounts.'</a>';
             } else {
-            return 0;
+              return 0;
             }
         })
         ->addColumn('action',  function ($dataset) {
@@ -92,12 +94,7 @@ class DatasetsDataTable extends DataTable
           //['measurements'])->with(['users', 'tags.translations']);
 
         if ($this->project) {
-            $ids = Project::find($this->project)->datasets()->pluck('id')->toArray();
-            //$query = $query->whereHas('measurements', function($query) { $query->whereHasMorph('measured',['App\Plant','App\Voucher'],function($q) { $q->where('project_id',$this->project);}); });
-            //this is required for non logged users to see tables
-            //$dts = DB::select('SELECT DISTINCT tb.dataset_id FROM (SELECT DISTINCT measurements.dataset_id FROM measurements LEFT JOIN plants ON plants.id=measurements.measured_id WHERE measurements.measured_type="App\\\Plant" AND plants.project_id='.$this->project.' UNION SELECT DISTINCT measurements.dataset_id FROM measurements LEFT JOIN vouchers ON vouchers.id=measurements.measured_id WHERE measurements.measured_type="App\\\Voucher" AND vouchers.project_id='.$this->project.') AS tb');
-            //$dts = array_map(function ($value) { return (array)$value;}, $dts);
-            $query->whereIn('id',$ids);
+            $query = $query->whereHas('measurements', function($query) { $query->withoutGlobalScopes()->whereHasMorph('measured',['App\Plant','App\Voucher'],function($q) { $q->withoutGlobalScopes()->where('project_id',$this->project);}); });
         }
         if ($this->tag) {
             $query->whereHas('tags',function($tag) { $tag->where('tags.id',$this->tag);});

@@ -49,34 +49,61 @@
 </p>
 @endif
 
-
+<br>
 <div class="col-sm-12">
-  <a data-toggle="collapse" href="#dataset_summary" class="btn btn-default">@lang('messages.dataset_summary')</a>
-  &nbsp;&nbsp;
   <a data-toggle="collapse" href="#dataset_references" class="btn btn-default">@lang('messages.references')</a>
   &nbsp;&nbsp;
   <a data-toggle="collapse" href="#dataset_people" class="btn btn-default">@lang('messages.persons')</a>
-  &nbsp;&nbsp;
-  @if ($dataset->measurements()->count())
-    <a href="{{ url('datasets/'. $dataset->id. '/measurements')  }}" class="btn btn-default" name="submit" value="submit">
+
+  @if ($dataset->plants_ids()->count())
+    &nbsp;&nbsp;
+    <a href="{{ url('plants/'. $dataset->id. '/datasets')  }}" class="btn btn-default" name="submit" value="submit">
           <i class="fa fa-btn fa-search"></i>
-          {{ $dataset->measurements()->count() }}
-          @lang('messages.measurements')
+          {{ $dataset->plants_ids()->count() }}
+          @lang('messages.plants')
     </a>
   @endif
-</div>
 
+  @if ($dataset->vouchers_ids()->count())
+    &nbsp;&nbsp;
+    <a href="{{ url('vouchers/'. $dataset->id. '/datasets')  }}" class="btn btn-default" name="submit" value="submit">
+          <i class="fa fa-btn fa-search"></i>
+          {{ $dataset->vouchers_ids()->count() }}
+          @lang('messages.vouchers')
+    </a>
+  @endif
+
+</div>
 <div class="col-sm-12">
-<br><br>
+  <br>
+  <a data-toggle="collapse" href="#dataset_summary" class="btn btn-default">@lang('messages.dataset_summary')</a>
+
+  &nbsp;&nbsp;
+  <button id='identifications_summary_button' type="button" class="btn btn-default">
+    <span id='identifications_summary_loading' hidden><i class="fas fa-sync fa-spin"></i></span>
+    @lang('messages.identifications_summary')
+  </button>
+
+</div>
+<div class="col-sm-12">
+<br>
+@if ($dataset->measurements()->withoutGlobalScopes()->count())
+  <a href="{{ url('datasets/'. $dataset->id. '/measurements')  }}" class="btn btn-default" name="submit" value="submit">
+        <i class="fa fa-btn fa-search"></i>
+        {{ $dataset->measurements()->withoutGlobalScopes()->count() }}
+        @lang('messages.measurements')
+  </a>
+  &nbsp;&nbsp;
+@endif
+
 @can ('update', $dataset)
-  <div class="col-sm-3 float-left">
     <a href="{{ url('datasets/'. $dataset->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
       <i class="fa fa-btn fa-plus"></i>
       @lang('messages.edit')
     </a>
-  </div>
+  &nbsp;&nbsp;
 @endcan
-  <div class="col-sm-3 float-right">
+
 @can('export', $dataset)
   <a href="{{ url('datasets/'.$dataset->id."/download") }}" class="btn btn-success">
     <span class="glyphicon glyphicon-download-alt unstyle"></span>
@@ -88,18 +115,8 @@
     @lang('messages.tooltip_request_dataset')
   </a>
 @endcan
-  </div>
+
 </div>
-
-
-
-
-
-
-
-
-
-
 </div>
 </div>
 
@@ -174,7 +191,21 @@
             <th>@lang('messages.total')</th>
           </thead>
           <tbody>
+            @php
+              $plants = 0;
+              $locations=0;
+              $taxons=0;
+              $vouchers=0;
+              $totals=0;
+            @endphp
             @foreach ($trait_summary as $summary)
+              @php
+                $plants = $plants+$summary->plants;
+                $locations = $locations+$summary->locations;
+                $taxons = $taxons+$summary->taxons;
+                $vouchers = $vouchers+$summary->vouchers;
+                $totals = $totals+$summary->total;
+              @endphp
               <tr>
                   <td class="table-text">
                       <a href="{{ url('traits/'.$summary->trait_id) }}">{{ $summary->export_name }}</a>
@@ -214,11 +245,47 @@
                   </td>
               </tr>
           @endforeach
+            <tr>
+            <td>
+              <strong>
+              @lang('messages.total')
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {{ $plants }}
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {{ $vouchers }}
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {{ $taxons }}
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {{ $locations }}
+              </strong>
+            </td>
+            <td>
+              <strong>
+                {{ $totals }}
+              </strong>
+            </td>
+            </tr>
       </tbody>
     </table>
     @endif
     </div>
   </div>
+
+  <!-- IDENTIFICATIONS SUMMARY PANEL -->
+  <div class="panel panel-default" id='identifications_summary_block' hidden></div>
+
     <!-- END dataset summary BLOCK -->
 
     <!-- start REFERENCE BLOCK -->
@@ -268,10 +335,52 @@
     </div>
   </div>
   <!-- END REFERENCE BLOCK -->
-
-
-
-
 </div>
-
 @endsection
+
+
+@push ('scripts')
+
+<script>
+
+$(document).ready(function() {
+
+ /* summarize identifications */
+  $('#identifications_summary_button').on('click', function(e){
+    if ($('#identifications_summary_block').is(':empty')){
+      $('#identifications_summary_loading').show();
+      e.preventDefault();
+      $.ajax({
+        type: 'POST',
+        url: "{{ route('datasetTaxonInfo',$dataset->id) }}",
+        data: {
+          "id" : "{{ $dataset->id }}",
+          "_token" : "{{ csrf_token() }}"
+        },
+        success: function(data) {
+            $('#identifications_summary_block').html(data);
+            $('#identifications_summary_block').show();
+            $('#identifications_summary_loading').hide();
+        },
+        error: function(data) {
+            $('#identifications_summary_block').html("NOT FOUND");
+            $('#identifications_summary_block').show();
+            $('#identifications_summary_loading').hide();
+        }
+      });
+  } else {
+    if ($('#identifications_summary_block').is(':visible')) {
+      $('#identifications_summary_block').hide();
+    } else {
+      $('#identifications_summary_block').show();
+    }
+  }
+  });
+
+
+
+
+});
+
+</script>
+@endpush

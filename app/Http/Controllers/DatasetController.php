@@ -148,14 +148,7 @@ class DatasetController extends Controller
 
         //with(['measurements.measured', 'measurements.odbtrait'])->
         //Summarize data set (only direct links are reported)
-        $trait_summary = DB::select("SELECT measurements.trait_id,traits.export_name,
-            SUM(CASE measured_type WHEN 'App\\\Plant' THEN 1 ELSE 0 END) AS plants,
-            SUM(CASE measured_type WHEN 'App\\\Voucher' THEN 1 ELSE 0 END) AS vouchers,
-            SUM(CASE measured_type WHEN 'App\\\Taxon' THEN 1 ELSE 0 END) AS taxons,
-            SUM(CASE measured_type WHEN 'App\\\Location' THEN 1 ELSE 0 END) AS locations,
-            count(*)  as total
-            FROM measurements LEFT JOIN traits ON traits.id=measurements.trait_id WHERE measurements.dataset_id= ? GROUP BY measurements.trait_id,traits.export_name  ORDER BY traits.export_name",[$id]);
-
+        $trait_summary = $dataset->traits_summary();
         return view('datasets.show', compact('dataset','trait_summary'));
     }
 
@@ -364,5 +357,11 @@ class DatasetController extends Controller
     }
 
 
+    public function summarize_identifications($id)
+    {
+      $dataset = Dataset::findOrFail($id);
+      $html = view("datasets.taxoninfo",compact('dataset'))->render();
+      return $html;
+    }
 
 }
