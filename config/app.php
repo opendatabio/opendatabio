@@ -111,7 +111,9 @@ return [
      * in the .env file.
      */
 
-    'valid_abbreviation' => '/^[A-Z,\. -]+$/',
+    'valid_abbreviation' => '/^[A-z,\. -]+$/',
+
+
 
     /* API KEYS
      * Some external services require API keys. You can configure them here:
@@ -260,6 +262,7 @@ return [
     'aliases' => [
 
         'App' => Illuminate\Support\Facades\App::class,
+        'Activity' => Spatie\Activitylog\Models\Activity::class,
         'Artisan' => Illuminate\Support\Facades\Artisan::class,
         'Auth' => Illuminate\Support\Facades\Auth::class,
         'Blade' => Illuminate\Support\Facades\Blade::class,
@@ -273,6 +276,8 @@ return [
         'Eloquent' => Illuminate\Database\Eloquent\Model::class,
         'Event' => Illuminate\Support\Facades\Event::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
+        'SimpleExcelWriter' => Spatie\SimpleExcel\SimpleExcelWriter::class,
+        'SimpleExcelReader' => Spatie\SimpleExcel\SimpleExcelWriter::class,
         'File' => Illuminate\Support\Facades\File::class,
         'Filepond' => Sopamo\LaravelFilepond\Filepond::class,
         'Gate' => Illuminate\Support\Facades\Gate::class,

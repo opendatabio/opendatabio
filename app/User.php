@@ -32,6 +32,11 @@ class User extends Authenticatable
             htmlspecialchars($this->email).'</a>';
     }
 
+    public function identifiableName()
+    {
+        return $this->person->fullname;
+    }
+
     protected static function boot()
     {
         parent::boot();

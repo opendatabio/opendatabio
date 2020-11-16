@@ -6,20 +6,20 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.person_details')
-<span class="history" style="float:right">
-<a href="{{url("persons/$person->id/history")}}">
-@lang ('messages.see_history')
-</a>
-</span>
+                    <span class="history" style="float:right">
+                    <a href="{{url("persons/$person->id/history")}}">
+                    @lang ('messages.see_history')
+                    </a>
+                    </span>
                 </div>
 
 		<div class="panel-body">
-<p>
-	<strong>
-	@lang('messages.full_name')
-:</strong>
-	{{ $person->full_name }}
-</p>
+  <p>
+  	<strong>
+  	@lang('messages.full_name')
+  :</strong>
+  	{{ $person->full_name }}
+  </p>
 <p>
 	<strong>
 	@lang('messages.abbreviation')
@@ -81,7 +81,7 @@
     </a>
 </div>
 @can ('update', $person)
-				<a class="btn btn-success" href="{{url ('persons/' . $person->id . '/edit')}}">				   
+				<a class="btn btn-success" href="{{url ('persons/' . $person->id . '/edit')}}">
 @lang('messages.edit_person')
 				</a>
 @endcan
