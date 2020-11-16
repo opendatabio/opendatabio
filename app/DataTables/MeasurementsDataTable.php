@@ -139,10 +139,7 @@ class MeasurementsDataTable extends DataTable
                     'targets' => [2, 4, 5, 6],
                     'visible' => false,
                 ]],
-            ])
-            ->buttons(
-              Button::make('custom_export'),
-            );
+            ]);
     }
 
     /**

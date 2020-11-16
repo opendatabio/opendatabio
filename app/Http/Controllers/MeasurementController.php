@@ -18,9 +18,13 @@ use App\ODBTrait;
 use App\Person;
 use App\Dataset;
 use App\BibReference;
+use App\UserJob;
+use App\Jobs\ImportMeasurements;
+use Spatie\SimpleExcel\SimpleExcelReader;
 use Auth;
 use Validator;
 use Lang;
+use App\DataTables\ActivityDataTable;
 
 class MeasurementController extends Controller
 {
@@ -61,20 +65,29 @@ class MeasurementController extends Controller
         $object = Taxon::findOrFail($id);
 
         return $dataTable->with([
-            'measured_type' => 'App\Taxon',
-            'measured' => $id,
+            'taxon' => $id
         ])->render('measurements.index', compact('object'));
     }
 
     public function indexDatasets($id, MeasurementsDataTable $dataTable)
     {
         //$dataset = Dataset::with(['measurements.measured', 'measurements.odbtrait'])->findOrFail($id);
-
+        //check if dataset and trait are informed in id
+        $ids = preg_split("/\|/", $id);
+        $with = [
+          'dataset' => isset($ids[0]) ? $ids[0] : null,
+          'odbtrait' => isset($ids[1]) ? $ids[1] : null,
+          'measured_type' => isset($ids[2]) ? $ids[2] : null,
+        ];
+        if (isset($ids[1])) {
+          $odbtrait = ODBTrait::findOrFail($ids[1]);
+        } else {
+          $odbtrait = null;
+        }
         $dataset = Dataset::findOrFail($id);
-        return $dataTable->with([
-            'dataset' => $id,
-        ])->render('measurements.index', compact('dataset'));
+        return $dataTable->with($with)->render('measurements.index', compact('dataset','odbtrait'));
     }
+
 
     public function indexTraits($id, MeasurementsDataTable $dataTable)
     {
@@ -183,6 +196,11 @@ class MeasurementController extends Controller
             if (ODBTrait::QUANT_INTEGER == $odbtrait->type and strval($request->value) != strval(intval($request->value))) {
                 $validator->errors()->add('value', Lang::get('messages.value_integer'));
             }
+            if (in_array($odbtrait->type, [ODBTrait::QUANT_REAL, ODBTrait::LINK]) and isset($request->value)) {
+                if (!is_numeric($request->value)) {
+                  $validator->errors()->add('value', Lang::get('messages.value_numeric'));
+                }
+            }
             if (in_array($odbtrait->type, [ODBTrait::CATEGORICAL, ODBTrait::ORDINAL, ODBTrait::CATEGORICAL_MULTIPLE])) {
                 // validates that the chosen category is ACTUALLY from the trait
                 $valid = $odbtrait->categories->pluck('id')->all();
@@ -284,5 +302,42 @@ class MeasurementController extends Controller
         $measurement->save();
 
         return redirect('measurements/'.$id)->withStatus(Lang::get('messages.saved'));
+    }
+
+    public function activity($id, ActivityDataTable $dataTable)
+    {
+        $object = Measurement::findOrFail($id);
+        return $dataTable->with('measurement', $id)->render('common.activity',compact('object'));
+    }
+
+    public function importJob(Request $request)
+    {
+      $this->authorize('create', Measurement::class);
+      $this->authorize('create', UserJob::class);
+      if (!$request->hasFile('data_file')) {
+          $message = Lang::get('messages.invalid_file_missing');
+      } else {
+        /*
+            Validate attribute file
+            Validate file extension and maintain original if valid or else
+            Store may save a csv as a txt, and then the Reader will fail
+        */
+        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
+        $ext = $request->file('data_file')->getClientOriginalExtension();
+        if (!in_array($ext,$valid_ext)) {
+          $message = Lang::get('messages.invalid_file_extension');
+        } else {
+          $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
+          if (count($data)>0) {
+            UserJob::dispatch(ImportMeasurements::class,[
+              'data' => $data,
+            ]);
+            $message = Lang::get('messages.dispatched');
+          } else {
+            $message = 'Something wrong with file';
+          }
+        }
+      }
+      return redirect('import/measurements')->withStatus($message);
     }
 }

@@ -59,8 +59,12 @@ class MeasurementController extends Controller
         }
         $measurements = $measurements->get();
 
+        //$fields = ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual','valueDate','traitUnit','datasetName','measuredFullname', 'measuredTaxonName','measuredTaxonFamily','measuredProject'];
+
+        $fields_simple = ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual','valueDate','traitUnit','datasetName'];
+
         $fields = ($request->fields ? $request->fields : 'simple');
-        $measurements = $this->setFields($measurements, $fields, ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual','valueDate','traitUnit','datasetName','measuredFullname', 'measuredTaxonName','measuredTaxonFamily','measuredProject']);
+        $measurements = $this->setFields($measurements, $fields,$fields_simple);
         return $this->wrap_response($measurements);
     }
 
