@@ -41,7 +41,7 @@ old('link_id', isset($measurement) ? $measurement->value_i : null)
 </label>
 <div class="col-sm-6">
     @endif
-<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' type="text" class="form-control" value="{{
+<input name ='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' id='value{{ isset($index) ? "[$index][$traitorder]" : "" }}' type="numeric" class="form-control" value="{{
     isset($index) ?
     old('value.' . $index . '.' . $traitorder, isset($measurement) ? $measurement->value : null) :
     old('value', isset($measurement) ? $measurement->value : null)
@@ -50,7 +50,7 @@ old('link_id', isset($measurement) ? $measurement->value_i : null)
     disabled
 @endif
 >
-    @if (!isset($index) && $odbtrait->link_type == "App\Taxon")
+@if (!isset($index) && $odbtrait->link_type == "App\Taxon")
 </div>
 </div>
 <script>
@@ -63,7 +63,7 @@ if (typeof jQuery !== 'undefined') {
 </script>
     @endif
 
-    @if (!isset($index) && $odbtrait->link_type == "App\Person")
+@if (!isset($index) && $odbtrait->link_type == "App\Person")
 </div>
 </div>
 <script>

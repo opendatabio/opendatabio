@@ -8,6 +8,7 @@
 namespace App\Http\Controllers;
 
 use App\DataTables\TraitsDataTable;
+use App\DataTables\ActivityDataTable;
 use App\ODBTrait;
 use Illuminate\Http\Request;
 use App\Language;
@@ -124,7 +125,7 @@ class TraitController extends Controller
         $odbtrait = ODBTrait::findOrFail($id);
         $this->authorize('update', $odbtrait);
         $this->validate($request, ODBTrait::rules($id));
-        $odbtrait->update($request->only(['export_name', 'type']));
+        $odbtrait->update($request->only(['export_name', 'type','bibreference_id']));
         $odbtrait->setFieldsFromRequest($request);
 
         return redirect('traits/'.$id)->withStatus(Lang::get('messages.stored'));
@@ -138,4 +139,14 @@ class TraitController extends Controller
     public function destroy($id)
     {
     }
+
+
+
+    public function activity($id, ActivityDataTable $dataTable)
+    {
+      $object = ODBTrait::findOrFail($id);
+      return $dataTable->with('odbtrait', $id)->render('common.activity',compact('object'));
+    }
+
+
 }

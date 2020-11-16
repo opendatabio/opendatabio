@@ -6,6 +6,13 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.trait')
+                    @if(Auth::user())
+                    <span class="history" style="float:right">
+                      <a href="{{url("traits/$odbtrait->id/activity")}}">
+                      @lang ('messages.see_history')
+                      </a>
+                    </span>
+                    @endif
                 </div>
 		<div class="panel-body">
 <p><strong>

@@ -41,7 +41,7 @@
 function genInputTranslationTable($odbtrait, $type, $language, $order) {
   switch($type) {
   case "name":
-      $text = "<td><input name='cat_" . $type . "[". $order . "][" . $language . "]' value='";
+      $text = "<td><input name='cat_" . $type . "[". $order ."][" . $language ."]' value='";
       if (is_numeric($order)) {
           if (isset($odbtrait)) {
               $cat = $odbtrait->categories->where('rank', $order)->first();
@@ -54,7 +54,8 @@ function genInputTranslationTable($odbtrait, $type, $language, $order) {
       $text .= "'></td>";
       break;
     case "description":
-      $text = "<td><textarea name='cat_" . $type . "[". $order . "][" . $language . "]' rows='2'>";
+      $text = "<td><textarea name='cat_" . $type . "[". $order ."][" . $language ."]' rows='2'";
+      $text .= ">";
       if (is_numeric($order)) {
           if (isset($odbtrait)) {
               $cat = $odbtrait->categories->where('rank', $order)->first();
@@ -92,6 +93,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
         $TB .= genInputTranslationTable($odbtrait, "name", $language->id, $order);
         $TB .= genInputTranslationTable($odbtrait, "description", $language->id, $order);
         $TB .="</tr>";
+        $first = false;
     }
     $TF = "</tbody></table>";
     return $TH . $TB . $TF;
@@ -140,28 +142,43 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
   </div>
 </div>
 
+
 <div class="form-group">
     <label for="type" class="col-sm-3 control-label mandatory">
 @lang('messages.type')
 </label>
         <a data-toggle="collapse" href="#hintp" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('type', isset($odbtrait) ? $odbtrait->type : null); ?>
-
-	<select name="type" id="type" class="form-control" >
-	@foreach (\App\ODBTrait::TRAIT_TYPES as $ttype)
-		<option value="{{ $ttype }}" {{ $ttype == $selected ? 'selected' : '' }}>
-@lang('levels.traittype.' . $ttype)
-		</option>
-	@endforeach
-	</select>
-            </div>
+	@php
+      $selected = old('type', isset($odbtrait) ? $odbtrait->type : null);
+      $canchange = isset($odbtrait) ? $odbtrait->measurements()->count()==0 : true;
+      $trait_types  = \App\ODBTrait::TRAIT_TYPES;
+      $trait_categorical_types = [\App\ODBTrait::CATEGORICAL, \App\ODBTrait::CATEGORICAL_MULTIPLE, \App\ODBTrait::ORDINAL];
+      if (isset($odbtrait) and false == $canchange and in_array($odbtrait->type,$trait_categorical_types)) {
+            $trait_types = $trait_categorical_types;
+            $canchange = true;
+      }
+  @endphp
+  @if($canchange)
+     <select name="type" id="type" class="form-control" >
+  @else
+	   <select name="type" id="type" class="form-control" disabled>
+  @endif
+    @foreach ($trait_types as $ttype)
+      <option value="{{ $ttype }}" {{ $ttype == $selected ? 'selected' : '' }}>
+        @lang('levels.traittype.' . $ttype)
+       </option>
+      @endforeach
+     </select>
+  </div>
   <div class="col-sm-12">
     <div id="hintp" class="panel-collapse collapse">
 	@lang('messages.trait_type_hint')
     </div>
   </div>
 </div>
+
+
 <div class="form-group">
     <label for="objects" class="col-sm-3 control-label mandatory">
 @lang('messages.object_types')
@@ -181,6 +198,8 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </div>
   </div>
 </div>
+
+
 <div class="form-group">
     <label for="bibreference_id" class="col-sm-3 control-label">
 @lang('messages.trait_bibreference')
@@ -199,13 +218,18 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
   </div>
 </div>
 
+
 <div class="form-group trait-number">
     <label for="unit" class="col-sm-3 control-label mandatory">
 @lang('messages.unit')
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="unit" id="unit" class="form-control" value="{{ old('unit', isset($odbtrait) ? $odbtrait->unit : null) }}">
+	<input type="text" name="unit" id="unit" class="form-control" value="{{ old('unit', isset($odbtrait) ? $odbtrait->unit : null) }}"
+  @if(!$canchange)
+    disabled
+  @endif
+  >
             </div>
   <div class="col-sm-12">
     <div id="hint1" class="panel-collapse collapse">
@@ -213,6 +237,8 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </div>
   </div>
 </div>
+
+
 <div class="form-group trait-number">
     <label for="range_min" class="col-sm-3 control-label">
 @lang('messages.range_min')
@@ -227,6 +253,8 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </div>
   </div>
 </div>
+
+
 <div class="form-group trait-number">
     <label for="range_max" class="col-sm-3 control-label">
 @lang('messages.range_max')
@@ -241,13 +269,19 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </div>
   </div>
 </div>
+
+
 <div class="form-group trait-spectral">
     <label for="range_min" class="col-sm-3 control-label mandatory">
 @lang('messages.wavenumber_start')
 </label>
         <a data-toggle="collapse" href="#hint13" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-     	<input type="text" name="range_min" id="range_min" class="form-control" value="{{ old('range_min', isset($odbtrait) ? $odbtrait->range_min : null) }}">
+     	<input type="text" name="range_min" id="range_min" class="form-control" value="{{ old('range_min', isset($odbtrait) ? $odbtrait->range_min : null) }}"
+      @if(!$canchange)
+        disabled
+      @endif
+      >
       </div>
   <div class="col-sm-12">
     <div id="hint13" class="panel-collapse collapse">
@@ -262,7 +296,11 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 </label>
         <a data-toggle="collapse" href="#hint14" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-     	<input type="text" name="range_max" id="range_max" class="form-control" value="{{ old('range_max', isset($odbtrait) ? $odbtrait->range_max : null) }}">
+     	<input type="text" name="range_max" id="range_max" class="form-control" value="{{ old('range_max', isset($odbtrait) ? $odbtrait->range_max : null) }}"
+      @if(!$canchange)
+        disabled
+      @endif
+      >
       </div>
   <div class="col-sm-12">
     <div id="hint14" class="panel-collapse collapse">
@@ -276,7 +314,11 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 </label>
         <a data-toggle="collapse" href="#hint15" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-     	<input type="text" name="value_length" id="value_length" class="form-control" value="{{ old('value_length', isset($odbtrait) ? $odbtrait->value_length : null) }}">
+     	<input type="text" name="value_length" id="value_length" class="form-control" value="{{ old('value_length', isset($odbtrait) ? $odbtrait->value_length : null) }}"
+      @if(!$canchange)
+        disabled
+      @endif
+      >
       </div>
   <div class="col-sm-12">
     <div id="hint15" class="panel-collapse collapse">
@@ -284,6 +326,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
     </div>
   </div>
 </div>
+
 <div class="form-group trait-category">
 <div class="col-sm-12" id="to_append_categories">
 <h3> @lang('messages.categories') </h3>
@@ -291,10 +334,12 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 if (isset($odbtrait)) {
     // do we have "old" input?
     if (empty(old()) or empty(old("cat_name"))) {
+        //fill with old data
         foreach($odbtrait->categories as $category) {
             echo genTraitCategoryTranslationTable($category->rank, $odbtrait);
         }
     } else {
+        //restore from input
         foreach(array_keys(old("cat_name")) as $rank) {
             echo genTraitCategoryTranslationTable($rank, $odbtrait);
         }
@@ -321,6 +366,8 @@ if (isset($odbtrait)) {
 
 </div>
 </div>
+
+
 <div class="form-group trait-link">
     <label for="link_type" class="col-sm-3 control-label mandatory">
 @lang('messages.link_type')
@@ -328,7 +375,11 @@ if (isset($odbtrait)) {
         <a data-toggle="collapse" href="#hintlt" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<?php $selected = old('type', isset($odbtrait) ? $odbtrait->link_type : null); ?>
-	<select name="link_type" id="link_type" class="form-control" >
+	<select name="link_type" id="link_type" class="form-control"
+  @if (!$canchange)
+    'disabled'
+  @endif
+  >
 	@foreach (\App\ODBTrait::LINK_TYPES as $ttype)
 		<option value="{{ $ttype }}" {{ $ttype == $selected ? 'selected' : '' }}>
 @lang('classes.' . $ttype)
@@ -343,22 +394,23 @@ if (isset($odbtrait)) {
   </div>
 </div>
 
-		        <div class="form-group">
-			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.add')
+<div class="form-group">
+  <div class="col-sm-offset-3 col-sm-6">
+    <button type="submit" class="btn btn-success" name="submit" value="submit">
+      <i class="fa fa-btn fa-plus"></i>
+      @lang('messages.add')
+    </button>
+    <a href="{{url()->previous()}}" class="btn btn-warning">
+      <i class="fa fa-btn fa-plus"></i>
+      @lang('messages.back')
+    </a>
+  </div>
+</div>
 
-				</button>
-				<a href="{{url()->previous()}}" class="btn btn-warning">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.back')
-				</a>
-			    </div>
-			</div>
-		    </form>
-        </div>
-    </div>
+
+    </form>
+  </div>
+</div>
 @endsection
 
 @push ('scripts')
@@ -420,7 +472,7 @@ $(document).ready(function() {
 	setFields(0);
     $("#add_category").click(function(event) {
         event.preventDefault();
-        var text = "<?php echo genTraitCategoryTranslationTable(null, null); ?>";
+        var text = "<?php echo genTraitCategoryTranslationTable(null, null,null); ?>";
         // infers the number of categories already displayed by the number of table-ordinal headers
         var newcat = $('th.table-ordinal').length + 1;
         text = text.replace(/__PLACEHOLDER__/g, newcat);

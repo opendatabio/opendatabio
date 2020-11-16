@@ -10,11 +10,17 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Lang;
 use DB;
+use Activity;
+use App\MeasurementCategory;
+use App\TraitCategory;
+use App\ActivityFunctions;
+use Spatie\Activitylog\Traits\LogsActivity;
+
 
 // class name needs to be different as Trait is a PHP reserved word
 class ODBTrait extends Model
 {
-    use Translatable;
+    use Translatable, LogsActivity;
 
     // Types that can have measurements associated with
     // If this is ever changed, remember to edit getObjectTypeNames!
@@ -28,8 +34,8 @@ class ODBTrait extends Model
     // NOTE: all link_types must support a "fullname" method
     const LINK_TYPES = [
         Taxon::class,
-        Person::class,
-        Plant::class,
+        //Person::class,
+        //Plant::class,
     ];
 
     const QUANT_INTEGER = 0;
@@ -55,6 +61,15 @@ class ODBTrait extends Model
 
     protected $fillable = ['type', 'export_name', 'unit', 'range_min', 'range_max', 'link_type', 'value_length', 'bibreference_id'];
     protected $table = 'traits';
+
+    //activity log trait
+    protected static $logName = 'trait';
+    protected static $recordEvents = ['updated','deleted'];
+    protected static $ignoreChangedAttributes = ['updated_at'];
+    protected static $logFillable = true;
+    protected static $logOnlyDirty = true;
+    protected static $submitEmptyLogs = false;
+
 
     public function rawLink()
     {
@@ -118,8 +133,82 @@ class ODBTrait extends Model
         return $cat;
     }
 
+
+
+    protected function updateCategory($names, $descriptions,$bibreference)
+    {
+        $current_categories_ids = $this->categories()->pluck('id')->toArray();
+        $current_cat_translations =  $this->categories()->get()
+                                ->flatMap(function($cat) {
+                                      return array('translations_'.$cat->id =>
+                                      $cat->translations()->get()->flatMap(function($tr) {
+                                      $newkey = $tr->language_id."_".$tr->translation_type;
+                                      return array($newkey => $tr->translation);
+                                      })->toArray());
+                                    })->toArray();
+        $skips = 0;
+        $checked_ids = array();
+        for ($i = 1; $i <= sizeof($names); ++$i) {
+          // checks to see if there's at least one name provided
+          if (!array_filter($names[$i])) {
+              ++$skips;
+              continue;
+          }
+          $rank = $i-$skips;
+          $cat = $this->categories()->where('rank',$rank);
+          if ($cat->count()) {
+            $checked_ids[] = $cat->first()->id;
+            $cat = $cat->first();
+          } else {
+            $cat = $this->categories()->create(['rank' => $rank, 'bibreference_id' => $bibreference]);
+          }
+          $cat_names = $names[$i];
+          $cat_descriptions = $descriptions[$i];
+          foreach ($cat_names as $language => $translation) {
+             $cat->setTranslation(UserTranslation::NAME, $language, $translation);
+          }
+          foreach ($cat_descriptions as $language => $translation) {
+             $cat->setTranslation(UserTranslation::DESCRIPTION, $language, $translation);
+          }
+        }
+        //if current categories are not in update list, delete if  has NO  measurements
+        $todelete = array_diff($current_categories_ids,$checked_ids);
+        if (count($todelete)) {
+          foreach($todelete as $category_id) {
+                $has_measurements = $this->measurements()
+                    ->whereHas('categories',function($category) use($category_id) {
+                        $category->where('category_id',$category_id);
+                    })->count();
+                if (0 == $has_measurements) {
+                  $this->categories()->where('id',$category_id)->delete();
+                }
+          }
+        }
+        //get new categories
+        $new_cat_translations = $this->categories()->get()->flatMap(function($cat) {
+                return array('translations_'.$cat->id =>
+                $cat->translations()->get()->flatMap(function($tr) {
+                  $newkey = $tr->language_id."_".$tr->translation_type;
+                  return array($newkey => $tr->translation);
+                  })->toArray());
+                })->toArray();
+        $logName = 'trait';
+        $logDescription = 'category updated';
+        $logDescriptionDeleted = 'category deleted';
+        ActivityFunctions::logTranslationsChanges($this,$current_cat_translations,$new_cat_translations,$logName,$logDescription,$logDescriptionDeleted);
+        return true;
+    }
+
     public function setFieldsFromRequest($request)
     {
+        //log old to track changes
+        $old_object_types = $this->object_types()->get()->map(function($obj) {
+              return $obj->object_type;})->toArray();
+        $old_translations = array('translation' => $this->translations->flatMap(function($translation) {
+          $newkey = $translation->language_id."_".$translation->translation_type;
+          return array($newkey => $translation->translation);
+        })->toArray());
+
         // Set fields from quantitative traits
         if (in_array($this->type, [self::QUANT_INTEGER, self::QUANT_REAL])) {
             $this->unit = $request->unit;
@@ -130,21 +219,27 @@ class ODBTrait extends Model
             $this->range_max = null;
             $this->range_min = null;
         }
-        // Set fields from categorical traits
-        $this->categories()->delete();
         if (in_array($this->type, [self::CATEGORICAL, self::CATEGORICAL_MULTIPLE, self::ORDINAL])) {
             $names = $request->cat_name;
             $descriptions = $request->cat_description;
             $bibreference = $request->cat_bibreference;
-            // counts the number of skipped entries, so the ranks will be matched to the names/description
-            $skips = 0;
-            for ($i = 1; $i <= sizeof($names); ++$i) {
+
+            $cat_ids = $this->categories()->pluck('id')->toArray();
+            $have_measurmements = MeasurementCategory::whereIn('category_id',$cat_ids)->count();
+            if ($this->categories()->count() and $have_measurmements) {
+                $this->updateCategory($names,$descriptions,$bibreference);
+            } else {
+              $this->categories()->delete();
+              // counts the number of skipped entries, so the ranks will be matched to the names/description
+              $skips = 0;
+              for ($i = 1; $i <= sizeof($names); ++$i) {
                 // checks to see if there's at least one name provided
                 if (!array_filter($names[$i])) {
                     ++$skips;
                     continue;
                 }
                 $this->makeCategory($i - $skips, $names[$i], $descriptions[$i],$bibreference);
+              }
             }
         }
         // Set link type
@@ -161,7 +256,7 @@ class ODBTrait extends Model
            $this->value_length = $request->value_length;
         }
 
-        // Set object types
+        // Set object types (can change if no measurements)
         $this->object_types()->delete();
         foreach ($request->objects as $key) {
             $this->object_types()->create(['object_type' => self::OBJECT_TYPES[$key]]);
@@ -173,7 +268,30 @@ class ODBTrait extends Model
         foreach ($request->description as $key => $translation) {
             $this->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
         }
+
         $this->save();
+
+        /* log changes if the case */
+        $new_object_types = $this->object_types()->get()->map(function($obj) {
+              return $obj->object_type;})->toArray();
+        $object_types_deleted = array_diff($old_object_types,$new_object_types);
+        $object_types_added  = array_diff($old_object_types,$new_object_types);
+        if (count($object_types_added) or count($object_types_deleted)) {
+          $tolog = array('attributes' => array('object_types' => $new_object_types), 'old' => array('object_types' => $old_object_types));
+          activity('trait')
+            ->performedOn($this)
+            ->withProperties($tolog)
+            ->log('updated');
+        }
+
+
+        $new_translations = array('translation' => ODBTrait::where('id',$this->id)->first()->translations->flatMap(function($translation) {
+          $newkey = $translation->language_id."_".$translation->translation_type;
+          return array($newkey => $translation->translation);
+        })->toArray());
+        $logName = 'trait';
+        $logDescription = 'updated';
+        ActivityFunctions::logTranslationsChanges($this,$old_translations,$new_translations,$logName,$logDescription,"");
     }
 
     public function object_types()
