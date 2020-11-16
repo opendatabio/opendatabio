@@ -10,12 +10,22 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Location;
+use App\Project;
 use App\DataTables\LocationsDataTable;
 use Validator;
 use DB;
 use Lang;
 use Response;
+use Storage;
+use App\UserJob;
+use App\Jobs\ImportLocations;
+use Spatie\SimpleExcel\SimpleExcelReader;
+
 use Illuminate\Support\Facades\Input;
+use Activity;
+use App\ActivityFunctions;
+use App\DataTables\ActivityDataTable;
+
 
 class LocationController extends Controller
 {
@@ -85,6 +95,16 @@ class LocationController extends Controller
     {
         return $dataTable->render('locations.index');
     }
+
+
+    public function indexProjects($id, LocationsDataTable $dataTable)
+    {
+        $object = Project::findOrFail($id);
+        return $dataTable->with([
+            'project' => $id
+        ])->render('locations.index', compact('object'));
+    }
+
 
     /**
      * Show the form for creating a new resource.
@@ -279,7 +299,7 @@ class LocationController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id,LocationsDataTable $dataTable)
     {
         $location = Location::noWorld()->select('*')->with('children')->withGeom()->findOrFail($id);
         $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
@@ -314,9 +334,13 @@ class LocationController extends Controller
                     'maintainAspectRatio' => true,
                 ]);
 
-            return view('locations.show', compact('chartjs', 'location', 'plot_children'));
+             return $dataTable->with([
+                    'location_id' => $id
+                ])->render('locations.show', compact('chartjs', 'location', 'plot_children'));
         } // else
-        return view('locations.show', compact('location', 'plot_children'));
+        return $dataTable->with([
+               'location_id' => $id
+           ])->render('locations.show', compact('location', 'plot_children'));
     }
 
     /**
@@ -345,6 +369,9 @@ class LocationController extends Controller
      */
     public function update(Request $request, $id)
     {
+        //to ge old geometry as text
+        $oldlocation = Location::noWorld()->withGeom()->findOrFail($id);
+
         $location = Location::findOrFail($id);
         $this->authorize('update', $location);
         $validator = $this->customValidate($request, $id);
@@ -382,7 +409,15 @@ class LocationController extends Controller
                 $location->geom = $request->geom;
             }
         }
+
         if ($request->uc_id and $request->adm_level > 99) {
+            if ($location->uc_id and $location->uc_id !== $request->uc_id) {
+            $tolog = array('attributes' => ['uc_id' => $request->uc_id], 'old' => ['uc_id' => $location->uc_id]);
+            activity('location')
+              ->performedOn($location)
+              ->withProperties($tolog)
+              ->log('UC changed');
+            }
             $location->uc_id = $request->uc_id;
         }
 
@@ -393,6 +428,7 @@ class LocationController extends Controller
         }
 
         if ($request->parent_id and $request->parent_id != $location->parent_id) {
+            $oldparentid = $location->parent_id;
             try {
                 $location->makeChildOf($request->parent_id);
             } catch (\Baum\MoveNotPossibleException $e) {
@@ -400,8 +436,25 @@ class LocationController extends Controller
                     ->withInput()
                     ->withErrors(Lang::get('messages.movenotpossible'));
             }
+            //log parent difference
+            $tolog = array('attributes' => ['parent_id' => $request->parent_id], 'old' => ['parent_id' => $oldparentid]);
+            activity('location')
+              ->performedOn($location)
+              ->withProperties($tolog)
+              ->log('parent changed');
         }
+
         $location->save();
+
+        //log geometry changes if any
+        $newlocation = Location::noWorld()->withGeom()->findOrFail($id);
+        if ($newlocation->geom !== $oldlocation->geom) {
+          $tolog = array('attributes' => ['geom' => $newlocation->geom], 'old' => ['geom' => $oldlocation->geom]);
+          activity('location')
+            ->performedOn($location)
+            ->withProperties($tolog)
+            ->log('geometry changed');
+        }
 
         return redirect('locations/'.$id)->withStatus(Lang::get('messages.stored'));
     }
@@ -425,5 +478,45 @@ class LocationController extends Controller
         }
 
         return redirect('locations')->withStatus(Lang::get('messages.removed'));
+    }
+
+
+    public function activity($id, ActivityDataTable $dataTable)
+    {
+        $object = Location::findOrFail($id);
+        return $dataTable->with('location', $id)->render('common.activity',compact('object'));
+    }
+
+
+
+    public function importJob(Request $request)
+    {
+      $this->authorize('create', Location::class);
+      $this->authorize('create', UserJob::class);
+      if (!$request->hasFile('data_file')) {
+          $message = Lang::get('messages.invalid_file_missing');
+      } else {
+        /*
+            Validate attribute file
+            Validate file extension and maintain original if valid or else
+            Store may save a csv as a txt, and then the Reader will fail
+        */
+        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
+        $ext = $request->file('data_file')->getClientOriginalExtension();
+        if (!in_array($ext,$valid_ext)) {
+          $message = Lang::get('messages.invalid_file_extension');
+        } else {
+          $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
+          if (count($data)>0) {
+            UserJob::dispatch(ImportLocations::class,[
+              'data' => $data,
+            ]);
+            $message = Lang::get('messages.dispatched');
+          } else {
+            $message = 'Something wrong with file';
+          }
+        }
+      }
+      return redirect('import/locations')->withStatus($message);
     }
 }
