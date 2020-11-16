@@ -9,6 +9,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
+use App\DataTables\VouchersDataTable;
 use App\Herbarium;
 use App\ExternalAPIs;
 use Illuminate\Support\Facades\Lang;
@@ -83,13 +84,13 @@ class HerbariumController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id, VouchersDataTable $dataTable)
     {
         $herbarium = Herbarium::findOrFail($id);
 
-        return view('herbaria.show', [
-            'herbarium' => $herbarium,
-        ]);
+        return $dataTable->with([
+               'herbarium_id' => $id
+           ])->render('herbaria.show', compact('herbarium'));
     }
 
     /**

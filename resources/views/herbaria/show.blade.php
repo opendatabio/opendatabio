@@ -82,16 +82,16 @@
                     @lang('messages.vouchers')
                 </div>
 
-		<div class="panel-body">
-            <ul>
-            @foreach ($herbarium->vouchers as $voucher)
-                <li>{!! $voucher->rawLink() !!} ({{$voucher->pivot->herbarium_number}})</li>
-            @endforeach
-            </ul>
+      <div class="panel-body">
+        {!! $dataTable->table() !!}
         </div>
-            </div>
+
+      </div>
 
 
         </div>
     </div>
 @endsection
+@push ('scripts')
+{!! $dataTable->scripts() !!}
+@endpush
