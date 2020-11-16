@@ -18,8 +18,6 @@ class Project extends Model
 {
     use HasAuthLevels, LogsActivity;
 
-    use \Staudenmeir\EloquentHasManyDeep\HasRelationships;
-
     const PRIVACY_AUTH = 0;
     const PRIVACY_REGISTERED = 1;
     const PRIVACY_PUBLIC = 2;
@@ -188,7 +186,6 @@ class Project extends Model
 
 
     /* GET THE UNIQUE TAXONS MODELS FOR THE IDENTIFICATIONS USED IN PROJECT OBJETS */
-    // this could be implemented as EloquentHasManyDeep but is slower
     public function taxons()
     {
       $ids = $this->taxons_ids();
