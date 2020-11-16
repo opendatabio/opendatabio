@@ -18,6 +18,7 @@
         "renanbr/bibtex-parser": "^2.1",
         "ryakad/pandoc-php": "^1.0",
         "sopamo/laravel-filepond": "^0.5.0",
+        "spatie/laravel-activitylog": "^3.16",
         "spatie/simple-excel": "^1.7",
         "stichoza/google-translate-php": "^4.0",
         "tanmuhittin/laravel-google-translate": "^1.0",
