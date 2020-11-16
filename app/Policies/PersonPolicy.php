@@ -52,8 +52,11 @@ class PersonPolicy
      */
     public function update(User $user, Person $person)
     {
+        //if person is set as the default person of a user it can only be updated by the user or and admin user
+        $userpersons = User::where('id','<>',$user->id)->whereRaw('person_id IS NOT NULL')->pluck('person_id')->toArray();
+
         // full users and admins
-        return $user->access_level >= User::USER;
+        return $user->access_level == User::ADMIN  or  !in_array($person->id,$userpersons);
     }
 
     /**

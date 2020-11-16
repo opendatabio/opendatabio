@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 use App\Person;
+use App\User;
 use Auth;
 use Validator;
 use Hash;
@@ -58,6 +59,7 @@ class SelfEditController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email|max:191|unique:users,email,'.Auth::user()->id,
             'new_password' => 'nullable|string|min:6|confirmed',
+            'person_id' => 'unique:users,person_id,'.Auth::user()->id,
         ]);
 
         // checks the old password against the old e-mail
@@ -68,7 +70,7 @@ class SelfEditController extends Controller
             }
         });
 
-        if ($validator->fails()) {
+        if ($validator->fails() ) {
             return redirect('selfedit')
                 ->withErrors($validator)
                 ->withInput($request->only(['email', 'person_id', 'project_id', 'dataset_id']));
@@ -79,6 +81,9 @@ class SelfEditController extends Controller
             Auth::user()->password = bcrypt($request->new_password);
             Auth::user()->save();
         }
+
+
+
         Auth::user()->update($request->only(['email', 'person_id', 'project_id', 'dataset_id']));
 
         return redirect()->route('home')->withStatus('Profile updated!');
