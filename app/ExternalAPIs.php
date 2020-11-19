@@ -9,6 +9,7 @@ namespace App;
 
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\ClientException;
+use Illuminate\Support\Str;
 use Log;
 
 class ExternalAPIs
@@ -29,6 +30,7 @@ class ExternalAPIs
             $this->proxystring = $this->proxystring.config('app.proxy_url').':'.config('app.proxy_port');
         }
     }
+
 
     public function getIndexHerbariorum($acronym)
     {
@@ -129,7 +131,6 @@ class ExternalAPIs
                 $senior = $synonym[0]->AcceptedName->ScientificName;
             }
         }
-
         return [$flags,
                 'rank' => $answer[0]->RankAbbreviation,
                 'author' => $answer[0]->Author,
@@ -141,9 +142,32 @@ class ExternalAPIs
         ];
     }
 
+
+    //when multiple hits, get only those really matching searchstring
+    public static function filterIPNI($searchstring,$answer)
+    {
+      $keys = explode('%', $answer[0]);
+      $rets = array();
+      for($i=1;$i<count($answer);$i++) {
+        $ret = explode('%', $answer[$i]);
+        if (count($keys)==count($ret)) {
+          $ret = array_combine($keys,$ret);
+          if ($searchstring == $ret["Full name without family and authors"]) {
+              $rets[] = $ret;
+            }
+        }
+      }
+      if (count($rets) == 1) {
+        return $rets[0];
+      } else {
+        return null;
+      }
+    }
+
     public function getIpni($searchstring)
     {
         // transform names with 3 components to genus epithet subsp. subepithet for IPNI compatibility
+        $searchstring = (string)Str::of($searchstring)->trim();
         $searchar = explode(' ', $searchstring);
         if (3 == sizeof($searchar)) {
             // otherwise... we need to guess if this is subsp, var or f...
@@ -154,41 +178,260 @@ class ExternalAPIs
         $base_uri = 'http://www.ipni.org/';
         $client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
         try {
-            $response = $client->request('GET',
-                        "ipni/simplePlantNameSearch.do?find_wholeName=$searchstring&output_format=delimited-short"
-                );
+            $response = $client->request('GET',"ipni/simplePlantNameSearch.do?find_wholeName=$searchstring&output_format=delimited-short");
         } catch (ClientException $e) {
             return null; //FAILED
         }
         if (200 != $response->getStatusCode()) {
             return null;
         } // FAILED
-        $answer = explode("\n", (string) $response->getBody());
-        if ('' === $answer[0]) {
+        $answer = array_filter(explode("\n", (string) $response->getBody()));
+
+        //if empty or only 1 line found (is heading) then not found
+        if ('' === $answer[0] | count($answer)==1) {
             return [self::NOT_FOUND];
         }
-        if ('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">' === $answer[0]) {
+        if ('<!DOCTPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">' === $answer[0]) {
             return [self::NOT_FOUND];
         } // search error
+
+        $ret = null;
         if (count($answer) > 2) {
-            $flags = $flags | self::MULTIPLE_HITS;
-        }
-        $ret = explode('%', $answer[1]);
-        if ($searchstring != $ret[14]) {
+            $ret = self::filterIPNI($searchstring,$answer);// bogus hit, like matching genus for species name
+            if (is_null($ret)) {
+              $flags = $flags | self::MULTIPLE_HITS;
+            }
+        } else {
+          $keys = explode('%', $answer[0]);
+          $ret = explode('%', $answer[1]);
+          $ret = array_combine($keys,$ret);
+          if ($searchstring != $ret["Full name without family and authors"]) {
             // bogus hit, like matching genus for species name
             return [self::NOT_FOUND];
+          }
+        }
+        $publication = $ret['Publication'].' '.$ret['Collation'].", ".$ret['Publication year full'];
+        $publication = Str::of($publication)->trim();
+        $author = isset($ret['Publishing author']) ? $ret['Publishing author'] : $ret['Basionym']." ".$ret['Authors'];
+        $author = Str::of($author)->trim();
+        $rank = $ret['Rank'];
+        switch ($rank) {
+          case 'sp.':
+          case 'spec.':
+          case 'species':
+          case 'subg.':
+          case 'subgenus':
+          case 'sect.':
+          case 'section':
+                  $parent =  $ret['Genus'];
+                  break;
+
+          case 'gen.':
+          case 'genus':
+          case 'subfam.':
+          case 'subfamily':
+                  $parent = $ret['Family'];
+                  break;
+
+          case 'subsp.':
+          case 'subspecies':
+          case 'var.':
+          case 'variety':
+          case 'f.':
+          case 'fo.':
+          case 'form':
+                $parent = explode(" ",$searchstring);
+                $parent = $parent[0]." ".$parent[1];
+                break;
+          default:
+                  $parent = null;
+            break;
         }
 
         return [$flags,
-                'rank' => $ret[10],
-                'author' => $ret[11],
-                'valid' => null,
-                'reference' => $ret[15].' '.$ret[16],
-                'parent' => $ret[2],
-                'key' => $ret[0],
+                'rank' => $ret['Rank'],
+                'author' => (string)$author,
+                'valid' => $ret['Name status'],
+                'reference' => (string)$publication,
+                'parent' => $parent,
+                'key' => $ret['Id'],
                 'senior' => null,
         ];
     }
+
+
+    /* THIS FUNCTION IS HERE FOR FUTURE AS zoobank API IS STILL QUITE INCOMPLETE AND GBIF CAN BE USED UNTIL*/
+    public function getZOOBANK($searchstring)
+    {
+      $flags = 0;
+      $base_uri = 'http://zoobank.org/';
+      $search_values = explode(' ',$searchstring);
+      $searchstring2 = str_replace(" ","_",$searchstring);
+      $client = new Guzzle(['base_uri' => $base_uri]);// 'proxy' => $this->proxystring]);
+      try {
+          $response = $client->request('GET',"NomenclaturalActs.json/".$searchstring2);
+      } catch (ClientException $e) {
+          return null; //FAILED
+      }
+      if (200 != $response->getStatusCode()) {
+          return null;
+      } // FAILED
+      $answer = json_decode($response->getBody(),true);
+
+      $result = array();
+      foreach($answer as $zoo) {
+        $parent = null;
+        $rank = strtolower($zoo['rankgroup']);
+        $namestring = $zoo['namestring'];
+
+        $author = str_replace($namestring,"",$zoo['value']);
+        $author = (string)Str::of($author)->trim();
+        $valid = false;
+        if (count($search_values)==2 and $namestring == $search_values[1]) {
+            $valid=true;
+            $parent = $search_values[0];
+        }
+        if (count($search_values)==3 and $namestring == $search_values[2]) {
+            $valid=true;
+            $parent = $search_values[0]." ".$search_values[1];
+        }
+        if (count($search_values)==1 and $namestring == $searchstring) {
+            $valid=true;
+        }
+        if (is_null($parent) and $zoo['parentname'] !== "") {
+          $parent = $zoo['parentname'];
+        }
+        if ($valid) {
+          $filtered = [
+            'author' => $author,
+            'parent' => $parent,
+            'rank' => $rank
+          ];
+          $result[$zoo['tnuuuid']] = $filtered;
+        }
+      }
+
+      //if there is more than one, get one for which the author pattern is more common
+      $counts = array_count_values(array_column($result,'author'));
+      if (count($counts)>1) {
+         $max_counts = max($counts);
+         $filtered_counts = array_filter($counts, function($element) use($max_counts){
+            return $element == $max_counts;
+          });
+         if (count($filtered_counts) == 1) {
+              $keys = array_search(array_keys($filtered_counts),array_column($result,'author'));
+              $key = array_keys($result)[$keys];
+              $result= $result[$key];
+              $result = array_merge($result,array('zoobank_key'=> $key));
+         } else {
+              //STILL MANY, MUST BE CHECKED MANUALLY
+              $result = null;
+         }
+      } else {
+        if (count($result)==1) {
+          $key = array_keys($result)[0];
+          $result = $result[$key];
+          $result = array_merge($result,array('zoobank_key' => $key));
+        }
+      }
+
+      if (is_null($result) or count($result)==0) {
+        return [self::NOT_FOUND];
+      }
+
+      return [$flags,
+              'rank' => $result['rank'],
+              'author' => $result['author'],
+              'valid' => null,
+              'reference' => null,
+              'parent' => $result['parent'],
+              'key' => $result['zoobank_key'],
+              'senior' => null,
+      ];
+      //return $results;
+    }
+
+    //GBIF API IMPLEMENTED FOR ANIMAL NAMES MAINLY //
+    //gbif has several LIMITATIONS AS TAXON API,  as it is not really a nomenclature database (IT IS HERE ONLY BECAUSE ZOOBANK DOES NOT HAVE MANY COMMON NAMES
+    public static function filterGBIF($searchstring,$results)
+    {
+      $result = array();
+      foreach($results as $values) {
+        if ($values['canonicalName']== $searchstring and !$values['synonym'] and "" !== $values['authorship'] and array_key_exists('rank',$values)) {
+            $filtered = [
+              'author' => $values['authorship'],
+              'parent' => $values['parent'],
+              'rank' => strtolower($values['rank']),
+              'scientificName' => $values['scientificName']
+            ];
+            $result[$values['key']] = $filtered;
+        }
+      }
+      //if there is more than one, get one for which the author pattern is more common
+      $counts = array_count_values(array_column($result,'author'));
+      if (count($counts)>1) {
+         $max_counts = max($counts);
+         $filtered_counts = array_filter($counts, function($element) use($max_counts){
+            return $element == $max_counts;
+          });
+         if (count($filtered_counts) == 1) {
+              $keys = array_search(array_keys($filtered_counts),array_column($result,'author'));
+              $key = array_keys($result)[$keys];
+              $result= $result[$key];
+              $result = array_merge($result,array('gbif_key'=> $key));
+         } else {
+              //STILL MANY, MUST BE CHECKED MANUALLY
+              $result = null;
+         }
+      } else {
+        if (count($result)==1) {
+          $key = array_keys($result)[0];
+          $result = $result[$key];
+          $result = array_merge($result,array('gbif_key' => $key));
+        } else {
+          $result = null;
+        }
+      }
+
+      return $result;
+    }
+
+
+    public function getGBIF($searchstring)
+    {
+      $flags = 0;
+      $base_uri = 'https://api.gbif.org/';
+      //$searchstring = htmlspecialchars($searchstring);
+      $client = new Guzzle(['base_uri' => $base_uri]);// 'proxy' => $this->proxystring]);
+      try {
+          $response = $client->request('GET',"v1/species?name=".$searchstring);
+      } catch (ClientException $e) {
+          return null; //FAILED
+      }
+      if (200 != $response->getStatusCode()) {
+          return null;
+      } // FAILED
+      $answer = json_decode($response->getBody(),true);
+
+      $results = $answer['results'];
+
+      $result = self::filterGBIF($searchstring,$results);
+
+      if (is_null($result)) {
+        return [self::NOT_FOUND];
+      }
+
+      return [$flags,
+              'rank' => $result['rank'],
+              'author' => $result['author'],
+              'valid' => null,
+              'reference' => null,
+              'parent' => $result['parent'],
+              'key' => $result['gbif_key'],
+              'senior' => null,
+      ];
+    }
+
 
     // small helper for getting nested fields
     protected function getElement($xml, $field)
@@ -228,14 +471,14 @@ class ExternalAPIs
         return $this->getMycobankInner($fname);
     }
 
+
     protected function getMycobankInner($searchstring)
     {
         $flags = 0;
         $base_uri = 'http://www.mycobank.org/';
         $client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
         try {
-            $response = $client->request('GET',
-                        "Services/Generic/SearchService.svc/rest/xml?layout=14682616000000161&filter=name%3D%22$searchstring%22"
+            $response = $client->request('GET',"Services/Generic/SearchService.svc/rest/xml?layout=14682616000000161&filter=name%3D%22$searchstring%22"
                 );
         } catch (ClientException $e) {
             return null; //FAILED
@@ -243,6 +486,7 @@ class ExternalAPIs
         if (200 != $response->getStatusCode()) {
             return null;
         } // FAILED
+
         $answer = json_decode(json_encode(simplexml_load_string((string) $response->getBody())));
         if (!isset($answer->Taxon)) {
             return [self::NOT_FOUND];

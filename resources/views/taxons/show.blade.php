@@ -99,6 +99,11 @@
 
 <div class="col-sm-12">
 <br>
+@if ($taxon->references->count())
+  <a data-toggle="collapse" href="#taxon_references" class="btn btn-default">@lang('messages.references')</a>
+  &nbsp;&nbsp;
+@endif
+
 @if ($taxon->measurements()->count())
 <a href="{{ url('taxons/'. $taxon->id. '/measurements')  }}" class="btn btn-default">
 <i class="fa fa-btn fa-search"></i>
@@ -152,6 +157,48 @@
             </div>
         </div>
 
+<!-- start REFERENCE BLOCK -->
+<div class="panel panel-default panel-collapse collapse" id='taxon_references'>
+  <div class="panel-heading">
+    <strong>
+    @lang('messages.references')
+    </strong>
+  </div>
+  <div class="panel-body">
+  @if ($taxon->references)
+  <table class="table table-striped">
+    <thead>
+    <tr>
+      <th>@lang('messages.bibtex_key')</th>
+      <th>@lang('messages.author')</th>
+      <th>@lang('messages.year')</th>
+      <th>@lang('messages.title')</th>
+   <tr>
+   </thead>
+   <tbody>
+  @foreach($taxon->references as $reference)
+    <tr>
+      <td class="table-text">
+        <a href='{{ url('references/'.$reference->bib_reference_id)}}'>
+          {{ $reference->bibkey }}
+        </a>
+      </td>
+      <td class="table-text">{{ $reference->first_author }}</td>
+      <td class="table-text">{{ $reference->year }}</td>
+      <td class="table-text">{{ $reference->title }}</td>
+    </tr>
+  @endforeach
+  </tbody>
+  </table>
+  @endif
+</div>
+</div>
+<!-- end REFERENCES BLOCK -->
+
+
+
+
+
 @if ($taxon->pictures->count())
 {!! View::make('pictures.index', ['pictures' => $taxon->pictures]) !!}
 @endif
@@ -187,23 +234,29 @@
 <!-- RELATED TAXA BLOCK-->
 <div class="panel panel-default">
   <div class="panel-heading">
-    @lang('messages.taxon_ancestors_and_children')
+    <a data-toggle="collapse" href="#related_taxa" class="btn btn-default">
+      @lang('messages.taxon_ancestors_and_children')
+    </a>
   </div>
-  <div class="panel-body">
-    @if ($taxon->getAncestors()->count())
-      @foreach ($taxon->getAncestors() as $ancestor)
-        {!! $ancestor->rawLink() !!} &gt;
-      @endforeach
-      @endif
-      <strong>{{ $taxon->qualifiedFullname }}</strong>
-  </div>
-    @if ($taxon->getDescendants()->count())
-      <hr>
-      <div class="panel-body">
+  <div class="panel-collapse collapse"  id='related_taxa'>
+    <div class="panel-body">
+      <strong>@lang('messages.taxon_ancestors')</strong>:
+      <br>
+      @if ($taxon->getAncestors()->count())
+        @foreach ($taxon->getAncestors() as $ancestor)
+          {!! $ancestor->rawLink() !!} &gt;
+        @endforeach
+        @endif
+        <strong>{{ $taxon->qualifiedFullname }}</strong>
+        <br>
+        @if ($taxon->getDescendants()->count())
+          <hr>
+          <strong>@lang('messages.taxon_children')</strong>:
+          <br><br>
         {!! $dataTable->table() !!}
-        </div>
-    @endif
-
+        @endif
+    </div>
+  </div>
 </div>
 
 

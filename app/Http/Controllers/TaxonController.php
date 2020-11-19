@@ -25,7 +25,7 @@ use App\DataTables\ActivityDataTable;
 use App\UserJob;
 use App\Jobs\ImportTaxons;
 use Spatie\SimpleExcel\SimpleExcelReader;
-
+use DB;
 
 
 class TaxonController extends Controller
@@ -81,7 +81,8 @@ class TaxonController extends Controller
      */
     public function create()
     {
-        return view('taxons.create');
+        $references = BibReference::select('*',DB::raw('odb_bibkey(bibtex) as bibkey'))->get();
+        return view('taxons.create',compact('references'));
     }
 
     public function customValidate(Request $request, $id = 0) // id used for checking duplicates
@@ -221,7 +222,23 @@ class TaxonController extends Controller
             $taxon->setapikey('Mobot', $request['mobotkey']);
             $taxon->setapikey('IPNI', $request['ipnikey']);
             $taxon->setapikey('Mycobank', $request['mycobankkey']);
+            $taxon->setapikey('GBIF', $request['gbifkey']);
+            $taxon->setapikey('ZOOBANK', $request['zoobankkey']);
+
             $taxon->save();
+
+            $references = [];
+            if (is_array($request->references_aditional)) {
+              foreach($request->references_aditional as $bib_reference_id) {
+                  $references[] = array(
+                    'bib_reference_id' => $bib_reference_id
+                  );
+              }
+            }
+            $taxon->references()->detach();
+            if (count($references)>0) {
+              $taxon->references()->sync($references);
+            }
         }
 
         return redirect('taxons/'.$taxon->id)->withStatus(Lang::get('messages.stored'));
@@ -264,8 +281,8 @@ class TaxonController extends Controller
     public function edit($id)
     {
         $taxon = Taxon::findOrFail($id);
-
-        return view('taxons.create', compact('taxon'));
+        $references = BibReference::select('*',DB::raw('odb_bibkey(bibtex) as bibkey'))->get();
+        return view('taxons.create', compact('taxon','references'));
     }
 
     /**
@@ -316,9 +333,24 @@ class TaxonController extends Controller
             $taxon->setapikey('Mobot', $request['mobotkey']);
             $taxon->setapikey('IPNI', $request['ipnikey']);
             $taxon->setapikey('Mycobank', $request['mycobankkey']);
+            $taxon->setapikey('GBIF', $request['gbifkey']);
+            $taxon->setapikey('ZOOBANK', $request['zoobankkey']);
 
             $taxon->save();
 
+
+            $references = [];
+            if (is_array($request->references_aditional)) {
+              foreach($request->references_aditional as $bib_reference_id) {
+                  $references[] = array(
+                    'bib_reference_id' => $bib_reference_id
+                  );
+              }
+            }
+            $taxon->references()->detach();
+            if (count($references)>0) {
+              $taxon->references()->sync($references);
+            }
             //$newexternal = Taxon::findOrFail($id)->externalrefs()->get()->toArray();
 
         }
@@ -345,7 +377,32 @@ class TaxonController extends Controller
         $apis = new ExternalAPIs();
         $mobotdata = $apis->getMobot($request->name);
         $ipnidata = $apis->getIpni($request->name);
-        $mycobankdata = $apis->getMycobank($request->name);
+
+        // WARNING: MYCOBANK API OUT OF SERVICE 18-11-2020
+        //THEY PROVIDE A STATIC ZIP FILE THAT COULD USED LOCALLY TO SEARCH names
+        //WAIT FOR API, as no rush
+        //only search fungi if not found as plant
+        /*
+        if ($mobotdata[0] == ExternalAPIs::NOT_FOUND  and $ipnidata[0] == ExternalAPIs::NOT_FOUND) {
+          $mycobankdata = $apis->getMycobank($request->name);
+        } else {
+
+        }
+        */
+        $mycobankdata = [ExternalAPIs::NOT_FOUND];
+        $gbifdata = [ExternalAPIs::NOT_FOUND];
+        $zoobankdata = [ExternalAPIs::NOT_FOUND];
+
+        //this is for animal names (and fungi), so only if not found previously
+        if ($mobotdata[0] == ExternalAPIs::NOT_FOUND  and $ipnidata[0] == ExternalAPIs::NOT_FOUND and $mycobankdata[0] == ExternalAPIs::NOT_FOUND) {
+          $gbifdata = $apis->getGBIF($request->name);
+          $zoobankdata = $apis->getZOOBANK($request->name);
+          if (is_null($zoobankdata)) {
+            $zoobankdata = [ExternalAPIs::NOT_FOUND];
+          }
+        }
+
+
 
         // includes the messages in the return object
         $bag = new MessageBag();
@@ -358,11 +415,15 @@ class TaxonController extends Controller
         if (is_null($mycobankdata)) {
             $bag->add('e8', Lang::get('messages.mycobank_error'));
         }
+        if (is_null($gbifdata)) {
+            $bag->add('e8', Lang::get('messages.gbif_error'));
+        }
 
-        if (
-                ($mobotdata[0] & ExternalAPIs::NOT_FOUND) and
-                ($ipnidata[0] & ExternalAPIs::NOT_FOUND) and
-                ($mycobankdata[0] & ExternalAPIs::NOT_FOUND)
+        if (($mobotdata[0] == ExternalAPIs::NOT_FOUND) and
+                ($ipnidata[0] == ExternalAPIs::NOT_FOUND) and
+                ($mycobankdata[0] == ExternalAPIs::NOT_FOUND) and
+                ($gbifdata[0] == ExternalAPIs::NOT_FOUND) and
+                ($zoobankdata[0] == ExternalAPIs::NOT_FOUND)
             ) {
             $bag->add('e2', Lang::get('messages.apis_not_found'));
         }
@@ -398,6 +459,14 @@ class TaxonController extends Controller
         if (!is_null($mycobankdata) && array_key_exists('rank', $mycobankdata)) {
             $rank = $mycobankdata['rank'];
         }
+        if (is_null($rank) and !is_null($gbifdata) and array_key_exists('rank', $gbifdata)) {
+            $rank = $gbifdata['rank'];
+        }
+        if (is_null($rank) and !is_null($zoobankdata) and array_key_exists('rank', $zoobankdata)) {
+            $rank = $zoobankdata['rank'];
+        }
+
+
         $author = null;
         if (!is_null($ipnidata) && array_key_exists('author', $ipnidata)) {
             $author = $ipnidata['author'];
@@ -408,6 +477,14 @@ class TaxonController extends Controller
         if (!is_null($mycobankdata) && array_key_exists('author', $mycobankdata)) {
             $author = $mycobankdata['author'];
         }
+        //gbif only if not found before, as plants and animals may share names
+        if (is_null($author) and !is_null($gbifdata) && array_key_exists('author', $gbifdata)) {
+            $author = $gbifdata['author'];
+        }
+        if (is_null($author) and !is_null($zoobankdata) and array_key_exists('author', $zoobankdata)) {
+            $author = $zoobankdata['author'];
+        }
+
         $reference = null;
         if (!is_null($ipnidata) && array_key_exists('reference', $ipnidata)) {
             $reference = $ipnidata['reference'];
@@ -439,13 +516,25 @@ class TaxonController extends Controller
 
         $getparent = null;
         $parent = null;
-        if (!is_null($mobotdata) && array_key_exists('parent', $mobotdata)) {
+        if (!is_null($mobotdata) and array_key_exists('parent', $mobotdata)) {
             $getparent = $mobotdata['parent'];
         }
+        if (is_null($getparent) and !is_null($ipnidata) and array_key_exists('parent', $ipnidata)) {
+            $getparent = $ipnidata['parent'];
+        }
+        if (is_null($getparent) and !is_null($gbifdata) and array_key_exists('parent', $gbifdata)) {
+            $getparent = $gbifdata['parent'];
+        }
+        //zoobank does not provide parent for genus, only species
+        if (is_null($getparent) and !is_null($zoobankdata) and array_key_exists('parent', $zoobankdata)) {
+            $getparent = $zoobankdata['parent'];
+        }
+
         $parent = Taxon::getParent($request['name'], $rank, $getparent);
         if (!is_null($mycobankdata) && array_key_exists('parent', $mycobankdata)) {
             $parent = $mycobankdata['parent'];
         } // mycobank api already returns a "getParent"
+
         if (!is_null($parent) and !is_array($parent)) {
             $bag->add('parent_id', Lang::get('messages.parent_not_registered', ['name' => $parent]));
             $parent = null;
@@ -481,7 +570,14 @@ class TaxonController extends Controller
         if (!is_null($mycobankdata) && array_key_exists('key', $mycobankdata)) {
             $mycobankkey = $mycobankdata['key'];
         }
-
+        $gbifkey = null;
+        if (!is_null($gbifdata) && array_key_exists('key', $gbifdata)) {
+            $gbifkey = $gbifdata['key'];
+        }
+        $zoobankkey = null;
+        if (!is_null($zoobankdata) && array_key_exists('key', $zoobankdata)) {
+            $zoobankkey = $zoobankdata['key'];
+        }
         return Response::json(['bag' => $bag,
                     'apidata' => [
                             $rank,
@@ -493,6 +589,8 @@ class TaxonController extends Controller
                             $mobotkey,
                             $ipnikey,
                             $mycobankkey,
+                            $gbifkey,
+                            $zoobankkey,
                     ],
             ]);
     }

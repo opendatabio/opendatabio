@@ -21,10 +21,18 @@
                 <div class="panel-heading">
 		@lang('messages.new_taxon')
 <div style="float:right;">
-<a href="http://tropicos.org/" target="_blank"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
-<a href="http://www.ipni.org/" target="_blank"><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
+<a href="http://tropicos.org/" target="_blank" data-toggle="tooltip" rel="tooltip" data-placement="right" title="@lang('messages.mobot_search')"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos" ></a>
+&nbsp;&nbsp;
+<a href="http://www.ipni.org/" target="_blank" data-toggle="tooltip" rel="tooltip" data-placement="right" title="@lang('messages.ipni_search')" ><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
+&nbsp;&nbsp;
+<a href="http://zoobank.org/" target="_blank" data-toggle="tooltip" rel="tooltip" data-placement="right" title="@lang('messages.zoobank_search')" ><img src="{{asset('images/zoobank.png')}}" alt="IPNI" width="33px"></a>
+&nbsp;&nbsp;
+<?php // WARNING: MYCOBANK OUT OF SERVICE ?>
+<!--
 <a href="http://www.mycobank.org/" target="_blank"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
+-->
                 </div>
+                <br><br>
                 </div>
 
                 <div class="panel-body">
@@ -50,7 +58,7 @@
 </label>
         <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="name" id="name" class="form-control" value="{{ old('name', isset($taxon) ? $taxon->fullname : null) }}">
+	<input type="text" name="name" id="name" class="form-control" value="{{ old('name', isset($taxon) ? $taxon->fullname : null) }}" required>
             </div>
   <div class="col-sm-12">
     <div id="hint1" class="panel-collapse collapse">
@@ -78,7 +86,7 @@
 	    <div class="col-sm-6">
 	<?php $selected = old('level', isset($taxon) ? $taxon->level : null); ?>
 
-	<select name="level" id="level" class="form-control" >
+	<select name="level" id="level" class="form-control" required>
 	@foreach (App\Taxon::TaxLevels() as $level)
 		<option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
 			@lang ('levels.tax.' . $level )
@@ -101,7 +109,7 @@
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
     <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control autocomplete"
-    value="{{ old('parent_autocomplete', (isset($taxon) and $taxon->parent) ? $taxon->parent->qualifiedFullname : null) }}">
+    value="{{ old('parent_autocomplete', (isset($taxon) and $taxon->parent) ? $taxon->parent->qualifiedFullname : null) }}" required>
     <input type="hidden" name="parent_id" id="parent_id"
     value="{{ old('parent_id', isset($taxon) ? $taxon->parent_id : null) }}">
             </div>
@@ -188,7 +196,7 @@ if (empty(old())) { // no "old" value, we're just arriving
 </label>
         <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<input type="text" name="author" id="author" class="form-control" value="{{ old('author', isset($taxon) ? $taxon->author : null) }}">
+	<input type="text" name="author" id="author" class="form-control" value="{{ old('author', isset($taxon) ? $taxon->author : null) }}" required>
         </div>
   <div class="col-sm-12">
     <div id="hint3" class="panel-collapse collapse">
@@ -204,7 +212,7 @@ if (empty(old())) { // no "old" value, we're just arriving
         <a data-toggle="collapse" href="#hint3i" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
     <input type="text" name="author_autocomplete" id="author_autocomplete" class="form-control autocomplete"
-    value="{{ old('author_autocomplete', (isset($taxon) and $taxon->author_person) ? $taxon->author_person->full_name . " [" . $taxon->author_person->abbreviation . "]" : null) }}">
+    value="{{ old('author_autocomplete', (isset($taxon) and $taxon->author_person) ? $taxon->author_person->full_name . " [" . $taxon->author_person->abbreviation . "]" : null) }}" required>
     <input type="hidden" name="author_id" id="author_id"
     value="{{ old('author_id', isset($taxon) ? $taxon->author_id : null) }}">
         </div>
@@ -217,7 +225,7 @@ if (empty(old())) { // no "old" value, we're just arriving
 
 <!-- tax reference -->
 <div class="form-group super-reference">
-    <label for="bibreference_id" class="col-sm-3 control-label mandatory">
+    <label for="bibreference_id" class="col-sm-3 control-label">
 @lang('messages.taxon_bibreference')
 </label>
         <a data-toggle="collapse" href="#hint5" class="btn btn-default">?</a>
@@ -245,6 +253,11 @@ if (empty(old())) { // no "old" value, we're just arriving
 	    <div class="col-sm-6">
 	<input type="text" name="mobotkey" id="mobotkey" class="form-control" value="{{ old('mobotkey', isset($taxon) ? $taxon->mobot : null) }}">
             </div>
+    <div class="col-sm-12">
+      <div id="hint7" class="panel-collapse collapse">
+    @lang ('messages.hint_mobot_key')
+      </div>
+    </div>
 </div>
 <div class="form-group super-external">
     <label for="ipnikey" class="col-sm-3 control-label">
@@ -261,12 +274,27 @@ if (empty(old())) { // no "old" value, we're just arriving
 	    <div class="col-sm-6">
 	<input type="text" name="mycobankkey" id="mycobankkey" class="form-control" value="{{ old('mycobankkey', isset($taxon) ? $taxon->mycobank : null) }}">
             </div>
-  <div class="col-sm-12">
-    <div id="hint7" class="panel-collapse collapse">
-	@lang ('messages.hint_mobot_key')
-    </div>
-  </div>
 </div>
+
+<div class="form-group super-external">
+    <label for="gbifkey" class="col-sm-3 control-label">
+@lang('messages.gbif_key')
+</label>
+	    <div class="col-sm-6">
+	<input type="text" name="gbifkey" id="gbifkey" class="form-control" value="{{ old('gbifkey', isset($taxon) ? $taxon->gbif : null) }}">
+            </div>
+</div>
+
+<div class="form-group super-external">
+    <label for="zoobankkey" class="col-sm-3 control-label">
+@lang('messages.zoobank_key')
+</label>
+	    <div class="col-sm-6">
+	<input type="text" name="zoobankkey" id="zoobankkey" class="form-control" value="{{ old('zoobankkey', isset($taxon) ? $taxon->zoobank : null) }}">
+            </div>
+</div>
+
+
 
 <!-- notes -->
 <div class="form-group">
@@ -277,22 +305,42 @@ if (empty(old())) { // no "old" value, we're just arriving
 	<textarea name="notes" id="notes" class="form-control">{{ old('notes', isset($taxon) ? $taxon->notes : null) }}</textarea>
             </div>
 </div>
-		        <div class="form-group">
-			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.add')
 
-				</button>
-				<a href="{{url()->previous()}}" class="btn btn-warning">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.back')
-				</a>
-			    </div>
-			</div>
-		    </form>
-        </div>
-    </div>
+
+<div class="form-group">
+<label for="references_aditional" class="col-sm-3 control-label">
+@lang('messages.references')
+</label>
+<a data-toggle="collapse" href="#hint_bib_aditional" class="btn btn-default">?</a>
+<div class="col-sm-6">
+{!! Multiselect::select(
+    'references_aditional',
+    $references->pluck('bibkey', 'id'), isset($taxon) ? $taxon->references->pluck('bib_reference_id') : [],
+     ['class' => 'multiselect form-control']
+) !!}
+</div>
+<div class="col-sm-12">
+  <div id="hint_bib_aditional" class="panel-collapse collapse">
+@lang('messages.taxon_bibreferences_hint')
+  </div>
+</div>
+</div>
+
+	      <div class="form-group">
+		      <div class="col-sm-offset-3 col-sm-6">
+			       <button type="submit" class="btn btn-success" name="submit" value="submit">
+			       <i class="fa fa-btn fa-plus"></i>
+              @lang('messages.add')
+			       </button>
+			       <a href="{{url()->previous()}}" class="btn btn-warning">
+			        <i class="fa fa-btn fa-plus"></i>
+              @lang('messages.back')
+			       </a>
+		      </div>
+		    </div>
+    </form>
+  </div>
+</div>
 @endsection
 
 @push ('scripts')
@@ -399,6 +447,8 @@ $("#checkapis").click(function(e) {
                 $("#mobotkey").val(data.apidata[6]);
                 $("#ipnikey").val(data.apidata[7]);
                 $("#mycobankkey").val(data.apidata[8]);
+                $("#gbifkey").val(data.apidata[9]);
+
                 // finally, set fields visibility
                 setFields(0);
             }

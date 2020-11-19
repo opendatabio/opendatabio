@@ -1,8 +1,10 @@
 <div class="panel panel-default">
     <div class="panel-heading">
-    @lang('messages.pictures')
+      <a data-toggle="collapse" href="#image_block" class="btn btn-default">
+        @lang('messages.pictures')
+      </a>
     </div>
-    <div class="panel-body">
+    <div class="panel-body collapse"  id='image_block'>
     <table class="picture-table">
 <tr>
 <?php $i = 0; ?>
@@ -15,7 +17,7 @@
 <a href="{{url('persons/' . $col[0]->person_id)}}">{{$col[0]->person->abbreviation}}</a>
 @elseif ($col->count() == 2)
 <a href="{{url('persons/' . $col[0]->person_id)}}">{{$col[0]->person->abbreviation}}</a> &amp;
-<a href="{{url('persons/' . $col[1]->person_id)}}">{{$col[1]->person->abbreviation}}</a> 
+<a href="{{url('persons/' . $col[1]->person_id)}}">{{$col[1]->person->abbreviation}}</a>
 @elseif ($col->count() > 2)
 <a href="{{url('persons/' . $col[0]->person_id)}}">{{$col[0]->person->abbreviation}}</a> et al.
 @endif
@@ -29,7 +31,7 @@
 $txt = $picture->description;
 if (strlen($txt) > 100) {
     $txt = substr($txt, 0,100) . "...";
-} 
+}
 echo $txt;
 ?>
     </span>

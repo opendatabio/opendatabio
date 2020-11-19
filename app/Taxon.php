@@ -458,6 +458,23 @@ class Taxon extends Node
         }
     }
 
+    public function getGbifAttribute()
+    {
+        foreach ($this->externalrefs as $ref) {
+            if ('GBIF' == $ref->name) {
+                return $ref->reference;
+            }
+        }
+    }
+
+    public function getZoobankAttribute()
+    {
+        foreach ($this->externalrefs as $ref) {
+            if ('ZOOBANK' == $ref->name) {
+                return $ref->reference;
+            }
+        }
+    }
     public function getPlants()
     {
         $p = $this->identifications()->where('object_type', 'App\Plant')->get()->all();
@@ -595,6 +612,11 @@ class Taxon extends Node
       } else {
         return null;
       }
+    }
+
+    public function references()
+    {
+        return $this->belongsToMany(BibReference::class,'taxon_bibreference')->withTimestamps();
     }
 
 }
