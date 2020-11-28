@@ -13,8 +13,11 @@
     </div>
   </div>
   <div class="panel panel-default">
-    <div class="panel-body">
+    <div class="panel-heading">
       <a data-toggle="collapse" href="#object_help" class="btn btn-default">@lang('messages.help')</a>
+    </div>
+    <div id="object_help" class="panel-body panel-collapse collapse">
+       @lang('messages.imports_help')
     </div>
     <div class="panel-body">
     <!-- Display Validation Errors -->
@@ -87,9 +90,6 @@
           </div>
         </div>
       </form>
-  </div>
-  <div id="object_help" class="panel-body panel-collapse collapse">
-    {!! Lang::get('imports.'.$model) !!}
   </div>
 </div>
 

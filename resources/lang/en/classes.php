@@ -2,7 +2,7 @@
 return [
     'App\Location' => 'Location',
     'App\Plant' => 'Plant',
-    'App\Voucher' => 'Herbarium sample',
+    'App\Voucher' => 'Voucher',
     'App\Taxon' => 'Taxon',
     'App\Person' => 'Person'
 ];

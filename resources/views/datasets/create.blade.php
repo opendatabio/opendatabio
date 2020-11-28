@@ -231,7 +231,7 @@
 @push ('scripts')
 <script>
 $(document).ready(function() {
-    $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
+    /*$("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");*/
 });
 </script>
 {!! Multiselect::scripts('admins', url('users/autocomplete_all'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
