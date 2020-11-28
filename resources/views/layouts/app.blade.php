@@ -158,6 +158,12 @@
           &nbsp;
         @endif
 
+        <li class="dropdown">
+          <a href="{{ url('docs')}}">
+            @lang('messages.help')
+          </a>
+        </li>
+        &nbsp;
 
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">

@@ -101,12 +101,12 @@
                     <a href="{{ route('home') }}">
 @lang ('messages.home')
 </a>
-                    <a href="https://github.com/opendatabio/opendatabio/wiki" target="_blank">
+                    <a href="{{ url('docs') }}" target="_blank">
 @lang('messages.docs')
 </a>
                     <a href="https://github.com/opendatabio/opendatabio" target="_blank">GitHub</a>
                 </div>
-                
+
 
 		<div class="links" style="margin-top:20px;">
     <div class="links">
