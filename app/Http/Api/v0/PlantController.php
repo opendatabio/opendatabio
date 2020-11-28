@@ -7,6 +7,7 @@
 
 namespace App\Http\Api\v0;
 
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use App\Plant;
 use App\Location;
@@ -32,22 +33,41 @@ class PlantController extends Controller
         if ($request->id) {
             $plant->whereIn('plants.id', explode(',', $request->id));
         }
-        if ($request->location) {
-            $locations = ODBFunctions::asIdList($request->location, Location::select('id'), 'name');
-            $plant->whereIn('location_id', $locations);
+        if ($request->location or $request->location_root) {
+            if ($request->location) {
+              $location_query= $request->location;
+            } else {
+              $location_query =  $request->location_root;
+            }
+            $locations_ids = ODBFunctions::asIdList($location_query, Location::select('id'), 'name');
+            if ($request->location_root) {
+              $locations = Location::whereIn('id',$locations_ids);
+              $locations_ids = Arr::flatten($locations->cursor()->map(function($location) { return $location->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
+            }
+            $plant->whereIn('location_id', $locations_ids);
         }
         if ($request->tag) {
             ODBFunctions::advancedWhereIn($plant, 'tag', $request->tag);
         }
-        if ($request->taxon) {
-            $taxon = ODBFunctions::asIdList(
-                    $request->taxon,
+        if ($request->taxon or $request->taxon_root) {
+            if ($request->taxon) {
+              $taxon_query= $request->taxon;
+            } else {
+              $taxon_query =  $request->taxon_root;
+            }
+            $taxons = ODBFunctions::asIdList(
+                    $taxon_query,
                     Taxon::select('id'),
-                    'odb_txname(name, level, parent_id)',
-                    true);
+                    'odb_txname(name, level, parent_id)');
+            if ($request->taxon_root) {
+              $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
+            } else {
+              $taxons_ids = $taxons->get()->pluck('id')->toArray();
+            }
+
             $identification = Identification::select('object_id')
                     ->where('object_type', '=', 'App\\Plant')
-                    ->whereIn('taxon_id', $taxon)
+                    ->whereIn('taxon_id', $taxons_ids)
                     ->get();
             $plant->whereIn('plants.id', $identification);
         }
@@ -55,6 +75,14 @@ class PlantController extends Controller
             $projects = ODBFunctions::asIdList($request->project, Project::select('id'), 'name');
             $plant->whereIn('project_id', $projects);
         }
+        if ($request->dataset) {
+            $datasets = ODBFunctions::asIdList($request->dataset, Dataset::select('id'), 'name');
+            $plant->whereHas('measurements', function($measurement) use($datasets){
+                $measurement->whereIn('dataset_id',$datasets);
+              }
+            );
+        }
+
         if ($request->limit && $request->offset) {
             $plant->offset($request->offset)->limit($request->limit);
         } else {

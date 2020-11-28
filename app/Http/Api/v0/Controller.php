@@ -35,13 +35,14 @@ class Controller extends BaseController
     // Filters the designated fields in the collection to be returned
     public function setFields($collection, $fields, $simple)
     {
-        // Special keyword "all", returns the collection untransformed
+        // Special keyword "all", returns the collection untransformed and all mutators defined in simple
         if ('all' == $fields) {
             return $collection;
         }
+
         // Special keyword "simple", returns a default listing of fields
         if ('simple' == $fields) {
-            $fields = $simple;
+             $fields = $simple;
         } else {
             $fields = explode(',', $fields);
         }
@@ -53,8 +54,7 @@ class Controller extends BaseController
                     $obj->append($field);
                 }
             }
-
-            return collect($obj->toArray())
+              return collect($obj->toArray())
                 ->only($fields)
                 ->all();
         });

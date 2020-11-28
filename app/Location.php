@@ -134,6 +134,12 @@ class Location extends Node
 
         return ['x' => substr($point, 0, $pos), 'y' => substr($point, $pos + 1)];
     }
+    public function getCentroidWKTAttribute()
+    {
+        $centroid = $this->centroid;
+        return "POINT(".$centroid['x']." ".$centroid['y'].")";
+    }
+
 
     public function getLatitudeSimpleAttribute()
     {

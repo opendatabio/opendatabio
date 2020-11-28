@@ -20,7 +20,11 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $projects = Project::withCount(['plants', 'vouchers'])->get();
+        $projects = Project::withCount(['plants', 'vouchers']);
+        if ($request->id) {
+            $projects->whereIn('id', explode(',', $request->id));
+        }
+        $projects = $projects->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
 

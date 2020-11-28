@@ -34,8 +34,18 @@ class TraitController extends Controller
         if ($request->id) {
             $traits->whereIn('id', explode(',', $request->id));
         }
-        if ($request->limit) {
+        if ($request->name) {
+            $odbtraits = ODBFunctions::asIdList($request->name, ODBTrait::select('id'), 'export_name');
+            $traits->whereIn('id', $odbtraits);
+        }
+
+
+        if ($request->limit && $request->offset) {
+            $traits->offset($request->offset)->limit($request->limit);
+        } else {
+          if ($request->limit) {
             $traits->limit($request->limit);
+          }
         }
 
         $traits = $traits->get();
@@ -54,10 +64,11 @@ class TraitController extends Controller
               }
               unset($thetrait->categories);
         }
+
+
         $fields = ($request->fields ? $request->fields : 'simple');
         $traits = $this->setFields($traits, $fields, ['id', 'type', 'typename','export_name','unit', 'range_min', 'range_max', 'link_type','name','description',"categoria"]);
         return $this->wrap_response($traits);
-        #return $this->toJson($traits);
     }
 
 

@@ -35,7 +35,7 @@ class TaxonController extends Controller
             ODBFunctions::advancedWhereIn($taxons,
                     'odb_txname(name, level, parent_id)',
                     $request->name,
-                    true);
+                    true);            
         }
         if (isset($request->level)) {
             $taxons->where('level', '=', $request->level);
@@ -46,14 +46,17 @@ class TaxonController extends Controller
         if ($request->external) {
             $taxons->with('externalrefs');
         }
-        if ($request->limit) {
+        if ($request->limit && $request->offset) {
+            $taxons->offset($request->offset)->limit($request->limit);
+        } else {
+          if ($request->limit) {
             $taxons->limit($request->limit);
+          }
         }
         $taxons = $taxons->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
         $taxons = $this->setFields($taxons, $fields, ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','author_id','notes','family']);
-
         return $this->wrap_response($taxons);
     }
 

@@ -40,9 +40,6 @@ class LocationController extends Controller
         if (isset($request->adm_level)) {
             $locations->whereIn('adm_level', explode(',', $request->adm_level));
         }
-        if ($request->limit) {
-            $locations->limit($request->limit);
-        }
         // For lat / long searches
         if ($request->querytype and isset($request->lat) and isset($request->long)) {
             $geom = "POINT($request->long $request->lat)";
@@ -61,10 +58,17 @@ class LocationController extends Controller
             if ('closest' == $request->querytype) {
                 $locations = $locations->withDistance($geom)->orderBy('distance', 'ASC');
                 if (!isset($request->limit)) {
-                    $locations->limit(10);
+                    $locations->limit($request->limit);
                 }
             }
         }
+
+
+        if ($request->limit) {
+            $locations->limit($request->limit);
+        }
+
+
         $locations = $locations->get();
 
         // Hide world id

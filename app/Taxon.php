@@ -244,6 +244,11 @@ class Taxon extends Node
         }
     }
 
+    public function getFullnameWithAuthor()
+    {
+      return $this->fullname." ".$this->authorSimple;
+    }
+
     public function getBibreferenceSimpleAttribute()
     {
         if ($this->bibreference) {

@@ -45,7 +45,7 @@ class PersonController extends Controller
         $persons = $persons->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        
+
         $persons = $this->setFields($persons, $fields, ['id', 'full_name', 'abbreviation', 'email', 'institution','notes']);
 
         return $this->wrap_response($persons);

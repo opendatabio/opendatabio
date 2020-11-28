@@ -7,6 +7,7 @@
 
 namespace App\Http\Api\v0;
 
+use Illuminate\Support\Arr;
 use App\Jobs\ImportMeasurements;
 use Illuminate\Http\Request;
 use App\Measurement;
@@ -28,18 +29,39 @@ class MeasurementController extends Controller
         if ($request->id) {
             $measurements->whereIn('id', explode(',', $request->id));
         }
-        if ($request->name) {
-            $traits = ODBTrait::select('id');
-            ODBFunctions::advancedWhereIn($traits,
-                    'export_name',
-                    $request->name);
-            $measurements->whereIn('trait_id', $traits->get());
+        if ($request->trait) {
+            $odbtraits = ODBFunctions::asIdList($request->trait, ODBTrait::select('id'), 'export_name');
+            $measurements->whereIn('trait_id', $odbtraits);
         }
         if ($request->dataset) {
           $measurements->where('dataset_id',$request->dataset);
         }
-        if ($request->taxon) {
-            $measurements->where('measured_type', 'App\\Taxon')->whereIn('measured_id', explode(',', $request->taxon));
+        if ($request->taxon or $request->taxon_root) {
+            //this is tricky as taxon may be related to measurement from different objects and user may want to get descendants as well
+            if ($request->taxon) {
+              $taxon_query= $request->taxon;
+            } else {
+              $taxon_query =  $request->taxon_root;
+            }
+            $taxons_ids = ODBFunctions::asIdList(
+                    $taxon_query,
+                    Taxon::select('id'),
+                    'odb_txname(name, level, parent_id)',
+                    true);
+            $taxons = Taxon::whereIn('id',$taxons_ids);
+
+            //asked for descendants
+            if ($request->taxon_root) {
+              $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
+              $taxons = Taxon::whereIn('id',$taxons_ids);
+            }
+
+            $measurements_ids = Arr::flatten($taxons->cursor()->map(function($taxon) {
+              $plids = $taxon->plant_measurements()->get()->pluck('id')->toArray();
+              $vcids = $taxon->voucher_measurements()->get()->pluck('id')->toArray();
+              return array_merge($plids,$vcids);
+            })->toArray());
+            $measurements->where('measured_type', 'App\\Taxon')->whereIn('measured_id', explode(',', $request->taxon))->orWhereIn('id',$measurements_ids);
         }
         if ($request->location) {
             $measurements->where('measured_type', 'App\\Location')->whereIn('measured_id', explode(',', $request->location));
@@ -50,6 +72,7 @@ class MeasurementController extends Controller
         if ($request->voucher) {
             $measurements->where('measured_type', 'App\\Voucher')->whereIn('measured_id', explode(',', $request->voucher));
         }
+
         if ($request->limit && $request->offset) {
             $measurements->offset($request->offset)->limit($request->limit);
         } else {

@@ -59,6 +59,7 @@ class ImportVouchers extends ImportCollectable
 
         //validate parent
         $parent = $this->validParent($voucher);
+        // TODO: if lat and long are informed, then create location or search for registered location with same coordinates.
         if (null === $parent) {
             $this->skipEntry($voucher, 'especified parent was not found in the database');
 
@@ -75,18 +76,18 @@ class ImportVouchers extends ImportCollectable
 
         $validtypes = array('Plant' => Plant::class,'Location' => Location::class);
         if (array_key_exists('parent_id', $voucher)) {
-            if (array_key_exists('parent_type', $voucher) and array_key_exists($voucher['parent_type'],$validtypes)) {
+            if (array_key_exists('parent_type', $voucher) and (array_key_exists($voucher['parent_type'],$validtypes) or array_key_exists($voucher['parent_type'],array_flip($validtypes))) {
                 return array(
                     'id' => $voucher['parent_id'],
-                    'type' => $validtypes[$voucher['parent_type']],
+                    'type' => array_key_exists($voucher['parent_type'],$validtypes) ? $validtypes[$voucher['parent_type']] : $voucher['parent_type'];
                 );
             }
             return null; // has id, but not type of parent
         } elseif (array_key_exists('parent_type', $voucher)) {
             return null; // has type, but not id of parent
         } elseif (array_key_exists('location', $voucher)) {
-            if (array_key_exists('plant', $voucher)) {
-                $valid = $this->validate($voucher['location'], $voucher['plant']);
+            if (array_key_exists('plant_tag', $voucher)) {
+                $valid = $this->validate($voucher['location'], $voucher['plant_tag']);
                 if (null === $valid) {
                     return null;
                 }
@@ -96,7 +97,8 @@ class ImportVouchers extends ImportCollectable
                     'type' => 'App\Plant',
                 );
             } else {
-                $valid = ODBFunctions::validRegistry(Location::select('id'), $location);
+                $fields = ['id', 'name'];
+                $valid = ODBFunctions::validRegistry(Location::select('id'), $location,$fields);
                 if (null === $valid) {
                     return null;
                 }
@@ -124,7 +126,8 @@ class ImportVouchers extends ImportCollectable
     // Given a location name or id and a plant tag, returns the id of the plant with this tag and location if exists, otherwise returns null.
     private function validate($location, $plant)
     {
-        $valid = ODBFunctions::validRegistry(Location::select('id'), $location);
+        $fields = ['id', 'name'];
+        $valid = ODBFunctions::validRegistry(Location::select('id'), $location,$fields);
         if (null === $valid) {
             return null;
         }
@@ -145,7 +148,7 @@ class ImportVouchers extends ImportCollectable
         $herbaria = array();
         if (!is_array($herbarios)) {
           if (!empty($herbarios)) {
-            $herbarios = explode(";",$herbarios);
+            $herbarios = explode(",",$herbarios);
           } else {
             $herbarios = array();
           }

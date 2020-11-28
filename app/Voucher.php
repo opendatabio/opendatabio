@@ -9,6 +9,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 use Auth;
 use Lang;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -83,6 +84,30 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         });
     }
 
+    public function identification()
+    {
+        return $this->morphOne(Identification::class, 'object');
+    }
+
+
+    public function getIdentificationObjectAttribute()
+    {
+      if ($this->identification) {
+          return $this->identification()->first();
+      }
+      if ($this->parent and $this->parent->identification) {
+          return $this->parent->identification()->first();
+      }
+      return null;
+    }
+
+    public function collectors()
+    {
+        return $this->morphMany(Collector::class, 'object')->with('person');
+    }
+
+
+    /* IDENTIFICATION ATTRIBUTES ASSESSORS */
     public function getTaxonNameAttribute()
     {
         if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
@@ -94,6 +119,72 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
 
         return Lang::get('messages.unidentified');
     }
+
+    public function getTaxonNameWithAuthorAttribute()
+    {
+        if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+            return $this->identification->taxon->getFullnameWithAuthor();
+        }
+        if (Plant::class == $this->parent_type) {
+            return $this->parent->identification->taxon->getFullnameWithAuthor();
+        }
+
+        return Lang::get('messages.unidentified');
+    }
+
+    public function getTaxonFamilyAttribute()
+    {
+      if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+          return $this->identification->taxon->family;
+      }
+      if (Plant::class == $this->parent_type) {
+          return $this->parent->identification->taxon->family;
+      }
+      return Lang::get('messages.unidentified');
+    }
+
+    public function getIdentificationDateAttribute()
+    {
+      if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+          return $this->identification->date;
+      }
+      if (Plant::class == $this->parent_type) {
+          return $this->parent->identification->date;
+      }
+      return null;
+    }
+
+    public function getIdentifiedByAttribute()
+    {
+      if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+          return $this->identification->person->abbreviation;
+      }
+      if (Plant::class == $this->parent_type) {
+          return $this->parent->identification->person->abbreviation;
+      }
+      return Lang::get('messages.unidentified');
+    }
+
+    public function getIdentificationNotesAttribute()
+    {
+      if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+          return $this->identification->notes;
+      }
+      if (Plant::class == $this->parent_type) {
+          return $this->parent->identification->notes;
+      }
+      return "";
+    }
+
+    public function getPlantTagAttribute()
+    {
+      if (Plant::class == $this->parent_type) {
+          return $this->parent->fullname;
+      }
+      return '';
+    }
+
+    /* end identifications attributes */
 
     public function getLinkedPlanttagAttribute()
     {
@@ -133,11 +224,25 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return 'Not registered-'.$this->number;
     }
 
-    /* Used in ActivityDataTable change display */
-    public function identifiableName()
+    public function getCollectorMainAttribute()
     {
-        return $this->getFullnameAttribute();
+        if ($this->person) {
+            return $this->person->abbreviation;
+        }
+        return 'Not registered-'.$this->number;
     }
+
+    public function getCollectorsAllAttribute()
+    {
+        if ($this->collectors()->count()) {
+            $persons = $this->collectors()->cursor()->map(function($person) { return $person->person->abbreviation;})->toArray();
+            $persons = implode(' | ',$persons);
+            return $persons;
+        }
+        return '';
+    }
+
+
 
     public function person()
     {
@@ -148,42 +253,123 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     {
         return $this->belongsTo(Project::class);
     }
+    public function getProjectNameAttribute()
+    {
+        return $this->project->name;
+    }
 
     public function parent()
     {
         return $this->morphTo();
     }
 
+
+    /* LOCATION attributes and relations  */
+    public function getLocation()
+    {
+        if (is_null($this->parent)) {
+            return null;
+        }
+        if ($this->parent instanceof Location) {
+            return $this->parent();
+        }
+        return $this->parent->location();
+    }
+
     // with access to the location geom field
     public function getLocationWithGeomAttribute()
     {
-        // This is ugly as hell, but simpler alternatives are "intercepted" by Baum, which does not respect the added scope...
-        $loc = $this->parent;
-        if (!$loc or Location::class != get_class($loc)) {
-            return $this->parent->locationWithGeom;
-        }
-
-        return Location::withGeom()->addSelect('id', 'name')->find($loc->id);
+        return $this->getLocation()->withGeom()->addSelect('id', 'name','adm_level');
     }
 
+    public function getCoordinatesWKTAttribute()
+    {
+      $centroid = $this->getLocation()->withGeom()->first()->centroidWKT;
+      return $centroid;
+    }
+
+    public function getLatitudeDecimalDegreesAttribute()
+    {
+      return (float) $this->getLocation()->withGeom()->first()->centroid['y'];
+    }
+
+    public function getLongitudeDecimalDegreesAttribute()
+    {
+      return (float) $this->getLocation()->withGeom()->first()->centroid['x'];
+    }
+
+    public function getCoordinatesPrecisionAttribute()
+    {
+      $adm_level = $this->getLocation()->first()->adm_level;
+      if ($adm_level >= 100) {
+          return Lang::get('levels.adm_level.'.$adm_level);
+      }
+      return Lang::get('messages.centroid');
+    }
+    public function getLocationFullNameAttribute()
+    {
+      return $this->getLocation()->first()->fullName;
+    }
 
     public function getLocationShowAttribute()
     {
         if (!$this->parent) {
             return;
         }
-        if ($this->locationWithGeom) {
-            return  $this->locationWithGeom->name.' '.$this->locationWithGeom->coordinatesSimple;
-        }
-        // else, parent is a plant
-        if ($this->parent->locationWithGeom) {
-            return $this->parent->locationWithGeom->name.' '.$this->parent->locationWithGeom->coordinatesSimple;
+        $name = $this->getLocation()->first()->name;
+        $coords =  $this->getLocation()->withGeom()->first()->coordinatesSimple;
+        return  $name.' '.$coords;
+    }
+
+    /* this only makes sense if location is not an administrative area nor UC */
+    public function getLocationAltitudeAttribute()
+    {
+        $adm_level = $this->getLocation()->first()->adm_level;
+        if ($adm_level>=100) {
+          return $this->getLocation()->first()->altitude;
+        } else {
+          return null;
         }
     }
 
+    /* herbaria related functions */
     public function herbaria()
     {
         return $this->belongsToMany(Herbarium::class)->withPivot(['herbarium_number','herbarium_type'])->withTimestamps();
+    }
+
+    public function getDepositedAtAttribute()
+    {
+      $herbaria = $this->herbaria()->cursor()->map(function($herb) {
+        $number = $herb->pivot->herbarium_number;
+        $type = $herb->pivot->herbarium_type;
+        $acronym = $herb->acronym;
+        if ($type>0) {
+          $type = Lang::get('levels.vouchertype'.$type);
+        } else {
+          $type = "";
+        }
+        if ($number) {
+          $number = $number." ".$type;
+          $number = (string)Str::of($number)->trim();
+          $number = "(".$number.")";
+        }
+        return (string)Str::of($herb->acronym." ".$number)->trim();
+      })->toArray();
+      $herbaria = array_filter($herbaria);
+      if (count($herbaria)) {
+        return implode("; ",$herbaria);
+      }
+      return '';
+    }
+    public function getIsTypeAttribute()
+    {
+      $hastype = $this->herbaria()->where('herbarium_type','>',0)->count();
+      if ($hastype) {
+        return Lang::get('levels.vouchertype.1');
+      } else {
+        return Lang::get('levels.vouchertype.0');
+      }
     }
 
     public function setHerbariaNumbers($herbaria)
@@ -203,31 +389,16 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         $this->herbaria()->sync($herbaria);
     }
 
-    public function identification()
-    {
-        return $this->morphOne(Identification::class, 'object');
-    }
-
-    public function collectors()
-    {
-        return $this->morphMany(Collector::class, 'object');
-    }
-
-
-    public function getLocation()
-    {
-        if (is_null($this->parent)) {
-            return null;
-        }
-        if ($this->parent instanceof Location) {
-            return $this->parent;
-        }
-
-        return $this->parent->location;
-    }
 
     public function pictures()
     {
         return $this->morphMany(Picture::class, 'object');
     }
+
+    /* Used in ActivityDataTable change display */
+    public function identifiableName()
+    {
+        return $this->getFullnameAttribute();
+    }
+
 }

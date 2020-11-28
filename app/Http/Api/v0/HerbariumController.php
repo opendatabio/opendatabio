@@ -21,7 +21,16 @@ class HerbariumController extends Controller
      */
     public function index(Request $request)
     {
-        $herbaria = Herbarium::select('*')->get();
+        $herbaria = Herbarium::select('*');
+
+        if ($request->id) {
+            $herbaria->whereIn('id', explode(',', $request->id));
+        }
+        if ($request->acronym) {
+            $herbaria->whereIn('acronym', explode(',', $request->acronym));
+        }
+        $herbaria = $herbaria->get();
+
 
         $fields = ($request->fields ? $request->fields : 'simple');
 

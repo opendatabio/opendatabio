@@ -41,21 +41,21 @@ class VouchersDataTable extends DataTable
         ->editColumn('parent_type', function ($voucher) {
             $text = 'Linked to location';
             if ($voucher->parent_type ==  'App\Plant') {
-              $text = $voucher->parent->rawLink();
+              $text = $voucher->parent()->first()->rawLink();
             }
             return $text;
         })
         ->addColumn('location',function($voucher) {
             $text = "";
             if (null !== $voucher->locationWithGeom) {
-                $text = $voucher->locationWithGeom->rawLink();
-                $text .= "<br>".$voucher->locationWithGeom->coordinatesSimple;
+                $text = $voucher->locationWithGeom->first()->rawLink();
+                $text .= "<br>".$voucher->locationWithGeom->first()->coordinatesSimple;
             }
             return $text;
         })
         ->editColumn('date', function ($voucher) { return $voucher->formatDate; })
         ->addColumn('measurements', function ($voucher) {
-            return '<a href="'.url('vouchers/'.$voucher->id.'/measurements').'">'.$voucher->measurements()->count().'</a>';
+            return '<a href="'.url('vouchers/'.$voucher->id.'/measurements').'">'.$voucher->measurements()->withoutGlobalScopes()->count().'</a>';
         })
 
         ->rawColumns(['number', 'identification','location','measurements','parent_type']);
@@ -119,7 +119,7 @@ class VouchersDataTable extends DataTable
         }
         if ($this->herbarium_id) {
             $herbid =$this->herbarium_id;
-            $query = $query->whereHas('herbaria', function ($q) use ($herbid) {$q->where('herbarium_id', '=', $herbid); });          
+            $query = $query->whereHas('herbaria', function ($q) use ($herbid) {$q->where('herbarium_id', '=', $herbid); });
         }
         return $this->applyScopes($query);
     }

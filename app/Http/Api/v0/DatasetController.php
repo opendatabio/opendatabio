@@ -21,12 +21,16 @@ class DatasetController extends Controller
     public function index(Request $request)
     {
        //with(['users', 'tags.translations'])
-        $datasets =   Dataset::withCount(['measurements'])->get();
+        $datasets =   Dataset::withCount(['measurements']);
 
+        if ($request->id) {
+            $datasets->whereIn('id', explode(',', $request->id));
+        }
+        $datasets = $datasets->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
 
-        $datasets = $this->setFields($datasets, $fields, ['id', 'name', 'notes', 'privacyLevel','measurements_count','contactEmail','taggedWidth']);
+        $datasets = $this->setFields($datasets, $fields, ['id', 'name', 'notes', 'privacyLevel','policy','description','measurements_count','contactEmail','taggedWidth']);
 
         return $this->wrap_response($datasets);
     }
