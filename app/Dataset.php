@@ -23,7 +23,7 @@ class Dataset extends Model
     const PRIVACY_PUBLIC = 2;
     const PRIVACY_LEVELS = [self::PRIVACY_AUTH, self::PRIVACY_REGISTERED, self::PRIVACY_PUBLIC];
 
-    protected $fillable = ['name', 'description', 'privacy', 'bibreference_id','policy','metadata'];
+    protected $fillable = ['name', 'description', 'privacy', 'policy','metadata'];
 
     public function rawLink()
     {
@@ -96,14 +96,10 @@ class Dataset extends Model
         return $ret;
     }
 
-    public function reference()
-    {
-        return $this->belongsTo(BibReference::class, 'bibreference_id');
-    }
+
 
     public function references()
     {
-        //return $this->belongsToMany(BibReference::class,'dataset_bibreference')->withTimestamps();
         return $this->belongsToMany(BibReference::class,'dataset_bibreference')->withPivot(['mandatory'])->withTimestamps();
     }
 

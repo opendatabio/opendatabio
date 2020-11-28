@@ -46,9 +46,10 @@ class BibReference extends Model
 
     public function datasets()
     {
-        return $this->hasMany(Dataset::class, 'bibreference_id');
+      return $this->belongsToMany(Dataset::class,'dataset_bibreference')->withPivot(['mandatory']);
     }
 
+    
     public function measurements()
     {
         return $this->hasMany(Measurement::class, 'bibreference_id');

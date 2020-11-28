@@ -100,7 +100,7 @@ class DatasetController extends Controller
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:'.$fullusers,
         ]);
-        $dataset = Dataset::create($request->only(['name', 'description', 'privacy', 'bibreference_id','policy','metadata']));
+        $dataset = Dataset::create($request->only(['name', 'description', 'privacy','policy','metadata']));
         $dataset->setusers($request->viewers, $request->collabs, $request->admins);
         $dataset->tags()->attach($request->tags);
 
@@ -194,7 +194,7 @@ class DatasetController extends Controller
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:'.$fullusers,
         ]);
-        $dataset->update($request->only(['name', 'description', 'privacy', 'bibreference_id','policy','metadata']));
+        $dataset->update($request->only(['name', 'description', 'privacy', 'policy','metadata']));
         $dataset->setusers($request->viewers, $request->collabs, $request->admins);
         $dataset->tags()->sync($request->tags);
         /*mandatory references */
