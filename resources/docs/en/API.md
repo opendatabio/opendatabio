@@ -1,10 +1,11 @@
-- [OpenDataBio API and R client](#top)
-- [API Tester](#api_test)
+- [OpenDataBio API and R client](#)
+- [API Tester](API-tester)
 - [API EndPoints](#endpoints)
   - [BibReferences EndPoint](#endpoint_bibreferences)
   - [Datasets EndPoint](#endpoint_datasets)
   - [Herbaria EndPoint](#endpoint_herbaria)
   - [Locations EndPoint](#endpoint_locations)
+  - [Language EndPoint](#endpoint_languages)
   - [Measurements EndPoint](#endpoint_measurements)
   - [Persons EndPoint](#endpoint_persons)
   - [Plants EndPoint](#endpoint_plants)
@@ -13,43 +14,46 @@
   - [Traits EndPoint](#endpoint_traits)
   - [Vouchers EndPoint](#endpoint_vouchers)
   - [UserJobs EndPoint](#endpoint_jobs)
-- [Possible erros](#possible_erros)
+- [Possible errors](#possible_errors)
 
 
-<a name="top"></a>
-# OpenDataBio API and R Client
+## OpenDataBio API and R Client
 
 The OpenDataBio API ([Application Programming Interface -API](https://en.wikipedia.org/wiki/API)) allows to programatically interact with an OpenDataBio database for exporting and importing data. The [OpenDataBio R package](https://github.com/opendatabio/opendatabio-r) is a  **client ** for this API, allowing the interaction with the data repository directly from R and illustrating the API capabilities so that other clients can be easily built.
-<br><br>
+
+
 The API allows easy querying of the database and easy data importation through a [REST](https://en.wikipedia.org/wiki/Representational_state_transfer) inspired interface. All API requests and responses are formatted in [JSON](https://en.wikipedia.org/wiki/JSON). The import and export tools of the web interface use the implemented APIs, so data exports and imports have standard formats.
 
 <a name="api_call"></a>
+***
 ## API call
 
 A simple call to the OpenDataBio API has four independent pieces:
 
 1. **HTTP verb** -  either `GET` for exports, or  `POST` for imports, related to the action that you want to accomplish. Other verbs, `PUT`, `DELETE`, etc are not implemenented and deletes and updates can only be made through the interface and have several restrictions for data preservation.
-2. **base URL** - is the URL used to access your OpenDataBio server, plus `/api/v0`. For, example, `http://opendatabio.inpa.gov.br/opendatabio/api/v0`
-3. **[endpoint](#section-6)** - represents the object or collection of objects that you want to access, for example, for querying taxonomic names, the endpoint is "taxons"
-4. **request parameters** - represent filtering and processing that should be done with the objects, and are represented in the API call after a question mark. For example, to retrieve only valid taxonomic names (non synonyms) end the request with `?valid=1`.
+1. **base URL** - is the URL used to access your OpenDataBio server, plus `/api/v0`. For, example, `http://opendatabio.inpa.gov.br/opendatabio/api/v0`
+1. **[endpoint](#endpoints)** - represents the object or collection of objects that you want to access, for example, for querying taxonomic names, the endpoint is "taxons"
+1. **request parameters** - represent filtering and processing that should be done with the objects, and are represented in the API call after a question mark. For example, to retrieve only valid taxonomic names (non synonyms) end the request with `?valid=1`.
 
 The API call exemplified above can be entered in a browser, by using the full URL `http://opendatabio.inpa.gov.br/api/v0/taxons?valid=1`. When using the OpenDataBio-R client for API calls, this example would be called as  `odb_get_taxons(list(valid=1))`.
 
 <a name="api_authentication"></a>
+***
 ## API Authentication
 
 Authentication is done using an `API token`, that can be found under your user profile on the web interface. Authentication is required, so only registered users can access the API. The token is assigned to a single database user, and should not be shared, exposed, e-mailed or stored in version controls. To authenticate against the OpenDataBio API, use the token in the "Authorization" header of the API request. When using the R client, pass the token to the `odb_config` function `cfg = odb_config(token="your-token-here")`.
-<br><br>
+
+
 Users will only have access to the data for which the user has permission and to, or any data with public access in the database, which by default includes locations, taxons, bibliographic references, persons and traits. Measurements, plants, and Vouchers access depends on permissions understood by the users token.
 
-> {primary} You may test the GET api if your are registered and has a token. Check the [API Tester](api#api_test)
-
 <a name="api_versions"></a>
+***
 ## API versions
 
 The OpenDataBio API follows its own version number. This means that the client can expect to use the same code and get the same answers regardless of which OpenDataBio version that the server is running. All changes done within the same API version should be backward compatible. Our API versioning is handled by the URL, so to ask for a specific API version, use the version number between the base URL and endpoint, such as `http://opendatabio.inpa.gov.br/api/v0/taxons`
 
 <a name="endpoints"></a>
+***
 ## API EndPoints - v0 - unstable API version
 
 The API version 0 (v0) is an unstable version. The first stable version will be the API version 1.
@@ -83,15 +87,16 @@ Most Endpoints accept all the common parameters described below. They may also a
 | [vouchers](#endpoint_vouchers) | `GET` | Lists registered voucher specimens | `id`, `number`, `plant`, `location`, `collector`, `taxon`, `project`, `dataset` |
 | [userjobs](#endpoint_jobs) | `GET` | Lists user Jobs | `id`, `status`|
 
-<br>
+
+
 ### Imports or POST verbs
 The [OpenDataBio R package]()
-  A **Import Data Tutorial** is available as vignette of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r). Below each endpoint there is an explanation of the specific `POST` variables and their requirements for importing data. Batch imports of  [Bibliographic References](auxiliary_objects#bibreferences) and [Pictures](auxiliary_objects#pictures) are possible but only through the web interface. The available `POST` APIs are listed below. If not using the R Client that does it for you, the data to be imported must be in the `request body`, formated as a JSON array. Each item in the array must be named and may contain several fields.
+  A **Import Data Tutorial** is available as vignette of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r). Below each endpoint there is an explanation of the specific `POST` variables and their requirements for importing data. Batch imports of  [Bibliographic References](Auxiliary-Objects#bibreferences) and [Pictures](Auxiliary-Objects#pictures) are possible but only through the web interface. The available `POST` APIs are listed below. If not using the R Client that does it for you, the data to be imported must be in the `request body`, formated as a JSON array. Each item in the array must be named and may contain several fields.
 
-> {primary}  The Import Data tools of the Web Interface use the POST API methods.
+**The Import Data tools of the Web Interface use the POST API methods**
 
 | Endpoint |  HTTP verb | Description |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | [measurements](#endpoint_measurements) | `POST` | Importo Measurements to Datasets |
 | [locations](#endpoint_locations) | `POST` | Imports locations |
 | [persons](#endpoint_persons) | `POST` | Imports a list of people |
@@ -102,27 +107,28 @@ The [OpenDataBio R package]()
 
 
 
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
 <a name="endpoint_test"></a>
+***
 ### Test
 
 The test endpoint may be used to perform connection tests. It returns a `Success` message and the identity of the logged in user.
 
-<a name="endpoint_bibreferences"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
-### BibReferences Endpoint
-The `bibreferences` endpoint interact with the [bibreference](auxiliary_objects#bibreferences) table. Their basic usage is getting the registered Bibliographic References. Because this is a simple table it is just easier to get them all and query latter..
 
-<br>
+<a name="endpoint_bibreferences"></a>
+***
+### BibReferences Endpoint
+The `bibreferences` endpoint interact with the [bibreference](Auxiliary-Objects#bibreferences) table. Their basic usage is getting the registered Bibliographic References. Because this is a simple table it is just easier to get them all and query latter..
+
+
+
 #### GET optional parameters  `id`, `bibkey`, `taxon`, `limit`,`offset`
 - `id=list` return only references having the id or ids provided (ex `id=1,2,3,10`)
 - `bibkey=list` return only references having the bibkey or bibkeys (ex `bibkey=ducke1953,mayr1992`)
 - `taxon=list of ids` return only references linked to the taxon informed.
 - `limit` and `offset` -  limit query. see [Common endpoints](endpoint_common).
 
-<br>
+
+
 #### Fields obtained with 'simple' option
   - `id`- the id of the BibReference in the bibreferences table (a local database id)
   - `bibkey` - the bibkey used to search and use of the reference in the web system
@@ -134,17 +140,18 @@ The `bibreferences` endpoint interact with the [bibreference](auxiliary_objects#
   - `bibtex` - the reference citation record in [BibTex](http://www.bibtex.org/) format
 
 
+
 <a name="endpoint_datasets"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+***
 ### Datasets Endpoint
 The `datasets` endpoint interact with the [datasets](management_objects#datasets) table. Their basic usage is getting the registered Datasets, but not the data in the datasets (use the web interface for getting the complete data for a dataset or the [Measurements API](#endpoint_measurements)). Usefull for getting dataset_ids for importing Measurements.
 
-<br>
+
+
 #### GET optional parameters  `id` only
 - `id=list` return only datasets having the id or ids provided (ex `id=1,2,3,10`)
 
-<br>
+
 #### Fields obtained with 'simple' option
   - `id` - the id of the Dataset in the datasets table (a local database id)
   - `name` - the name of the dataset
@@ -155,15 +162,17 @@ The `datasets` endpoint interact with the [datasets](management_objects#datasets
   - `measurements_count` - the number of measurements in the dataset
   - `taggedWidth` - the list of tags applied to the dataset
 
+
 <a name="endpoint_herbaria"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+***
 ### Herbaria Endpoint
 The `herbaria` endpoint interact with the [herbaria](management_objects#herbaria) table. Their basic usage is getting the list of Biological Collections (Herbaria and other plant and non-plant repositories of biological samples) registered in the database. Using for getting `herbarium_id` for importing data with the [Vouchers API](#endpoint_vouchers)).
-<br><br>
+
+
 #### GET optional parameters  `id` only
 - `id=list` return only 'herbaria' having the id or ids provided (ex `id=1,2,3,10`)
-<br><br>
+
+
 #### Fields obtained with 'simple' option
   - `id` - the id of the repository or museum in the herbaria table (a local database id)
   - `name` - the name of the repository or museum
@@ -171,11 +180,11 @@ The `herbaria` endpoint interact with the [herbaria](management_objects#herbaria
   - `irn` - only for Herbaria, the number of the herbarium in the [Index Herbariorum](http://sweetgum.nybg.org/science/ih/)
 
 <a name="endpoint_measurements"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+***
 ### Measurements Endpoint
-The `measurements` endpoint interact with the [measurements](auxiliary_objects#measurements) table. Their basic usage is getting Data linked to Plants, Taxons, Locations or Vouchers, regardless of datasets, so it is usefull when you want particular measurements from different datasets that you have access for. If you want a full dataset, use the web interface, as it prepares a complete set of the dataset measurements and their associated data tables for download in your Job tab.
-<br><br>
+The `measurements` endpoint interact with the [measurements](Auxiliary-Objects#measurements) table. Their basic usage is getting Data linked to Plants, Taxons, Locations or Vouchers, regardless of datasets, so it is usefull when you want particular measurements from different datasets that you have access for. If you want a full dataset, use the web interface, as it prepares a complete set of the dataset measurements and their associated data tables for download in your Job tab.
+
+
 #### GET optional parameters `id`, `taxon`,`dataset`,`trait`,`plant`,`voucher`,`location`,`limit`,`offset`
 - `id=list of ids` return only the measurement or measurements having the id or ids provided (ex `id=1,2,3,10`)
 - `taxon=list of ids or names` return only the measurements related to the Taxons, both direct taxon measurements and indirect taxon measurements from their plants and vouchers (ex `taxon=Aniba,Licaria`). Does not consider descendants taxons for this use `taxon_root` instead. In the example only measurements directly linked to the genus and genus level identified vouchers and plants will be retrieved.
@@ -185,9 +194,10 @@ The `measurements` endpoint interact with the [measurements](auxiliary_objects#m
 - `plant=list of plant ids` return only the  measurements for the plant ids informed (ex `plant=1000,1200`)
 - `voucher=list of voucher ids` return only the  measurements for the voucher ids informed (ex `voucher=345,321`)
 - `location=list of voucher ids` return only measurements for the locations ids informed (ex `location=4,321`)- does not retrieve measurements for plants and vouchers in those locations, only measured locations, like plot soil surveys data.
-- `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of measurements, as the request may fail due to memory constraints. See [Common endpoints](endpoint_common).
+- `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of measurements, as the request may fail due to memory constraints. See [Common endpoints](#endpoint_common).
 
-<br><br>
+
+
 #### Fields obtained with 'simple' option
   - `id` - the id of the measurement in the measurements table (a local database id)
   - `measured_type` - the measured object, one of Plant, Location, Taxon or Voucher
@@ -199,18 +209,20 @@ The `measurements` endpoint interact with the [measurements](auxiliary_objects#m
   - `valueDate` - the measurement measured date
   - `datasetName` - the dataset name to which the measurement belong to
 
-<br><br>
+
+
 #### Addition relevant fields
   - `measuredTaxonName` - the taxon name in case the measurement is from a Taxon, Voucher or Plant
   - `measuredTaxonFamily` - the taxon Family name in case the measurement is from a Taxon, Voucher or Plant
   - `measuredProject` - the project that indirectly the measurement belongs to, if any.
 
-<br>
+
+
 #### POST format
-<br>
-See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import measurements for different types of [traits](trait_objects#traits).
+See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import measurements for different types of [traits](Trait-Objects#traits).
 The following fields are allowed in a post API:
-<br>
+
+
 * `dataset=number` -  the id of the dataset where the measurement should be placed **required**
 * `date=YYYY-MM-DD` - the observation date for the measurement, must be passed as YYYY-MM-DD  **required**
 * `object_type=string` - either 'Plant','Location','Taxon' or 'Voucher', i.e. the object from where the measurement was taken **required**
@@ -223,13 +235,27 @@ The following fields are allowed in a post API:
 * `notes` - any note you whish. In same cases this is a usefull place to store measurement related information. For example, when measuring 3 leaves of a voucher, you may indicate here to which leaf the measurement belongs, leaf1, leaf2, etc. allowing to link measurements from different traits by this field.
 * `duplicated` - by default, the import API will prevent duplicated measurements for the same trait, object and date; specifying `duplicated=1` will allow to import such duplicated measurements. Will assume 0 if not informed and will then check for duplicated values.
 
-<a name="endpoint_locations"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
-### Locations
-The `locations` endpoints interact with the [locations](core_objects#locations) table. Their basic usage is getting a list of registered countries, cities, plots, etc, or importing new locations.
 
-<br>
+<a name="endpoint_languages"></a>
+***
+### Languages
+The `languages` endpoint interact with the [Language](Auxiliary-Objects#user_translations) table. Their basic usage is getting a list of registered Languages to import [User Translations](Auxiliary-Objects#user_translations) like [Trait](#endpoint_traits) and TraitCategories names and descriptions.
+
+#### GET optional parameters: `none`
+
+#### Fields obtained
+  - `id` - the id of the language in the languages table (a local database id)
+  - `code` - the language string code;
+  - `name` - the language name;
+
+
+
+<a name="endpoint_locations"></a>
+***
+### Locations
+The `locations` endpoints interact with the [locations](Core-Objects#locations) table. Their basic usage is getting a list of registered countries, cities, plots, etc, or importing new locations.
+
+
 #### GET optional parameters  `id`, `parent_id`,`adm_level`, `name`, `limit`, `querytype`, `lat`, `long`,`root`
 - `id=list` return only locations having the id or ids provided (ex `id=1,2,3,10`)
 - `admlevel=number` return only locations for the specified level:
@@ -250,7 +276,8 @@ The `locations` endpoints interact with the [locations](core_objects#locations) 
 
 Notice that `id`, `search`, `parent` and `root` should probably not be combined in the same query.
 
-<br>
+
+
 #### Fields obtained with 'simple' option
   - `id` - the id of the location in the locations table (a local database id)
   - `name` - the location name;
@@ -264,11 +291,13 @@ Notice that `id`, `search`, `parent` and `root` should probably not be combined 
   - `centroid_raw` - when location is a polygon, then its centroid WKT representation
   - `area` - when location is a polygon its area in squared meters.
 
-<br>
-#### POST format
-See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Locations](core_objects#locations)
 
-<br>
+
+#### POST format
+See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Locations](Core-Objects#locations)
+
+
+
 * `name` -  the location name (parent+name must be unique in the database) - **required**
 * `adm_level` - must be numeric, see [above](#locations_get) - **required**
 * `altitude` - in meters
@@ -285,11 +314,11 @@ See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.co
 
 
 <a name="endpoint_persons"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+***
 ### Persons
-The `persons` endpoint interact with the [Person](auxiliary_objects#persons) table. The basic usage is getting a list of registered people (plant and voucher collectors, taxonomic specialists or database users), with full name, abbreviation and e-mail.
-<br>
+The `persons` endpoint interact*** with the [Person](Auxiliary-Objects#persons) table. The basic usage is getting a list of registered people (plat and voucher collectors, taxonomic specialists or database users), with full name, abbreviation and e-mail.
+
+
 #### GET optional parameters  `id`, `search`,`abbrev`, `email`, `limit`, `offset`
 - `id=list` return only persons having the id or ids provided (ex `id=1,2,3,10`)
 - `name=string` - return people whose name matches the specified string. You may use asterisk as a wildcard. Ex: `name=*ducke*`
@@ -298,7 +327,8 @@ The `persons` endpoint interact with the [Person](auxiliary_objects#persons) tab
 - `search=string`, return people whose name, abbreviation or e-mail matches the specified string. You may use asterisk as a wildcard.
 - `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of measurements, as the request may fail due to memory constraints. See [Common endpoints](endpoint_common).
 
-<br>
+
+
 #### Fields obtained with 'simple' option
 - `id` - the id of the person in the persons table (a local database id)
 - `full_name` - the person name;
@@ -308,12 +338,15 @@ The `persons` endpoint interact with the [Person](auxiliary_objects#persons) tab
 - `notes` - any registered notes;
 - `herbarium` - the name of the Biological Collection (Herbaria, etc) that the person is associated with; not included in simple)
 
-<br>
+
+
 #### POST format
-<br>
-See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Persons](auxiliary_objects#persons).
+
+
+See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Persons](Auxiliary-Objects#persons).
 The following fields are allowed in a post API:
-<br>
+
+
 - `full_name` - person full name, **required**
 - `abbreviation` - abbreviated name, as used by the person in publications, as collector, etc. (if left blank, a standard abbreviation will be generated using the full_name);
 - `email` - an email address,
@@ -322,12 +355,12 @@ The following fields are allowed in a post API:
 
 
 <a name="endpoint_plants"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+***
 ### Plants
-The `plants` endpoints interact with the [Plant](core_objects#plants) table. Their basic usage is getting a list of plants or import new ones.
+The `plants` endpoints interact with the [Plant](Core-Objects#plants) table. Their basic usage is getting a list of plants or import new ones.
 
-<br>
+
+
 #### GET optional parameters `id`, `location`, `taxon`, `tag`,`project`, `dataset`, `limit`, `offset`
 - `id=number or list` - return plants that have id or ids ex: `id=2345,345`
 - `location=mixed` - return by location id or name or ids or names ex: `location=24,25,26` `location=Parcela 25ha` of the locations where the plants
@@ -339,10 +372,12 @@ The `plants` endpoints interact with the [Plant](core_objects#plants) table. The
 - `dataset=mixed` - the id or ids or names of the datasets, return plants having measurements in the datasets informed
 - `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of plants, as the request may fail due to memory constraints. See [Common endpoints](endpoint_common).
 
-<br>
+
+
 Notice that all search fields (taxon, location and project) may be specified as names (eg, "taxon=Euterpe edulis") or as database ids. If a list is specified for one of these fields, all items of the list must be of the same type, i.e. you cannot search for 'taxon=Euterpe,24'. Also, location and taxon have priority over location_root and taxon_root if both informed.
 
-<br>
+
+
 #### Fields obtained with 'simple' option
 - `id` - the id of the plant in the plants table (a local database id)
 - `fullName` - the plant fullName is a unique identifier composed of `LocationName+Tag`
@@ -359,16 +394,18 @@ Notice that all search fields (taxon, location and project) may be specified as 
 - `notes` - any note
 - `projectName` - the projectName the plant belongs to
 
-<br>
 #### Additional relevant fields
 - `angle` and `distance` - azimuth in degrees and distance in meteres of the plant position in relation to its location (which in this case would be a geographical POINT). This may be used in some specific plant inventory surveys
 
-<br>
+
+
 #### POST format
-<br>
-See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Plants](core_objects#plants).
+
+
+See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Plants](Core-Objects#plants).
 The following fields are allowed in a post API:
-<br>
+
+
 * `location` - the location name or id; **required**
 * `tag` - the plant field tag number or code **required**
 * `project` - name or id **required**
@@ -383,17 +420,20 @@ The following fields are allowed in a post API:
 * `identification_based_on_herbarium_id` - only fill if `identification_based_on_herbarium` is present;
 * `relative_position` - cartesian position in meters relative to the 0,0 location coordinate in WKT format: `POINT(x,y)`
 
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+
+
 <a name="endpoint_projects"></a>
+***
 ### Projects EndPoint
 The `projects` endpoint interact with the [projects](management_objects#projects) table. The basic usage is getting the registered Projects, but not the plants nor vouchers in the projects, only counts and some basic info. Usefull for getting project_ids for importing Plants and Vouchers.
 
-<br>
+
+
 #### GET optional parameters  `id` only
 - `id=list` return only projects having the id or ids provided (ex `id=1,2,3,10`)
 
-<br>
+
+
 #### Fields obtained with 'simple' option
   - `id` - the id of the Project in the projects table (a local database id)
   - `fullname` - project name
@@ -404,12 +444,12 @@ The `projects` endpoint interact with the [projects](management_objects#projects
 
 
 <a name="endpoint_taxons"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+***
 ### Taxons
-The `taxons` endpoint interact with the [taxons](core_objects#taxons)  table. The basic usage is getting a list of registered taxonomic names or importing new taxonomic names.
+The `taxons` endpoint interact with the [taxons](Core-Objects#taxons)  table. The basic usage is getting a list of registered taxonomic names or importing new taxonomic names.
 
-<br>
+
+
 #### GET optional parameters  `root`, `id`, `name`,`level`, `valid`, `external`, `limit`, `offset`
 - `id=list` return only taxons having the id or ids provided (ex `id=1,2,3,10`)
 - `name=search` returns only taxons with fullname (no authors) matching the search string. You may use asterisk as a wildcard.
@@ -431,14 +471,15 @@ Taxon level options are:
 |30 for ` div., phyl., phylum, division ` |90 for ` ord., order `           |180 for ` gen., genus `            |270 for ` f., fo., form `                |
 |40 for ` subdiv. `                       |100 for ` subord. `              |190 for ` subg., subgenus, sect. ` |                                         |
 
-<br>
+
+
 #### Fields obtained with 'simple' option
 - `id` - the id of the Taxon in the taxons table (a local database id)
 - `fullname` - the 'canonicalName' or full taxonomic name without authors (i.e. including genus name and epithet for species name)
 - `level` - the numeric value of the taxon rank
 - `levelName` - the string value of the taxon rank
 - `authorSimple` - the taxon authorship, will be a Person name if the taxon is unpublished.
-- `bibreferenceSimple` - unified bibliographic reference (i.e. either the short format or an extract of the bibtext reference assinged). Only reference for taxon description, aditional taxon linked references can be extracted with the [BibReference API](api#endpoint_bibreferences).
+- `bibreferenceSimple` - unified bibliographic reference (i.e. either the short format or an extract of the bibtext reference assinged). Only reference for taxon description, aditional taxon linked references can be extracted with the [BibReference API](API#endpoint_bibreferences).
 - `valid` - if valid or invalid
 - `senior_id` - if invalid the id of the valid synonym that the taxon belongs to
 - `parent_id` - the id of the parent taxon
@@ -447,12 +488,12 @@ Taxon level options are:
 - `family` - the family name if taxon is family or lower rank.
 - `externalrefs` - the Tropicos, IPNI, MycoBank, ZOOBANK or GBIF reference numbers
 
-<br>
+
+
 #### POST format
-<br>
-See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Taxons](core_objects#taxons).
+See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Taxons](Core-Objects#taxons).
 The following fields are allowed in a post API:
-<br>
+
 * `name` - taxon full name **required**
 * `level` - may be the numeric id or a string describing the level (see above)
 * `parent_name` - the taxon's parent full name
@@ -469,21 +510,86 @@ Note. Only name is required because the API will search the external nomenclatur
 
 
 <a name="endpoint_traits"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+***
 ### Traits
-| [traits](#endpoint_traits) | `GET` | Lists variables (traits) list |`id`, `name`,`limit`,`offset`|
+The `traits` endpoint interact with the [Trait](Trait-Objects#traits) table. The basic usage is getting a list of variables and variables categories for importing [Measurements](Trait-Objects#measurements). The POST method allows you to import, but it is recommended that the Web Interface is used to store traits in the database, because the interface facilitates avoiding creating a redundant trait.
 
+#### GET optional parameters  `id`, `name`,`categories` `limit`,`offset`
+- `id=list` return only traits having the id or ids provided (ex `id=1,2,3,10`);
+- `name=string` return only traits having the `export_name` as indicated (ex `name=DBH`)
+- `language=mixed` return name and descriptions of both trait and categories in the specified language. Values may be 'language_id', 'language_code' or 'language_name';
+- `bibreference=boolean` - if true, include the [BibReference](Auxiliary-Objects#bibreferences) associated with the trait in the results;
+- `limit` and `offset` are SQL statements to limit the amount. See [Common endpoints](endpoint_common).
+
+
+#### Fields obtained with 'simple' option
+- `id` - the id of the Trait in the odbtraits table (a local database id)
+- `type` - the numeric code defining the Trait type
+- `typename` - the name of the Trait type
+- `export_name` - the export name value
+- `unit` - the unit of measurement for Quantitative traits
+- `range_min` - the minimum allowed value for Quantitative traits
+- `range_max` - the maximum allowed value for Quantitative traits
+- `link_type` - if Link type trait, the class of the object the trait links to (currently only Taxon)
+- `name` - the trait name in the language requested or in the default language
+- `description` - the trait description in the language requested or in the default language
+- `value_length` - the length of values allowed for Spectral trait types
+- `objects` - the types of object the trait may be used for, separated by pipe '|'
+- `categories` - each category is given for Categorical and Ordinal traits, with the following fields (the category `id`, `name`, `description` and `rank`). Ranks are meaningfull only for ORDINAL traits, but reported for all categorical traits.
+
+
+#### POST format
+The POST method allows you to batch import traits into the database and is designed for transfering data to OpenDataBio from other systems, including Trait Ontologies databases.  When entering few traits, it is **strongly recommended** that you enter traits one by one using the Web Interface form and then use the GET option for ids to import measurements.
+  1. As noted under the [Trait Model](Trait-Objects#traits) description, it is important that one really checks whether a needed Trait is not already in the DataBase to avoid multiplication of redundant traits. The Web Interface facilitates this process and in a batch process that involves multiple languages, trait name comparsions become too complicated. OpenDataBio only checks for identifical `export_name`, which must be unique within the database. Note, however, that Traits should also be as specific as possible for detailed metadata annotations.  
+  1. Traits use [User Translations](Auxiliary-Objects#user_translations) for names and descriptions, allowing a multilanguage, so names and descriptions of Trait and Trait Categories together with the respective language key (or id)
+
+See also the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Traits](Trait-Objects#traits).
+The following fields are allowed in a post API:
+
+
+**Fields for the POST method**:
+* `export_name=string` - a short name for the Trait, which will be used during data exports, are more easily used in trait selection inputs in the web-interface and also during data analyses outside OpenDataBio. **Export names must be unique** and have no translation. Short and [CamelCase](https://en.wikipedia.org/wiki/Camel_case) export names are recommended. Avoid diacritics (accents), special characters, dots and even white-spaces. **required**
+* `type=number` - a numeric code specifying the trait type. See the [Trait Model](Trait-Objects#traits) for a full list. **required**
+* `objects=list` - a list of the [Core objects](Core-Objects) the trait is allowed to be measured for. Possible values are 'Plant', 'Voucher', 'Location' and/or 'Taxon', singular and case sensitive. Ex:  "{'object': 'Plant,Voucher'}"; **required**
+* `name=json` - see translations below; **required**
+* `description=json` - see translations below; **required**
+* **Trait specific fields**:
+  * `units=string` - required for quantitative traits only (the unit o measurement). recommened to use English standards and full words, e.g. ('meters' instead of just 'm')
+  * `range_min=number` - optional for quantitative traits. specify the minimum value allowed as a Trait [Measurement](Trait-Objects#measurements)
+  * `range_max=number` - optional for quantitative. maximum allowed value for the trait.
+  * `categories=json` - **required for categorical and ordinal traits**; see translations below
+* `bibreference=number` - the id of a [BibReference](Auxiliary-Objects#bibreferences) object from which the trait definition and or trait categories are based upon.
+
+#### translations
+* Fields `name`, `description` must have the following structure to account for  [User Translations](Auxiliary-Objects#user_translations). They should be a list with the language as 'keys'. For example a `name` field may be informed as:
+  * using the Language code as keys: `{"en":"Diameter at Breast Height","pt":"Di\u00e2metro a Altura do Peito"}`
+  * or using the Language ids as keys:  `{"1":"Diameter at Breast Height","2":"Di\u00e2metro a Altura do Peito"}`.
+  * or using the Language names as keys:  `{"English":"Diameter at Breast Height","Portuguese":"Di\u00e2metro a Altura do Peito"}`.
+* Field `categories` must include for each category+rank+lang the following fields:
+  * `lang=mixed` - the id, code or name of the language of the translation, **required**
+  * `name=string` - the translated category name  **required** (name+rank+lang must be unique)
+  * `rank=number` - the rank for ordinal traits; for non-ordinal, rank is important to indicate the same category across languages, so may just use 1 to number of categories in the order you want. **required**
+  * `description=string` - optional for categories, a definition of the category.
+  * Example:
+    ```
+      [
+        {"lang":"en","rank":1,"name":"small","description":"smaller than 1 cm"},
+        {"lang":"pt","rank":1,"name":"pequeno","description":"menor que 1 cm"}
+        {"lang":"en","rank":1,"name":"big","description":"bigger than 10 cm"},
+        {"lang":"pt","rank":1,"name":"grande","description":"maior que 10 cm"},
+      ]
+    ```
+* Valid languages may be retrieved with the [Language API](#endpoint_languages).
 
 
 
 <a name="endpoint_vouchers"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+***
 ### Vouchers
-The `vouchers` endpoints interact with the [Voucher](core_objects#vouchers) table. Their basic usage is getting and importing voucher specimens into the database.
+The `vouchers` endpoints interact with the [Voucher](Core-Objects#vouchers) table. Their basic usage is getting and importing voucher specimens into the database.
 
-<br>
+
+
 #### GET parameters `id`, `number`, `plant`, `location`, `collector`, `taxon`, `project`, `dataset`, `limit`, `offset`
 * `id=list` return only vouchers having the id or ids provided (ex `id=1,2,3,10`)
 * `number=string` returns only vouchers for the informed collector number (but is a string and may contain non-numeric codes)
@@ -499,10 +605,11 @@ The `vouchers` endpoints interact with the [Voucher](core_objects#vouchers) tabl
 * `with_identification=boolean` - if set to 1, include the identification object in the result.
 * `with_herbaria=boolean` - must be used with `fields=all`, if set to true (1), returns the related herbaria table
 * `with_collectorsa=boolean` - must be used with `fields=all`, if set to true (1), returns the related collectors table
-<br>
-Notice that some search fields (taxon, location, project and collector) may be specified as names - abbreviation, fullnames and emails in the case of collector - (eg, "taxon=Euterpe edulis") or as database ids. If a list is specified for one of these fields, all items of the list must be of the same type.
 
-<br>
+
+Notice that some search fields (taxon, location, project and collector) may be specified as names - abbreviation, fullnames and emails in the case of collector - (eg, "taxon=Euterpe edulis") or as database ids. If a list is specified for one of these fields, **all items of the list must be of the same type**.
+
+
 #### Fields obtained with 'simple' option
 * `id` - the Voucher id in the vouchers table (local database id)
 * `fullname` - the unique database combination collectorMain+Number;
@@ -526,17 +633,20 @@ Notice that some search fields (taxon, location, project and collector) may be s
 * `coordinatesWKT` - coordinates in [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation; e.g. 'POINT(long lat)'
 * `plantTag` - if parent is plant, then the Plant fullname, which is the combination of Location+FieldTag
 * `projectName` - the project the voucher belongs too
-* `notes` - a note that has been associated with the voucher (does not include notes assigned as measurements values, these should be gathered through the [Measurements API Endpoints](api#measurements).
+* `notes` - a note that has been associated with the voucher (does not include notes assigned as measurements values, these should be gathered through the [Measurements API Endpoints](API#measurements).
 
-<br>
+
+
 #### POST format
-<br>
-See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Vouchers](core_objects#vouchers). The main validation restriction is that `main_collector+number` must be unique in the database and duplicated values are not allowed.
+
+
+See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Vouchers](Core-Objects#vouchers). The main validation restriction is that `main_collector+number` must be unique in the database and duplicated values are not allowed.
 The following fields are allowed in a post API:
-<br>
+
+
 * `number=string` - the *main collector number*  **required**
 * `collector=mixed` - either ids or abbreviations of persons. At least one value is **required**, which is the main collector. When multiple values are informed, then the first is the *main collector*. Ex: "collector=9,10" or "collector=Mori, S.A."
-* `date=YYYY-MM-DD or array` - the date the voucher was collected, for historical records you may inform an incomplete string in the form "1888-05-NA" or "1888-NA-NA" when day and/or month are unknown. You may also inform as array "date={ 'year' : 1888, 'month': 5}". OpenDataBio deals with incomplete dates, see the [IncompleteDate Model](auxiliary_objects#incompletedate). At least year, however, is **required**
+* `date=YYYY-MM-DD or array` - the date the voucher was collected, for historical records you may inform an incomplete string in the form "1888-05-NA" or "1888-NA-NA" when day and/or month are unknown. You may also inform as array "date={ 'year' : 1888, 'month': 5}". OpenDataBio deals with incomplete dates, see the [IncompleteDate Model](Auxiliary-Objects#incompletedate). At least year, however, is **required**
 * `project=number` - id of the Project the voucher belongs to. **required**
 * `parent_type=string` - either 'Plant' or 'Location' case sensitive, as vouchers can be linked to either of these objects
 * `parent_id=number` - the id of the `parent_type` object that the voucher belongs to. If informed requires `parent_type` and will ignore `location`, `plant` and `plant_tag`
@@ -556,10 +666,11 @@ The following fields are allowed in a post API:
     * A array in which each element contains a single herbarium record:
         * `herbarium_code=string` - one of id, acronym, name or irn of a single herbarium;
         * `herbarium_number=string` - the voucher number or id in the herbarium;
-        * `herbarium_type=numeric` - numeric code representing the kind of nomenclatural type the voucher represents in this repository. The default value is 0 (Not a Type). See [nomenclatural types list](api#nomenclaturaltypes)
+        * `herbarium_type=numeric` - numeric code representing the kind of nomenclatural type the voucher represents in this repository. The default value is 0 (Not a Type). See [nomenclatural types list](API#nomenclaturaltypes)
 * `created_at` and `updated_at` - may also be added in the import, if you want to preserve some tracking history when transfering data from a different platform.
 
-<br>
+
+
 <a name='nomenclaturaltypes'></a>
 
 |**Nomenclatural types numeric does**               |
@@ -576,8 +687,8 @@ The following fields are allowed in a post API:
 
 
 <a name="endpoint_jobs"></a>
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
+
+
 ### User Jobs
 | [userjobs](#endpoint_jobs) | `GET` | Lists user Jobs | `id`, `status`|
 
@@ -589,28 +700,11 @@ The `jobs` endpoints interact with the [[UserJob|Interface-and-data-access]] tab
 
 - `status=string` return only jobs for the specified status
 
-<br>
-<larecipe-progress type="primary" :value="100"></larecipe-progress>
-<a name="api_test"></a>
-### Test the API
 
-@if(Auth::user())
+<a name="possible_errors"></a>
 
-Use the form below to test the GET API and see de results. You need to add the desired `endpoint`, specify endpoint parameters and inform your `token`.
 
-> {warning} Always use `limit=5` or other small value to see the response.
-
-<larecipe-swagger base-url="{{ env('APP_URL') }}" endpoint="api/v0/"  default-method='get' name='voucher_endpoint' id='vouchers_apitest' has-auth-header=1 ></larecipe-swagger>
-
-@else
-
-> {warning} Must be logged to use the API tester!
-
-@endif
-
-<a name="possible_erros"></a>
-<br>
-<hr>
+***
 ### Possible errors
 
 This should be an extensive list of error codes that you can receive while using the API. If you receive any other error code, please file a [bug report](https://github.com/opendatabio/opendatabio/issues)!

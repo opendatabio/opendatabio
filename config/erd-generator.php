@@ -108,10 +108,12 @@ return [
 
 
         /* bibreferences_model.png */
-        //  App\Dataset::class,
-        //  App\BibReference::class,
-        //  App\Taxon::class,
-        //  App\Measurement::class,
+        App\Dataset::class,
+        App\BibReference::class,
+        App\Taxon::class,
+        App\Measurement::class,
+        App\ODBTrait::class,
+
 
         /* persons_table.png */
         //App\TraitCategory::class,
@@ -144,12 +146,14 @@ return [
         //App\Dataset::class,
         //App\UserTranslation::class,
 
-        /* trait_model.png */
-        //App\ODBTrait::class,
-        //App\TraitCategory::class,
-        //App\TraitObject::class,
-        //App\UserTranslation::class,
-        //App\Language::class,
+        /* trait_model.png
+        App\ODBTrait::class,
+        App\TraitCategory::class,
+        App\TraitObject::class,
+        App\UserTranslation::class,
+        App\Language::class,
+        App\BibReference::class,
+        */
 
         /* identification_model */
         //App\Voucher::class,
@@ -160,12 +164,12 @@ return [
         //App\Herbaria::class,
 
         /* user translations */
-        App\UserTranslation::class,
-        App\Language::class,
-        App\Picture::class,
-        App\ODBTrait::class,
-        App\TraitCategory::class,
-        App\Tag::class,
+        //App\UserTranslation::class,
+        //App\Language::class,
+        //App\Picture::class,
+        //App\ODBTrait::class,
+        //App\TraitCategory::class,
+        //App\Tag::class,
     ],
 
     /*
@@ -244,7 +248,7 @@ return [
         //'nodesep' => 0.6,
 
 
-        /* plant_model.png and taxon_model.png*/
+        /* plant_model.png and taxon_model.png trait_model.png*/
         'rankdir' => 'LR',
         'ranksep' => 2,
         'nodesep' => 0.5,

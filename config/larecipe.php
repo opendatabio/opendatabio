@@ -20,7 +20,7 @@ return [
     'docs'        => [
         'route'   => 'docs',
         'path'    => '/resources/docs',
-        'landing' => 'overview',
+        'landing' => 'Home',
         'middleware' => ['web'],
         'baseurl' => env('APP_URL')
     ],

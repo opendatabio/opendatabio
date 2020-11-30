@@ -1,31 +1,39 @@
-The OpenDatabBio project aims to provide a flexible but robust framework for storing, analyzing and exporting biological data. It is specially focused on plant biology, but it can also be used for other taxa. The main features of this database include the ability to define custom [[Traits|Trait]] that can be measured on individual marked plants, herbarium specimens, taxonomic entities and localities. Data can be organized in Datasets and Projects, and have different types of users and data access permissions.  Tools to data management, exports and imports, are provided along with a R package and API services. You can check the full [[Data Model]] specification.
+* [**Home**](#)
+* [**Core Objects**](Core-Objects)
+* [**Auxiliary Objects**](Auxiliary-Objects)
+* [**Trait Objects**](Trait-Objects)
+* [**Data Access Objects**](Data-Access-Objects)
+* [**API**](API)
 
-The code and documentation are being written in English to expand the possibilities of cooperation with other research groups, but the interface should be translatable to other languages, most notably Portuguese and Spanish.
+# OpenDataBio Documentation
 
-The project should have a main module for querying the database directly, including new data and editing or deleting existing data. The data entry on this module will consist on predetermined pages for the base objects and on flexible [[Forms|Interface and data access]] to enter used defined variables. It should also allow for flexible searches on all database objects, using the defined fields or user supplied Traits. These searches may be saved as user defined data filters. These should be detailed later (TODO).
+The OpenDatabBio is an opensource database developed to provide a flexible but robust framework to store, manage and distribute biological data. It is designed to accomodate many data types used in biological sciences and their relationships, particularly biodiversity and ecological studies, and serves as a data repository that allow users to download or request well-organized and documented research data.
 
-There will also be modules for the bulk import and export of data.
+The main features of this database include:
 
-The data import should accept csv and Excel spreadsheets, and must handle different field and numeric separators, date formats, encodings and line endings.
+1. The ability to define custom [traits](Trait-Objects#traits) of diferent types, including some special cases like Spectral Data, Colors and Links. Measurements for these traits can be from marked [plants](Core-Objects#plants), [vouchers specimens](Core-Objects#vouchers), [taxonomic entities](Core-Objects#taxons) and [locations](Core-Objects#localities).
+1. [Taxons](Core-Objects#locations) can be published or unpublished names, synonyms or valid names, and any node of the tree of life may be stored. Taxon insertion are checked through APIs to different plant, fungi and animal data sources (Tropicos, IPNI, MycoBank,ZOOBANK).
+1. [Locations](Core-Objects#locations) are stored with their Geometries, allowing location parent autodetection and spatial queries. Special location types, such as Plots, can be defined and Conservation Units are treated separetely - because they may transverse different administrative areas.
+1. Data are organized in [Datasets](Data-Access-Objects#datasets) and [Projects](Data-Access-Objects#projects), entities that have different user-access options, with administrator being able to track downloads and requests histories for datasets. These entities allow different research groups to use the same installation, having total control over their particular research data edition and access, while sharing common libraries such as Taxonomy, Locations,  Bibliographic References and Traits.
+1. Tools for data exports and imports are provided through [API services](API), along with a API client in R language, the [OpenDataBio-R package](https://github.com/opendatabio/opendatabio-r).
+1. The [Activity Model](Auditing) audits changes in any record and downloads of full datasets, which are logged for history tracking, so you know when and who changed or download something.
+1. It is an opensource software that can be customized for any special need.
 
-The data export module should allow for taxonomic filters, as well as filters by censuses, date, location and should have a helper to include all the traits contained in a Form. The data export should de-normalize measurements for categorical traits with multiple select. There should be a tool for exporting all types of objects, including taxonomic reports, plant data and voucher data.
 
-The data access API should be documented and allow for recovery and insertion of data. This is specially relevant for the companion R package, and for importing data via Open Data Kit forms (see below).
+<a name="data_model"></a>
+***
+## Data Model
 
-There should be a provision for including spectral data (one value of reflection or absorption for each wavelength) and molecular data (one id (genebank?), one marked and the sequence) in the database.
+The facilitate data model understanding, as it includes many tables and complex relationships, the model is here divided as follows:
 
-Other than the core facilities of the system, more functionality may be provided as plugins. An extensive documentation will be provided on how to specify a plugin.
+* [Core Objects](Core-Objects) -  those that recieve measurements from custom traits.
+* [Trait Objects](Trait-Objects) - custom traits and measurements models.
+* [Auxiliary Objects](Auxiliary-Objects) - libraries of common use like Persons and Bibliographic references, and classes related to multilingual translations.
+* [Data Access Objects](Data-Access-Objects) - objects that facilitate data management and data access permissions definitions
+* [Auditing](Auditing) - audits for changes in data values and change history tracking.
 
-A companion R package is also being developed to improve the data import and export routines. The data validation for importing should consider: ignoring whitespace difference; ignoring accents; ignoring case; stemming of words and fuzzy matching, with the later being suggested as edits. It should be allowed to save the import job in any step and returning later with no data loss. Trimming and 'nulling' are being handled by [[Laravel|https://laravel.com/docs/5.4/requests#input-trimming-and-normalization]]. Fuzzy Matching is being implemented by a longest matching block heuristics, based on Ratcliff & Obershelp (1980) via the [[FuzzyWuzzy|https://github.com/wyndow/fuzzywuzzy]] library. 
 
-## Authors
+Data model pages include Entity Relationships Diagrams (ERD) to facilitate understanding how the models and their tables interact in both the Laravel classes definitions and in the SQL database structure. These diagrams were generated automatically from reading the OpenDataBio script files using [Laravel ER Diagram Generator](https://github.com/beyondcode/laravel-er-diagram-generator), so they express the direct and indirect relationships defined in the Data Model. Some relationships are also expressed for clarity by custom views generated in the PhpMyAdmin designer tool.
 
-**Coordinator:** 
-- Alberto Vicentini (vicentini.beto@gmail.com, alberto.vicentini@inpa.gov.br) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil
 
-**Collaborators:**
-- Andre Chalom (andrechalom@gmail.com) - Main developer 
-- Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
-
-## Funding & Support
-This project has received support from [Natura Campus](http://www.naturacampus.com.br/cs/naturacampus/home).
+<br><br><br><br><br>
