@@ -25,7 +25,7 @@ class LanguageController extends Controller
 
         $fields = ($request->fields ? $request->fields : 'simple');
 
-        $languages = $this->setFields($languages, $fields, ['id','name']);
+        $languages = $this->setFields($languages, $fields, ['id','name','code']);
 
         return $this->wrap_response($languages);
     }
