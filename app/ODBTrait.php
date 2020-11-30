@@ -87,6 +87,11 @@ class ODBTrait extends Model
         ];
     }
 
+    public static function getLinkTypeBaseName()
+    {
+       return collect(self::LINK_TYPES)->map(function($link){ return class_basename($link);})->toArray();
+    }
+
     public function getObjectKeys()
     {
         $ret = [];
@@ -96,6 +101,9 @@ class ODBTrait extends Model
 
         return $ret;
     }
+
+
+
 
     // for input validation
     public static function rules($id = null, $merge = [])
@@ -109,7 +117,7 @@ class ODBTrait extends Model
                 'type' => 'required|integer',
                 'objects' => 'required|array|min:1',
                 'objects.*' => 'required|integer|min:0|max:'.(count(self::OBJECT_TYPES) - 1),
-                'unit' => 'required_if:type,0,1',
+                'unit' => 'required_if:type,0,1,8',
                 'cat_name' => 'array|required_if:type,2,3,4',
                 'cat_name.1' => 'required_if:type,2,3,4',
                 'cat_name.1.1' => 'required_if:type,2,3,4',
@@ -210,10 +218,14 @@ class ODBTrait extends Model
         })->toArray());
 
         // Set fields from quantitative traits
-        if (in_array($this->type, [self::QUANT_INTEGER, self::QUANT_REAL])) {
+        if (in_array($this->type, [self::QUANT_INTEGER, self::QUANT_REAL,self::SPECTRAL])) {
             $this->unit = $request->unit;
             $this->range_max = $request->range_max;
             $this->range_min = $request->range_min;
+            if ($this->type == self::SPECTRAL)
+            {
+               $this->value_length = $request->value_length;
+            }
         } else {
             $this->unit = null;
             $this->range_max = null;
@@ -247,13 +259,6 @@ class ODBTrait extends Model
             $this->link_type = $request->link_type;
         } else {
             $this->link_type = null;
-        }
-        //Set spectral type
-        if (in_array($this->type, [self::SPECTRAL]))
-        {
-           $this->range_max = $request->range_max;
-           $this->range_min = $request->range_min;
-           $this->value_length = $request->value_length;
         }
 
         // Set object types (can change if no measurements)
@@ -297,6 +302,11 @@ class ODBTrait extends Model
     public function object_types()
     {
         return $this->hasMany(TraitObject::class, 'trait_id');
+    }
+
+    public function getObjectsAttribute()
+    {
+      return implode(' | ',$this->object_types()->pluck('object_type')->toArray());
     }
 
     public function details()
@@ -384,6 +394,11 @@ class ODBTrait extends Model
             $ret = range($min,$max,$step);
         }
         return $ret;
+    }
+
+    public function bibreference()
+    {
+        return $this->belongsTo('App\BibReference', 'bibreference_id');
     }
 
 }

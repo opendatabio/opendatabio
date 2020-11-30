@@ -51,6 +51,14 @@
 </ul>
 @endif
 
+@if ($odbtrait->bibreference_id)
+		    <p><strong>
+@lang('messages.bibreference')
+: </strong>{!! $odbtrait->bibreference->rawLink() !!}
+</p>
+@endif
+
+
 @if ( in_array( $odbtrait->type, [\App\ODBTrait::QUANT_INTEGER, \App\ODBTrait::QUANT_REAL]))
     @if ($odbtrait->unit)
     <p><strong>
@@ -63,7 +71,7 @@
     <p><strong>
     @lang('messages.range')
     : </strong>
-    {{ $odbtrait->rangeDisplay }}
+    {!! $odbtrait->rangeDisplay !!}
     </p>
     @endif
 @endif

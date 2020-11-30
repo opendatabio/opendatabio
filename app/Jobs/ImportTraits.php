@@ -60,6 +60,13 @@ class ImportTraits extends AppJob
         if (!$this->validateTraitType($odbtrait)) {
             return false;
         }
+
+        //if type is a categorical or ordinal, validate category languages for category names which must be informed
+        if (in_array($odbtrait['type'],[ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
+          if (!$this->validateCategories($odbtrait)) {
+              return false;
+          }
+        }
         //check link_types
         if (!$this->validateObjectType($odbtrait)) {
             return false;
@@ -68,42 +75,108 @@ class ImportTraits extends AppJob
     }
 
     //function to validade name array with translation language_ids
-    private function validateLanguageKeys($names) {
-      //name is an array with keys being language ids or codes
-      $validids = DB::table('languages')->pluck('id')->toArray();
-      $validcodes = DB::table('languages')->pluck('code')->toArray();
-      $validkeys = 1;
+    private function validateLanguageKeys(&$names) {
+      //name is an array with keys being language ids or codes or names (case sensitive)
+      $result = array();
       foreach($names as $key => $name) {
+         //if there are multiple languages, name is an array with each language also an array
          if (is_array($name)) {
             foreach($name as $subkey => $subname) {
-              if (!in_array($subkey,$validids) && !in_array($subkey,$validcodes)) {
-                $validkeys = null;
+              $lang = ODBFunctions::validRegistry(Language::select('id'),$subkey, ['id', 'code','name']);
+              if ($lang) {
+                //place id as code if found language
+                $result[] = [$lang->id => $subname];
               }
             }
          } else {
-           if (!in_array($key,$validids) && !in_array($key,$validcodes)) {
-             $validkeys = null;
+           //name is a single language
+           $lang = ODBFunctions::validRegistry(Language::select('id'),$key, ['id', 'code','name']);
+           if ($lang) {
+             //place id as code if found language
+             $result[] = [$lang->id => $name];
            }
          }
       }
-      return $validkeys;
+      if (count($result)>0) {
+        return null;
+      }
+
+      //modify and retur true
+      $names = $result;
+      return true;
+    }
+
+    private function validateCategoriesTranslations(&$categories,$traitType)
+    {
+
+      $result = array();
+      //each category may have 'lang', 'name', 'description' and 'rank'
+      //name.rank.lang must be unique;
+      $mustbeunique = array();
+      foreach($categories as $category) {
+          if (!$this->hasRequiredKeys(['lang','name','rank'], $category)) {
+            return false;
+         }
+         //rank is mandatory because it links different translations and must be number
+         if (!is_numeric($category['rank'])) {
+           return false;
+         }
+         $rank = $category['rank'];
+         if (!array_key_exists('rank',$result)) {
+           $result[$rank] = array();
+         }
+         $lang = ODBFunctions::validRegistry(Language::select('id'),$category['lang'], ['id', 'code','name']);
+         if ($lang) {
+            //if language is found
+            $result[$rank] = ['translation_type' => UserTranslation::NAME, 'translation' => $category['name'], 'lang' => $lang->id];
+            //description is not mandatory for categories
+            if (array_key_exists('description',$category)){
+             $result[$rank] = ['translation_type' => UserTranslation::DESCRIPTION, 'translation' => $category['description'], 'lang' => $lang->id];
+            }
+            $mustbeunique[] = $category['name'].$lang->id.$rank;
+        } else {
+            return false;
+        }
+      }
+      //if there are duplicated values dont import
+      if (count($mustbeunique) > count(array_unique($mustbeunique))) {
+        return false;
+      }
+
+      //modify and return true
+      $categories = $result;
+      return true;
+    }
+
+    protected function validateCategories(&$odbtrait) {
+      if (null == $odbtrait['categories']) {
+        $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name']." requires 'categories' translations, each having the as possible fields 'lang','name','description','rank'");
+        return false;
+      }
+      //validate categories
+      if (!is_array($odbtrait['categories']) or  !Self::validateCategoriesTranslations($odbtrait['categories'])) {
+        $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name']." has some problem with the format of the categories field. Must have for each language: 'lang', 'name' and 'rank', and 'description' is optional. Category.Rank.Language must be unique");
+        return false;
+      }
+      return true;
     }
 
 
     //check if trait has a name and a description and that language is specified
+    //modifie name and description to an import format with ids as keys.
     protected function validateNameTranslations(&$odbtrait) {
       if (null == $odbtrait['name'] or null === $odbtrait['description']) {
-        $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name'].' requires name and description, and these must to be arrays with names corresponding to registered language ids or codes');
+        $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name'].' requires name and description');
         return false;
       }
       //if name is not array and keys do not matck registered languages
       if (!is_array($odbtrait['name']) || null === Self::validateLanguageKeys($odbtrait['name'])) {
-        $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name']." requires 'name' to be an array with names corresponding to registered language ids or codes");
+        $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name']." requires 'name' to be an array with keys corresponding to registered language ids, codes or names");
         return false;
       }
       //if name is not array and keys do not matck registered languages
       if (!is_array($odbtrait['description']) || null === Self::validateLanguageKeys($odbtrait['description'])) {
-        $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name']." requires 'description' to be an array with names corresponding to registered language ids or codes");
+        $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name']." requires 'description' to be an array with keys corresponding to registered language ids, codes or names");
         return false;
       }
       //check length and descriptions match
@@ -122,17 +195,51 @@ class ImportTraits extends AppJob
           return false;
         }
         //check if info for quantitative traits was informed
-        if (in_array($odbtrait['type'], [ODBTrait::QUANT_INTEGER, ODBTrait::QUANT_REAL])) {
-          if (!array_key_exists('unit',$odbtrait) || !array_key_exists("range_max",$odbtrait) || !array_key_exists("range_min",$odbtrait)) {
+        if (in_array($odbtrait['type'], [ODBTrait::QUANT_INTEGER, ODBTrait::QUANT_REAL, ODBTrait::SPECTRAL])) {
+          if (!array_key_exists('unit',$odbtrait)) {
             //null === $odbtrait['unit'] or null === $odbtrait['range_max'] or null === $odbtrait['range_min']) {
-            $this->skipEntry($odbtrait, 'Missing unit, range_min or range_max for trait '.$odbtrait['export_name'].'Mandatory for quantitative traits');
+            $this->skipEntry($odbtrait, 'Missing unit for trait '.$odbtrait['export_name'].'Mandatory for quantitative and spectral traits');
             return false;
           }
-          if (!is_numeric($odbtrait['range_max']) or !is_numeric($odbtrait['range_min'])) {
-            $this->skipEntry($odbtrait, 'Range_max and range_min must be numeric. Trait '.$odbtrait['export_name']);
-            return false;
+          if (isset($odbtrait['range_max']) and isset($odbtrait['range_min'])) {
+            if (!is_numeric($odbtrait['range_max']) or !is_numeric($odbtrait['range_min'])) {
+              $this->skipEntry($odbtrait, 'Range_max and range_min must be numeric. Trait '.$odbtrait['export_name']);
+              return false;
+            }
+          } else {
+            if ($odbtrait['type'] == ODBTrait::SPECTRAL) {
+              $this->skipEntry($odbtrait, 'Range_max and range_min must be informed for spectral Trait '.$odbtrait['export_name']);
+              return false;
+            }
+          }
+          if ($odbtrait['type'] == ODBTrait::SPECTRAL) {
+            if (!isset($odbtrait['value_length']) or !is_numeric($odbtrait['value_length'])) {
+              $this->skipEntry($odbtrait, 'A numeric value_length must be informed for spectral Trait '.$odbtrait['export_name']);
+              return false;
+            }
           }
         }
+
+
+        //LINK TYPE TRAITS VALIDATION
+        if ($odbtrait['type'] == ODBTrait::LINK) {
+          if (!array_key_exists('link_type',$odbtrait)) {
+            //null === $odbtrait['unit'] or null === $odbtrait['range_max'] or null === $odbtrait['range_min']) {
+            $this->skipEntry($odbtrait, 'Missing link_type for trait '.$odbtrait['export_name'].'Mandatory for LINK traits');
+            return false;
+          }
+          if (!in_array($odbtrait['link_type'], ODBTrait::LINK_TYPES) and !in_array($odbtrait['link_type'],ODBTrait::getLinkTypeBaseName())) {
+            $this->skipEntry($odbtrait, 'Link_type for trait '.$odbtrait['export_name'].' is invalid');
+            return false;
+          }
+          if (in_array($odbtrait['link_type'],ODBTrait::getLinkTypeBaseName())) {
+            $odbtrait['link_type'] = ODBTrait::LINK_TYPES[array_search($odbtrait['link_type'],$tr)];
+          }
+        }
+
+
+
+
         //check for categorical values
         if (in_array($odbtrait['type'], [ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
             //minimally requires a category name to be a valid categorical trait
@@ -164,77 +271,79 @@ class ImportTraits extends AppJob
     }
 
     protected function validateObjectType(&$odbtrait) {
-      //convert to array if only one value informed
+      //this may be a string separated by commas or an array
+      //convert to array if not array
       if (!is_array($odbtrait['objects'])) {
-        $odbtrait['objects'] = array($odbtrait['objects']);
+        $odbtrait['objects'] = explode(','$odbtrait['objects']);
       }
-      //format with key values
-      foreach($odbtrait['objects'] as $key => $object) {
-         if (in_array($object,array("Plant","Voucher","Location","Taxon"))) {
-           $odbtrait['objects'][$key] = array_search($object,array("Plant","Voucher","Location","Taxon"));
-         } else {
-           //then fail  as object type is invalid
-           $this->skipEntry($odbtrait, 'ObjectType '.$object.' for trait '.$odbtrait['export_name'].' is invalid!');
-           break;
-           return false;
-         }
+      $objects_informed = $odbtrait['objects'];
+      //values are valid?
+      $validobjectsClass = ODBTrait::OBJECT_TYPES;
+      $validobjectsName = collect(ODBTrait::OBJECT_TYPES)->map(function($obj) { return str_replace("App\\","",$obj);});
+      $validobjects = array_combine($validobjectsName,$validobjectsClass);
+      $objects = array_filter(
+          $validobjects,
+          function ($key) use ($objects_informed) {
+              return in_array($key, $objects_informed);
+          },
+          ARRAY_FILTER_USE_KEY
+      );
+      if (count($objects)>0) {
+        $odbtrait['objects'] = array_values($objects);
+        return true;
       }
-      return true;
+
+      //then fail  as object type is invalid
+       $this->skipEntry($odbtrait, 'ObjectType '.$object.' for trait '.$odbtrait['export_name'].' is invalid!');
+      return false;
+
     }
 
     public function import($odbtrait)
     {
 
       //check if already exists if so skip
-      if (ODBTrait::whereRaw('export_name = ?', [$odbtrait['export_name']])->count() > 0) {
+      if (ODBTrait::whereRaw('export_name like ?', [$odbtrait['export_name']])->count() > 0) {
           $this->skipEntry($odbtrait, ' trait '.$odbtrait['export_name'].' already in the database');
-          return;
+          return false;
       }
+      $bibreference = null;
+      if (isset($odbtrait['bibreference_id'])) {
+          $bibreference = ODBFunctions::validRegistry(BibReference::select('id'),$odbtrait['bibreference_id'],'id');
+          if (!$bibreference) {
+            $this->skipEntry($odbtrait, ' trait '.$odbtrait['export_name'].' informed bibreference id is invalid');
+            return;
+          }
+          $bibreference = $bibreference->id;
+      }
+
 
       //GET FIELD VALUES
       $export_name = $odbtrait['export_name'];
       $odbtype = $odbtrait['type'];
       $names = $odbtrait['name'];
-
-
-
-      #if (!is_array($odbtrait['name'])) {
-      #  $txt2 = "";
-      #  foreach($odbtrait['cat_name'] as $key => $val) {
-      #    $txt2 .= $key."=>";
-      #    foreach($val as $k2 => $val2) {
-      #      $txt2 .= "Sub:".$k2."=>".$val2."\n";
-      #    }
-      #  }
-      #  $txttest = Self::validateLanguageKeys($odbtrait['cat_name']);
-      #  $this->skipEntry($odbtrait, 'Trait '.$odbtrait['export_name']." o problema esta aqui".$txt2." e o teste=".$txttest."  ATE AQUI");
-      #  return false;
-      #}
-
-
-
       $descriptions = $odbtrait['description'];
+
       $objects = $odbtrait['objects'];
       // Set fields from quantitative traits
-      if (in_array($odbtype, [ODBTrait::QUANT_INTEGER, ODBTrait::QUANT_REAL])) {
+      if (in_array($odbtype, [ODBTrait::QUANT_INTEGER, ODBTrait::QUANT_REAL, ODBTrait::SPECTRAL])) {
           $unit = $odbtrait['unit'];
-          $range_max = $odbtrait['range_max'];
-          $range_min = $odbtrait['range_min'];
+          $range_max = isset($odbtrait['range_max']) ? $odbtrait['range_max'] : null;
+          $range_min = isset($odbtrait['range_min']) ? $odbtrait['range_min'] : null;
       } else {
         $unit = null;
         $range_max = null;
         $range_min = null;
       }
+      $link_type = null;
+      if (in_array($odbtype, [ODBTrait::LINK])) {
+        $link_type = $odbtrait['link_type'];
+      }
 
-      // Set link type
-      //if (in_array($this->type, [self::LINK])) {
-      //    $this->link_type = $request->link_type;
-      //} else {
-      //    $this->link_type = null;
-      //}
-
-      $cat_names = array_key_exists('cat_name', $odbtrait) ? $odbtrait['cat_name'] : null;
-      $cat_descriptions = array_key_exists('cat_description', $odbtrait) ? $odbtrait['cat_description'] : null;
+      $value_length = null;
+      if (in_array($odbtype, [ODBTrait::SPECTRAL])) {
+        $link_type = $odbtrait['value_length'];
+      }
 
       //create new
       $odbtrait = new ODBTrait([
@@ -243,63 +352,38 @@ class ImportTraits extends AppJob
           'unit' => $unit,
           'range_max' => $range_max,
           'range_min' => $range_min,
+          'value_length' => $value_length,
+          'link_type' => $link_type,
+          'bibreference_id' => $bibreference,
       ]);
-      //save name translations
+      //save trait
       $odbtrait->save();
-      foreach ($objects as $key) {
-        $odbtrait->hasMany(TraitObject::class, 'trait_id')->create(['object_type' => ODBTrait::OBJECT_TYPES[$key]]);
+
+      //save allowed objects
+      foreach ($objects as $object) {
+        $odbtrait->hasMany(TraitObject::class, 'trait_id')->create(['object_type' => $object]);
       }
       $odbtrait->save();
 
       //SAVE name and category VIA translations
 
-      //get ids and codes from language table
-      $validids = DB::table('languages')->pluck('id')->toArray();
-      $validcodes = DB::table('languages')->pluck('code')->toArray();
-
       //save trait name and descriptions
-      foreach ($names as $key => $translation) {
-          $lang = $key;
-          if (in_array($key,$validcodes)) {
-            $lang = $validids[array_search($key,$validcodes)];
-          }
+      foreach ($names as $lang => $translation) {
           $odbtrait->setTranslation(UserTranslation::NAME, $lang, $translation);
       }
-      foreach ($descriptions as $key => $translation) {
-          $lang = $key;
-          if (in_array($key,$validcodes)) {
-            $lang = $validids[array_search($key,$validcodes)];
-          }
+      foreach ($descriptions as $lang => $translation) {
           $odbtrait->setTranslation(UserTranslation::DESCRIPTION, $lang, $translation);
       }
-      $odbtrait->save();
-
 
       //save categories for categorical and ordinal
       if (in_array($odbtype, [ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
-          foreach($cat_names as $rank => $cat_name) {
-              $cat = $odbtrait->hasMany(TraitCategory::class, 'trait_id')->create(['rank' => $rank+1]);
-              foreach ($cat_name as $key => $translation) {
-                $lang = $key;
-                if (in_array($key,$validcodes)) {
-                  $lang = $validids[array_search($key,$validcodes)];
-                }
-                $cat->setTranslation(UserTranslation::NAME, $lang, $translation);
+          foreach($categories as $rank => $translations) {
+              $cat = $odbtrait->hasMany(TraitCategory::class, 'trait_id')->create(['rank' => $rank]);
+              foreach ($translations as $translation) {
+                $cat->setTranslation($translation['translation_type'],$translation['lang'],$translation['translation']);
               }
-              //descriptions are not required for categories
-              //if (null === $cat_descriptions) {
-              $cat_description = $cat_descriptions[$rank];
-              if (is_array($cat_description)) {
-                foreach ($cat_description as $key => $translation) {
-                  $lang = $key;
-                  if (in_array($key,$validcodes)) {
-                    $lang = $validids[array_search($key,$validcodes)];
-                  }
-                  $cat->setTranslation(UserTranslation::DESCRIPTION, $lang, $translation);
-                }
-              }
+              $cat->save();
           }
-          $cat->save();
       }
       $this->affectedId($odbtrait->id);
       return;
