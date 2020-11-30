@@ -35,13 +35,6 @@
 </p>
 @endif
 
-@if ($dataset->bibreference_id)
-		    <p><strong>
-@lang('messages.dataset_bibreference')
-: </strong>{!! $dataset->reference->rawLink() !!}
-</p>
-@endif
-
 @if ($dataset->tags)
 <p><strong>
 @lang('messages.tagged_with')
