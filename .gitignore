@@ -1,7 +1,7 @@
 /node_modules
 /public/hot
 /public/storage
-/public/downloads_temp
+/public/downloads_temp/*
 /public/fonts
 /public/js/app.js.LICENSE.txt
 /storage/*.key
