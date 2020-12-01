@@ -31,6 +31,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         //delete prepared downloads older than 15 days
+        /*
         $schedule->command(
           collect(File::files(public_path('downloads_temp')))->each(function($file) {
               if ($file->getMTime() < now()->subdays(15)->getTimeStamp()) {
@@ -39,7 +40,7 @@ class Kernel extends ConsoleKernel
              })
           )
           ->dailyAt('04:00');
-
+          */
 
         // $schedule->command('inspire')
         //          ->hourly();
