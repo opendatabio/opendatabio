@@ -8,8 +8,10 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Auth;
 use Log;
+use File;
 
 class UserJob extends Model
 {
@@ -85,4 +87,6 @@ class UserJob extends Model
 
         return $userjob->id;
     }
+
+
 }

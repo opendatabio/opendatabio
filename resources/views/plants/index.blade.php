@@ -55,11 +55,6 @@
 @lang('messages.create')
             </a>
           </div>
-            <div class="col-sm-6">
-            <button class="btn btn-success" id='batch_identify'>
-              @lang('messages.plants_batch_identify')
-            </button>
-            </div>
           </div>
         </div>
 @endcan
@@ -221,8 +216,48 @@
                         @lang('messages.plants')
                     </div>
                     <div class="panel-body">
+                      <div class="col-sm-3">
+                        @can ('create', App\Plant::class)
+                        <button class="btn btn-success" id='batch_identify'>
+                          @lang('messages.plants_batch_identify')
+                        </button>
+                        @endcan
+                        <button class="btn btn-primary" id='exports'>
+                          @lang('messages.export_button')
+                        </button>
+                      </div>
+
+                      <!--- EXPORT FORM hidden -->
+                      <div class="col-sm-6" id='export_pannel' hidden>
+                        <form action="{{ url('exportdata')}}" method="POST" class="form-horizontal" id='export_form'>
+                        <!-- csrf protection -->
+                          {{ csrf_field() }}
+                        <!--- field to fill with ids to export --->
+                        <input type='hidden' name='export_ids' id='export_ids' value='' >
+                        <input type='hidden' name='object_type' value='Plant' >
+                          <input type="radio" name="filetype" checked value="csv" >&nbsp;<label>CSV</label>
+                          &nbsp;&nbsp;
+                          <input type="radio" name="filetype" value="ods">&nbsp;<label>ODS</label>
+                          &nbsp;&nbsp;
+                          <input type="radio" name="filetype" value="xlsx">&nbsp;<label>XLSX</label>
+                          &nbsp;&nbsp;
+                          &nbsp;&nbsp;
+                          <input type="radio" name="fields" value="all">&nbsp;<label>all</label>
+                          &nbsp;&nbsp;
+                          <input type="radio" name="fields" checked value="simple">&nbsp;<label>simple</label>
+                          &nbsp;&nbsp;
+                          <a data-toggle="collapse" href="#hint_exports" class="btn btn-default">?</a>
+                          <button type='button' class="btn btn-default" id='export_sumbit'>@lang('messages.submit')</button>
+                      </form>
+                    </div>
+                    <div class="col-sm-12" id='hint_exports' hidden>
+                      <br>
+                      @lang('messages.export_hint')
+                    </div>
+                  </div>
+                  <div class="panel-body">
                       {!! $dataTable->table([],true) !!}
-                </div>
+                  </div>
                 </div>
         </div>
     </div>
@@ -292,7 +327,6 @@ $('#batch_identify').on('click', function(e){
 });
 
 
-
 $('#submit_batch_identifications').on('click',function(e){
     //check if mandatory fields are filled
     var table =  $('#dataTableBuilder').DataTable();
@@ -313,8 +347,29 @@ $('#submit_batch_identifications').on('click',function(e){
     }
 });
 
-//$('#teste').on('click',function(){
-//});
+// Handle form submission event
+$('#exports').on('click', function(e){
+    if ($('#export_pannel').is(":visible")) {
+      $('#export_pannel').hide();
+    } else {
+      $('#export_pannel').show();
+    }
+    /* var table =  $('#dataTableBuilder').DataTable();
+    var form = this;
+    var rows_selected = table.column( 0 ).checkboxes.selected();
+    Iterate over all selected checkboxes
+    $('#batch_list').val( rows_selected.join());
+    */
+});
+$('#export_sumbit').on('click',function(e){
+  var table =  $('#dataTableBuilder').DataTable();
+  var rows_selected = table.column( 0 ).checkboxes.selected();
+  $('#export_ids').val( rows_selected.join());
+  if (rows_selected.length==0) {
+    alert('No rows selected, all records accessible by you will be exported');
+  }
+  $("#export_form"). submit();
+});
 
 
 });

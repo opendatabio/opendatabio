@@ -8,8 +8,11 @@
 namespace App\Http\Controllers;
 
 use App\UserJob;
+use Illuminate\Support\Arr;
 use Auth;
 use Lang;
+use File;
+use Storage;
 use Queue;
 
 class UserJobController extends Controller
@@ -27,6 +30,30 @@ class UserJobController extends Controller
         return view('userjobs.index', compact('jobs'));
     }
 
+
+    //delete files of user downloads and exports when deleting its job
+    //files MUST BE STORED WITH PREFIX 'job-'.$id."_whatever.*'
+    public static function deleteJobFiles($id)
+    {
+      $files = scandir(public_path('downloads_temp'));
+      $todelete = Arr::where($files, function ($value, $key) use($id) {
+          $fn = explode("_",$value);
+          if ($fn[0] == "job-".$id) {
+            return $value;
+          }
+      });
+      //should be just one file found
+      if (count($todelete)) {
+        $filename = public_path('downloads_temp/'.array_values($todelete)[0]);
+        File::delete($filename);
+        if (!file_exists($filename)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+
     public function destroy($id)
     {
         $userjob = UserJob::findOrFail($id);
@@ -41,7 +68,7 @@ class UserJobController extends Controller
             return redirect()->back()
                 ->withErrors([Lang::get('messages.fk_error')])->withInput();
         }
-
+        $file_deleted = self::deleteJobFiles($id);
         return redirect('userjobs')->withStatus(Lang::get('messages.removed'));
     }
 

@@ -34,7 +34,7 @@ class TaxonsDataTable extends DataTable
         ->addColumn('authorSimple', function ($taxon) { return $taxon->authorSimple; })
 
         ->filterColumn('fullname', function ($query, $keyword) {
-            $query->whereRaw('odb_txname(name, level, parent_id) like ?', ["%".$keyword."%"]);            
+            $query->whereRaw('odb_txname(name, level, parent_id) like ?', ["%".$keyword."%"]);
         })
         //->filterColumn('authorSimple', function ($query, $keyword) {
             //$query->where('persons.full_name', 'like', ["%{$keyword}%"])->orWhere('author', 'like', ["%{$keyword}%"]);
@@ -79,8 +79,10 @@ class TaxonsDataTable extends DataTable
             if ($taxon->mycobank) {
                 $ret .= '<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec='.$taxon->mycobank.'&Fields=All"><img src="'.asset('images/MBLogo.png').'" alt="Mycobank" width="33px"></a>';
             }
-
             return $ret;
+        })
+        ->addColumn('select_taxons',  function ($taxon) {
+            return $taxon->id;
         })
         ->rawColumns(['fullname', 'plants', 'vouchers', 'measurements', 'pictures', 'external','family']);
     }
@@ -140,6 +142,7 @@ class TaxonsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
+                'select_taxons' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'fullname' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'family' => ['title' => Lang::get('messages.family'), 'searchable' => false, 'orderable' => false],
@@ -156,16 +159,27 @@ class TaxonsDataTable extends DataTable
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
                 'buttons' => [
-                    'csv',
+                    /*'csv',
                     'excel',
-                    'print',
+                    'print',*/
                     'reload',
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1,4, 9],
+                    'targets' => [2,5, 10],
                     'visible' => false,
-                ]],
+                ],
+                [
+                  'targets' => 0,
+                  'checkboxes' => [
+                  'selectRow' => true
+                  ]
+                ]
+                ],
+                'select' => [
+                      'style' => 'multi',
+                ]
+
             ]);
     }
 

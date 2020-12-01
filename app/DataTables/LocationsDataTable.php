@@ -47,6 +47,9 @@ class LocationsDataTable extends DataTable
         ->addColumn('parent', function ($location) {
             return empty($location->parent) ? '' : $location->parent->name;
         })
+        ->addColumn('select_locations',  function ($location) {
+            return $location->id;
+        })
         ->rawColumns(['name', 'pictures', 'plants','vouchers', 'measurements','latitude','longitude']);
     }
 
@@ -92,6 +95,7 @@ class LocationsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
+                'select_locations' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'adm_level' => ['title' => Lang::get('messages.adm_level'), 'searchable' => false, 'orderable' => true],
@@ -116,8 +120,8 @@ class LocationsDataTable extends DataTable
                 'lengthMenu' => [3,5,10,15,20,50,100],
                 'buttons' => [
                     'pageLength',
-                    'csv',
-                    'excel',
+                    /*'csv',
+                    'excel',*/
                     'reload',
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
@@ -125,14 +129,23 @@ class LocationsDataTable extends DataTable
                 'autoWidth' => false,
                 'columnDefs' => [
                   [
-                    'targets' => [1, 4,7, 8,9, 10, 11, 12, 13, 14, 15],
+                    'targets' => [2, 5,8, 9, 10, 11, 12, 13, 14, 15,16],
                     'visible' => false,
-                ],
-                [
+                  ],
+                  [
                   "width" => "20%",
-                  "targets" => [0]
-                ]
+                  "targets" => [1]
+                  ],
+                  [
+                    'targets' => 0,
+                    'checkboxes' => [
+                    'selectRow' => true
+                    ]
+                  ],
               ],
+              'select' => [
+                    'style' => 'multi',
+              ]
             ]);
     }
 

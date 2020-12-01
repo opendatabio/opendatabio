@@ -151,3 +151,6 @@ Route::get('forms/{id}/prepare', 'FormController@prepare');
 Route::post('forms/{id}/fill', 'FormController@fill');
 
 Route::resource('forms', 'FormController');
+
+
+Route::post('exportdata', 'ExportController@exportData');

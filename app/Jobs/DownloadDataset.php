@@ -331,6 +331,10 @@ class DownloadDataset extends AppJob
         $zipFileName = str_replace(" ","_",$zipFileName);
         $zipFileName = $zipFileName."_".$today->toDateString().".zip";
 
+        //add job id to name to find and delete when user delete his job.
+        $jobid = "job-".$this->userjob->id;
+        $zipFileName = $jobid."_".$zipFileName;
+
         // Create ZipArchive Obj
         $zip = new ZipArchive;
         $zipfile =  $public_dir . '/' . $zipFileName;

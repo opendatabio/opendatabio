@@ -134,15 +134,17 @@ class PlantsDataTable extends DataTable
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
                 'buttons' => [
+                    /* export buttons are in views now. Print button also disable because large tables will stuck requests
                     'csv',
                     'excel',
                     'print',
+                    */
                     'reload',
                     ['extend' => 'colvis',  'columns' => ':gt(0)', 'collectionLayout' => 'two-column'],
                 ],
                 'columnDefs' => [
                   [
-                    'targets' => [ 1,5, 6, 8],
+                    'targets' => [1,5, 6, 8],
                     'visible' => false,
                   ],
                   [
