@@ -531,7 +531,7 @@ class Installer
             // Since we are inside /app directory, we need to strip it to find the correct root directory
             $DIR = dirname(__DIR__);
             echo "You should store the following lines in a file called
-                /etc/supervisor/conf.d/opendatabio-worker.conf (Debian/Ubuntu) or 
+                /etc/supervisor/conf.d/opendatabio-worker.conf (Debian/Ubuntu) or
                 /etc/supervisor.d/opendatabio-worker.ini (ArchLinux)\n(You will need root access for that)\n\n";
             echo ";--------------\n";
             echo"[program:opendatabio-worker]\n";
@@ -603,7 +603,7 @@ class Installer
             }
         }
         // Reloads the environment file
-        $this->dotenv->overload();
+        $this->dotenv->load();
     }
 
     protected function runDbUser($query)

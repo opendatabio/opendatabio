@@ -16,7 +16,8 @@ $installer->composerInstall(true);
 require "./vendor/autoload.php";
 // Now, process the options for installation and store that configuration in the .env file
 $installer->getOrCreateEnv();
-$installer->dotenv = new \Dotenv\Dotenv(__DIR__);
+//$installer->dotenv = new \Dotenv\Dotenv(__DIR__);
+$installer->dotenv = Dotenv\Dotenv::createUnsafeMutable(__DIR__);
 $installer->dotenv->load();
 $installer->processEnvFile();
 
