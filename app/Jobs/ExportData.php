@@ -11,6 +11,11 @@ use GuzzleHttp\Exception\ClientException;
 use Spatie\SimpleExcel\SimpleExcelWriter;
 use Illuminate\Support\Facades\Storage;
 use Auth;
+use App\Measurement;
+use App\Taxon;
+use App\Plant;
+use App\Location;
+use App\Voucher;
 
 class ExportData extends AppJob
 {
@@ -33,7 +38,7 @@ class ExportData extends AppJob
            $export_ids = explode(",",$data['export_ids']);
          } else {
            //if none informed export all for which  the user has access for
-           $object = app($object_type);
+           $object = app("App\\".$object_type);
            $export_ids = $object->cursor()->pluck('id')->toArray();
          }
 
