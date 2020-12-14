@@ -14,7 +14,7 @@ class DropColumnBibReferenceTableDatasets extends Migration
     public function up()
     {
         Schema::table('datasets', function (Blueprint $table) {
-          $table->dropIndex('datasets_bibreference_id_foreign');
+          $table->dropForeign('datasets_bibreference_id_foreign');
           $table->dropColumn('bibreference_id');
         });
     }
