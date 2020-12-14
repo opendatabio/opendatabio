@@ -50,6 +50,20 @@ class VoucherController extends Controller
 
         return $dataTable->with('taxon', $id)->render('vouchers.index', compact('object'));
     }
+    public function indexTaxonsProjects($id, VouchersDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Project::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'project' => $ids[1]])->render('vouchers.index', compact('object','object_second'));
+    }
+    public function indexTaxonsDatasets($id, VouchersDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Dataset::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'dataset' => $ids[1]])->render('vouchers.index', compact('object','object_second'));
+    }
 
     public function indexProjects($id, VouchersDataTable $dataTable)
     {
@@ -71,6 +85,22 @@ class VoucherController extends Controller
 
         return $dataTable->with('location', $id)->render('vouchers.index', compact('object'));
     }
+
+    public function indexLocationsProjects($id, VouchersDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Location::findOrFail($ids[0]);
+        $object_second = Project::findOrFail($ids[1]);
+        return $dataTable->with(['location' => $ids[0],'project' => $ids[1]])->render('vouchers.index', compact('object','object_second'));
+    }
+    public function indexLocationsDatasets($id, VouchersDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Location::findOrFail($ids[0]);
+        $object_second = Dataset::findOrFail($ids[1]);
+        return $dataTable->with(['location' => $ids[0],'dataset' => $ids[1]])->render('vouchers.index', compact('object','object_second'));
+    }
+
 
     public function indexPlants($id, VouchersDataTable $dataTable)
     {

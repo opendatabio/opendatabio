@@ -10,6 +10,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\DataTables\MeasurementsDataTable;
 use App\Measurement;
+use App\Project;
 use App\Plant;
 use App\Voucher;
 use App\Taxon;
@@ -40,16 +41,49 @@ class MeasurementController extends Controller
         ])->render('measurements.index', compact('object'));
     }
 
+    public function indexPlantsDatasets($id, MeasurementsDataTable $dataTable)
+    {
+      $ids = explode('|',$id);
+      $object = Plant::findOrFail($ids[0]);
+      $object_second = Dataset::findOrFail($ids[1]);
+      return $dataTable->with(['measured' => $ids[0],'measured_type'=> 'App\Plant','dataset' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+    }
+
     public function indexLocations($id, MeasurementsDataTable $dataTable)
+    {
+        $object = Location::findOrFail($id);
+        return $dataTable->with([
+            'location' => $id,
+        ])->render('measurements.index', compact('object'));
+    }
+
+    public function indexLocationsProjects($id, MeasurementsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Location::findOrFail($ids[0]);
+        $object_second = Project::findOrFail($ids[1]);
+        return $dataTable->with(['location' => $ids[0],'project' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+    }
+
+    public function indexLocationsDatasets($id, MeasurementsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Location::findOrFail($ids[0]);
+        $object_second = Dataset::findOrFail($ids[1]);
+        return $dataTable->with(['location' => $ids[0],'dataset' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+    }
+
+
+
+
+    public function indexLocationsRoot($id, MeasurementsDataTable $dataTable)
     {
         $object = Location::findOrFail($id);
 
         return $dataTable->with([
-            'measured_type' => 'App\Location',
-            'measured' => $id,
+            'location' => $id,
         ])->render('measurements.index', compact('object'));
     }
-
     public function indexVouchers($id, MeasurementsDataTable $dataTable)
     {
         $object = Voucher::findOrFail($id);
@@ -69,33 +103,55 @@ class MeasurementController extends Controller
         ])->render('measurements.index', compact('object'));
     }
 
+    public function indexTaxonsProjects($id, MeasurementsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Project::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'project' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+    }
+
+    public function indexTaxonsDatasets($id, MeasurementsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Dataset::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'dataset' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+    }
+
+
     public function indexDatasets($id, MeasurementsDataTable $dataTable)
     {
         //$dataset = Dataset::with(['measurements.measured', 'measurements.odbtrait'])->findOrFail($id);
         //check if dataset and trait are informed in id
         $ids = preg_split("/\|/", $id);
+        $dataset = isset($ids[0]) ? $ids[0] : null;
+        $odbtrait = isset($ids[1]) ? $ids[1] : null;
+        $measured_type = isset($ids[2]) ? $ids[2] : null;
         $with = [
-          'dataset' => isset($ids[0]) ? $ids[0] : null,
-          'odbtrait' => isset($ids[1]) ? $ids[1] : null,
-          'measured_type' => isset($ids[2]) ? $ids[2] : null,
+          'dataset' => $dataset,
+          'odbtrait' => $odbtrait,
+          'measured_type' => $measured_type,
         ];
-        if (isset($ids[1])) {
-          $odbtrait = ODBTrait::findOrFail($ids[1]);
-        } else {
-          $odbtrait = null;
+        $object_second = null;
+        if (null != $odbtrait) {
+          $object_second = ODBTrait::findOrFail($odbtrait);
         }
-        $dataset = Dataset::findOrFail($id);
-        return $dataTable->with($with)->render('measurements.index', compact('dataset','odbtrait'));
+        if (null != $dataset) {
+          $object = Dataset::findOrFail($dataset);
+        }
+
+        return $dataTable->with($with)->render('measurements.index', compact('object','object_second','measured_type'));
     }
 
 
     public function indexTraits($id, MeasurementsDataTable $dataTable)
     {
-        $odbtrait = ODBTrait::findOrFail($id);
+        $object = ODBTrait::findOrFail($id);
 
         return $dataTable->with([
             'odbtrait' => $id,
-        ])->render('measurements.index', compact('odbtrait'));
+        ])->render('measurements.index', compact('object'));
     }
 
     protected function create($object)

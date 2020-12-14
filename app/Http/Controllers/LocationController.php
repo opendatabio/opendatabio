@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Location;
 use App\Project;
+use App\Dataset;
 use App\DataTables\LocationsDataTable;
 use Validator;
 use DB;
@@ -86,6 +87,8 @@ class LocationController extends Controller
         return Response::json(['detectdata' => [$parent->fullname, $parent->id, $uc_ac, $uc_id]]);
     }
 
+
+
     /**
      * Display a listing of the resource.
      *
@@ -104,6 +107,17 @@ class LocationController extends Controller
             'project' => $id
         ])->render('locations.index', compact('object'));
     }
+
+    public function indexDatasets($id, LocationsDataTable $dataTable)
+    {
+        $object = Dataset::findOrFail($id);
+        return $dataTable->with([
+            'dataset' => $id
+        ])->render('locations.index', compact('object'));
+    }
+
+
+
 
 
     /**
@@ -303,6 +317,12 @@ class LocationController extends Controller
     {
         $location = Location::noWorld()->select('*')->with('children')->withGeom()->findOrFail($id);
         $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
+        //$plot_children = null;
+        if (null !== $location->parent->geom and $location->adm_level>0) {
+          $parent = Location::noWorld()->select('*')->withGeom()->findOrFail($location->parent->id);
+        } else {
+          $parent = null;
+        }
         if ($location->x) {
             if ($location->x > $location->y) {
                 $width = 400;
@@ -335,12 +355,12 @@ class LocationController extends Controller
                 ]);
 
              return $dataTable->with([
-                    'location_id' => $id
-                ])->render('locations.show', compact('chartjs', 'location', 'plot_children'));
+                    'location' => $id
+                ])->render('locations.show', compact('chartjs', 'location', 'plot_children','parent'));
         } // else
         return $dataTable->with([
-               'location_id' => $id
-           ])->render('locations.show', compact('location', 'plot_children'));
+               'location' => $id
+           ])->render('locations.show', compact('location', 'plot_children','parent'));
     }
 
     /**

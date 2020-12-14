@@ -87,8 +87,22 @@ class PlantController extends Controller
     public function indexLocations($id, PlantsDataTable $dataTable)
     {
         $object = Location::findOrFail($id);
-
         return $dataTable->with('location', $id)->render('plants.index', compact('object'));
+    }
+
+    public function indexLocationsProjects($id, PlantsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Location::findOrFail($ids[0]);
+        $object_second = Project::findOrFail($ids[1]);
+        return $dataTable->with(['location' => $ids[0],'project' => $ids[1]])->render('plants.index', compact('object','object_second'));
+    }
+    public function indexLocationsDatasets($id, PlantsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Location::findOrFail($ids[0]);
+        $object_second = Dataset::findOrFail($ids[1]);
+        return $dataTable->with(['location' => $ids[0],'dataset' => $ids[1]])->render('plants.index', compact('object','object_second'));
     }
 
     public function indexTaxons($id, PlantsDataTable $dataTable)
@@ -96,6 +110,21 @@ class PlantController extends Controller
         $object = Taxon::findOrFail($id);
 
         return $dataTable->with('taxon', $id)->render('plants.index', compact('object'));
+    }
+
+    public function indexTaxonsProjects($id, PlantsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Project::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'project' => $ids[1]])->render('plants.index', compact('object','object_second'));
+    }
+    public function indexTaxonsDatasets($id, PlantsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Dataset::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'dataset' => $ids[1]])->render('plants.index', compact('object','object_second'));
     }
 
     public function indexProjects($id, PlantsDataTable $dataTable)

@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use App\Taxon;
 use App\Person;
 use App\Project;
+use App\Location;
+use App\Dataset;
 use App\BibReference;
 use App\ExternalAPIs;
 use Response;
@@ -41,14 +43,91 @@ class TaxonController extends Controller
     ]);
     }
 
+    /* for scope Project */
     public function indexProjects($id, TaxonsDataTable $dataTable)
     {
         $object = Project::findOrFail($id);
         return $dataTable->with([
-            'project_id' => $id
+            'project' => $id
         ])->render('taxons.index', compact('object'));
     }
 
+    /* for scope Dataset */
+    public function indexDatasets($id, TaxonsDataTable $dataTable)
+    {
+        $object = Dataset::findOrFail($id);
+        return $dataTable->with([
+            'dataset' => $id
+        ])->render('taxons.index', compact('object'));
+    }
+
+    /* for scope Location */
+    public function indexLocations($id, TaxonsDataTable $dataTable)
+    {
+        $object = Location::findOrFail($id);
+        return $dataTable->with([
+            'location' => $id
+        ])->render('taxons.index', compact('object'));
+    }
+
+    /* for scope Location */
+    public function indexLocationsDatasets($id, TaxonsDataTable $dataTable)
+    {
+        $ids = explode("|",$id);
+        $object = Location::findOrFail($ids[0]);
+        $object_second = Dataset::findOrFail($ids[1]);
+        return $dataTable->with([
+            'location' => $ids[0],
+            'dataset' => $ids[1],
+        ])->render('taxons.index', compact('object','object_second'));
+    }
+
+    /* for scope Location */
+    public function indexLocationsProjects($id, TaxonsDataTable $dataTable)
+    {
+        $ids = explode("|",$id);
+        $object = Location::findOrFail($ids[0]);
+        $object_second = Project::findOrFail($ids[1]);
+        return $dataTable->with([
+            'location' => $ids[0],
+            'project' => $ids[1],
+        ])->render('taxons.index', compact('object','object_second'));
+    }
+
+
+    /* for scope Location */
+    public function indexTaxons($id, TaxonsDataTable $dataTable)
+    {
+        $object = Taxon::findOrFail($id);
+        return $dataTable->with([
+            'taxon' => $id
+        ])->render('taxons.index', compact('object'));
+    }
+
+
+    /* for scope Location */
+    public function indexTaxonsDatasets($id, TaxonsDataTable $dataTable)
+    {
+        $ids = explode("|",$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Dataset::findOrFail($ids[1]);
+        return $dataTable->with([
+            'taxon' => $ids[0],
+            'dataset' => $ids[1],
+        ])->render('taxons.index', compact('object','object_second'));
+    }
+
+    /* for scope Location */
+    public function indexTaxonsProjects($id, TaxonsDataTable $dataTable)
+    {
+        $ids = explode("|",$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Project::findOrFail($ids[1]);
+        return $dataTable->with([
+            'taxon' => $ids[0],
+            'project' => $ids[1],
+        ])->render('taxons.index', compact('object','object_second'));
+    }
 
     // Functions for autocompleting taxon names, used in dropdowns. Expects a $request->query input
     // MAY receive optional "$request->full" to return all names; default is to return only valid names

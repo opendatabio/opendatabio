@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\DataTables\ProjectsDataTable;
 use App\Project;
+use App\Dataset;
 use App\User;
 use Auth;
 use Lang;
@@ -39,6 +40,13 @@ class ProjectController extends Controller
         $myprojects = null;
         $object = Tag::findOrFail($id);
         return $dataTable->with('tag', $id)->render('projects.index', compact('object','myprojects'));
+    }
+
+    public function indexDatasets($id,ProjectsDataTable $dataTable)
+    {
+        $myprojects = null;
+        $object = Dataset::findOrFail($id);
+        return $dataTable->with('dataset', $id)->render('projects.index', compact('object','myprojects'));
     }
 
     /**
@@ -215,7 +223,7 @@ class ProjectController extends Controller
     }
 
 
-    public function summary($id)
+    public function summarize_project($id)
     {
       $project = Project::findOrFail($id);
       $html = view("projects.summary",compact('project'))->render();
