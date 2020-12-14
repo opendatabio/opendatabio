@@ -14,6 +14,8 @@ use App\Measurement;
 use App\UserJob;
 use App\ODBTrait;
 use App\ODBFunctions;
+use App\Location;
+use App\Taxon;
 use Response;
 
 class MeasurementController extends Controller
@@ -27,15 +29,19 @@ class MeasurementController extends Controller
     {
         $measurements = Measurement::select('*','measurements.date as valueDate');
         if ($request->id) {
-            $measurements->whereIn('id', explode(',', $request->id));
+            $measurements = $measurements->whereIn('id', explode(',', $request->id));
         }
         if ($request->trait) {
             $odbtraits = ODBFunctions::asIdList($request->trait, ODBTrait::select('id'), 'export_name');
-            $measurements->whereIn('trait_id', $odbtraits);
+            $measurements = $measurements->whereIn('trait_id', $odbtraits);
         }
         if ($request->dataset) {
-          $measurements->where('dataset_id',$request->dataset);
+          $measurements = $measurements->where('dataset_id',$request->dataset);
         }
+        if ($request->measured_type) {
+          $measurements = $measurements->where('measured_type', 'like', "%".$request->measured_type."%");
+        }
+
         if ($request->taxon or $request->taxon_root) {
             //this is tricky as taxon may be related to measurement from different objects and user may want to get descendants as well
             if ($request->taxon) {
@@ -48,46 +54,54 @@ class MeasurementController extends Controller
                     Taxon::select('id'),
                     'odb_txname(name, level, parent_id)',
                     true);
-            $taxons = Taxon::whereIn('id',$taxons_ids);
-
             //asked for descendants
             if ($request->taxon_root) {
-              $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
               $taxons = Taxon::whereIn('id',$taxons_ids);
+              $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
             }
-
-            $measurements_ids = Arr::flatten($taxons->cursor()->map(function($taxon) {
-              $plids = $taxon->plant_measurements()->get()->pluck('id')->toArray();
-              $vcids = $taxon->voucher_measurements()->get()->pluck('id')->toArray();
-              return array_merge($plids,$vcids);
-            })->toArray());
-            $measurements->where('measured_type', 'App\\Taxon')->whereIn('measured_id', explode(',', $request->taxon))->orWhereIn('id',$measurements_ids);
+            $measurements = $measurements->where(function($subquery) use($taxons_ids) {
+              $subquery->whereHasMorph('measured',['App\Plant','App\Voucher'],function($mm) use($taxons_ids) { $mm->whereHas('identification',function($idd) use($taxons_ids)  { $idd->whereIn('taxon_id',$taxons_ids);});})->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$this->taxon);
+            });
+            
         }
         if ($request->location) {
-            $measurements->where('measured_type', 'App\\Location')->whereIn('measured_id', explode(',', $request->location));
+            $measurements = $measurements->where('measured_type', 'App\\Location')->whereIn('measured_id', explode(',', $request->location));
+        }
+        if ($request->location_root) {
+            $locations_ids = Location::where('id','=',$request->location_root)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+            $measurements = $measurements->where('measured_type', 'App\\Location')->whereIn('measured_id', $locations_ids);
         }
         if ($request->plant) {
-            $measurements->where('measured_type', 'App\\Plant')->whereIn('measured_id', explode(',', $request->plant));
+            $measurements = $measurements->where('measured_type', 'App\\Plant')->whereIn('measured_id', explode(',', $request->plant));
         }
         if ($request->voucher) {
-            $measurements->where('measured_type', 'App\\Voucher')->whereIn('measured_id', explode(',', $request->voucher));
+            $measurements = $measurements->where('measured_type', 'App\\Voucher')->whereIn('measured_id', explode(',', $request->voucher));
         }
 
         if ($request->limit && $request->offset) {
-            $measurements->offset($request->offset)->limit($request->limit);
+            $measurements = $measurements->offset($request->offset)->limit($request->limit);
         } else {
           if ($request->limit) {
-            $measurements->limit($request->limit);
+            $measurements = $measurements->limit($request->limit);
           }
         }
-        $measurements = $measurements->get();
-
-        //$fields = ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual','valueDate','traitUnit','datasetName','measuredFullname', 'measuredTaxonName','measuredTaxonFamily','measuredProject'];
-
-        $fields_simple = ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual','valueDate','traitUnit','datasetName'];
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $measurements = $this->setFields($measurements, $fields,$fields_simple);
+        $simple = ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual','valueDate','traitUnit','datasetName'];
+        $other = ['measuredFullname', 'measuredTaxonName','measuredTaxonFamily','measuredProject'];
+        //include here to be able to add mutators and categories
+        if ('all' == $fields) {
+            $keys = array_keys($measurements->first()->toArray());
+            $fields = array_merge($simple,$keys,$other);
+            $fields =  implode(',',$fields);
+        }
+
+        $measurements = $measurements->cursor();
+        if ($fields=="id") {
+          $measurements = $measurements->pluck('id')->toArray();
+        } else {
+          $measurements = $this->setFields($measurements, $fields, $simple);
+        }
         return $this->wrap_response($measurements);
     }
 

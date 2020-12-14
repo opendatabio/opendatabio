@@ -42,11 +42,22 @@ class PersonController extends Controller
         if ($request->limit) {
             $persons->limit($request->limit);
         }
-        $persons = $persons->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
+        $simple = ['id', 'full_name', 'abbreviation', 'email', 'institution','notes'];
+        //include here to be able to add mutators and categories
+        if ('all' == $fields) {
+            $keys = array_keys($persons->first()->toArray());
+            $fields = array_merge($simple,$keys);
+            $fields =  implode(',',$fields);
+        }
 
-        $persons = $this->setFields($persons, $fields, ['id', 'full_name', 'abbreviation', 'email', 'institution','notes']);
+        $persons = $persons->cursor();
+        if ($fields=="id") {
+          $persons = $persons->pluck('id')->toArray();
+        } else {
+          $persons = $this->setFields($persons, $fields, $simple);
+        }
 
         return $this->wrap_response($persons);
     }

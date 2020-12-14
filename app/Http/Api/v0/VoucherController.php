@@ -17,6 +17,7 @@ use App\Project;
 use App\Person;
 use App\UserJob;
 use App\ODBFunctions;
+use App\Dataset;
 use Response;
 use App\Jobs\ImportVouchers;
 use Illuminate\Support\Arr;
@@ -31,88 +32,102 @@ class VoucherController extends Controller
      */
     public function index(Request $request)
     {
-        $voucher = Voucher::select('*');
+        $vouchers = Voucher::select('*');
         if ($request->id) {
-            $voucher->whereIn('id', explode(',', $request->id));
+            $vouchers->whereIn('id', explode(',', $request->id));
         }
         if ($request->number) {
-            ODBFunctions::advancedWhereIn($voucher, 'number', $request->number);
+            ODBFunctions::advancedWhereIn($vouchers, 'number', $request->number);
         }
         if ($request->location or $request->location_root) {
-            $locations = ODBFunctions::asIdList($request->location, Location::select('id'), 'name');
-            if ($request->location_root and !($request->location)) {
-                $locations = Location::whereIn('id',$locations);
-                $locations = Arr::flatten($locations->cursor()->map(function($location) { return $location->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
+            if ($request->location) {
+              $location_query= $request->location;
+            } else {
+              $location_query =  $request->location_root;
+            }
+            $locations_ids = ODBFunctions::asIdList($location_query, Location::select('id'), 'name');
+            if ($request->location_root) {
+              $locations = Location::whereIn('id',$locations_ids);
+              $locations_ids = Arr::flatten($locations->cursor()->map(function($location) { return $location->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
             }
             //there are both direct and indirect location links, get both
-            $plants = Plant::select('plants.id')->whereIn('location_id', $locations);
+            $plants = Plant::select('plants.id')->whereIn('location_id', $locations_ids);
             if ($request->plant_tag) {
               ODBFunctions::advancedWhereIn($plants, 'tag', $request->plant_tag);
             } else {
               $plants = $plants->cursor()->pluck('id')->toArray();
             }
-            $voucher->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', $plants);
+            $vouchers->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', $plants);
             if (!($request->plant) and !($request->plant_tag)) {
-              $voucher->orWhere('parent_type', '=', 'App\\Location')->whereIn('parent_id', $locations);
+              $vouchers->orWhere('parent_type', '=', 'App\\Location')->whereIn('parent_id', $locations_ids);
             }
         }
         if ($request->plant and !($request->plant_tag)) { // plant without location refers to plant.id
             if ('*' === $request->plant) { // especial case that means all vouchers of plant
-              $voucher->where('parent_type', '=', 'App\\Plant');
+              $vouchers->where('parent_type', '=', 'App\\Plant');
             } else {
-              $voucher->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', explode(',', $request->plant));
+              $vouchers->where('parent_type', '=', 'App\\Plant')->whereIn('parent_id', explode(',', $request->plant));
             }
         }
 
         if ($request->collector) {
             $main_collector = ODBFunctions::asIdList($request->collector, Person::select('id'), 'abbreviation');
-            $voucher->whereIn('person_id', $main_collector);
+            $vouchers->whereIn('person_id', $main_collector);
         }
         if ($request->project) {
             $projects = ODBFunctions::asIdList($request->project, Project::select('id'), 'name');
-            $voucher->whereIn('project_id', $projects);
+            $vouchers->whereIn('project_id', $projects);
         }
         if ($request->taxon or $request->taxon_root) {
             // taxon may refers to identification of the voucher requested by the client, or refers to identification of plant refered to the voucher requested by the client.
             //and taxon_root defines to get descendants
-            $taxon = ODBFunctions::asIdList($request->taxon, Taxon::select('id'), 'odb_txname(name, level, parent_id)', true);
-            if ($request->taxon_root and !($request->taxon)) {
-                $taxon = Taxon::whereIn('id',$taxon);
-                $taxon = Arr::flatten($taxon->cursor()->map(function($tx) { return $tx->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
+            if ($request->taxon) {
+              $taxon_query= $request->taxon;
+            } else {
+              $taxon_query =  $request->taxon_root;
             }
-            $voucher->where(function ($query) use ($taxon) {
-                $identifications = Identification::select('object_id')
-                        ->where('object_type', '=', 'App\\Voucher')
-                        ->whereIn('taxon_id', $taxon);
-                $query->whereIn('id', $identifications);
-                $query->orWhere(function ($internalQuery) use ($taxon) {
-                    $plants = Identification::select('object_id')
-                            ->where('object_type', '=', 'App\\Plant')
-                            ->whereIn('taxon_id', $taxon);
-                    $internalQuery->where('parent_type', '=', 'App\\Plant')
-                            ->whereIn('parent_id', $plants);
-                });
-            });
+            $taxon_ids = ODBFunctions::asIdList(
+                    $taxon_query,
+                    Taxon::select('id'),
+                    'odb_txname(name, level, parent_id)');
+            if ($request->taxon_root) {
+              $taxons = Taxon::whereIn('id',$taxon_ids);
+              $taxon_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
+            }
+            $vouchers->where(function($subquery) use($taxon_ids) {
+              $subquery->whereHas('identification', function ($q) use ($taxon_ids) {$q->whereIn('taxon_id',$taxon_ids); })->orWhereHas('plant_identification',function($q) use($taxon_ids) {
+                $q->whereIn('taxon_id',$taxon_ids);
+            });});            
         }
+
+        if ($request->dataset) {
+            $datasets = ODBFunctions::asIdList($request->dataset, Dataset::select('id'), 'name');
+            $vouchers->whereHas('measurements', function($measurement) use($datasets){
+                $measurement->whereIn('dataset_id',$datasets);
+              }
+            );
+        }
+
+
         if ($request->limit && $request->offset) {
-            $voucher->offset($request->offset)->limit($request->limit);
+            $vouchers->offset($request->offset)->limit($request->limit);
         } else {
           if ($request->limit) {
-            $voucher->limit($request->limit);
+            $vouchers->limit($request->limit);
           }
         }
         if($request->with_collectors) {
-          $voucher = $voucher->with('collectors');
+          $vouchers = $vouchers->with('collectors');
         }
         if ($request->with_herbaria) {
-          $voucher = $voucher->with('herbaria');
+          $vouchers = $vouchers->with('herbaria');
         }
-        $voucher = $voucher->get();
+        $vouchers = $vouchers->cursor();
 
-        $simple = ['id','fullname','collectorMain','number','collectorsAll','date','taxonName','taxonNameWithAuthor','taxonFamily','identificationDate','identifiedBy','identificationNotes','depositedAt','isType','locationName','locationFullname','longitudeDecimalDegrees','latitudeDecimalDegrees','coordinatesPrecision','coordinatesWKT','plantTag','projectName','notes'];
         $fields = ($request->fields ? $request->fields : 'simple');
+        $simple = ['id','fullname','collectorMain','number','collectorsAll','date','taxonName','taxonNameWithAuthor','taxonFamily','identificationDate','identifiedBy','identificationNotes','depositedAt','isType','locationName','locationFullname','longitudeDecimalDegrees','latitudeDecimalDegrees','coordinatesPrecision','coordinatesWKT','plantTag','projectName','notes'];
         if ('all' == $fields) {
-          $keys = array_keys($voucher->first()->toArray());
+          $keys = array_keys($vouchers->first()->toArray());
           $fields = implode(',',array_merge($simple,$keys));
         }
         if ($request->with_identification) {
@@ -122,11 +137,12 @@ class VoucherController extends Controller
             $fields = $fields.",identificationObject";
           }
         }
-
-
-        $voucher = $this->setFields($voucher, $fields, $simple);
-
-        return $this->wrap_response($voucher);
+        if ($fields=="id") {
+          $vouchers = $vouchers->pluck('id')->toArray();
+        } else {
+          $vouchers = $this->setFields($vouchers, $fields, $simple);
+        }
+        return $this->wrap_response($vouchers);
     }
 
     public function store(Request $request)

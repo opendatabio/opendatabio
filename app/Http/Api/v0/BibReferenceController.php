@@ -54,10 +54,23 @@ class BibReferenceController extends Controller
           }
         }
 
-        $bibrefences = $bibrefences->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $bibrefences = $this->setFields($bibrefences, $fields, ['id', 'bibkey', 'year', 'author','title','doi','url','bibtex']);
+        $simple = ['id', 'bibkey', 'year', 'author','title','doi','url','bibtex'];
+        //include here to be able to add mutators and categories
+        if ('all' == $fields) {
+            $keys = array_keys($bibrefences->first()->toArray());
+            $fields = array_merge($simple,$keys);
+            $fields =  implode(',',$fields);
+        }
+
+        $bibrefences = $bibrefences->cursor();
+        if ($fields=="id") {
+          $bibrefences = $bibrefences->pluck('id')->toArray();
+        } else {
+          $bibrefences = $this->setFields($bibrefences, $fields, $simple);
+        }
+
 
         return $this->wrap_response($bibrefences);
     }

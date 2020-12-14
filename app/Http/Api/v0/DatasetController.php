@@ -26,11 +26,22 @@ class DatasetController extends Controller
         if ($request->id) {
             $datasets->whereIn('id', explode(',', $request->id));
         }
-        $datasets = $datasets->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
+        $simple = ['id', 'name', 'notes', 'privacyLevel','policy','description','measurements_count','contactEmail','taggedWidth'];
+        //include here to be able to add mutators and categories
+        if ('all' == $fields) {
+            $keys = array_keys($datasets->first()->toArray());
+            $fields = array_merge($simple,$keys);
+            $fields =  implode(',',$fields);
+        }
 
-        $datasets = $this->setFields($datasets, $fields, ['id', 'name', 'notes', 'privacyLevel','policy','description','measurements_count','contactEmail','taggedWidth']);
+        $datasets = $datasets->cursor();
+        if ($fields=="id") {
+          $datasets = $datasets->pluck('id')->toArray();
+        } else {
+          $datasets = $this->setFields($datasets, $fields, $simple);
+        }
 
         return $this->wrap_response($datasets);
     }

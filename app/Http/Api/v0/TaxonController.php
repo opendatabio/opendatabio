@@ -11,6 +11,7 @@ use App\Jobs\ImportTaxons;
 use Illuminate\Http\Request;
 use App\Taxon;
 use App\UserJob;
+use App\Location;
 use App\ODBFunctions;
 use Response;
 
@@ -35,7 +36,7 @@ class TaxonController extends Controller
             ODBFunctions::advancedWhereIn($taxons,
                     'odb_txname(name, level, parent_id)',
                     $request->name,
-                    true);            
+                    true);
         }
         if (isset($request->level)) {
             $taxons->where('level', '=', $request->level);
@@ -46,6 +47,27 @@ class TaxonController extends Controller
         if ($request->external) {
             $taxons->with('externalrefs');
         }
+
+        if ($request->project) {
+            $project_id = $request->project;
+            $taxons = $taxons->whereHas('summary_counts',function($count) use($project_id) {
+                          $count->where('scope_id',"=",$project_id)->where('scope_type',"=","App\Project")->where('value',">",0);
+                        });
+        }
+        if ($request->dataset) {
+            $dataset_id = $request->dataset;
+            $taxons = $taxons->whereHas('summary_counts',function($count) use($dataset_id) {
+              $count->where('scope_id',"=",$dataset_id)->where('scope_type',"=","App\Dataset")->where('value',">",0);
+            });
+        }
+
+
+        if ($request->location_root) {
+            $taxon_ids = Location::find($request->location_root)->taxonsIDS();
+            $taxons = $taxons->whereIn('id',$taxon_ids);
+        }
+
+
         if ($request->limit && $request->offset) {
             $taxons->offset($request->offset)->limit($request->limit);
         } else {
@@ -53,10 +75,22 @@ class TaxonController extends Controller
             $taxons->limit($request->limit);
           }
         }
-        $taxons = $taxons->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $taxons = $this->setFields($taxons, $fields, ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','author_id','notes','family']);
+        $simple =  ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','author_id','family'];
+        //include here to be able to add mutators and categories
+        if ('all' == $fields) {
+            $keys = array_keys($taxons->first()->toArray());
+            $fields = array_merge($simple,$keys);
+            $fields =  implode(',',$fields);
+        }
+
+        $taxons = $taxons->cursor();
+        if ($fields=="id") {
+          $taxons = $taxons->pluck('id')->toArray();
+        } else {
+          $taxons = $this->setFields($taxons, $fields, $simple);
+        }
         return $this->wrap_response($taxons);
     }
 

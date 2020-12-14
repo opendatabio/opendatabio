@@ -13,6 +13,7 @@ use App\Location;
 use App\UserJob;
 use App\ODBFunctions;
 use App\Jobs\ImportLocations;
+use Log;
 
 class LocationController extends Controller
 {
@@ -63,24 +64,48 @@ class LocationController extends Controller
             }
         }
 
+        if ($request->project) {
+            $project_id = $request->project;
+            $locations = $locations->whereHas('summary_counts',function($count) use($project_id) {
+                          $count->where('scope_id',"=",$project_id)->where('scope_type',"=","App\Project")->where('value',">",0);
+                        });
+        }
+        if ($request->dataset) {
+            $dataset_id = $request->dataset;
+            $locations = $locations->whereHas('summary_counts',function($count) use($dataset_id) {
+              $count->where('scope_id',"=",$dataset_id)->where('scope_type',"=","App\Dataset")->where('value',">",0);
+            });
+        }
+
 
         if ($request->limit) {
             $locations->limit($request->limit);
         }
 
 
-        $locations = $locations->get();
-
         // Hide world id
         foreach ($locations as $location) {
             if ('Country' === $location->levelName) {
-                unset($location->parent_id);
+                $location->parent_id = null;
             }
         }
 
         $fields = ($request->fields ? $request->fields : 'simple');
         // NOTE that "distance" as a field is only defined for querytype='closest', but it is ignored for other queries
-        $locations = $this->setFields($locations, $fields, ['id', 'name', 'levelName', 'geom', 'distance','parentName','parent_id','x','y','startx','starty','centroid_raw','area']);
+        $simple =  ['id', 'name', 'levelName', 'geom', 'distance','parentName','parent_id','x','y','startx','starty','centroid_raw','area'];
+        //include here to be able to add mutators and categories
+        if ('all' == $fields) {
+            $keys = array_keys($locations->first()->toArray());
+            $fields = array_merge($simple,$keys);
+            $fields =  implode(',',$fields);
+        }
+
+        $locations = $locations->cursor();
+        if ($fields=="id") {
+          $locations = $locations->pluck('id')->toArray();
+        } else {
+          $locations = $this->setFields($locations, $fields, $simple);
+        }
 
         return $this->wrap_response($locations);
     }

@@ -51,10 +51,8 @@ class TraitController extends Controller
 
         $traits = $traits->with('bibreference');
 
-        $traits = $traits->get();
+        $traits = $traits->cursor();
 
-        //the list of simple Fields
-        $simple = ['id', 'type', 'typename','export_name','unit', 'range_min', 'range_max', 'link_type','value_length','name','description','objects','categories'];
 
         //if language is specified, need to mutate name and description for current language
         if ($request->language) {
@@ -82,7 +80,7 @@ class TraitController extends Controller
         }
 
         $fields = ($request->fields ? $request->fields : 'simple');
-
+        $simple = ['id', 'type', 'typename','export_name','unit', 'range_min', 'range_max', 'link_type','value_length','name','description','objects','categories'];
         //include here to be able to add mutators and categories
         if ('all' == $fields) {
             $keys = array_keys($traits->first()->toArray());
@@ -94,17 +92,19 @@ class TraitController extends Controller
               $simple[] = 'bibreference';
             } else {
               $fields .= ",bibreference";
-            }
+            }            
         }
-
-        $traits = $this->setFields($traits, $fields, $simple);
-
-        //this is placed here because otherwise setFields will change to default language
-        if ($request->language) {
-          foreach($traits as $key => $trait) {
-            $trait['name'] = $names[$key]['name'];
-            $trait['description'] = $names[$key]['description'];
-            $traits[$key] = $trait;
+        if ($fields=="id") {
+          $traits = $traits->pluck('id')->toArray();
+        } else {
+          $traits = $this->setFields($traits, $fields, $simple);
+          //this is placed here because otherwise setFields will change to default language
+          if ($request->language) {
+            foreach($traits as $key => $trait) {
+              $trait['name'] = $names[$key]['name'];
+              $trait['description'] = $names[$key]['description'];
+              $traits[$key] = $trait;
+            }
           }
         }
 

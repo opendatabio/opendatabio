@@ -14,6 +14,7 @@ use App\Location;
 use App\Taxon;
 use App\Identification;
 use App\Project;
+use App\Dataset;
 use App\UserJob;
 use App\ODBFunctions;
 use Response;
@@ -31,7 +32,7 @@ class PlantController extends Controller
     {
         $plant = Plant::select('*', DB::raw('AsText(plants.relative_position) as relativePosition'))->with(['location']);
         if ($request->id) {
-            $plant->whereIn('plants.id', explode(',', $request->id));
+            $plant = $plant->whereIn('plants.id', explode(',', $request->id));
         }
         if ($request->location or $request->location_root) {
             if ($request->location) {
@@ -44,7 +45,7 @@ class PlantController extends Controller
               $locations = Location::whereIn('id',$locations_ids);
               $locations_ids = Arr::flatten($locations->cursor()->map(function($location) { return $location->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
             }
-            $plant->whereIn('location_id', $locations_ids);
+            $plant = $plant->whereIn('location_id', $locations_ids);
         }
         if ($request->tag) {
             ODBFunctions::advancedWhereIn($plant, 'tag', $request->tag);
@@ -55,45 +56,53 @@ class PlantController extends Controller
             } else {
               $taxon_query =  $request->taxon_root;
             }
-            $taxons = ODBFunctions::asIdList(
+            $taxon_ids = ODBFunctions::asIdList(
                     $taxon_query,
                     Taxon::select('id'),
                     'odb_txname(name, level, parent_id)');
             if ($request->taxon_root) {
-              $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
-            } else {
-              $taxons_ids = $taxons->get()->pluck('id')->toArray();
+              $taxons = Taxon::whereIn('id',$taxon_ids);
+              $taxon_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
             }
-
-            $identification = Identification::select('object_id')
-                    ->where('object_type', '=', 'App\\Plant')
-                    ->whereIn('taxon_id', $taxons_ids)
-                    ->get();
+            $identification = Identification::
+                    where('object_type', '=', 'App\\Plant')
+                    ->whereIn('taxon_id', $taxon_ids)
+                    ->distinct('object_id')->cursor()->pluck('object_id')->toArray();
             $plant->whereIn('plants.id', $identification);
         }
         if ($request->project) {
             $projects = ODBFunctions::asIdList($request->project, Project::select('id'), 'name');
-            $plant->whereIn('project_id', $projects);
+            $plant = $plant->whereIn('project_id', $projects);
         }
         if ($request->dataset) {
             $datasets = ODBFunctions::asIdList($request->dataset, Dataset::select('id'), 'name');
-            $plant->whereHas('measurements', function($measurement) use($datasets){
+            $plant = $plant->whereHas('measurements', function($measurement) use($datasets){
                 $measurement->whereIn('dataset_id',$datasets);
               }
             );
         }
 
         if ($request->limit && $request->offset) {
-            $plant->offset($request->offset)->limit($request->limit);
+            $plant = $plant->offset($request->offset)->limit($request->limit);
         } else {
           if ($request->limit) {
-            $plant->limit($request->limit);
+            $plant = $plant->limit($request->limit);
           }
         }
-        $plant = $plant->get();
         $fields = ($request->fields ? $request->fields : 'simple');
-        $plant = $this->setFields($plant, $fields, ['id','fullName', 'taxonName', 'taxonFamily','location_id', 'locationName', 'locationParentName','tag', 'date', 'notes', 'projectName', 'relativePosition','xInParentLocation','yInParentLocation']);
-
+        $simple = ['id','fullName', 'taxonName', 'taxonFamily','location_id', 'locationName', 'locationParentName','tag', 'date', 'notes', 'projectName', 'relativePosition','xInParentLocation','yInParentLocation'];
+        //include here to be able to add mutators and categories
+        if ('all' == $fields) {
+            $keys = array_keys($plant->first()->toArray());
+            $fields = array_merge($simple,$keys);
+            $fields =  implode(',',$fields);
+        }
+        if ($fields=="id") {
+          $plant = $plant->cursor()->pluck('id')->toArray();
+        } else {
+          $plant = $plant->cursor();
+          $plant = $this->setFields($plant, $fields, $simple);
+        }
         return $this->wrap_response($plant);
     }
 

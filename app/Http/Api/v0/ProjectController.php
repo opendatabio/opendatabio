@@ -24,11 +24,22 @@ class ProjectController extends Controller
         if ($request->id) {
             $projects->whereIn('id', explode(',', $request->id));
         }
-        $projects = $projects->get();
 
         $fields = ($request->fields ? $request->fields : 'simple');
+        $simple = ['id', 'fullname', 'notes', 'privacyLevel','contactEmail','plants_count','vouchers_count'];
+        //include here to be able to add mutators and categories
+        if ('all' == $fields) {
+            $keys = array_keys($persons->first()->toArray());
+            $fields = array_merge($simple,$keys);
+            $fields =  implode(',',$fields);
+        }
 
-        $projects = $this->setFields($projects, $fields, ['id', 'fullname', 'notes', 'privacyLevel','contactEmail','plants_count','vouchers_count']);
+        $projects = $projects->cursor();
+        if ($fields=="id") {
+          $projects = $projects->pluck('id')->toArray();
+        } else {
+          $projects = $this->setFields($projects, $fields, $simple);
+        }
 
         return $this->wrap_response($projects);
     }
