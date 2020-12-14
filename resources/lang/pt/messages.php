@@ -540,7 +540,7 @@ return array (
   'voucher_identification_date_hint' => 'Esta é a data de identificação do Voucher. Se o dia ou mês são desconhecidos, utilize pontos de interrogação.',
   'voucher_identifier_id_hint' => 'Registre aqui a pessoa responsável por identificar este voucher',
   'voucher_isnomenclatural_type' => 'É um Tipo',
-  'voucher_list_for' => 'Lista de amostras para',
+  'voucher_list_for' => 'Lista de vouchers para',
   'voucher_list' => 'Lista de vouchers',
   'voucher_modifier_hint' => 'Registre aqui o modificador de identificação usado. s.s. = "sensu strictu", estritamente falando; s.l. = "sensu lato", sentido amplo, em geral; c.f. = "confer", confira, significando que acredita-se que a identificação esteja correta, mas não se tem certeza; aff. = "affinis", significando que há evidências de que esta é uma nova espécie ainda não descrita, mas relacionada ao táxon indicado; vell aff. = "ou affinis", significando que a planta pode ser do táxon indicado ou de outra espécie relacionada ainda não descrita.',
   'voucher_note_hint' => 'Se você tem suas notas na forma de variáveis numéricas, categóricas, etc, considere adicionar elas como uma Medição ligada à esta amostra. Use aqui apenas para observações textuais.',

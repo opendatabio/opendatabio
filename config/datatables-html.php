@@ -10,7 +10,7 @@ return [
      * Default table attributes when generating the table.
      */
     'table' => [
-        'class' => 'table',
+        'class' => 'display responsive wrap',
         'id' => 'dataTableBuilder',
     ],
 ];

@@ -130,13 +130,12 @@
   <p><strong>
     @lang ('messages.additional_collectors')
   </strong>:
-  <ul>
     @foreach ($collectors as $collector)
       @if($collector->person->id !== $voucher->person->id)
-        <li>{!! $collector->person->rawLink() !!}</li>
+        {!! " | ".$collector->person->rawLink() !!}
       @endif;
     @endforeach
-    </ul>
+
   </p>
 @endif
 <hr>

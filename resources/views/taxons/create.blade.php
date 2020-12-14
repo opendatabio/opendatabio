@@ -25,7 +25,7 @@
 &nbsp;&nbsp;
 <a href="http://www.ipni.org/" target="_blank" data-toggle="tooltip" rel="tooltip" data-placement="right" title="@lang('messages.ipni_search')" ><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
 &nbsp;&nbsp;
-<a href="http://zoobank.org/" target="_blank" data-toggle="tooltip" rel="tooltip" data-placement="right" title="@lang('messages.zoobank_search')" ><img src="{{asset('images/zoobank.png')}}" alt="IPNI" width="33px"></a>
+<a href="http://zoobank.org/" target="_blank" data-toggle="tooltip" rel="tooltip" data-placement="right" title="@lang('messages.zoobank_search')" ><img src="{{asset('images/zoobank.png')}}" alt="ZOOBANK" width="33px"></a>
 &nbsp;&nbsp;
 <?php // WARNING: MYCOBANK OUT OF SERVICE ?>
 <!--

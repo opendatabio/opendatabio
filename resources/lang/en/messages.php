@@ -543,7 +543,7 @@ return array (
   'voucher_identification_date_hint' => 'This is the identification date of the Voucher specimen. If the day or month is unknown, use the question marks.',
   'voucher_identifier_id_hint' => 'Register here the person responsible for identifying this voucher specimen',
   'voucher_isnomenclatural_type' => 'Is Type',
-  'voucher_list_for' => 'Samples list for',
+  'voucher_list_for' => 'Vouchers list for',
   'voucher_list' => 'Vouchers list',
   'voucher_modifier_hint' => 'Register here the identification modifier used. s.s. = "sensu strictu", meaning strictly speaking; s.l. = "sensu lato", meaning "broadly"; c.f. = "confer", meaning that the identification is believed to be correct, but is not certain; aff. = "affinis", meaning there is evidence that this is a new species, still undescribed, but related to the given taxon; "vel aff." means "or affinis", which indicates that the plant may be from the indicated taxon or from a related, undescribed species.',
   'voucher_note_hint' => 'If you have specific traits for your notes, consider adding measurements to this voucher afertwards. Use here for textual observations',
