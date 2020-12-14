@@ -89,6 +89,18 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return $this->morphOne(Identification::class, 'object');
     }
 
+    //vouchers through plants
+    public function plant_identification()
+    {
+      return $this->hasOneThrough(
+                    'App\Identification',
+                    'App\Plant',
+                    'id', // Foreign key on plant table...
+                    'object_id', // Foreign key on identification table...
+                    'parent_id', // Local key on voucher table...
+                    'id' // Local key on plant table...
+                    )->where('object_type', 'App\Plant')->where('parent_type','App\Plant');
+    }
 
     public function getIdentificationObjectAttribute()
     {
