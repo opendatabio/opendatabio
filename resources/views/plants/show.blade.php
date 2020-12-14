@@ -114,9 +114,9 @@
     @lang('messages.not_registered')
 @endif
 </p>
-@if ($plant->measurements()->count())
+@if ($plant->measurements()->withoutGlobalScopes()->count())
 <div class="col-sm-4">
-    <a href="{{ url('plants/'. $plant->id. '/measurements')  }}" class="btn btn-default">
+    <a href="{{ url('measurements/'. $plant->id. '/plant')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
 {{ $plant->measurements()->count() }}
 @lang('messages.measurements')

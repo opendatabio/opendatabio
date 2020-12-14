@@ -132,11 +132,11 @@
 </p>
 @endif
 
-@if ($odbtrait->measurements()->count())
+@if ($odbtrait->measurements()->withoutGlobalScopes()->count())
 			    <div class="col-sm-6">
-				<a href="{{ url('traits/'. $odbtrait->id. '/measurements')  }}" class="btn btn-success" name="submit" value="submit">
+				<a href="{{ url('measurements/'. $odbtrait->id. '/trait')  }}" class="btn btn-success" name="submit" value="submit">
                     <i class="fa fa-btn fa-plus"></i>
-{{ $odbtrait->measurements()->count() }}
+{{ $odbtrait->measurements()->withoutGlobalScopes()->count() }}
 @lang('messages.measurements')
 				</a>
 			    </div>

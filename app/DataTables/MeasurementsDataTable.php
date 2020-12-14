@@ -13,6 +13,7 @@ use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
 use App\Taxon;
+use App\Location;
 
 class MeasurementsDataTable extends DataTable
 {
@@ -24,7 +25,6 @@ class MeasurementsDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-        //return (new CollectionDataTable($query))
         ->editColumn('value', function ($measurement) {
             $text = $measurement->rawLink();
             if ($measurement->type == \App\ODBTrait::COLOR) {
@@ -50,6 +50,9 @@ class MeasurementsDataTable extends DataTable
         ->addColumn('unit', function ($measurement) { return $measurement->odbtrait->unit; })
         ->editColumn('date', function ($measurement) { return $measurement->formatDate; })
         ->editColumn('person_id', function ($measurement) { return $measurement->person ? $measurement->person->full_name : ''; })
+        ->addColumn('select_measurements',  function ($measurement) {
+            return $measurement->id;
+        })
         ->rawColumns(['value', 'trait_id', 'measured_id']);
     }
 
@@ -61,7 +64,6 @@ class MeasurementsDataTable extends DataTable
     public function query()
     {
 
-        //->with(['categories', 'odbtrait.translations', 'person', 'dataset', 'measured'])
         $query = Measurement::query()
             ->select([
                 'measurements.id',
@@ -86,24 +88,31 @@ class MeasurementsDataTable extends DataTable
         if ($this->dataset) {
             $query = $query->where('dataset_id', $this->dataset);
         }
+        if ($this->project) {
+            $query = $query->whereHasMorph('measured',['App\Voucher',"App\Plant"],function($measured) {
+                $measured->where('project_id','=',$this->project);
+            });
+        }
+
         if ($this->odbtrait) {
             $query = $query->where('trait_id', $this->odbtrait);
         }
         if ($this->taxon) {
           $taxon_list = Taxon::findOrFail($this->taxon)->getDescendantsAndSelf()->pluck('id')->toArray();
-          $query = $query->whereHasMorph('measured',['App\Plant','App\Voucher'],function($mm) use($taxon_list) { $mm->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
-          $query = $query->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$this->taxon);
+          $query = $query->where(function($subquery) use($taxon_list) {
+            $subquery->whereHasMorph('measured',['App\Plant','App\Voucher'],function($measured) use($taxon_list) {
+              $measured->whereHas('identification',function($idd) use($taxon_list)  {
+                $idd->whereIn('taxon_id',$taxon_list);});})->orWhere(function($qq) use($taxon_list) {
+                    $qq->where('measured_type',"=",'App\Taxon')->whereIn('measured_id',$taxon_list);
+          });});
         }
 
+        if ($this->location) {
+          $locations_ids = Location::findOrFail($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
+          $query = $query->whereIn('measured_id', $locations_ids)->where('measured_type', "App\Location");
+        }
         return $this->applyScopes($query);
 
-        //return collect($query->get())->filter(function ($item) {
-            // This relies on the global scopes for the "measured" items to trigger. If the measured object is, eg, a Plant, and the plant is not accessible by the current user, the following relation will return "null", and the if() will evaluate to false
-          //  if ($item->measured) {
-            //    return true;
-            //}
-        //});
-        // $query;
     }
 
     /**
@@ -115,6 +124,7 @@ class MeasurementsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
+                'select_measurements' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'trait_id' => ['title' => Lang::get('messages.trait'), 'searchable' => true, 'orderable' => false],
                 'value' => ['title' => Lang::get('messages.value'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
@@ -129,16 +139,26 @@ class MeasurementsDataTable extends DataTable
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
                 'buttons' => [
-                    'csv',
+                    /*'csv',
                     'excel',
-                    'print',
+                    'print',*/
                     'reload',
                     ['extend' => 'colvis',  'columns' => ':gt(1)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [2, 4, 5, 6],
+                    'targets' => [3, 5, 6, 7],
                     'visible' => false,
-                ]],
+                  ],
+                  [
+                  'targets' => 0,
+                  'checkboxes' => [
+                  'selectRow' => true
+                  ]
+                ],
+              ],
+              'select' => [
+                    'style' => 'multi',
+              ]
             ]);
     }
 

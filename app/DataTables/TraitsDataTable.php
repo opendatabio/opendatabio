@@ -31,12 +31,17 @@ class TraitsDataTable extends DataTable
         })
         ->editColumn('type', function ($odbtrait) { return Lang::get('levels.traittype.'.$odbtrait->type); })
         ->addColumn('details', function ($odbtrait) {return $odbtrait->details(); })
-        ->addColumn('measurements', function ($odbtrait) {return $odbtrait->measurements_count; })
+        ->addColumn('measurements', function ($odbtrait) {
+          if ($this->dataset) {
+            return '<a href="'.url('measurements/'.$odbtrait->id.'|'.$this->dataset.'/plant_dataset').'">'.$odbtrait->measurements()->withoutGlobalScopes()->where('dataset_id','=',$this->dataset)->count().'</a>';
+          }
+          return '<a href="'.url('measurements/'.$odbtrait->id.'/trait').'">'.$odbtrait->measurements()->withoutGlobalScopes()->count().'</a>';
+        })
         ->filterColumn('name', function ($query, $keyword) {
             $translations = UserTranslation::where('translation', 'like', '%'.$keyword.'%')->where('translatable_type','like','%ODBTrait%')->get()->pluck('translatable_id')->toArray();
             $query->whereIn('id', $translations);
         })
-        ->rawColumns(['name']);
+        ->rawColumns(['name','measurements']);
 
     }
 

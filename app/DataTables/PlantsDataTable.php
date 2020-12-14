@@ -49,7 +49,10 @@ class PlantsDataTable extends DataTable
         })
         ->editColumn('date', function ($plant) { return $plant->formatDate; })
         ->addColumn('measurements', function ($plant) {
-            return '<a href="'.url('plants/'.$plant->id.'/measurements').'">'.$plant->measurements()->count().'</a>';
+            if ($this->dataset) {
+              return '<a href="'.url('measurements/'.$plant->id.'|'.$this->dataset.'/plant_dataset').'">'.$plant->measurements()->withoutGlobalScopes()->where('dataset_id','=',$this->dataset)->count().'</a>';
+            }
+            return '<a href="'.url('measurements/'.$plant->id.'/plant').'">'.$plant->measurements()->withoutGlobalScopes()->count().'</a>';
         })
         ->addColumn('location', function ($plant) {
             $loc = $plant->locationWithGeom;
@@ -63,9 +66,9 @@ class PlantsDataTable extends DataTable
             return $plant->id;
         })
         ->addColumn('vouchers',function($plant) {
-            return $plant->vouchers()->count();
+            return '<a href="'.url('plants/'.$plant->id.'/vouchers').'">'.$plant->vouchers()->withoutGlobalScopes()->count().'</a>';
         })
-        ->rawColumns(['tag', 'identification','measurements','location']);
+        ->rawColumns(['tag', 'identification','measurements','location','vouchers']);
     }
 
     /**

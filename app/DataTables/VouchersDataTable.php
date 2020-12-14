@@ -10,6 +10,7 @@ namespace App\DataTables;
 use Baum\Node;
 use App\Voucher;
 use App\Location;
+use App\Taxon;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
@@ -41,7 +42,7 @@ class VouchersDataTable extends DataTable
         ->editColumn('parent_type', function ($voucher) {
             $text = 'Linked to location';
             if ($voucher->parent_type ==  'App\Plant') {
-              $text = $voucher->parent()->first()->rawLink();
+              $text = $voucher->parent->rawLink();
             }
             return $text;
         })
@@ -57,7 +58,9 @@ class VouchersDataTable extends DataTable
         ->addColumn('measurements', function ($voucher) {
             return '<a href="'.url('vouchers/'.$voucher->id.'/measurements').'">'.$voucher->measurements()->withoutGlobalScopes()->count().'</a>';
         })
-
+        ->addColumn('select_vouchers',  function ($voucher) {
+            return $voucher->id;
+        })
         ->rawColumns(['number', 'identification','location','measurements','parent_type']);
     }
 
@@ -83,8 +86,11 @@ class VouchersDataTable extends DataTable
             //->withCount('measurements');
         // customizes the datatable query
         if ($this->location) {
-            $locationsids = Location::where('id', '=', $this->location)->first()->getDescendantsAndSelf()->pluck('id');
-            $query = $query->where('parent_type', 'App\Location')->whereIn('parent_id',$locationsids);
+            $locationsids = Location::find($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
+            $query = $query->where(function($subquery) use($locationsids) {
+              $subquery->where('parent_type', 'App\Location')->whereIn('parent_id',$locationsids);
+            })->orWhereHasMorph('parent',["App\Plant"],function($plant) use($locationsids) {
+                $plant->whereIn('location_id',$locationsids); });
         }
         if ($this->plant) {
             $query = $query->where('parent_type', 'App\Plant')->where('parent_id', '=', $this->plant);
@@ -94,7 +100,11 @@ class VouchersDataTable extends DataTable
         }
         if ($this->taxon) {
             $taxon = $this->taxon;
-            $query = $query->whereHas('identification', function ($q) use ($taxon) {$q->where('taxon_id', '=', $taxon); });
+            $taxon_list = Taxon::where('id',$taxon)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+            $query = $query->where(function($subquery) use($taxon_list) {
+              $subquery->whereHas('identification', function ($q) use ($taxon_list) {$q->whereIn('taxon_id',$taxon_list); })->orWhereHas('plant_identification',function($q) use($taxon_list) {
+                $q->whereIn('taxon_id',$taxon_list);
+            });});
         }
         if ($this->person) {
             $person = $this->person;
@@ -133,8 +143,9 @@ class VouchersDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => true, 'orderable' => true],
+                'select_vouchers' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
+                'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => true, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
                 'parent_type' => ['title' => Lang::get('messages.planttag'), 'searchable' => false, 'orderable' => true],
                 'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
@@ -149,16 +160,27 @@ class VouchersDataTable extends DataTable
                 'order' => [[0, 'asc']],
                 'pageLength' => 10,
                 'buttons' => [
-                    'csv',
+                    /*'csv',
                     'excel',
-                    'print',
+                    'print',*/
                     'reload',
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
-                'columnDefs' => [[
-                    'targets' => [1,3,8],
+                'columnDefs' => [
+                  [
+                    'targets' => [1,4,9],
                     'visible' => false,
-                ]],
+                  ],
+                  [
+                    'targets' => 0,
+                    'checkboxes' => [
+                    'selectRow' => true
+                    ]
+                  ],
+                ],
+                'select' => [
+                      'style' => 'multi',
+                ]
             ]);
     }
 

@@ -115,21 +115,12 @@ class Dataset extends Model
         return $this->users()->wherePivot('access_level', '=', User::ADMIN)->first()->email;
     }
 
-/* Summarize what the dataset is about */
-public function plants_ids()
-{
-  return Measurement::withoutGlobalScopes()->where('dataset_id',$this->id)->where('measured_type','App\Plant')->distinct('measured_id');
-}
 
-public function vouchers_ids()
-{
-  return Measurement::withoutGlobalScopes()->where('dataset_id',$this->id)->where('measured_type','App\Voucher')->distinct('measured_id');
-}
 
-public function measured_classes_counts()
-{
-  return DB::table('measurements')->selectRaw('measured_type,count(*) as count')->where('dataset_id',$this->id)->groupBy('measured_type')->get();
-}
+    public function measured_classes_counts()
+    {
+      return DB::table('measurements')->selectRaw('measured_type,count(*) as count')->where('dataset_id',$this->id)->groupBy('measured_type')->get();
+    }
 
 public function identification_summary()
 {
@@ -150,12 +141,7 @@ public function traits_summary()
     return $trait_summary;
 }
 
-  public function taxons_count()
-  {
-    $count_measured_identifications = DB::table('identifications')->join('measurements','measured_id','=','object_id')->distinct('taxon_id')->whereRaw('measured_type=object_type')->where('dataset_id',$this->id)->count();
-    $count_measured_taxa =  $this->measurements()->where('measured_type','App\Taxon')->distinct('measured_id')->count();
-    return ($count_measured_identifications+$count_measured_taxa);
- }
+
 
  public function taxons_ids()
  {
@@ -186,6 +172,76 @@ public function traits_summary()
      return null;
    }
  }
+
+   /* functions to interact with COUNT model*/
+   public function summary_counts()
+   {
+       return $this->morphMany("App\Summary", 'object');
+   }
+
+
+   public function getCount($scope="all",$scope_id=null,$target='plants')
+   {
+     $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
+     if (null !== $scope_id) {
+       $query = $query->where('scope_id',"=",$scope_id);
+     } else {
+       $query = $query->whereNull('scope_id');
+     }
+     if ($query->count()) {
+       return $query->first()->value;
+     }
+     return 0;
+   }
+
+   /* functions to generate counts */
+   public function plantsCount()
+   {
+      return $this->plants()->withoutGlobalScopes()->distinct('plants.id')->count();
+   }
+
+   public function vouchersCount()
+   {
+       return $this->vouchers()->withoutGlobalScopes()->distinct('vouchers.id')->count();
+   }
+
+   public function measurementsCount()
+   {
+     return $this->measurements()->withoutGlobalScopes()->count();
+   }
+
+   public function taxonsCount()
+   {
+     $count_level = Taxon::getRank('species');
+     $measured_objects_taxon_id  = DB::table('identifications')->join('measurements','measured_id','=','object_id')->join('taxons','taxon_id','=','taxons.id')->distinct('taxon_id')->whereRaw('measured_type=object_type')->where('dataset_id',$this->id)->where('taxons.level',">=",$count_level)->pluck('taxon_id')->toArray();
+     $measured_taxon_id =  $this->measurements()->withoutGlobalScopes()->where('measured_type','=','App\Taxon')->whereHasMorph( 'measured',['App\Taxon'],function($object) use($count_level){ $object->where('level','>=',$count_level);})->distinct('measured_id')->pluck('measured_id')->toArray();
+     return count(array_unique(array_merge($measured_objects_taxon_id,$measured_taxon_id)));
+   }
+
+   public function locationsCount()
+   {
+     $plants = $this->plants()->withoutGlobalScopes()->cursor()->pluck('location_id')->toArray();
+     $vouchers = $this->vouchers()->withoutGlobalScopes()->cursor()->map(function($voucher) {
+       if ($voucher->parent_type=="App\Plant") {
+         return $voucher->parent()->withoutGlobalScopes()->first()->location_id;
+       } else  {
+         return $voucher->parent_id;
+       }
+     })->toArray();
+     return count(array_unique(array_merge($plants,$vouchers)));
+   }
+
+
+   public function projectsCount()
+   {
+     $plants = $this->plants()->withoutGlobalScopes()->cursor()->pluck('project_id')->toArray();
+     $vouchers = $this->vouchers()->withoutGlobalScopes()->cursor()->pluck('project_id')->toArray();
+     return count(array_unique(array_merge($plants,$vouchers)));
+   }
+
+
+
+
 
 
 }

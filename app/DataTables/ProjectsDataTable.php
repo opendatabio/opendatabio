@@ -29,11 +29,26 @@ class ProjectsDataTable extends DataTable
         ->editColumn('privacy', function ($project) { return Lang::get('levels.privacy.'.$project->privacy); })
         ->addColumn('full_name', function ($project) {return $project->full_name; })
         ->addColumn('plants', function ($project) {
-          return '<a href="'.url('projects/'. $project->id. '/plants').'" >'.$project->plants_public_count().'</a>';
+          $plants_count = $project->getCount('all',null,"plants");
+          return '<a href="'.url('projects/'. $project->id. '/plants').'" >'.$plants_count.'</a>';
         })
         ->addColumn('vouchers', function ($project) {
-          return '<a href="'.url('projects/'. $project->id. '/vouchers').'" >'.$project->vouchers_public_count().'</a>';
+          $vouchers_count = $project->getCount('all',null,"vouchers");
+          return '<a href="'.url('vouchers/'. $project->id. '/project').'" >'.$vouchers_count.'</a>';
         })
+        ->addColumn('taxons', function ($project) {
+          $taxons_count = $project->getCount('all',null,"taxons");
+          return '<a href="'.url('taxons/'. $project->id. '/project').'" >'.$taxons_count.'</a>';
+        })
+        ->addColumn('locations', function ($project) {
+          $locations_count = $project->getCount('all',null,"locations");
+          return '<a href="'.url('locations/'. $project->id. '/project').'" >'.$locations_count.'</a>';
+        })
+        ->addColumn('datasets', function ($project) {
+          $dataset_counts = $project->getCount('all',null,"datasets");
+          return '<a href="'.url('datasets/'. $project->id. '/project').'" >'.$dataset_counts.'</a>';
+        })
+
         ->addColumn('members', function ($project) {
             if (empty($project->users)) {
                 return '';
@@ -49,7 +64,7 @@ class ProjectsDataTable extends DataTable
 
             return $ret;
         })
-        ->rawColumns(['name', 'members','plants','vouchers']);
+        ->rawColumns(['name', 'members','plants','vouchers','taxons','locations','datasets']);
     }
 
     /**
@@ -62,9 +77,15 @@ class ProjectsDataTable extends DataTable
         $query = Project::query()->with('users');
         //->withCount(['plants', 'vouchers'])->
 
-        if ($this->tag) {
-            $query->whereHas('tags',function($tag) { $tag->where('tags.id',$this->tag);});
+        if ($this->dataset) {
+            $dataset = $this->dataset;
+            $query = $query->whereHas('plant_measurements',function($measurement) use($dataset) { $measurement->withoutGlobalScopes()->where('dataset_id','=',$dataset);})->orWhereHas('voucher_measurements',function($measurement) use($dataset) {  $measurement->withoutGlobalScopes()->where('dataset_id','=',$dataset);});
         }
+        if ($this->tag) {
+            $tagid = $this->tag;
+            $query = $query->whereHas('tags',function($tag) use($tagid) { $tag->where('tags.id',$tagid);});
+        }
+
 
         return $this->applyScopes($query);
     }
@@ -85,6 +106,9 @@ class ProjectsDataTable extends DataTable
                 'members' => ['title' => Lang::get('messages.members'), 'searchable' => false, 'orderable' => false],
                 'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
+                'taxons' => ['title' => Lang::get('messages.taxons'), 'searchable' => false, 'orderable' => false],
+                'locations' => ['title' => Lang::get('messages.locations'), 'searchable' => false, 'orderable' => false],
+                'datasets' => ['title' => Lang::get('messages.datasets'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',

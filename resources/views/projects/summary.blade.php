@@ -19,13 +19,13 @@
             @lang('messages.plants')
           </td>
           <td class='table-text'>
-              {{ $project->plants_public_count() }}
+              {{ $project->plantsCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->plants_public_measurements_count() }}
+              {{ $project->plantsMeasurementsCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->plants_public_taxons_count() }}
+              {{ $project->taxonsCount('plants') }}
           </td>
       </tr>
       <tr>
@@ -33,13 +33,13 @@
             @lang('messages.vouchers')
           </td>
           <td class='table-text'>
-              {{ $project->vouchers_public_count() }}
+              {{ $project->vouchersCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->vouchers_public_measurements_count() }}
+              {{ $project->vouchersMeasurementsCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->vouchers_public_taxons_count() }}
+              {{ $project->taxonsCount('vouchers') }}
           </td>
       </tr>
     </tbody>

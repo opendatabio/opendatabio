@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Intervention\Image\Facades\Image;
 use Lang;
 use DB;
+use App\Taxon;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 
@@ -83,6 +84,18 @@ class Project extends Model
                     )->where('identifications.object_type', 'App\Plant');
     }
 
+    public function plants_pictures( )
+    {
+      return $this->hasManyThrough(
+                    'App\Picture',
+                    'App\Plant',
+                    'project_id', // Foreign key on Plants table...
+                    'object_id', // Foreign key on Measurements table...
+                    'id', // Local key on Project table...
+                    'id' // Local key on Plants table...
+                    )->where('pictures.object_type', 'App\Plant');
+    }
+
     public function voucher_identifications( )
     {
       return $this->hasManyThrough(
@@ -93,6 +106,18 @@ class Project extends Model
                     'id', // Local key on Project table...
                     'id' // Local key on Plants table...
                     )->where('identifications.object_type', 'App\Voucher');
+    }
+
+    public function vouchers_pictures( )
+    {
+      return $this->hasManyThrough(
+                    'App\Picture',
+                    'App\Voucher',
+                    'project_id', // Foreign key on Plants table...
+                    'object_id', // Foreign key on Measurements table...
+                    'id', // Local key on Project table...
+                    'id' // Local key on Plants table...
+                    )->where('pictures.object_type', 'App\Voucher');
     }
 
 
@@ -199,42 +224,117 @@ class Project extends Model
       return array_unique(array_merge($q1,$q2));
     }
 
+    public function locations_ids()
+    {
+      $q1 =  $this->plants()->withoutGlobalScopes()->distinct('location_id')->cursor()->pluck('location_id')->toArray();
+      $q2 =  $this->vouchers()->withoutGlobalScopes()->distinct('parent_id')->where('parent_type','App\Location')->cursor()->pluck('parent_id')->toArray();
+      return array_unique(array_merge($q1,$q2));
+    }
 
-    /* SUMMARY FUNCTIONS FOR INFORMING WHAT THE PROJECT IS ABOUT */
-    /* counts must be shown regardless of permission, so unatuhorized users can see how many things the project have */
-    /* hence using the DB raw queries */
 
-    public function plants_public_count()
+    /* function to interact with the Count model */
+    public function summary_counts()
+    {
+        return $this->morphMany("App\Summary", 'object');
+    }
+
+
+    public function getCount($scope="all",$scope_id=null,$target='plants')
+    {
+      $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
+      if (null !== $scope_id) {
+        $query = $query->where('scope_id',"=",$scope_id);
+      } else {
+        $query = $query->whereNull('scope_id');
+      }
+      if ($query->count()) {
+        return $query->first()->value;
+      }
+      return 0;
+    }
+
+
+    public function locationsCount()
+    {
+      return count($this->locations_ids());
+    }
+
+    public function plantsCount()
     {
        return $this->plants()->withoutGlobalScopes()->count();
     }
 
-    public function vouchers_public_count()
+    public function vouchersCount()
     {
         return $this->vouchers()->withoutGlobalScopes()->count();
     }
+    public function measurementsCount()
+    {
+      return ($this->vouchersMeasurementsCount())+($this->plantsMeasurementsCount());
+    }
 
-    public function vouchers_public_taxons_count()
+    /*count distinct plant and voucher identification taxon at or below the species level*/
+    public function count_taxons($what=null)
+    {
+      $taxonsp = [];
+      if ($what == null or $what=='plants') {
+        $taxonsp = $this->plant_identifications()->withoutGlobalScopes()->with('taxon')->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+      }
+      $taxonsv = [];
+      if ($what == null or $what=='vouchers') {
+        $taxonsv = $this->voucher_identifications()->withoutGlobalScopes()->with('taxon')->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+      }
+      $taxons = array_unique(array_merge($taxonsp,$taxonsv));
+      return count($taxons);
+    }
+
+
+    public function taxonsCount()
+    {
+      return $this->count_taxons();
+    }
+
+    /* pictures of plants and vouchers only */
+    public function picturesCount()
+    {
+      $picturesp = $this->plants_pictures()->withoutGlobalScopes()->count();
+      $picturesv = $this->vouchers_pictures()->withoutGlobalScopes()->count();
+      return ($picturesp+$picturesv);
+    }
+
+
+    public function vouchersTaxonsCount()
     {
       return $this->voucher_identifications()->withoutGlobalScopes()->distinct('taxon_id')->count();
     }
-    public function plants_public_taxons_count()
+    public function plantsTaxonsCount()
     {
       return $this->plant_identifications()->withoutGlobalScopes()->distinct('taxon_id')->count();
     }
 
 
-    public function vouchers_public_measurements_count()
+    public function vouchersMeasurementsCount()
     {
       return $this->voucher_measurements()->withoutGlobalScopes()->count();
     }
 
-    public function plants_public_measurements_count()
+    public function plantsMeasurementsCount()
     {
       return $this->plant_measurements()->withoutGlobalScopes()->count();
 
     }
 
+    public function datasetIDS()
+    {
+      $query = DB::select('(SELECT DISTINCT dataset_id FROM measurements INNER JOIN plants ON plants.id=measurements.measured_id WHERE measured_type="App\\\Plant" AND plants.project_id='.$this->id.') UNION (SELECT DISTINCT dataset_id FROM measurements INNER JOIN vouchers ON vouchers.id=measurements.measured_id WHERE measured_type="App\\\Voucher" AND vouchers.project_id='.$this->id.")");
+      $query  = array_map(function($value) { return (array)$value;},$query);
+      return $query;
+    }
+
+    public function datasetsCount()
+    {
+      return count($this->datasetIDS());
+    }
 
     /* summarize the counts of identifications per taxons.level and published vs unpublished names*/
     public function identification_summary()

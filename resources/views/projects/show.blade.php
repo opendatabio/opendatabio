@@ -105,7 +105,7 @@
     </a>
     @endif
     &nbsp;&nbsp;
-    <a href="{{ url('taxons/'. $project->id. '/project')  }}" class="btn btn-default">
+    <a href="{{ url('projects/'. $project->id. '/taxons')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
       @lang('messages.taxons')
     </a>

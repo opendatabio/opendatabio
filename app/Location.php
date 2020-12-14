@@ -10,6 +10,9 @@ namespace App;
 use Baum\Node;
 use DB;
 use Lang;
+use App\Taxon;
+use App\Identification;
+use Illuminate\Support\Arr;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 
@@ -100,7 +103,7 @@ class Location extends Node
 
     public function measurements()
     {
-        return $this->morphMany(Measurement::class, 'measured');
+        return $this->morphMany("App\Measurement", 'measured');
     }
 
     public function getLatLong()
@@ -221,8 +224,8 @@ class Location extends Node
 
     protected function extractXY($point)
     {
+        $point = str_replace(["(",")"],"", $point);
         $pos = strpos($point, ' ');
-
         return ['x' => substr($point, 0, $pos), 'y' => substr($point, $pos + 1)];
     }
 
@@ -363,11 +366,43 @@ class Location extends Node
         return $this->morphMany(Voucher::class, 'parent');
     }
 
-    public function plantvouchers()
+    //vouchers through plants
+    public function plant_vouchers()
     {
-      return $this->hasManyThrough('App\Voucher', 'App\Plant', 'id','parent_id','id','location_id')->where('parent_type','App\Plant');
-      //array_search(static::class, Relation::morphMap()) ?: static::class);
+      return $this->hasManyThrough(
+                    'App\Voucher',
+                    'App\Plant',
+                    'location_id', // Foreign key on plant table...
+                    'parent_id', // Foreign key on voucher table...
+                    'id', // Local key on location table...
+                    'id' // Local key on plant table...
+                    )->where('parent_type','App\Plant');
     }
+
+    public function plant_identifications( )
+    {
+      return $this->hasManyThrough(
+                    'App\Identification',
+                    'App\Plant',
+                    'location_id', // Foreign key on Plants table...
+                    'object_id', // Foreign key on identification table...
+                    'id', // Local key on location table...
+                    'id' // Local key on plants table...
+                    )->where('identifications.object_type', 'App\Plant');
+    }
+
+    public function voucher_identifications( )
+    {
+      return $this->hasManyThrough(
+                    'App\Identification',
+                    'App\Voucher',
+                    'parent_id', // Foreign key on Plants table...
+                    'object_id', // Foreign key on Measurements table...
+                    'id', // Local key on Project table...
+                    'id' // Local key on Plants table...
+                    )->where('identifications.object_type', 'App\Voucher')->where('vouchers.parent_type','App\Location');
+    }
+
 
 
     public function getAllVouchersAttribute() {
@@ -467,6 +502,145 @@ class Location extends Node
         $query = DB::table('vouchers')->join('plants','plants.id','=','vouchers.parent_id')->whereIn('plants.location_id',$ids)->where('parent_type',"App\Plant");
         $n2 = $query->count();
         return $n1+$n2;
+    }
+
+
+    /* FUNCTIONS TO INTERACT WITH THE COUNT MODEL */
+    public function summary_counts()
+    {
+        return $this->morphMany("App\Summary", 'object');
+    }
+
+
+    public function getCount($scope="all",$scope_id=null,$target='plants')
+    {
+      $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
+      if (null !== $scope_id) {
+        $query = $query->where('scope_id',"=",$scope_id);
+      } else {
+        $query = $query->whereNull('scope_id');
+      }
+      if ($query->count()) {
+        return $query->first()->value;
+      }
+      return 0;
+    }
+
+
+
+    /* functions to generate counts */
+    public function plantsCount($scope='all',$scope_id=null)
+    {
+      if ('projects' == $scope and $scope_id>0) {
+          return array_sum($this->getDescendantsAndSelf()->loadCount(['plants' => function ($plant) use($scope_id ) {
+              $plant->withoutGlobalScopes()->where('project_id',$scope_id);
+            }])->pluck('plants_count')->toArray());
+      }
+      if ('datasets' == $scope and $scope_id>0) {
+          $query = $this->getDescendantsAndSelf()->loadCount(['plants' => function ($plant)  use($scope_id) {
+            $plant->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scope_id) {
+              $measurement->withoutGlobalScopes()->where('dataset_id','=',$scope_id);
+            });}]);
+          return array_sum($query->pluck('plants_count')->toArray());
+      }
+      return array_sum($this->getDescendantsAndSelf()->loadCount(['plants' => function ($plant) {
+            $plant->withoutGlobalScopes();
+        }])->pluck('plants_count')->toArray());
+    }
+
+
+    public function vouchersCount($scope='all',$scope_id=null)
+    {
+      if ('projects' == $scope and $scope_id>0) {
+        $query = $this->getDescendantsAndSelf()->loadCount(
+            ['vouchers' => function ($voucher)  use($scope_id) {
+                $voucher->withoutGlobalScopes()->where('vouchers.project_id','=',$scope_id); } ])->loadCount(['plant_vouchers' => function ($plant_voucher) use($scope_id) {
+                    $plant_voucher->withoutGlobalScopes()->where('vouchers.project_id','=',$scope_id); } ]);
+      }
+      if ('datasets' == $scope and $scope_id>0) {
+        $query = $this->getDescendantsAndSelf()->loadCount(
+            ['vouchers' => function ($voucher)  use($scope_id) {
+                $voucher->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scope_id) {
+                  $measurement->withoutGlobalScopes()->where('dataset_id','=',$scope_id);
+                }); }])->loadCount(['plant_vouchers' => function ($plant_voucher) use($scope_id) {
+                    $plant_voucher->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scope_id) {
+                      $measurement->withoutGlobalScopes()->where('dataset_id','=',$scope_id);
+                    });}]);
+      }
+      if (!isset($query) or null == $scope_id) {
+      $query = $this->getDescendantsAndSelf()->loadCount(
+          ['vouchers' => function ($voucher) {
+              $voucher->withoutGlobalScopes(); } ])->loadCount(['plant_vouchers' => function ($plant_voucher) {
+                  $plant_voucher->withoutGlobalScopes(); } ]);
+      }
+      $count1 = array_sum($query->pluck('vouchers_count')->toArray());
+      $count2 = array_sum($query->pluck('plant_vouchers_count')->toArray());
+      return $count1+$count2;
+    }
+
+    //measurement should count only LOCATION measurements, including descendants (not like taxon as descendant has not a relationship with parent like phylogenetic relationships), so should not count measurements for plants and vouchers at locations.
+    //they also have no relationship with project, so project scope makes no sense for locations
+    public function measurementsCount($scope='all',$scope_id=null)
+    {
+      $query = $this->getDescendantsAndSelf()->loadCount('measurements');
+      if ($scope='datasets' and $scope_id>0) {
+        $query = $this->getDescendantsAndSelf()->loadCount(
+            ['measurements' => function ($query)  use($scope_id) {
+                $query->withoutGlobalScopes()->where('dataset_id','=',$scope_id); } ]);
+      }
+      return array_sum($query->pluck('measurements_count')->toArray());
+    }
+
+    /* for pictures only location related pictures including pictures of descendants*/
+    public function picturesCount($scope='all',$scope_id=null)
+    {
+      $query = $this->getDescendantsAndSelf()->loadCount('pictures');
+      return array_sum($query->pluck('pictures_count')->toArray());
+    }
+
+    /* count species or below species identifications at locatilies */
+    public function taxonsCount($scope=null,$scope_id=null)
+    {
+      if ('projects' == $scope and $scope_id>0) {
+          $locations_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
+          $taxonsp = Identification::with('taxon')->whereHasMorph('object',['App\Plant'],function($plant) use($scope_id,$locations_list){
+            $plant->withoutGlobalScopes()->where('project_id','=',$scope_id)->whereIn('location_id',$locations_list);
+          })->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+          $taxonsv = Identification::with('taxon')->whereHasMorph('object',['App\Voucher'],function($voucher) use($scope_id,$locations_list){
+            $voucher->withoutGlobalScopes()->where('project_id','=',$scope_id)->whereIn('parent_id',$locations_list)->where('parent_type','=','App\Location');
+          })->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+          $taxons = array_unique(array_merge($taxonsp,$taxonsv));
+      }
+      if ('datasets' == $scope and $scope_id>0) {
+        $locations_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
+        $taxonsp = Identification::with('taxon')->whereHasMorph('object',['App\Plant'],function($plant) use($scope_id,$locations_list){
+          $plant->withoutGlobalScopes()->whereIn('location_id',$locations_list)->whereHas('measurements',function($measurement) use ($scope_id) { $measurement->withoutGlobalScopes()->where('dataset_id',"=",$scope_id); });
+        })->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+        $taxonsv = Identification::with('taxon')->whereHasMorph('object',['App\Voucher'],function($voucher) use($scope_id,$locations_list){
+          $voucher->withoutGlobalScopes()->whereIn('parent_id',$locations_list)->where('parent_type','=','App\Location')->whereHas('measurements',function($measurement) use ($scope_id) { $measurement->withoutGlobalScopes()->where('dataset_id',"=",$scope_id); });
+        })->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+        $taxons = array_unique(array_merge($taxonsp,$taxonsv));
+      }
+      if (!isset($taxons) or null == $scope_id) {
+        $taxons  = $this->getDescendantsAndSelf()->map(function($location) {
+                  $listp = $location->plant_identifications()->with('taxon')->withoutGlobalScopes()->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+                  $listv = $location->voucher_identifications()->with('taxon')->withoutGlobalScopes()->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+                  return array_unique(array_merge($listp,$listv));
+                })->toArray();
+      }
+      $taxons = array_unique(Arr::flatten($taxons));
+      return count($taxons);
+    }
+
+
+    public function taxonsIDS()
+    {
+      $taxons  = $this->getDescendantsAndSelf()->map(function($location) {
+                  $listp = $location->plant_identifications()->with('taxon')->withoutGlobalScopes()->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+                  $listv = $location->voucher_identifications()->with('taxon')->withoutGlobalScopes()->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+                  return array_unique(array_merge($listp,$listv));
+                })->toArray();
+      return array_unique(Arr::flatten($taxons));
     }
 
 

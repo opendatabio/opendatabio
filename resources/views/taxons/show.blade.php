@@ -16,6 +16,9 @@
 @if ($taxon->mycobank)
 <a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec={{$taxon->mycobank}}&Fields=All" target="_blank"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
 @endif
+@if ($taxon->zoobank)
+<a href=="http://zoobank.org/NomenclaturalActs/{{$taxon->zoobank}}" target="_blank"><img src="{{asset('images/zoobank.png')}}" alt="ZOOBANK" width="33px"></a>
+@endif
 &nbsp;
 <span class="history" style="float:right">
 <a href="{{url("taxons/$taxon->id/activity")}}">
@@ -104,26 +107,26 @@
   &nbsp;&nbsp;
 @endif
 
-@if ($taxon->measurements()->count())
-<a href="{{ url('taxons/'. $taxon->id. '/measurements')  }}" class="btn btn-default">
+@if ($taxon->getCount("all",null,'measurements'))
+<a href="{{ url('measurements/'. $taxon->id. '/taxon')  }}" class="btn btn-default">
 <i class="fa fa-btn fa-search"></i>
-{{ $taxon->measurements()->count() }}
+{{ $taxon->getCount("all",null,'measurements') }}
 @lang('messages.measurements')
 </a>
 &nbsp;&nbsp;
 @endif
-@if ($taxon->plantsCount())
-<a href="{{ url('taxons/'. $taxon->id. '/plants')  }}" class="btn btn-default">
+@if ($taxon->getCount("all",null,'plants'))
+<a href="{{ url('plants/'. $taxon->id. '/taxon')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
-{{ $taxon->plantsCount() }}
+{{ $taxon->getCount("all",null,'plants') }}
 @lang('messages.plants')
     </a>
 &nbsp;&nbsp;
 @endif
-@if ($taxon->vouchersCount())
-<a href="{{ url('taxons/'. $taxon->id. '/vouchers')  }}" class="btn btn-default">
+@if ($taxon->getCount("all",null,'vouchers'))
+<a href="{{ url('vouchers/'. $taxon->id. '/taxon')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
-{{ $taxon->vouchersCount() }}
+{{ $taxon->getCount("all",null,'vouchers') }}
 @lang('messages.vouchers')
     </a>
 &nbsp;&nbsp;

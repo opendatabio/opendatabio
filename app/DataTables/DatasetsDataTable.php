@@ -33,12 +33,8 @@ class DatasetsDataTable extends DataTable
         ->editColumn('privacy', function ($dataset) { return Lang::get('levels.privacy.'.$dataset->privacy); })
         ->addColumn('full_name', function ($dataset) {return $dataset->full_name; })
         ->addColumn('measurements', function ($dataset) {
-            $meas_counts = $dataset->measurements()->withoutGlobalScopes()->count();
-            if ($meas_counts) {
-              return '<a href="'.url('datasets/'.$dataset->id.'/measurements').'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measurements').'" >'.$meas_counts.'</a>';
-            } else {
-              return 0;
-            }
+            $measurements_count = $dataset->getCount('all',null,"measurements");
+            return '<a href="'.url('measurements/'.$dataset->id.'/dataset').'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measurements').'" >'.$measurements_count.'</a>';
         })
         ->addColumn('members', function ($dataset) {
             if (empty($dataset->users)) {
@@ -57,20 +53,24 @@ class DatasetsDataTable extends DataTable
         })
         ->addColumn('tags', function ($dataset) { return $dataset->tagLinks; })
         ->addColumn('plants', function ($dataset) {
-            $plcounts = $dataset->plants_ids()->count();
-            if ($plcounts>0) {
-              return '<a href="'.url('plants/'.$dataset->id."/datasets").'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measured_plants').'" >'.$plcounts.'</a>';
-            } else {
-              return 0;
-            }
+          $plants_count = $dataset->getCount('all',null,"plants");
+          return '<a href="'.url('plants/'. $dataset->id. '/datasets').'" >'.$plants_count.'</a>';
         })
         ->addColumn('vouchers', function ($dataset) {
-            $vccounts = $dataset->vouchers_ids()->count();
-            if ($vccounts>0) {
-              return '<a href="'.url('vouchers/'.$dataset->id.'/datasets').'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measured_vouchers').'" >'.$vccounts.'</a>';
-            } else {
-              return 0;
-            }
+            $vouchers_count = $dataset->getCount('all',null,"vouchers");
+            return '<a href="'.url('vouchers/'. $dataset->id. '/dataset').'" >'.$vouchers_count.'</a>';
+        })
+        ->addColumn('taxons', function ($dataset) {
+            $taxons_count = $dataset->getCount('all',null,"taxons");
+            return '<a href="'.url('taxons/'. $dataset->id. '/dataset').'" >'.$taxons_count.'</a>';
+        })
+        ->addColumn('locations', function ($dataset) {
+            $locations_count = $dataset->getCount('all',null,"locations");
+            return '<a href="'.url('locations/'. $dataset->id. '/dataset').'" >'.$locations_count.'</a>';
+        })
+        ->addColumn('projects', function ($dataset) {
+            $projects_count = $dataset->getCount('all',null,"projects");
+            return '<a href="'.url('projects/'. $dataset->id. '/dataset').'" >'.$projects_count.'</a>';
         })
         ->addColumn('action',  function ($dataset) {
             if (Gate::denies('export', $dataset)) {
@@ -79,7 +79,7 @@ class DatasetsDataTable extends DataTable
               return  '<a href="'.url('datasets/'.$dataset->id."/download").'" class="btn btn-success btn-xs datasetexport" id='.$dataset->id.' data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_download_dataset').'"><span class="glyphicon glyphicon-download-alt unstyle"></span></a>';
             }
         })
-        ->rawColumns(['name', 'members', 'tags','measurements','plants','vouchers','action']);
+        ->rawColumns(['name', 'members', 'tags','measurements','plants','vouchers','taxons','locations','projects','action']);
     }
 
     /**
@@ -122,6 +122,10 @@ class DatasetsDataTable extends DataTable
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
                 'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
+                'taxons' => ['title' => Lang::get('messages.taxons'), 'searchable' => false, 'orderable' => false],
+                'locations' => ['title' => Lang::get('messages.locations'), 'searchable' => false, 'orderable' => false],
+                'projects' => ['title' => Lang::get('messages.projects'), 'searchable' => false, 'orderable' => false],
+
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -135,7 +139,7 @@ class DatasetsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [2,3,4],
+                    'targets' => [2,3,4,5],
                     'visible' => false,
                 ],
               ],

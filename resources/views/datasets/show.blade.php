@@ -48,21 +48,39 @@
   &nbsp;&nbsp;
   <a data-toggle="collapse" href="#dataset_people" class="btn btn-default">@lang('messages.persons')</a>
 
-  @if ($dataset->plants_ids()->count())
+  @if ($dataset->getCount('all',null,'plants'))
     &nbsp;&nbsp;
     <a href="{{ url('plants/'. $dataset->id. '/datasets')  }}" class="btn btn-default" name="submit" value="submit">
           <i class="fa fa-btn fa-search"></i>
-          {{ $dataset->plants_ids()->count() }}
+          {{ $dataset->getCount('all',null,'plants') }}
           @lang('messages.plants')
     </a>
   @endif
 
-  @if ($dataset->vouchers_ids()->count())
+  @if ($dataset->getCount('all',null,'vouchers'))
     &nbsp;&nbsp;
-    <a href="{{ url('vouchers/'. $dataset->id. '/datasets')  }}" class="btn btn-default" name="submit" value="submit">
+    <a href="{{ url('vouchers/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
           <i class="fa fa-btn fa-search"></i>
-          {{ $dataset->vouchers_ids()->count() }}
+          {{ $dataset->getCount('all',null,'vouchers') }}
           @lang('messages.vouchers')
+    </a>
+  @endif
+
+  @if ($dataset->getCount('all',null,'locations'))
+    &nbsp;&nbsp;
+    <a href="{{ url('locations/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
+          <i class="fa fa-btn fa-search"></i>
+          {{ $dataset->getCount('all',null,'locations') }}
+          @lang('messages.locations')
+    </a>
+  @endif
+
+  @if ($dataset->getCount('all',null,'taxons'))
+    &nbsp;&nbsp;
+    <a href="{{ url('taxons/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
+          <i class="fa fa-btn fa-search"></i>
+          {{ $dataset->getCount('all',null,'taxons') }}
+          @lang('messages.taxons')
     </a>
   @endif
 
@@ -81,7 +99,7 @@
 <div class="col-sm-12">
 <br>
 @if ($dataset->measurements()->withoutGlobalScopes()->count())
-  <a href="{{ url('datasets/'. $dataset->id. '/measurements')  }}" class="btn btn-default" name="submit" value="submit">
+  <a href="{{ url('measurements/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
         <i class="fa fa-btn fa-search"></i>
         {{ $dataset->measurements()->withoutGlobalScopes()->count() }}
         @lang('messages.measurements')
@@ -205,7 +223,7 @@
                   </td>
                   <td class="table-text">
                       @if ($summary->plants>0)
-                        <a href="{{ url('datasets/'.$dataset->id.'|'.$summary->trait_id.'|Plant/measurements') }}">{{ $summary->plants }}</a>
+                        <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'|Plant/dataset') }}">{{ $summary->plants }}</a>
                       @else
                         {{ $summary->plants }}
                       @endif
@@ -213,7 +231,7 @@
 
                   <td class="table-text">
                       @if ($summary->vouchers>0)
-                    <a href="{{ url('datasets/'.$dataset->id.'|'.$summary->trait_id.'|Voucher/measurements') }}">{{ $summary->vouchers }}</a>
+                    <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'|Voucher/dataset') }}">{{ $summary->vouchers }}</a>
                   @else
                     {{ $summary->vouchers }}
                   @endif
@@ -221,20 +239,20 @@
 
                   <td class="table-text">
                       @if ($summary->taxons>0)
-                    <a href="{{ url('datasets/'.$dataset->id.'|'.$summary->trait_id.'|Taxon/measurements') }}">{{ $summary->taxons }}</a>
+                    <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'|Taxon/dataset') }}">{{ $summary->taxons }}</a>
                   @else
                     {{ $summary->taxons }}
                   @endif
                   </td>
                   <td class="table-text">
                       @if ($summary->locations>0)
-                    <a href="{{ url('datasets/'.$dataset->id.'|'.$summary->trait_id.'|Location/measurements') }}">{{ $summary->locations }}</a>
+                    <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'|Location/dataset') }}">{{ $summary->locations }}</a>
                   @else
                     {{ $summary->locations }}
                   @endif
                   </td>
                   <td class="table-text">
-                      <a href="{{ url('datasets/'.$dataset->id.'|'.$summary->trait_id.'/measurements') }}">{{ $summary->total }}</a>
+                      <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'/dataset') }}">{{ $summary->total }}</a>
                   </td>
               </tr>
           @endforeach
