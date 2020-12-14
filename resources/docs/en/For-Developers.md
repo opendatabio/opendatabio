@@ -27,3 +27,202 @@ Documentation should organized as markdown files within the `resources/docs/` fo
     ```
     php artisan generate:erd public/images/trait_model.png
     ```
+
+## Hierarchical Relations
+The [Location](Core-Objects#locations) and the [Taxon](Core-Objects#locations) use the Nested Set Model implemented through the [Baum](https://github.com/etrepat/baum) package. Other Nested Set Model packages are available for Laravel and the used may not be the most stable and updated version, although it is working.
+
+* The Hierarchical relation implemented through informing the parent-child paths for Locations and Taxons also means that queries for these objects have to query the descendants of any node. Ex: searching for 'Lauraceae' may need to return all the genera and species and infraspecies within this family. Similarly, searching form 'Brazil', should return data from all locations within Brazil. These is easly implemented with the Baum package and columns `lft` and `rgt` allow fast search for acenstors and descendants if a raw query is needed. Locations also have geometries, that could be used directly to query objects as well.
+
+* Datatables for Locations and Taxon have counts for Plants, Vouchers, Measurements and these counts MUST convey the sum of related objects to all Location and Taxon descendants. Depending on  the `depth` of the tree structure in each case, it may become too slow to render the datatable, even the initial server side page as they usually will be nodes with the largest number of descendants.
+
+* There are different ways of retriving such counts. The code below may be run in `Tinker` to compare the different performance for such queries. Compare with or withoutGlobalScopes from the queries, i.e. including or excluding the check of permissions to plants, vouchers and measurements to count them. When including global scopes you must be logged.
+
+*  **withoutGlobalScopes**:
+
+```php
+$taxon_id=1; $project_id = 2;
+
+//option 1 FASTER
+$start = microtime(true);
+$taxons_ids = Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+$plants_count = Plant::whereHas('identification', function($query) use($taxons_ids) {
+    $query->whereIn('identifications.taxon_id',$taxons_ids);})->withoutGlobalScopes()->count();
+$end = microtime(true);
+$time1 = ($end - $start);
+
+//with project scopeLeaf
+$start = microtime(true);
+$taxons_ids = Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+$plants_count = Plant::whereHas('identification', function($query) use($taxons_ids) {
+    $query->whereIn('identifications.taxon_id',$taxons_ids);})->where('project_id',"=",$project_id)->withoutGlobalScopes()->count();
+$end = microtime(true);
+$time1p = ($end - $start);
+
+
+
+//option 2
+$start = microtime(true);
+$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) { return $taxon->plants()->withoutGlobalScopes()->count();})->toArray());
+$end = microtime(true);
+$time2 = ($end - $start);
+
+
+$start = microtime(true);
+$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) use($project_id) { return $taxon->plants()->where('project_id','=',$project_id)->withoutGlobalScopes()->count();})->toArray());
+$end = microtime(true);
+$time2p = ($end - $start);
+
+
+//option 3
+$start = microtime(true);
+$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['plants' => function ($query) {
+    $query->withoutGlobalScopes();
+}])->pluck('plants_count')->toArray());
+$end = microtime(true);
+$time3 = ($end - $start);
+
+//with project scope
+$start = microtime(true);
+$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['plants' => function ($query) use($project_id) {
+    $query->withoutGlobalScopes()->where('project_id',$project_id);
+}])->pluck('plants_count')->toArray());
+$end = microtime(true);
+$time3p = ($end - $start);
+
+```
+
+* **With scopes**:
+
+```php
+
+auth::loginUsingID(2);
+$taxon_id=1; $project_id = 2;
+
+//option 1
+$start = microtime(true);
+$taxons_ids = Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+$plants_count = Plant::whereHas('identification', function($query) use($taxons_ids) {
+    $query->whereIn('identifications.taxon_id',$taxons_ids);})->count();
+$end = microtime(true);
+$time1ws = ($end - $start);
+
+//with project scopeLeaf
+$start = microtime(true);
+$taxons_ids = Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+$plants_count = Plant::whereHas('identification', function($query) use($taxons_ids) {
+    $query->whereIn('identifications.taxon_id',$taxons_ids);})->where('project_id',"=",$project_id)->count();
+$end = microtime(true);
+$time1pws = ($end - $start);
+
+
+
+//option 2
+$start = microtime(true);
+$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) { return $taxon->plants()->count();})->toArray());
+$end = microtime(true);
+$time2ws = ($end - $start);
+
+
+$start = microtime(true);
+$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) use($project_id) { return $taxon->plants()->where('project_id','=',$project_id)->count();})->toArray());
+$end = microtime(true);
+$time2pws= ($end - $start);
+
+
+//option 3
+$start = microtime(true);
+$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount('plants')->pluck('plants_count')->toArray());
+$end = microtime(true);
+$time3ws = ($end - $start);
+
+//with project scope
+$start = microtime(true);
+$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['plants' => function ($query) use($project_id) {
+    $query->where('project_id',$project_id);
+}])->pluck('plants_count')->toArray());
+$end = microtime(true);
+$time3pws = ($end - $start);
+
+```
+
+
+```php
+
+echo
+"| Option | Execution Time | withoutGlobalScopes | ProjectScope |
+|----|----|----|
+|Option 1|".round($time1,6)."| true | false |
+|Option 2|".round($time2,6)."| true | false |
+|Option 3|".round($time3,6)."| true | false |
+|----|----|----|
+|Option 1|".round($time1ws,6)."| false | false |
+|Option 2|".round($time2ws,6)."| false | false |
+|Option 3|".round($time3ws,6)."| false | false |
+|----|----|----|
+|Option 1|".round($time1p,6)."| true | true |
+|Option 2|".round($time2p,6)."| true | true |
+|Option 3|".round($time3p,6)."| true | true |
+|----|----|----|
+|Option 1|".round($time1pws,6)."| false | true |
+|Option 2|".round($time2pws,6)."| false | true |
+|Option 3|".round($time3pws,6)."| false | true |
+";
+
+```
+
+
+| Option | Execution Time | withoutGlobalScopes | ProjectScope |
+|----|----|----|
+|Option 1|1.134222| true | false |
+|Option 2|2.680581| true | false |
+|Option 3|0.99281| true | false |
+|----|----|----|
+|Option 1|1.149312| false | false |
+|Option 2|3.18036| false | false |
+|Option 3|1.055677| false | false |
+|----|----|----|
+|Option 1|1.168094| true | true |
+|Option 2|3.044003| true | true |
+|Option 3|1.019828| true | true |
+|----|----|----|
+|Option 1|1.174584| false | true |
+|Option 2|3.015961| false | true |
+|Option 3|1.047753| false | true |
+
+
+* For Taxon measurements which is a distant relationship and involves [polymorphic relations](Core-Objects#polymorphicrelationships) it isffast to get directly from measurements as in the Measurements data-table query but without scopes.
+
+```php
+$start = microtime(true);
+$tx = Taxon::where('id',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(
+            ['plant_measurements' => function ($query) {
+                $query->withoutGlobalScopes(); } ])->loadCount(['voucher_measurements' => function ($query) {
+                    $query->withoutGlobalScopes(); } ])->loadCount(['measurements' => function ($query) {
+                        $query->withoutGlobalScopes(); } ]);
+$n1 = array_sum($tx->pluck('voucher_measurements_count')->toArray());
+$n2 = array_sum($tx->pluck('plant_measurements_count')->toArray());
+$n3 = array_sum($tx->pluck('measurements_count')->toArray());
+($n1+$n2+$n3);
+$end = microtime(true);
+$time1 = ($end - $start);
+
+$start = microtime(true);
+$taxon_list = Taxon::find($taxon_id)->getDescendantsAndSelf()->pluck('id')->toArray();
+$query = Measurement::whereHasMorph('measured',['App\Plant','App\Voucher'],function($mm) use($taxon_list) { $mm->withoutGlobalScopes()->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
+$query = $query->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$taxon_id);
+$query->count();
+$end = microtime(true);
+$time2 = ($end - $start);
+
+echo
+"| Option | Execution Time |
+|----|----|----|
+|Option 1|".round($time1,6)."|
+|Option 2|".round($time2,6)."|";
+
+```
+
+| Option | Execution Time |
+|----|----|----|
+|Option 1|2.156653|
+|Option 2|2.099643|
