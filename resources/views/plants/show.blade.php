@@ -68,7 +68,7 @@
     <p><strong>
     @lang('messages.location_precision')
 :</strong>
-    {{ $plant->location->precision }} <a data-toggle="collapse" href='#hintp'>?</a>
+    {!! $plant->location->precision !!} <a data-toggle="collapse" href='#hintp'>?</a>
     </p>
 @endif
 <div id='hintp' class='panel-collapse collapse'>
@@ -118,7 +118,7 @@
 <div class="col-sm-4">
     <a href="{{ url('measurements/'. $plant->id. '/plant')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
-{{ $plant->measurements()->count() }}
+{{ $plant->measurements()->withoutGlobalScopes()->count() }}
 @lang('messages.measurements')
     </a>
 </div>

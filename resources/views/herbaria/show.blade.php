@@ -26,6 +26,7 @@
           @lang('messages.noih')
           @endif
 </p>
+@if($herbarium->vouchers()->count() == 0)
 @can ('delete', $herbarium)
 		    <form action="{{ url('herbaria/'.$herbarium->id) }}" method="POST" class="form-horizontal">
 			 {{ csrf_field() }}
@@ -41,6 +42,7 @@
 			</div>
 		    </form>
 @endcan
+@endif
                 </div>
             </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->

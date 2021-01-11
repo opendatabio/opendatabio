@@ -80,7 +80,23 @@
 			    </div>
 @endcan
                 </div>
+
+
             </div>
 <!-- Other details (specialist, herbarium, collects, etc?) -->
     </div>
+
+
+    @if (isset($chartjs))
+    <div class="panel panel-default">
+      <div class="panel-body" >
+        @if (isset($chartjs))
+          <div style = "width:100%; height:400px; overflow:auto;">
+            {!! $chartjs->render() !!}
+          </div>
+        @endif
+      </div>
+    </div>
+    @endif
+
 @endsection

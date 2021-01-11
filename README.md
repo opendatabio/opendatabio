@@ -92,7 +92,7 @@ Find files:
 php -i | grep 'Configuration File'
 
 Change in them:
-	memory_limit should be at least 300M
+	memory_limit should be at least 512M
 	post_max_size should be at least 30M
 	upload_max_filesize should be at least 30M
 
@@ -175,7 +175,7 @@ User-agent: *
 Disallow: /
 ```
 
-* Folders `public/downloads_temp`, `public/upload_pictures`, `storage` and `bootstrap/cache` must be writable by the Server user (usually www-data). See [this link](https://linuxhint.com/how-to-set-up-file-permissions-for-laravel/) for an example of how to do that. 
+* Folders `public/downloads_temp`, `public/upload_pictures`, `storage` and `bootstrap/cache` must be writable by the Server user (usually www-data). See [this link](https://linuxhint.com/how-to-set-up-file-permissions-for-laravel/) for an example of how to do that.
 
 * When considering database backups for an OpenDataBio installation, please remember that the user uploaded images are
 stored in the filesystem, and plan your backup accordingly.

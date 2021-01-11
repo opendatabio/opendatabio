@@ -34,8 +34,8 @@ class LocationController extends Controller
     // MAY receive optional "$request->scope" to return only UCs; default is to return all locations?
     public function autocomplete(Request $request)
     {
-        $locations = Location::where('name', 'LIKE', ['%'.$request->input('query').'%'])->noWorld()
-                        ->orderBy('name', 'ASC')->take(30);
+        $locations = Location::noWorld()->where('name', 'LIKE', ['%'.$request->input('query').'%'])
+                        ->orderBy('name', 'ASC')->take(10);
         if ($request->scope) {
             switch ($request->scope) {
             case 'ucs':
@@ -51,7 +51,7 @@ class LocationController extends Controller
         $locations = $locations->get();
         $locations = collect($locations)->transform(function ($location) {
             $location->data = $location->id;
-            $location->value = $location->fullname;
+            $location->value = $location->searchablename;
 
             return $location->only(['data', 'value', 'adm_level']);
         });

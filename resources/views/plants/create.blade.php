@@ -41,7 +41,7 @@
 // - are we adding a plant to a registered location?
 
 $ltype = isset($plant) ? $plant->location->adm_level : (is_null($location) ? '' : $location->adm_level);
-$lname = (isset($plant) and $plant->location) ? $plant->location->fullname : (is_null($location) ? '' : $location->fullname);
+$lname = (isset($plant) and $plant->location) ? $plant->location->searchablename : (is_null($location) ? '' : $location->searchablename);
 $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($location) ? '' : $location->id);
 ?>
 
@@ -139,23 +139,21 @@ $lid = (isset($plant) and $plant->location) ? $plant->location_id : (is_null($lo
 </div>
 
 <div class="form-group super-relative">
-    <label for="relative_position" class="col-sm-3 control-label">
-@lang('messages.relative_position')
-</label>
-        <a data-toggle="collapse" href="#hint12" class="btn btn-default">?</a>
-	    <div class="col-sm-6 super-xy">
+    <label for="relative_position" class="col-sm-3 control-label">@lang('messages.relative_position')</label>
+    <a data-toggle="collapse" href="#hint12" class="btn btn-default">?</a>
+	   <div class="col-sm-6 super-xy">
 	X: <input type="text" name="x" id="x" class="form-control latlongpicker" value="{{ old('x', isset($plant) ? $plant->x : null) }}">(m)&nbsp;
 	Y: <input type="text" name="y" id="y" class="form-control latlongpicker" value="{{ old('y', isset($plant) ? $plant->y : null) }}">(m)
-            </div>
-	    <div class="col-sm-6 super-ang">
-	@lang('messages.angle'): <input type="text" name="angle" id="angle" class="form-control latlongpicker" value="{{ old('x', isset($plant) ? $plant->angle : null) }}">&nbsp;
-	@lang('messages.distance'): <input type="text" name="distance" id="distance" class="form-control latlongpicker" value="{{ old('y', isset($plant) ? $plant->distance : null) }}">(m)
-            </div>
-  <div class="col-sm-12">
-    <div id="hint12" class="panel-collapse collapse">
-	@lang('messages.plant_position_hint')
     </div>
-  </div>
+	   <div class="col-sm-6 super-ang">
+	      @lang('messages.angle'): <input type="text" name="angle" id="angle" class="form-control latlongpicker" value="{{ old('x', isset($plant) ? $plant->angle : null) }}">&nbsp;
+	       @lang('messages.distance'): <input type="text" name="distance" id="distance" class="form-control latlongpicker" value="{{ old('y', isset($plant) ? $plant->distance : null) }}">(m)
+    </div>
+    <div class="col-sm-12">
+      <div id="hint12" class="panel-collapse collapse">
+	       @lang('messages.plant_position_hint')
+       </div>
+     </div>
 </div>
 
 <!-- collector -->

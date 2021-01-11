@@ -50,10 +50,10 @@ class Location extends Node
     public function getPrecisionAttribute()
     {
         if ($this->adm_level <= 99) {
-            return Lang::get('levels.imprecise');
+            return Lang::get('levels.imprecise').' <strong>'.Lang::get('levels.adm_level.'.$this->adm_level)."</strong>";
         }
 
-        return Lang::get('levels.precise');
+        return Lang::get('levels.precise').' <strong>'.Lang::get('levels.adm_level.'.$this->adm_level)."</strong>";
     }
 
     public function rawLink()
@@ -192,6 +192,18 @@ class Location extends Node
         }
 
         return $str.$this->name;
+    }
+
+    public function getSearchableNameAttribute()
+    {
+        $name = $this->name;
+        $parent = $this->getAncestors()->last()->name;
+        if ($this->getAncestorsWithoutRoot()->count()>2) {
+          $str = $name." << ".$parent." << ... << ".$this->getAncestorsWithoutRoot()->first()->name;
+        } else {
+          $str = $name." << ".$parent;
+        }        
+        return $str;
     }
 
     public function getParentNameAttribute()
@@ -488,27 +500,16 @@ class Location extends Node
         return $this->morphMany(Picture::class, 'object');
     }
 
-    public function plants_public_count()
-    {
-        $ids = $this->getDescendantsAndSelf()->pluck('id')->toArray();
-        $query = DB::table('plants')->whereIn('plants.location_id',$ids);
-        return $query->count();
-    }
-    public function vouchers_public_count()
-    {
-        $ids = $this->getDescendantsAndSelf()->pluck('id')->toArray();
-        $query = DB::table('vouchers')->whereIn('parent_id',$ids)->where('parent_type',"App\Location");
-        $n1 = $query->count();
-        $query = DB::table('vouchers')->join('plants','plants.id','=','vouchers.parent_id')->whereIn('plants.location_id',$ids)->where('parent_type',"App\Plant");
-        $n2 = $query->count();
-        return $n1+$n2;
-    }
-
 
     /* FUNCTIONS TO INTERACT WITH THE COUNT MODEL */
     public function summary_counts()
     {
         return $this->morphMany("App\Summary", 'object');
+    }
+
+    public function summary_scopes()
+    {
+        return $this->morphMany("App\Summary", 'scope');
     }
 
 
@@ -522,6 +523,24 @@ class Location extends Node
       }
       if ($query->count()) {
         return $query->first()->value;
+      }
+      //get a fresh count
+      if ($target=="plants") {
+        return $this->plantsCount($scope,$scope_id);
+      }
+      //get a fresh count
+      if ($target=="measurements") {
+        return $this->measurementsCount($scope,$scope_id);
+      }
+      //get a fresh count
+      if ($target=="vouchers") {
+        return $this->vouchersCount($scope,$scope_id);
+      }
+      if ($target=="taxons") {
+        return $this->taxonsCount($scope,$scope_id);
+      }
+      if ($target=="pictures") {
+        return $this->picturesCount($scope,$scope_id);
       }
       return 0;
     }
@@ -599,7 +618,7 @@ class Location extends Node
     }
 
     /* count species or below species identifications at locatilies */
-    public function taxonsCount($scope=null,$scope_id=null)
+    public function taxonsCountOld($scope=null,$scope_id=null)
     {
       if ('projects' == $scope and $scope_id>0) {
           $locations_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
@@ -632,6 +651,17 @@ class Location extends Node
       return count($taxons);
     }
 
+    public function taxonsCount($scope=null,$scope_id=null)
+    {
+      $ids =  array_unique($this->summary_scopes()->distinct('object_id')->whereHasMorph('object',['App\Taxon'],function($object) { $object->where('level','>',200);})->where('object_type','App\Taxon')->cursor()->pluck('object_id')->toArray());
+      if ('projects' == $scope and $scope_id>0) {
+        return  Summary::distinct('object_id')->whereIn('object_id',$ids)->where('object_type','App\Taxon')->where('scope_id',$scope_id)->where('scope_type','App\Project')->count();
+      }
+      if ('datasets' == $scope and $scope_id>0) {
+        return  Summary::distinct('object_id')->whereIn('object_id',$ids)->where('object_type','App\Taxon')->where('scope_id',$scope_id)->where('scope_type','App\Dataset')->count();
+      }
+      return count(array_unique($ids));
+    }
 
     public function taxonsIDS()
     {
@@ -643,5 +673,14 @@ class Location extends Node
       return array_unique(Arr::flatten($taxons));
     }
 
+    public function taxons_ids()
+    {
+      $taxons  = $this->getDescendantsAndSelf()->map(function($location) {
+        $listp = $location->plant_identifications()->withoutGlobalScopes()->selectRaw('DISTINCT taxon_id')->pluck('taxon_id')->toArray();
+        $listv = $location->voucher_identifications()->withoutGlobalScopes()->selectRaw('DISTINCT taxon_id')->pluck('taxon_id')->toArray();
+        return array_unique(array_merge($listp,$listv));
+      })->toArray();
+      return array_unique(Arr::flatten($taxons));
+    }
 
 }

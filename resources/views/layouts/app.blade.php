@@ -126,7 +126,6 @@
             </ul>
           </li>
 
-          &nbsp;
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
                 @lang('messages.imports') <span class="caret"></span>
@@ -155,7 +154,6 @@
               </a></li>
             </ul>
           </li>
-          &nbsp;
         @endif
 
         <li class="dropdown">
@@ -163,7 +161,6 @@
             @lang('messages.help')
           </a>
         </li>
-        &nbsp;
 
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">

@@ -243,7 +243,7 @@
 		    @endif
     </a>
   </div>
-  <div class="panel-collapse collapse" id='map_box'>
+  <div class="panel-collapse" id='map_box'>
   <div class="panel-body" id="map" style="
         height: 400px;
         width: 100%;">

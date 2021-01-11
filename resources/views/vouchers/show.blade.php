@@ -68,7 +68,7 @@
               @lang('messages.plant')
               : </strong>
               {!! $voucher->parent->rawLink() !!}
-              {!! $voucher->parent->location ? $voucher->parent->locationWithGeom->coordinatesSimple : '' !!}
+              {!! $voucher->parent->location ? $voucher->parent->locationWithGeom->first()->coordinatesSimple : '' !!}
             </p>
             <p><strong>
               @lang('messages.location_precision')
@@ -81,7 +81,7 @@
               @lang('messages.location')
               : </strong>
               {!! $voucher->parent->rawLink() !!}
-              {!! $voucher->locationWithGeom->coordinatesSimple !!}
+              {!! $voucher->locationWithGeom->first()->coordinatesSimple !!}
             </p>
             <p><strong>
               @lang('messages.location_precision')
