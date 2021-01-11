@@ -148,18 +148,26 @@ class ExternalAPIs
     {
       $keys = explode('%', $answer[0]);
       $rets = array();
+      $dates = array();
       for($i=1;$i<count($answer);$i++) {
         $ret = explode('%', $answer[$i]);
         if (count($keys)==count($ret)) {
           $ret = array_combine($keys,$ret);
-          if ($searchstring == $ret["Full name without family and authors"]) {
+          $name = strtolower((string)Str::of($ret["Full name without family and authors"])->trim());
+          if (strtolower($searchstring) == $name) {
               $rets[] = $ret;
-            }
+              $dates[] = (int)$ret['Publication year full'];
+          }
         }
       }
       if (count($rets) == 1) {
         return $rets[0];
       } else {
+        #get oldest record if still more than one (priority)
+        $key = array_search(min($dates),$dates);
+        if (!is_array($key) and $dates[$key] != null) {
+          return $rets[$key];
+        }
         return null;
       }
     }
@@ -187,6 +195,7 @@ class ExternalAPIs
         } // FAILED
         $answer = array_filter(explode("\n", (string) $response->getBody()));
 
+        //return $answer;
         //if empty or only 1 line found (is heading) then not found
         if ('' === $answer[0] | count($answer)==1) {
             return [self::NOT_FOUND];
@@ -200,6 +209,7 @@ class ExternalAPIs
             $ret = self::filterIPNI($searchstring,$answer);// bogus hit, like matching genus for species name
             if (is_null($ret)) {
               $flags = $flags | self::MULTIPLE_HITS;
+              return [self::NOT_FOUND];
             }
         } else {
           $keys = explode('%', $answer[0]);
