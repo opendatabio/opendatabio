@@ -368,6 +368,47 @@ class ImportMeasurements extends AppJob
               }
           }
         $this->affectedId($measurement->id);
+
+        /* SUMMARY COUNT UPDATE */
+        $taxon_id = null;
+        $project_id = null;
+        $location_id = null;
+        if ($measurement->measured_type == Plant::class) {
+          $plant = Plant::findOrFail($measurement->measured_id);
+          $taxon_id = $plant->identification->taxon_id;
+          $location_id = $plant->location_id;
+          $project_id = $plant->project_id;
+        }
+        if ($measurement->measured_type == Voucher::class) {
+            $voucher = Voucher::findOrFail($measurement->measured_id);
+            $project_id = $voucher->project_id;
+            if ($voucher->parent_type == Location::class) {
+              $taxon_id =  $voucher->identification->taxon_id;
+              $location_id = $voucher->parent_id;
+            } else {
+              $taxon_id =  $voucher->parent->identification->taxon_id;
+              $location_id = $voucher->parent->location_id;
+            }
+        }
+        if ($measurement->measured_type == Taxon::class) {
+            $taxon_id = $measurement->measured_id;
+        }
+        if ($measurement->measured_type == Location::class) {
+            $location_id = $measurement->measured_id;
+        }
+        $newvalues = [
+          'taxon_id' => $taxon_id,
+          'location_id' => $location_id,
+          'project_id' => $project_id,
+          'dataset_id' => $measurement->dataset_id
+        ];
+        $target = 'measurements'
+        Summary::updateSummaryMeasurementsCounts($newvalues,$value="value + 1");
+        /* END SUMMARY COUNT UPDATE */
+
+
+
+
         }
         return;
     }

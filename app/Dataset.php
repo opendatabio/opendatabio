@@ -179,6 +179,10 @@ public function traits_summary()
        return $this->morphMany("App\Summary", 'object');
    }
 
+   public function summary_scopes()
+   {
+       return $this->morphMany("App\Summary", 'scope');
+   }
 
    public function getCount($scope="all",$scope_id=null,$target='plants')
    {
@@ -210,13 +214,20 @@ public function traits_summary()
      return $this->measurements()->withoutGlobalScopes()->count();
    }
 
-   public function taxonsCount()
+   public function taxonsCountOld()
    {
      $count_level = Taxon::getRank('species');
      $measured_objects_taxon_id  = DB::table('identifications')->join('measurements','measured_id','=','object_id')->join('taxons','taxon_id','=','taxons.id')->distinct('taxon_id')->whereRaw('measured_type=object_type')->where('dataset_id',$this->id)->where('taxons.level',">=",$count_level)->pluck('taxon_id')->toArray();
      $measured_taxon_id =  $this->measurements()->withoutGlobalScopes()->where('measured_type','=','App\Taxon')->whereHasMorph( 'measured',['App\Taxon'],function($object) use($count_level){ $object->where('level','>=',$count_level);})->distinct('measured_id')->pluck('measured_id')->toArray();
      return count(array_unique(array_merge($measured_objects_taxon_id,$measured_taxon_id)));
    }
+
+   public function taxonsCount()
+   {
+     $count_level = Taxon::getRank('species');
+     return $this->summary_scopes()->whereHasMorph('object',['App\Taxon'],function($object) use($count_level) { $object->where('level','>=',$count_level);})->where('object_type','App\Taxon')->selectRaw("DISTINCT object_id")->cursor()->count();
+   }
+
 
    public function locationsCount()
    {

@@ -17,16 +17,367 @@ use Illuminate\Support\Arr;
 class Summary extends Model
 {
 
-    protected $table = "counts";
-
     protected $fillable = ['object_id', 'object_type', 'value', 'target', 'scope_id','scope_type'];
 
+    /* Morph to object with counts */
     public function object()
     {
         return $this->morphTo('object');
     }
 
-    public static function fillCounts($object_id=null,$object_type=null,$scope_type='all',$scope_id=null,$storezeros=false)
+    /* Morph to the scope counted */
+    public function scope()
+    {
+        return $this->morphTo('scope');
+    }
+
+
+
+    /* FUNCTION TO BE CALLED ON PLANT OR VOUCHER EDITS, updates or insertions */
+    /* UPDATE  Summary->value COUNTS FOR objects: locations and taxons; target plants OR vouchers; and, scopes location,project and datasets*/
+    #newvalues and oldvalues are arrays with the following keys
+    #$taxon_id
+    #location_id
+    #project_id
+    #target is one of 'vouchers' or 'plants'
+    #datasets is an array of datasets ids
+
+    public static function updateSummaryCounts($newvalues,$oldvalues,$target,$datasets=null,$measurements_count=0)
+    {
+
+      if (null == $oldvalues) {
+        $oldvalues =  [
+             "taxon_id" => null,
+             "location_id" => null,
+             "project_id" => null
+        ];
+        }
+      /* what changed or is new*/
+      $taxonchanged = ($newvalues['taxon_id'] != $oldvalues['taxon_id'] and null != $oldvalues['taxon_id']) ? true : false;
+      $locationchanged = ($newvalues['location_id'] != $oldvalues['location_id'] and null != $oldvalues['location_id']) ? true : false;
+      $projectchanged = ($newvalues['project_id'] != $oldvalues['project_id'] and null != $oldvalues['project_id']) ? true : false;
+
+      //get taxon chain
+      $taxonsnew = Taxon::findOrFail($newvalues['taxon_id'])->getAncestorsAndSelf()->pluck('id')->toArray();
+      if ($taxonchanged) {
+        $taxonsold = Taxon::findOrFail($oldvalues['taxon_id'])->getAncestorsAndSelf()->pluck('id')->toArray();
+      }
+      //get locations chain
+      $locationsnew = Location::findOrFail($newvalues['location_id'])->getAncestorsAndSelf()->pluck('id')->toArray();
+      if ($locationchanged) {
+          $locationsold = Location::findOrFail($oldvalues['location_id'] )->getAncestorsAndSelf()->pluck('id')->toArray();
+      }
+
+      //update taxon if has changed or is new
+      if ($taxonchanged or $oldvalues['taxon_id'] == null) {
+        $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','all')->where('target',$target);
+        /* create records in summaries table if need*/
+        if ($current->count() < count($taxonsnew)) {
+          $arein = $current->cursor()->pluck('object_id')->toArray();
+          $arenot = array_diff($taxonsnew,$arein);
+          $txtoinsert = [];
+          $targets = [$target,'measurements'];
+          foreach ($targets as $current_target) {
+            foreach ($arenot as $taxon_id) {
+              $txtoinsert[] = ['object_id' => $taxon_id, 'object_type' => 'App\Taxon', 'scope_type' => 'all', 'target' => $current_target, 'value' => 0,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
+              foreach ($locationsnew as $location_id) {
+                $txtoinsert[] = ['object_id' => $taxon_id, 'object_type' => 'App\Taxon', 'scope_type' => 'App\Location', 'target' => $current_target, 'value' => 0, 'scope_id' => $location_id,'created_at' => now(), 'updated_at' => now()];
+              }
+              $txtoinsert[] = ['object_id' => $taxon_id, 'object_type' => 'App\Taxon', 'scope_type' => 'App\Project', 'target' => $current_target, 'value' => 0, 'scope_id' => $newvalues['project_id'],'created_at' => now(), 'updated_at' => now()];
+              if (null != $datasets) {
+                foreach ($datasets as $dataset_id) {
+                  $txtoinsert[] = ['object_id' => $taxon_id, 'object_type' => 'App\Taxon', 'scope_type' => 'App\Dataset', 'target' => $current_target, 'value' => 0, 'scope_id' => $dataset_id,'created_at' => now(), 'updated_at' => now()];
+                }
+              }
+            }
+          }
+          Summary::insertOrIgnore($txtoinsert);
+        }
+
+        /*which summary counts for the taxon objects need to be updated? */
+        $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','all')->where('target',$target);
+        $current->update(['value'=> DB::raw( 'value + 1' )]);
+        if ($measurements_count>0) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','all')->where('target','measurements');
+          $current->update(['value'=> DB::raw( 'value + '.$measurements_count )]);
+        }
+
+        if ($oldvalues['taxon_id'] != null) {
+          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','all')->where('target',$target);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','all')->where('target','measurements');
+            $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+          }
+        }
+
+        /*for location scopes */
+        $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Location')->where('target',$target)->whereIn('scope_id',$locationsnew);
+        $current->update(['value'=> DB::raw( 'value + 1' )]);
+        if ($measurements_count>0) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Location')->where('target','measurements')->whereIn('scope_id',$locationsnew);
+          $current->update(['value'=> DB::raw( 'value + '.$measurements_count )]);
+        }
+        if (!$locationchanged and $taxonchanged) {
+          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Location')->where('target',$target)->whereIn('scope_id',$locationsnew);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Location')->where('target','measurements')->whereIn('scope_id',$locationsnew);
+            $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+          }
+        } elseif ($locationchanged and $taxonchanged) {
+          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Location')->where('target',$target)->whereIn('scope_id',$locationsold);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Location')->where('target','measurements')->whereIn('scope_id',$locationsold);
+            $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+          }
+        }
+
+        /* for project scopes */
+        if ($projectchanged or null == $oldvalues['project_id']) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value + 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target','measurements')->where('scope_id',$newvalues['project_id']);
+            $current->update(['value'=> DB::raw( 'value + '.$measurements_count )]);
+          }
+
+        }
+        if (!$projectchanged and $taxonchanged) {
+          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target','measurements')->where('scope_id',$newvalues['project_id']);
+            $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+          }
+        } elseif ($taxonchanged and $projectchanged) {
+          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$oldvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target','measurements')->where('scope_id',$oldvalues['project_id']);
+            $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+          }
+        }
+
+        /* for datasets scopes */
+        if (null != $datasets and ($taxonchanged or null == $oldvalues['taxon_id'])) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Dataset')->where('target',$target)->whereIn('scope_id',$datasets);
+          $values = $current->selectRaw('(value+1) as newvalue')->cursor()->pluck('newvalue')->toArray();
+          $current->update(['value'=> DB::raw( 'value + 1' )]);
+
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Dataset')->where('target','measurements')->whereIn('scope_id',$datasets);
+            $current->update(['value'=> DB::raw( 'value + '.$measurements_count )]);
+          }
+
+          if (null != $oldvalues['taxon_id']) {
+              $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Dataset')->where('target',$target)->whereIn('scope_id',$datasets);
+              $current->update(['value'=> DB::raw( 'value - 1' )]);
+              if ($measurements_count>0) {
+                $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Taxon")->where('scope_type','App\Dataset')->where('target','measurements')->whereIn('scope_id',$datasets);
+                $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+              }
+          }
+        }
+      } else {
+        if ($projectchanged) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$oldvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target','measurements')->where('scope_id',$oldvalues['project_id']);
+            $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+          }
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value + 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target','measurements')->where('scope_id',$newvalues['project_id']);
+            $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+          }
+        }
+      }
+
+
+      if ($locationchanged or $oldvalues['location_id'] == null) {
+        $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','all')->where('target',$target);
+        /*  create records if needed*/
+        if ($current->count() < count($locationsnew)) {
+          $arein = $current->cursor()->pluck('object_id')->toArray();
+          $arenot = array_diff($locationsnew,$arein);
+          $loctoinsert = [];
+          foreach ($arenot as $location_id) {
+            $loctoinsert[] = ['object_id' => $location_id, 'object_type' => 'App\Location', 'scope_type' => 'all', 'target' => $target, 'value' => 0,'scope_id' => null, 'created_at' => now(), 'updated_at' => now()];
+            $loctoinsert[] = ['object_id' => $location_id, 'object_type' => 'App\Location', 'scope_type' => 'App\Project', 'target' => $target, 'value' => 0, 'scope_id' => $newvalues['project_id'],'created_at' => now(), 'updated_at' => now()];
+            if (null != $datasets) {
+              foreach ($datasets as $dataset_id) {
+                $loctoinsert[] = ['object_id' => $location_id, 'object_type' => 'App\Location', 'scope_type' => 'App\Dataset', 'target' => $target, 'value' => 0, 'scope_id' => $dataset_id,'created_at' => now(), 'updated_at' => now()];
+              }
+            }
+          }
+          Summary::insertOrIgnore($loctoinsert);
+        }
+        /*which records need to be updated for location objects? */
+        $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','all')->where('target',$target);
+        $current->update(['value'=> DB::raw( 'value + 1' )]);
+        if ($oldvalues['location_id'] != null) {
+          $current = Summary::whereIn('object_id',$locationsold)->where('object_type',"App\Location")->where('scope_type','all')->where('target',$target);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+        }
+        if ($projectchanged or null == $oldvalues['project_id']) {
+          $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value + 1' )]);
+        }
+        if (!$projectchanged and $locationchanged) {
+          $current = Summary::whereIn('object_id',$locationsold)->where('object_type',"App\Location")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+        } elseif ($locationchanged and $projectchanged) {
+          $current = Summary::whereIn('object_id',$locationsold)->where('object_type',"App\Location")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$oldvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+        }
+
+        if (null != $datasets and ($locationchanged or null == $oldvalues['location_id'])) {
+          $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','App\Dataset')->where('target',$target)->whereIn('scope_id',$datasets);
+          $current->update(['value'=> DB::raw( 'value + 1' )]);
+          if ($oldvalues['location_id'] != null) {
+            $current = Summary::whereIn('object_id',$locationsold)->where('object_type',"App\Location")->where('scope_type','App\Dataset')->where('target',$target)->whereIn('scope_id',$datasets);
+            $current->update(['value'=> DB::raw( 'value - 1' )]);
+          }
+        }
+      } else {
+        if ($projectchanged) {
+          $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$oldvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+
+          $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+          $current->update(['value'=> DB::raw( 'value + 1' )]);
+        }
+      }
+
+      if ($projectchanged or $oldvalues['project_id']==null) {
+        $current = Summary::where('object_id',$newvalues['project_id'])->where('object_type',"App\Project")->where('scope_type','all')->where('target',$target);
+        if ($current->count()) {
+          $current->update(['value'=> DB::raw( 'value + 1' )]);
+        } else {
+          $record = ['object_id' => $newvalues['project_id'], 'object_type' => 'App\Project', 'scope_type' => 'all', 'target' => $target, 'value' => 1,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
+          Summary::insertOrIgnore($record);
+        }
+
+        if ($measurements_count>0) {
+          $current = Summary::where('object_id',$newvalues['project_id'])->where('object_type',"App\Project")->where('scope_type','all')->where('target','measurements');
+          if ($current->count()) {
+            $current->update(['value'=> DB::raw( 'value + '.$measurements_count )]);
+          } else {
+            $record = ['object_id' => $newvalues['project_id'], 'object_type' => 'App\Project', 'scope_type' => 'all', 'target' => 'measurements', 'value' => $measurements_count,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
+            Summary::insertOrIgnore($record);
+          }
+        }
+
+        if ($oldvalues['project_id'] != null) {
+          $current = Summary::where('object_id',$oldvalues['project_id'])->where('object_type',"App\Project")->where('scope_type','all')->where('target',$target);
+          $current->update(['value'=> DB::raw( 'value - 1' )]);
+          if ($measurements_count>0) {
+            $current = Summary::where('object_id',$oldvalues['project_id'])->where('object_type',"App\Project")->where('scope_type','all')->where('target','measurements');
+            $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
+          }
+        }
+
+
+
+      }
+
+    }
+
+
+    /*FUNCTION TO BE CALLED WHEN CREATING MEASUREMENTS */
+    public static function updateSummaryMeasurementsCounts($measurement_entry,$value="value + 1")
+    {
+      //expects:$taxon_id,$location_id,$project_id,$dataset_id
+      extract($measurement_entry);
+      $target='measurements';
+      if (null != $location_id) {
+        $locationsnew = Location::findOrFail($location_id)->getAncestorsAndSelf()->pluck('id')->toArray();
+      } else {
+        $locationsnew = [];
+      }
+      if (null != $taxon_id) {
+        //get taxon chain
+        $taxonsnew = Taxon::findOrFail($taxon_id)->getAncestorsAndSelf()->pluck('id')->toArray();
+        //get locations chain
+        $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','all')->where('target',$target);
+        /* create records in summaries table if need*/
+        if ($current->count() < count($taxonsnew)) {
+          $arein = $current->cursor()->pluck('object_id')->toArray();
+          $arenot = array_diff($taxonsnew,$arein);
+          $txtoinsert = [];
+          foreach ($arenot as $taxon) {
+            $txtoinsert[] = ['object_id' => $taxon, 'object_type' => 'App\Taxon', 'scope_type' => 'all', 'target' => $target, 'value' => 0,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
+            foreach ($locationsnew as $location_id) {
+              $txtoinsert[] = ['object_id' => $taxon, 'object_type' => 'App\Taxon', 'scope_type' => 'App\Location', 'target' => $target, 'value' => 0, 'scope_id' => $location_id,'created_at' => now(), 'updated_at' => now()];
+            }
+            if (null != $project_id) {
+              $txtoinsert[] = ['object_id' => $taxon, 'object_type' => 'App\Taxon', 'scope_type' => 'App\Project', 'target' => $target, 'value' => 0, 'scope_id' => $project_id,'created_at' => now(), 'updated_at' => now()];
+            }
+            $txtoinsert[] = ['object_id' => $taxon, 'object_type' => 'App\Taxon', 'scope_type' => 'App\Dataset', 'target' => $target, 'value' => 0, 'scope_id' => $dataset_id,'created_at' => now(), 'updated_at' => now()];
+          }
+          Summary::insertOrIgnore($txtoinsert);
+        }
+
+        /*update summary counts for the taxon objects need to be updated? */
+        $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','all')->where('target',$target);
+        $current->update(['value'=> DB::raw( $value )]);
+
+        /*for location scopes */
+        if (count($locationsnew)>0) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Location')->where('target',$target)->whereIn('scope_id',$locationsnew);
+          $current->update(['value'=> DB::raw( $value )]);
+        }
+        /* for project scopes */
+        if (null != $project_id) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Project')->where('target',$target)->where('scope_id',$project_id);
+          $current->update(['value'=> DB::raw( $value )]);
+        }
+
+        $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Taxon")->where('scope_type','App\Dataset')->where('target',$target)->where('scope_id',$dataset_id);
+        $current->update(['value'=> DB::raw( $value )]);
+     }
+
+     //if is a location measurement, then only location counts need to be updated
+     if (null != $location_id and null == $taxon_id)  {
+        $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','all')->where('target',$target);
+        /*  create records if needed*/
+        if ($current->count() < count($locationsnew)) {
+          $arein = $current->cursor()->pluck('object_id')->toArray();
+          $arenot = array_diff($locationsnew,$arein);
+          $loctoinsert = [];
+          foreach ($arenot as $location) {
+            $loctoinsert[] = ['object_id' => $location, 'object_type' => 'App\Location', 'scope_type' => 'all', 'target' => $target, 'value' => 0,'scope_id' => null, 'created_at' => now(), 'updated_at' => now()];
+            $loctoinsert[] = ['object_id' => $location, 'object_type' => 'App\Location', 'scope_type' => 'App\Dataset', 'target' => $target, 'value' => 0, 'scope_id' => $dataset_id,'created_at' => now(), 'updated_at' => now()];
+          }
+          Summary::insertOrIgnore($loctoinsert);
+        }
+        /*which records need to be updated for location objects? */
+        $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','all')->where('target',$target);
+        $current->update(['value'=> DB::raw( $value )]);
+        $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Location")->where('scope_type','App\Dataset')->where('target',$target)->where('scope_id',$dataset_id);
+        $current->update(['value'=> DB::raw( $value )]);
+      }
+
+      if (null != $project_id) {
+        $current = Summary::where('object_id',$project_id)->where('object_type',"App\Project")->where('scope_type','all')->where('target',$target);
+        if ($current->count()) {
+          $current->update(['value'=> DB::raw( $value )]);
+        } else {
+          $record = ['object_id' => $project_id, 'object_type' => 'App\Project', 'scope_type' => 'all', 'target' => $target, 'value' => 1,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
+          Summary::insertOrIgnore($record);
+        }
+      }
+
+    }
+
+
+
+    /* Function to calculate the full counts of object+scope+target */
+    public static function fillCounts($object_id=null,$object_type=null,$scope_type='all',$scope_id=null,$storezeros=false,$target=null)
       {
         /*define the object for which counts will be calculated */
         /* in the models to calculate counts three public static functions have to exist:
@@ -43,16 +394,26 @@ class Summary extends Model
         if ('App\Dataset' == $scope_type) {
             $scope = 'datasets';
         }
+        if ('App\Location' == $scope_type) {
+            $scope = 'locations';
+        }
         if (! null == $object_id) {
           $objects = $objects->where('id',$object_id);
         }
         foreach($objects->cursor() as $object) {
-            $targets = ['plants','vouchers','measurements','taxons','pictures'];
-            if (get_class($object) == "App\Project") {
-              $targets = ['plants','vouchers','measurements','taxons','pictures','locations','datasets'];
-            }
-            if (get_class($object) == "App\Dataset") {
-              $targets = ['plants','vouchers','measurements','taxons','locations','projects'];
+            if ($target==null) {
+              $targets = ['plants','vouchers','measurements','pictures'];
+              if (get_class($object) == "App\Location") {
+                $targets = ['plants','vouchers','measurements','pictures'];
+              }
+              if (get_class($object) == "App\Project") {
+                $targets = ['plants','vouchers','measurements','pictures','locations','datasets'];
+              }
+              if (get_class($object) == "App\Dataset") {
+                $targets = ['plants','vouchers','measurements','locations','projects'];
+              }
+            } else {
+              $targets = (array)$target;
             }
             foreach($targets as $target) {
                 if ($target=='plants') {
@@ -106,12 +467,19 @@ class Summary extends Model
   }
 
 
-    public static function updateSummaryTable($what='all',$taxons=null,$locations=null,$projects=null,$datasets=null)
+
+    public static function updateSummaryTable($what='all',$taxons=null,$locations=null,$projects=null,$datasets=null,$scope='all')
     {
       //update counts for taxon
       if ($what=="taxons" or $what == 'all') {
         if (null == $taxons) {
-          $taxons = Taxon::cursor();
+          //get used taxons and calculate only for taxons above the species level
+          $ids = Taxon::has('identifications')->cursor()->map(function($taxon) { return $taxon->getAncestorsAndSelf()->pluck('id')->toArray();})->toArray();
+          $taxons_ids = array_unique(Arr::flatten($ids));
+          //$noneed = Summary::where('object_type',"App\Taxon")->selectRaw('DISTINCT object_id')->cursor()->pluck('object_id')->toArray();
+          //$taxons = Taxon::whereIn('id',$taxons_ids)->where('level','<',Taxon::getRank('species')->orderBy('level')->cursor();
+          //$taxons_ids = array_diff($taxons_ids,$noneed);
+          $taxons = Taxon::whereIn('id',$taxons_ids)->orderBy('level')->cursor();
         }
         if ($taxons->count()) {
           foreach($taxons as $taxon) {
@@ -119,32 +487,102 @@ class Summary extends Model
             $scope_id=null;
             $object_id=$taxon->id;
             $object_type="App\Taxon";
-            Summary::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=true);
-            $projects = Project::cursor();
-            if ($projects->count()) {
-              foreach($projects as $project) {
-                $scope_type="App\Project";
-                $scope_id=$project->id;
-                self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
+            if ($scope=="all") {
+              self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
+            }
+
+            $selfanddescendants = $taxon->getDescendantsAndSelf()->pluck('id')->toArray();
+            if ($scope=="all" or $scope=='projects') {
+              //get the project the taxon was used for
+              $projects = Project::whereHas('plant_identifications',function($identification) use($selfanddescendants) {
+                $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
+              })->orWhereHas('voucher_identifications',function($identification) use($selfanddescendants) {
+                $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
+              })->cursor();
+              if ($projects->count()) {
+                foreach($projects as $project) {
+                  $scope_type="App\Project";
+                  $scope_id=$project->id;
+                  self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
+                }
               }
             }
-            $datasets = Dataset::cursor();
-            if ($datasets->count()) {
-              foreach($datasets as $dataset) {
-                $scope_type="App\Dataset";
-                $scope_id=$dataset->id;
-                self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
+            if ($scope=="all" or $scope=='datasets') {
+              //get the dataset the taxon is measured or has plants or vouchers measured
+              $datasets_ids = DB::select("(SELECT DISTINCT dataset_id  FROM identifications JOIN measurements ON measurements.measured_id=identifications.object_id WHERE identifications.object_type=measurements.measured_type AND identifications.taxon_id IN (".implode(',',$selfanddescendants)."))");
+              $datasets_ids = Arr::flatten(array_map(function($value) { return (array)$value;},$datasets_ids));
+              $datasets = Dataset::whereIn('id',$datasets_ids)->cursor();
+              if ($datasets->count()) {
+                foreach($datasets as $dataset) {
+                  $scope_type="App\Dataset";
+                  $scope_id=$dataset->id;
+                  self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
+                }
+              }
+            }
+            if ($scope=="all" or $scope=='locations') {
+              //non point locations only (points will have easier counts //
+              $locations = Location::whereHas('plant_identifications',function($identification) use($selfanddescendants) {
+                $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
+              })->orWhereHas('voucher_identifications',function($identification) use($selfanddescendants) {
+                $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
+              });
+              $ancestorsandself = $locations->cursor()->map(function($location) {
+                return $location->getAncestorsAndSelf()->pluck('id')->toArray();
+              })->toArray();
+              $ancestorsandself = array_unique(Arr::flatten($ancestorsandself));
+
+              //eliminate
+              //$noneed = Summary::where('object_id',$object_id)->where('object_type',$object_type)->whereIn('scope_id',$ancestorsandself)->where('scope_type','App\Location');
+              //$noneed = $noneed->cursor()->pluck('scope_id')->toArray();
+              //$ancestorsandself = array_diff($ancestorsandself,$noneed);
+
+              $locations = Location::noWorld()->whereIn('id',$ancestorsandself);
+              //elimitate leaves as they should contain few counts and may be easily dinamically calculated
+              $leaves = $locations->cursor()->map(function($location) {
+                return $location->getLeaves()->pluck('id')->toArray();
+              })->toArray();
+              $leaves = array_filter($leaves);
+              $leaves = array_unique(Arr::flatten($leaves));
+              if (count($leaves)>0) {
+                $locations = $locations->whereNotIn('id',$leaves)->cursor();
+              } else {
+                $locations = $locations->cursor();
+              }
+
+
+
+              //get_all ancestor locations
+              if ($locations->count()) {
+                foreach($locations as $location) {
+                    $scope_type="App\Location";
+                    $scope_id=$location->id;
+                    //$tem = Summary::where('object_id',$object_id)->where('object_type',$object_type)->where('scope_id',$scope_id)->where('scope_type',$scope_type)->count();
+                    //if (!$tem) {
+                    self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
+                    //}
+                }
               }
             }
           }
         }
-
       }
 
       //update counts for taxon
       if ($what=="locations" or $what == 'all') {
         if (null == $locations) {
-          $locations = Location::cursor();
+          //exclude $leaves
+          $leaves = Location::noWorld()->where('adm_level','<',999)->cursor()->map(function($location) { return $location->getLeaves()->pluck('id')->toArray();})->toArray();
+          $leaves = array_unique(Arr::flatten($leaves));
+          $locations_ids = Location::noWorld()->where('adm_level','<',999)->whereNotIn('id',$leaves)->cursor()->map(function($location) { return $location->getAncestorsAndSelf()->pluck('id')->toArray();})->toArray();
+          $locations_ids = array_unique(Arr::flatten($locations_ids));
+          $locations = Location::noWorld()->whereIn('id',$locations_ids)->orderBy('adm_level')->cursor();
+
+          //has('vouchers')->orHas('plants')->orderBy('adm_level')
+          //->pluck('id')->toArray();
+          //$locations_ids = Location::whereIn('id',$ids)->cursor()->map(function($location) { return $location->getAncestorsAndSelf()->pluck('id')->toArray();})->toArray();
+          //$locations_ids = array_unique(Arr::flatten($locations_ids));
+          //$locations = Location::whereIn('id',$locations_ids)->orderBy('adm_level')->cursor();
         }
         if ($locations->count()) {
           foreach($locations as $location) {
@@ -152,8 +590,13 @@ class Summary extends Model
             $scope_id=null;
             $object_id=$location->id;
             $object_type="App\Location";
-            self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=true);
-            $projects = Project::cursor();
+            self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
+            $selfanddescendants = $location->getDescendantsAndSelf()->pluck('id')->toArray();
+            $projects = Project::whereHas('plants',function($plant) use($selfanddescendants) {
+              $plant->withoutGlobalScopes()->whereIn('location_id',$selfanddescendants);
+            })->orWhereHas('vouchers',function($voucher) use($selfanddescendants) {
+              $voucher->withoutGlobalScopes()->whereIn('parent_id',$selfanddescendants)->where('parent_type','=','App\Location');
+            })->cursor();
             if ($projects->count()) {
               foreach($projects as $project) {
                 $scope_type="App\Project";
@@ -161,7 +604,15 @@ class Summary extends Model
                 self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
               }
             }
-            $datasets = Dataset::cursor();
+            $datasets = Dataset::whereHas('plants', function($plant) use($selfanddescendants) {
+              $plant->whereIn('location_id',$selfanddescendants);
+            })->orWhereHas('vouchers',function($voucher) use($selfanddescendants) {
+              $voucher->whereIn('parent_id',$selfanddescendants)->where('parent_type',"App\Location");
+            })->orWhereHas('vouchers',function($voucher) use($selfanddescendants) {
+              $voucher->whereHasMorph('parent',['App\Plant'],function($plant) use($selfanddescendants) {
+                $plant->whereIn('location_id',$selfanddescendants);
+              });
+            })->cursor();
             if ($datasets->count()) {
               foreach($datasets as $dataset) {
                 $scope_type="App\Dataset";
@@ -185,7 +636,7 @@ class Summary extends Model
             $scope_id=null;
             $object_id=$project->id;
             $object_type="App\Project";
-            Summary::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=true);
+            Summary::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
           }
         }
       }
@@ -200,174 +651,14 @@ class Summary extends Model
             $scope_id=null;
             $object_id=$dataset->id;
             $object_type="App\Dataset";
-            self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=true);
+            self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
           }
         }
       }
-
-
-
-
-    return true;
+      return true;
     }
 
 
-    /* USED AS A FREQUENT SCHEDULED CRON CALL - CALLED BY THE php artisan summary:update  COMMAND*/
-    public static function updateCountChanges()
-    {
-      /* check last time the count table has been changed */
-        $lastcount =  Summary::select('updated_at')->orderBy('updated_at','desc')->first()->updated_at;
-
-      /* COUNTS FOR THE TAXON MODEL */
-        /*check last identification created */
-        $lastdet = Identification::select('updated_at')->orderBy('updated_at','desc')->first()->updated_at;
-
-        /* check taxon counts changes */
-        $newtaxons = array();
-        if ($lastdet>$lastcount) {
-          $newtaxons = Identification::where('updated_at',">",$lastcount)->distinct('taxon_id')->cursor()->pluck('taxon_id')->toArray();
-        }
-        /*check changes in identifications  */
-        $changedtaxons = Activity::where("description","=","identification updated")->where('updated_at',">",$lastcount)->cursor()->map(function($activity) {
-            $changes = $activity->changes;
-            $newtaxon = (int)$changes['attributes']['taxon_id'];
-            $oldtaxon = (int)$changes['old']['taxon_id'];
-            if ($newtaxon !== $oldtaxon) {
-              return [$newtaxon,$oldtaxon];
-            }
-          })->toArray();
-
-        /* get new measurements for taxa  */
-        $lastmeasurment = Measurement::select('updated_at')->withoutGlobalScopes()->orderBy('updated_at','desc')->first()->updated_at;
-        $measurements_taxons = [];
-        $measurements_locations = [];
-        if ($lastmeasurment>$lastcount) {
-          $measurements_taxons = Measurement::withoutGlobalScopes()->where('updated_at',">",$lastcount)->where('measured_type',"=","App\Taxon")->distinct('measured_id')->cursor()->pluck('measured_id')->toArray();
-          $measurements_locations = Measurement::withoutGlobalScopes()->where('updated_at',">",$lastcount)->where('measured_type',"=","App\Location")->distinct('measured_id')->cursor()->pluck('measured_id')->toArray();
-        }
-        /* get taxon pictures */
-        $lastpictures = Picture::select('updated_at')->orderBy('updated_at','desc')->first()->updated_at;
-        $pictures_taxons = [];
-        $pictures_locations = [];
-        if ($lastpictures>$lastcount) {
-          $pictures_taxons = Picture::where('updated_at',">",$lastcount)->where('object_type',"=","App\Taxon")->distinct('object_id')->cursor()->pluck('object_id')->toArray();
-          $pictures_locations = Picture::where('updated_at',">",$lastcount)->where('object_type',"=","App\Location")->distinct('object_id')->cursor()->pluck('object_id')->toArray();
-        }
-
-
-
-
-        /* taxa to update include each taxa and their ancestors or parents*/
-        $taxons = array_merge($newtaxons,$changedtaxons,$measurements_taxons,$pictures_taxons);
-        $taxons = array_unique(Arr::flatten($taxons));
-        $alltaxons = [];
-        foreach($taxons as $id) {
-            $taxons = Taxon::find($id)->getAncestorsAndSelf()->pluck('id')->toArray();
-            $alltaxons[] = $taxons;
-        }
-        $alltaxons = Arr::flatten($alltaxons);
-        $alltaxons = array_unique($alltaxons);
-        if (count($alltaxons)) {
-          //update counts for these taxa
-          $taxons = Taxon::whereIn('id',$alltaxons)->cursor();
-          self::updateSummaryTable($what='taxons',$taxons=$taxons,$locations=null,$projects=null,$datasets=null);
-        }
-
-
-        /* COUNTS FOR THE Location MODEL */
-          /*check last plant change */
-          $lastplant = Plant::withoutGlobalScopes()->select('updated_at')->orderBy('updated_at','desc')->limit(0,1)->first();
-          $lastplant = $lastplant->updated_at;
-          $newplantslocations =[];
-          if ($lastplant>$lastcount) {
-            $newplantslocations = Plant::withoutGlobalScopes()->where('updated_at',">",$lastcount)->cursor()->pluck('location_id')->toArray();
-          }
-          /*check last plant change */
-          $lastvoucher = Voucher::withoutGlobalScopes()->select('updated_at')->where('parent_type','=',"App\Location")->orderBy('updated_at','desc')->limit(0,1)->first();
-          $lastvoucher = $lastvoucher->updated_at;
-          $newvoucherslocations =[];
-          if ($lastvoucher>$lastcount) {
-            $newvoucherslocations = Voucher::withoutGlobalScopes()->where('parent_type','=',"App\Location")->where('updated_at',">",$lastcount)->cursor()->pluck('parent_id')->toArray();
-          }
-
-          /* check changes in plant */
-          $changedplantlocations = Activity::where("description","=","updated")->where('subject_type','=','App\Plant')->where('updated_at',">",$lastcount)->cursor()->map(function($activity) {
-              $changes = $activity->changes;
-              $newlocation = $changes['attributes']['location_id'];
-              $oldlocation = $changes['old']['location_id'];
-              if ($newlocation !== $oldlocation) {
-                return [$newlocation,$oldlocation];
-              }
-            })->toArray();
-          /* check changes in plant */
-          $changedvoucherlocations = Activity::where("description","=","updated")->where('subject_type','=','App\Voucher')->where('updated_at',">",$lastcount)->cursor()->map(function($activity) {
-                $changes = $activity->changes;
-                $voucher = Voucher::withoutGlobalScopes()->find($activity->subject_id);
-                if ($voucher->parent_type == 'App\Location') {
-                  $newlocation = $changes['attributes']['parent_id'];
-                  $oldlocation = $changes['old']['parent_id'];
-                  if ($newlocation !== $oldlocation ) {
-                    return [$newlocation,$oldlocation];
-                  }
-                }
-              })->toArray();
-            /* taxa to update include each taxa and their ancestors or parents*/
-            $locations = array_merge($changedplantlocations,$changedvoucherlocations,$newvoucherslocations,$newplantslocations,$measurements_locations,$pictures_locations);
-            $locations = array_unique(Arr::flatten($taxons));
-            $allocations = [];
-            foreach($taxons as $id) {
-                $allocations = Location::find($id)->getAncestorsAndSelf()->pluck('id')->toArray();
-                $allocations[] = $allocations;
-            }
-            $allocations = Arr::flatten($allocations);
-            $allocations = array_unique($allocations);
-            if (count($allocations)) {
-              //update counts for these locations
-              $locations = Location::whereIn('id',$allocations)->cursor();
-              self::updateSummaryTable($what='locations',$taxons=null,$locations=$locations,$projects=null,$datasets=null);
-            }
-
-        /* COUNTS FOR THE Project MODEL */
-          $insertedplantprojects = Plant::withoutGlobalScopes()->where('created_at',">",$lastcount)->distinct('project_id')->cursor()->pluck('project_id')->toArray();
-          $changedplantprojects = Activity::where("description","=","updated")->where('subject_type','=','App\Plant')->where('updated_at',">",$lastcount)->cursor()->map(function($activity) {
-              $changes = $activity->changes;
-              $newproject = isset($changes['attributes']['project_id']) ? $changes['attributes']['project_id'] : null;
-              $oldproject = isset($changes['old']['project_id']) ? $changes['attributes']['project_id'] : null;
-              if ($newproject !== $oldproject ) {
-                  return array_filter([$newproject,$oldlocation]);
-              }
-          })->toArray();
-          $insertedvoucherprojects = Voucher::withoutGlobalScopes()->where('created_at',">",$lastcount)->distinct('project_id')->cursor()->pluck('project_id')->toArray();
-          $changedvoucherprojects = Activity::where("description","=","updated")->where('subject_type','=','App\Voucher')->where('updated_at',">",$lastcount)->cursor()->map(function($activity) {
-                $changes = $activity->changes;
-                $newproject = isset($changes['attributes']['project_id']) ? $changes['attributes']['project_id'] : null;
-                $oldproject = isset($changes['old']['project_id']) ? $changes['attributes']['project_id'] : null;
-                if ($newproject !== $oldproject ) {
-                    return array_filter([$newproject,$oldproject]);
-                }
-            })->toArray();
-          $changedmeasurementsprojects = Measurement::withoutGlobalScopes()->where('updated_at',">",$lastcount)->cursor()->map(function($measurement) {
-            return $measurement->measured()->pluck('project_id')->toArray();
-          })->toArray();
-          $projects = array_merge($insertedplantprojects,$insertedvoucherprojects,$changedplantprojects,$changedvoucherprojects,$changedmeasurementsprojects);
-          $projects = array_unique(Arr::flatten($projects));
-          if (count($projects)) {
-            //update counts for these projects
-            $projects = Project::whereIn('id',$projects)->cursor();
-            self::updateSummaryTable($what='projects',$taxons=null,$locations=null,$projects,$datasets=null);
-          }
-
-        /* COUNTS for the Dataset MODEL
-        /* check dataset counts when measurements changes  */
-        $changeddatasets = Measurement::withoutGlobalScopes()->where('updated_at',">",$lastcount)->distinct('dataset_id')->cursor()->pluck('dataset_id')->toArray();
-        if (count($changeddatasets)) {
-          //update counts for these locations
-          $datasets = Dataset::whereIn('id',$changeddatasets)->cursor();
-          self::updateSummaryTable($what='datasets',$taxons=null,$locations=null,$projects=null,$datasets);
-        }
-
-
-    }
 
 
 }

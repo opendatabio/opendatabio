@@ -238,6 +238,10 @@ class Project extends Model
         return $this->morphMany("App\Summary", 'object');
     }
 
+    public function summary_scopes()
+    {
+        return $this->morphMany("App\Summary", 'scope');
+    }
 
     public function getCount($scope="all",$scope_id=null,$target='plants')
     {
@@ -288,10 +292,11 @@ class Project extends Model
       return count($taxons);
     }
 
-
+    /* for faster display of taxon counts on datatables */
     public function taxonsCount()
     {
-      return $this->count_taxons();
+      $count_level = Taxon::getRank('species');
+      return $this->summary_scopes()->whereHasMorph('object',['App\Taxon'],function($object) use($count_level) { $object->where('level','>=',$count_level);})->where('object_type','App\Taxon')->selectRaw("DISTINCT object_id")->cursor()->count();
     }
 
     /* pictures of plants and vouchers only */

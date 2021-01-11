@@ -19,6 +19,7 @@ use App\Herbarium;
 use App\Identification;
 use App\DataTables\PlantsDataTable;
 use App\Dataset;
+use App\Summary;
 use Auth;
 use Response;
 use Lang;
@@ -126,6 +127,15 @@ class PlantController extends Controller
         $object_second = Dataset::findOrFail($ids[1]);
         return $dataTable->with(['taxon' => $ids[0],'dataset' => $ids[1]])->render('plants.index', compact('object','object_second'));
     }
+
+    public function indexTaxonsLocations($id, PlantsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Location::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'location' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+    }
+
 
     public function indexProjects($id, PlantsDataTable $dataTable)
     {
@@ -281,10 +291,28 @@ class PlantController extends Controller
             $request->identification_date_year);
         $plant->identification->save();
 
+        /* UPDATE SUMMARY COUNTS */
+          $newvalues =  [
+               "taxon_id" => $request->taxon_id,
+               "location_id" => $request->location_id,
+               "project_id" => $request->project_id
+          ];
+
+          $oldvalues =  [
+              "taxon_id" => null,
+              "location_id" => null,
+              "project_id" => null,
+          ];
+
+          $target = 'plants';
+          $datasets = null;
+          Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,$measurements_count=0);
+        /* END SUMMARY UPDATE */
+
+
+
         return redirect('plants/'.$plant->id)->withStatus(Lang::get('messages.stored'));
     }
-
-
 
 
     /**
@@ -341,6 +369,15 @@ class PlantController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+
+        /* array for summaries table updates */
+        $oldvalues =  [
+            "taxon_id" => $plant->identification->taxon_id,
+            "location_id" => $plant->location_id,
+            "project_id" => $plant->project_id,
+        ];
+
+
         $plant->update($request->only([
             'tag', 'location_id', 'project_id', 'notes',
         ]));
@@ -392,6 +429,20 @@ class PlantController extends Controller
         //log identification changes if any
         $identifiers['date'] = $plant->identification->date;
         ActivityFunctions::logCustomChanges($plant,$oldidentification,$identifiers,'plant','identification updated',null);
+
+
+
+        /* UPDATE SUMMARY COUNTS */
+          $newvalues =  [
+               "taxon_id" => $request->taxon_id,
+               "location_id" => $request->location_id,
+               "project_id" => $request->project_id
+          ];
+          $target = 'plants';
+          $datasets = array_unique($plant->measurements()->withoutGlobalScopes()->pluck('dataset_id')->toArray());
+          $measurements_count = $plant->measurements()->withoutGlobalScopes()->count();
+          Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,$measurements_count);
+        /* END SUMMARY UPDATE */
 
 
         return redirect('plants/'.$id)->withStatus(Lang::get('messages.saved'));

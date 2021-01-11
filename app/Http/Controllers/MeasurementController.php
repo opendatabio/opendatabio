@@ -20,6 +20,7 @@ use App\Person;
 use App\Dataset;
 use App\BibReference;
 use App\UserJob;
+use App\Summary;
 use App\Jobs\ImportMeasurements;
 use Spatie\SimpleExcel\SimpleExcelReader;
 use Auth;
@@ -119,6 +120,13 @@ class MeasurementController extends Controller
         return $dataTable->with(['taxon' => $ids[0],'dataset' => $ids[1]])->render('measurements.index', compact('object','object_second'));
     }
 
+    public function indexTaxonsLocations($id, MeasurementsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Location::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'location' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+    }
 
     public function indexDatasets($id, MeasurementsDataTable $dataTable)
     {
@@ -197,6 +205,41 @@ class MeasurementController extends Controller
     public function show($id)
     {
         $measurement = Measurement::findOrFail($id);
+        //if spectral pass graph
+        if ($measurement->odbtrait->type==ODBTrait::SPECTRAL) {
+          $odbtrait = $measurement->odbtrait;
+          $min = $odbtrait->range_min;
+          $max = $odbtrait->range_max;
+          $step = ($max-$min)/(($odbtrait->value_length)-1);
+          $xvalues = range($min,$max,$step);
+          $yvalues = explode(";",$measurement->value_a);
+          $values = array_combine($xvalues,$yvalues);
+          $data = array_map(function($val) use($values) {
+            return ['x' => $val, 'y' => $values[(string)$val]+0];
+          },$xvalues);
+          $chartjs = app()->chartjs
+              ->name('SpectralMeasurement')
+              ->type('scatter')
+              ->datasets([
+                  [
+                      'label' => 'Spectrum',
+                      'backgroundColor' => "#ffffff",
+                      'borderColor' => "#339933",
+                      "pointBorderColor" => "#339933",
+                      "pointBackgroundColor" => "#339933",
+                      "pointHoverBackgroundColor" => "#fff",
+                      "pointHoverBorderColor" => "rgba(220,220,220,1)",
+                      'pointRadius' => 1,
+                      'fill' => false,
+                      'data' => $data,
+                  ]
+              ])
+              ->options([
+                  'maintainAspectRatio' => true,
+              ]);
+              return view('measurements.show', compact('measurement','chartjs'));
+        }
+
 
         return view('measurements.show', compact('measurement'));
     }
@@ -313,6 +356,43 @@ class MeasurementController extends Controller
         }
         $measurement->save();
 
+        /* SUMMARY COUNT UPDATE */
+        $taxon_id = null;
+        $project_id = null;
+        $location_id = null;
+        if ($request->measured_type == Plant::class) {
+          $plant = Plant::findOrFail($request->measured_id);
+          $taxon_id = $plant->identification->taxon_id;
+          $location_id = $plant->location_id;
+          $project_id = $plant->project_id;
+        }
+        if ($request->measured_type == Voucher::class) {
+            $voucher = Voucher::findOrFail($request->measured_id);
+            $project_id = $voucher->project_id;
+            if ($voucher->parent_type == Location::class) {
+              $taxon_id =  $voucher->identification->taxon_id;
+              $location_id = $voucher->parent_id;
+            } else {
+              $taxon_id =  $voucher->parent->identification->taxon_id;
+              $location_id = $voucher->parent->location_id;
+            }
+        }
+        if ($request->measured_type == Taxon::class) {
+            $taxon_id = $request->measured_id;
+        }
+        if ($request->measured_type == Location::class) {
+            $location_id = $request->measured_id;
+        }
+        $target = 'measurements';
+        $newvalues = [
+          'taxon_id' => $taxon_id,
+          'location_id' => $location_id,
+          'project_id' => $project_id,
+          'dataset_id' => $request->dataset_id
+        ];
+        Summary::updateSummaryMeasurementsCounts($newvalues,$value="value + 1");
+        /* END SUMMARY COUNT UPDATE */
+
         return redirect('measurements/'.$measurement->id)->withStatus(Lang::get('messages.stored'));
     }
 
@@ -345,6 +425,66 @@ class MeasurementController extends Controller
         if (ODBTrait::QUANT_REAL == $odbtrait->type) {
             $request->value = str_replace(',', '.', $request->value);
         }
+
+        /*if measured changed need to update counts */
+        if ($request->measured_id != $measurement->measured_id) {
+          $oldvalues = ['taxon_id' => null, 'location_id' => null, 'project_id' => null];
+          if ($measurement->measured_type == Plant::class) {
+            $plant = Plant::findOrFail($measurement->measured_id);
+            $oldvalues['taxon_id'] = $plant->identification->taxon_id;
+            $oldvalues['location_id'] = $plant->location_id;
+            $oldvalues['project_id'] = $plant->project_id;
+          }
+          if ($measurement->measured_type == Voucher::class) {
+              $voucher = Voucher::findOrFail($measurement->measured_id);
+              $oldvalues['project_id'] = $voucher->project_id;
+              $project_id = $voucher->project_id;
+              if ($voucher->parent_type == Location::class) {
+                $oldvalues['taxon_id'] = $voucher->identification->taxon_id;
+                $oldvalues['location_id'] = $voucher->parent_id;
+
+              } else {
+                $oldvalues['taxon_id'] = $voucher->parent->identification->taxon_id;
+                $oldvalues['location_id'] = $voucher->parent->location_id;
+              }
+          }
+          if ($measurement->measured_type == Taxon::class) {
+              $oldvalues['taxon_id'] = $measurement->measured_id;
+          }
+          if ($measurement->measured_type == Location::class) {
+              $oldvalues['location_id'] = $measurement->measured_id;
+          }
+          Summary::updateSummaryMeasurementsCounts($oldvalues,$value="value - 1");
+
+          $newvalues = ['taxon_id' => null, 'location_id' => null, 'project_id' => null];
+          if ($request->measured_type == Plant::class) {
+            $plant = Plant::findOrFail($request->measured_id);
+            $newvalues['taxon_id'] = $plant->identification->taxon_id;
+            $newvalues['location_id'] = $plant->location_id;
+            $newvalues['project_id'] = $plant->project_id;
+          }
+          if ($request->measured_type == Voucher::class) {
+              $voucher = Voucher::findOrFail($request->measured_id);
+              $newvalues['project_id'] = $voucher->project_id;
+              $project_id = $voucher->project_id;
+              if ($voucher->parent_type == Location::class) {
+                $newvalues['taxon_id'] = $voucher->identification->taxon_id;
+                $newvalues['location_id'] = $voucher->parent_id;
+
+              } else {
+                $newvalues['taxon_id'] = $voucher->parent->identification->taxon_id;
+                $newvalues['location_id'] = $voucher->parent->location_id;
+              }
+          }
+          if ($request->measured_type == Taxon::class) {
+              $newvalues['taxon_id'] = $request->measured_id;
+          }
+          if ($request->measured_type == Location::class) {
+              $newvalues['location_id'] = $request->measured_id;
+          }
+          Summary::updateSummaryMeasurementsCounts($newvalues,$value="value + 1");
+        }
+
         $measurement->update($request->only([
             'trait_id', 'dataset_id', 'person_id', 'bibreference_id', 'notes',
         ]));

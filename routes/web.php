@@ -52,10 +52,10 @@ Route::resource('locations', 'LocationController');
 Route::get('taxons/{id}/project', 'TaxonController@indexProjects');
 Route::get('taxons/{id}/dataset', 'TaxonController@indexDatasets');
 Route::get('taxons/{id}/activity', 'TaxonController@activity');
-Route::get('taxons/{id}/location','TaxonController@indexLocations');
 Route::get('taxons/{id}/taxon', 'TaxonController@indexTaxons');
 Route::get('taxons/{id}/taxon_project', 'TaxonController@indexTaxonsProjects');
 Route::get('taxons/{id}/taxon_dataset', 'TaxonController@indexTaxonsDatasets');
+Route::get('taxons/{id}/taxon_location', 'TaxonController@indexTaxonsLocations');
 Route::get('taxons/{id}/location', 'TaxonController@indexLocations');
 Route::get('taxons/{id}/location_project', 'TaxonController@indexLocationsProjects');
 Route::get('taxons/{id}/location_dataset', 'TaxonController@indexLocationsDatasets');
@@ -63,6 +63,7 @@ Route::get('taxons/{id}/location_dataset', 'TaxonController@indexLocationsDatase
 
 Route::post('taxons/checkapis', 'TaxonController@checkapis')->name('checkapis');
 Route::get('taxons/autocomplete', 'TaxonController@autocomplete');
+
 Route::resource('taxons', 'TaxonController');
 
 
@@ -94,6 +95,7 @@ Route::get('locations/{id}/plants/create', 'PlantController@createLocations');
 Route::get('plants/{id}/taxon', 'PlantController@indexTaxons');
 Route::get('plants/{id}/taxon_project', 'PlantController@indexTaxonsProjects');
 Route::get('plants/{id}/taxon_dataset', 'PlantController@indexTaxonsDatasets');
+Route::get('plants/{id}/taxon_location', 'PlantController@indexTaxonsLocations');
 Route::get('plants/{id}/location', 'PlantController@indexLocations');
 Route::get('plants/{id}/location_project', 'PlantController@indexLocationsProjects');
 Route::get('plants/{id}/location_dataset', 'PlantController@indexLocationsDatasets');
@@ -112,6 +114,7 @@ Route::get('plants/{id}/vouchers', 'VoucherController@indexPlants');
 Route::get('vouchers/{id}/taxon', 'VoucherController@indexTaxons');
 Route::get('vouchers/{id}/taxon_project', 'VoucherController@indexTaxonsProjects');
 Route::get('vouchers/{id}/taxon_dataset', 'VoucherController@indexTaxonsDatasets');
+Route::get('vouchers/{id}/taxon_location', 'VoucherController@indexTaxonsLocations');
 Route::get('vouchers/{id}/location', 'VoucherController@indexLocations');
 Route::get('vouchers/{id}/location_project', 'VoucherController@indexLocationsProjects');
 Route::get('vouchers/{id}/location_dataset', 'VoucherController@indexLocationsDatasets');
@@ -147,6 +150,7 @@ Route::get('locations/{id}/measurements_root', 'MeasurementController@indexLocat
 Route::get('measurements/{id}/taxon', 'MeasurementController@indexTaxons');
 Route::get('measurements/{id}/taxon_project', 'MeasurementController@indexTaxonsProjects');
 Route::get('measurements/{id}/taxon_dataset', 'MeasurementController@indexTaxonsDatasets');
+Route::get('measurements/{id}/taxon_location', 'MeasurementController@indexTaxonsLocations');
 Route::get('measurements/{id}/location', 'MeasurementController@indexLocations');
 Route::get('measurements/{id}/location_project', 'MeasurementController@indexLocationsProjects');
 Route::get('measurements/{id}/location_dataset', 'MeasurementController@indexLocationsDatasets');

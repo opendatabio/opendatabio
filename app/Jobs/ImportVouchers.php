@@ -249,7 +249,12 @@ class ImportVouchers extends ImportCollectable
                 $this->skipEntry($voucher, 'Vouchers of location must have taxonomic information');
                 return;
             }
+            $location_id = $parent_id;
+            $taxon_id = $identification['taxon_id'];
         } else {
+            $parent = Plant::withoutGlobalScopes()->findOrFail($parent_id);
+            $location_id = $parent->location_id;
+            $taxon_id = $parent->identification->taxon_id;
             $identification = null;
         }
 
@@ -283,6 +288,19 @@ class ImportVouchers extends ImportCollectable
 
         // - Then create the related registries (for identification and collector), if requested
         $this->createCollectorsAndIdentification('App\Voucher', $voucher->id, $collectors, $identification);
+
+
+        //UPDATE SUMMARY counts
+        $newvalues =  [
+             "taxon_id" => $taxon_id,
+             "location_id" => $location_id,
+             "project_id" => $project
+        ];
+
+        $target = 'vouchers';
+        Summary::updateSummaryCounts($newvalues,null,$target,null,0);
+
+
 
         return;
     }

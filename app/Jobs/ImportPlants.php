@@ -114,10 +114,20 @@ class ImportPlants extends ImportCollectable
         $plant->setDate($date);
         $plant->save();
         $this->affectedId($plant->id);
-
         // - Then create the related registries (for identification and collector), if requested
         $this->createCollectorsAndIdentification('App\Plant', $plant->id, $collectors, $identification);
 
+        //NEED TO UPDATE SUMMARY counts
+        /* SUMMARY COUNTS */
+        $newvalues =  [
+             "taxon_id" => $identification['taxon_id'],
+             "location_id" => $location,
+             "project_id" => $project
+        ];
+        $target = 'plants';
+        Summary::updateSummaryCounts($newvalues,null,$target,null,0);
+
+        /* END SUMMARY UPDATE */
         return;
     }
 }

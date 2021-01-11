@@ -9,7 +9,7 @@ use App\Dataset;
 use App\Summary;
 use App\Project;
 
-class CreateCountsTable extends Migration
+class CreateSummariesTable extends Migration
 {
   /**
    * Run the migrations.
@@ -17,7 +17,7 @@ class CreateCountsTable extends Migration
   public function up()
   {
 
-      Schema::create('counts', function (Blueprint $table) {
+      Schema::create('summaries', function (Blueprint $table) {
           $table->increments('id');
           $table->integer('object_id');
           $table->string('object_type');
@@ -26,10 +26,14 @@ class CreateCountsTable extends Migration
           $table->integer('scope_id')->nullable();
           $table->string('scope_type');
           $table->timestamps();
-          $table->unique(['object_id', 'object_type', 'target','scope_id', 'scope_type']);
+          $table->unique(['object_id', 'object_type', 'target','scope_id', 'scope_type'],'summaries_unique');
+          $table->index(['object_id', 'object_type'],'summaries_object');
+          $table->index(['scope_id', 'scope_type'],'summaries_scope');
+          $table->index(['target'],'summaries_target');
       });
 
-      Summary::updateSummaryTable($what="both",null,null);
+      
+      Summary::updateSummaryTable($what="all");
 
 
   }
@@ -39,7 +43,7 @@ class CreateCountsTable extends Migration
    */
   public function down()
   {
-      Schema::dropIfExists('counts');
+      Schema::dropIfExists('summaries');
   }
 
 }

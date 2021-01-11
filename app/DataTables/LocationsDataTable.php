@@ -78,14 +78,14 @@ class LocationsDataTable extends DataTable
         })
         ->addColumn('taxons', function ($location) {
           if ($this->project) {
-            $taxons_count = $location->getCount('App\Project',$this->project,"taxons");
+            $taxons_count = $location->taxonsCount('App\Project',$this->project);
             return '<a href="'.url('taxons/'.$location->id.'|'.$this->project.'/location_project').'">'.$taxons_count.'</a>';
           } else {
             if ($this->dataset) {
-              $taxons_count = $location->getCount('App\Dataset',$this->dataset,'taxons');
+              $taxons_count = $location->taxonsCount('App\Dataset',$this->dataset);
               return '<a href="'.url('taxons/'.$location->id.'|'.$this->dataset.'/location_dataset').'">'.$taxons_count.'</a>';
             } else {
-              $taxons_count = $location->getCount('all',null,"taxons");
+              $taxons_count = $location->taxonsCount('all',null);
               return '<a href="'.url('taxons/'.$location->id.'/location').'">'.$taxons_count.'</a>';
             }
           }
@@ -97,23 +97,23 @@ class LocationsDataTable extends DataTable
         ->addColumn('latitude', function ($location) {return $location->latitudeSimple; })
         ->addColumn('longitude', function ($location) {return $location->longitudeSimple; })
         ->addColumn('parent', function ($location) {
-            if (isset($location->parent)) {
+            if (null != $location->parent_id) {
               if ($this->project) {
-                $url = url('locations/'.$location->parent->id.'|'.$this->project.'/location_project');
+                $url = url('locations/'.$location->parent_id.'|'.$this->project.'/location_project');
               } else {
                 if ($this->dataset) {
-                  $url = url('locations/'.$location->parent->id.'|'.$this->dataset.'/location_dataset');
+                  $url = url('locations/'.$location->parent_id.'|'.$this->dataset.'/location_dataset');
                 } else {
-                  $url = url('locations/'.$location->parent->id.'/location');
+                  $url = url('locations/'.$location->parent_id);
                 }
               }
-              return '<a href="'.$url.'">'.$location->name.'</a>';
+              return '<a href="'.$url.'">'.$location->parent->name.'</a>';
             }
         })
         ->addColumn('select_locations',  function ($location) {
             return $location->id;
         })
-        ->rawColumns(['name', 'pictures', 'plants','vouchers', 'measurements','latitude','longitude','taxons']);
+        ->rawColumns(['name', 'pictures', 'plants','vouchers', 'measurements','latitude','longitude','taxons','parent']);
     }
 
     /**
@@ -145,15 +145,23 @@ class LocationsDataTable extends DataTable
         }
         if ($this->dataset) {
           $query->whereHas('summary_counts',function($count) {
-            $count->where('scope_id',"=",$this->dataset)->where('scope_type',"=","App\Dataset")->where('value',">",0);
+            $count->where('scope_id',"=",$this->dataset)->where('scope_type',"=","App\Dataset");
           });
         }
 
         if ($this->location) {
-            $locations = Location::find($this->location)->getDescendants()->pluck('id')->toArray();
-            $query = $query->whereIn('id',$locations);
+            $location = Location::noWorld()->where('id',$this->location)->cursor();
+            $query = $query->where('lft','>',$location->first()->lft)->where('rgt','<',$location->first()->rgt);
         }
 
+        if ($this->request()->has('adm_level')) {
+          $adm_level =  $this->request()->get('adm_level');
+          if ($adm_level != "" and null !== $adm_level) {
+            $query = $query->where('adm_level',$adm_level);
+          }
+        }
+
+        //$query = $query->orderBy('adm_level')->orderBy('name');
         return $this->applyScopes($query);
     }
 
@@ -164,12 +172,23 @@ class LocationsDataTable extends DataTable
      */
     public function html()
     {
+
+        $locations_level =  Location::AdmLevels();
+        $title_level = Lang::get('messages.level');
+        if (count($locations_level)) {
+          $title_level  = Lang::get('messages.level').'<select name="location_level" id="location_level" ><option value="">'.Lang::get('messages.all').'</option>';
+          foreach ($locations_level as $level) {
+                 $title_level  .= '<option value="'.$level.'" >'.Lang::get('levels.adm_level.' . $level).'</option>';
+          }
+          $title_level  .= '</select>';
+        }
+
         return $this->builder()
             ->columns([
                 'select_locations' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
-                'adm_level' => ['title' => Lang::get('messages.adm_level'), 'searchable' => false, 'orderable' => true],
+                'adm_level' => ['title' => $title_level, 'searchable' => false, 'orderable' => true],
                 'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
                 'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => false, 'orderable' => false],
                 'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
@@ -189,7 +208,7 @@ class LocationsDataTable extends DataTable
                 'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
-                'lengthMenu' => [3,5,10,15,20,50,100],
+                'lengthMenu' => [3,5,10,15,20,50],
                 'buttons' => [
                     'pageLength',
                     /*'csv',

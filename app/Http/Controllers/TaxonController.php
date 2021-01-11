@@ -95,7 +95,6 @@ class TaxonController extends Controller
     }
 
 
-    /* for scope Location */
     public function indexTaxons($id, TaxonsDataTable $dataTable)
     {
         $object = Taxon::findOrFail($id);
@@ -104,8 +103,6 @@ class TaxonController extends Controller
         ])->render('taxons.index', compact('object'));
     }
 
-
-    /* for scope Location */
     public function indexTaxonsDatasets($id, TaxonsDataTable $dataTable)
     {
         $ids = explode("|",$id);
@@ -116,8 +113,6 @@ class TaxonController extends Controller
             'dataset' => $ids[1],
         ])->render('taxons.index', compact('object','object_second'));
     }
-
-    /* for scope Location */
     public function indexTaxonsProjects($id, TaxonsDataTable $dataTable)
     {
         $ids = explode("|",$id);
@@ -128,6 +123,16 @@ class TaxonController extends Controller
             'project' => $ids[1],
         ])->render('taxons.index', compact('object','object_second'));
     }
+
+    public function indexTaxonsLocations($id, TaxonsDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Location::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'location' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+    }
+
+
 
     // Functions for autocompleting taxon names, used in dropdowns. Expects a $request->query input
     // MAY receive optional "$request->full" to return all names; default is to return only valid names
@@ -346,7 +351,7 @@ class TaxonController extends Controller
         }
 
         return $dataTable->with([
-            'taxon_id' => $id
+            'taxon' => $id
         ])->render('taxons.show', compact('taxon', 'author', 'bibref'));
     }
 

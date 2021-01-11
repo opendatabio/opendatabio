@@ -200,10 +200,10 @@
 
 
 
+@if ( $taxon->getCount("all",null,'pictures'))
 
+{!! View::make('pictures.index', ['pictures' => $taxon->allpictures()]) !!}
 
-@if ($taxon->pictures->count())
-{!! View::make('pictures.index', ['pictures' => $taxon->pictures]) !!}
 @endif
 
 

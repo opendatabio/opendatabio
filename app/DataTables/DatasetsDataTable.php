@@ -61,7 +61,7 @@ class DatasetsDataTable extends DataTable
             return '<a href="'.url('vouchers/'. $dataset->id. '/dataset').'" >'.$vouchers_count.'</a>';
         })
         ->addColumn('taxons', function ($dataset) {
-            $taxons_count = $dataset->getCount('all',null,"taxons");
+            $taxons_count = $dataset->taxonsCount();
             return '<a href="'.url('taxons/'. $dataset->id. '/dataset').'" >'.$taxons_count.'</a>';
         })
         ->addColumn('locations', function ($dataset) {

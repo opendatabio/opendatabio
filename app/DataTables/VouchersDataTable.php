@@ -26,14 +26,27 @@ class VouchersDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-        ->editColumn('number', function ($voucher) {
+        ->editColumn('fullname', function ($voucher) {
             return $voucher->rawLink();
+        })
+        ->filterColumn('fullname', function ($query, $keyword) {
+            $taxon = Taxon::whereRaw('odb_txname(name, level, parent_id) like ?', ["%".$keyword."%"])->cursor();
+            if ($taxon->count()) {
+              $taxon_list = $taxon->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+              $query->where('number', 'like', ["%{$keyword}%"])->orWhere('persons.full_name','like',["%{$keyword}%"])->orWhere(function($subquery) use($taxon_list) {
+                $subquery->whereHas('identification', function ($q) use ($taxon_list) {$q->whereIn('taxon_id',$taxon_list); })->orWhereHas('plant_identification',function($q) use($taxon_list) {
+              $q->whereIn('taxon_id',$taxon_list);
+              });});
+            } else {
+              $query->where('number', 'like', ["%{$keyword}%"])->orWhere('persons.full_name','like',["%{$keyword}%"]);
+            }
         })
         ->addColumn('project', function ($voucher) { return $voucher->project->name; })
         ->addColumn('identification', function ($voucher) {
             return $voucher->taxonName == Lang::get('messages.unidentified') ?
                    $voucher->taxonName : '<em>'.htmlspecialchars($voucher->taxonName).'</em>';
         })
+
         ->addColumn('collectors', function ($voucher) {
             $col = $voucher->collectors;
             return implode(', ',$col->map(function ($c) {return $c->person->fullname; })->all()
@@ -61,7 +74,7 @@ class VouchersDataTable extends DataTable
         ->addColumn('select_vouchers',  function ($voucher) {
             return $voucher->id;
         })
-        ->rawColumns(['number', 'identification','location','measurements','parent_type']);
+        ->rawColumns(['fullname', 'identification','location','measurements','parent_type']);
     }
 
     /**
@@ -81,16 +94,21 @@ class VouchersDataTable extends DataTable
                 'parent_id',
                 'parent_type',
                 'date',
-            ]);
-            //->with(['identification.taxon', 'person', 'collectors.person']);
+                'persons.full_name',
+            ])->join('persons','person_id','=','persons.id');
+            //with(['identification.taxon', 'person']);
             //->withCount('measurements');
         // customizes the datatable query
         if ($this->location) {
             $locationsids = Location::find($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
-            $query = $query->where(function($subquery) use($locationsids) {
-              $subquery->where('parent_type', 'App\Location')->whereIn('parent_id',$locationsids);
-            })->orWhereHasMorph('parent',["App\Plant"],function($plant) use($locationsids) {
-                $plant->whereIn('location_id',$locationsids); });
+            $query = $query->where(function($q) use($locationsids) {
+              $q->where(function($subquery) use($locationsids) {
+                $subquery->where('parent_type', 'App\Location')->whereIn('parent_id',$locationsids);
+              })->orWhereHasMorph('parent',["App\Plant"],function($plant) use($locationsids) {
+                  $plant->whereIn('location_id',$locationsids); });
+            });
+
+
         }
         if ($this->plant) {
             $query = $query->where('parent_type', 'App\Plant')->where('parent_id', '=', $this->plant);
@@ -145,20 +163,19 @@ class VouchersDataTable extends DataTable
             ->columns([
                 'select_vouchers' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
-                'number' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => true, 'orderable' => true],
-                'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
+                'fullname' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => true, 'orderable' => true],
+                'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => true, 'orderable' => false],
                 'parent_type' => ['title' => Lang::get('messages.planttag'), 'searchable' => false, 'orderable' => true],
                 'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
-                'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => true, 'orderable' => false],
+                'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
-                'pageLength' => 10,
                 'buttons' => [
                     /*'csv',
                     'excel',
@@ -181,7 +198,9 @@ class VouchersDataTable extends DataTable
                 'select' => [
                       'style' => 'multi',
                 ]
-            ]);
+
+          ]);
+
     }
 
     /**

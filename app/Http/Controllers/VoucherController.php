@@ -20,6 +20,7 @@ use App\Identification;
 use App\Voucher;
 use App\Taxon;
 use App\Dataset;
+use App\Summary;
 use Auth;
 use Lang;
 use Activity;
@@ -63,6 +64,14 @@ class VoucherController extends Controller
         $object = Taxon::findOrFail($ids[0]);
         $object_second = Dataset::findOrFail($ids[1]);
         return $dataTable->with(['taxon' => $ids[0],'dataset' => $ids[1]])->render('vouchers.index', compact('object','object_second'));
+    }
+
+    public function indexTaxonsLocations($id, VouchersDataTable $dataTable)
+    {
+        $ids = explode('|',$id);
+        $object = Taxon::findOrFail($ids[0]);
+        $object_second = Location::findOrFail($ids[1]);
+        return $dataTable->with(['taxon' => $ids[0],'location' => $ids[1]])->render('measurements.index', compact('object','object_second'));
     }
 
     public function indexProjects($id, VouchersDataTable $dataTable)
@@ -241,6 +250,13 @@ class VoucherController extends Controller
                 $request->identification_date_day,
                 $request->identification_date_year);
             $voucher->identification->save();
+
+            //for summary count updates
+            $newvalues =  [
+                 "taxon_id" => $request->taxon_id,
+                 "location_id" => $request->parent_location_id,
+                 "project_id" => $request->project_id
+            ];
         } else { // Plant
             $plant = Plant::findOrFail($request->parent_plant_id);
             $voucher = new Voucher(array_merge(
@@ -250,6 +266,14 @@ class VoucherController extends Controller
                 ]));
             $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
             $voucher->save();
+
+            //for summary counts
+            $newvalues = [
+                'location_id' =>  $plant->location_id,
+                'taxon_id' =>  $plant->identification->taxon_id,
+                'project_id' => $request->project_id
+            ];
+
         }
 
         // common:
@@ -259,7 +283,22 @@ class VoucherController extends Controller
             }
         }
 
-        $voucher->setHerbariaNumbers($request->herbarium);
+
+        if ($request->herbarium) {
+          $voucher->setHerbariaNumbers($request->herbarium);
+        }
+
+        /* UPDATE SUMMARY COUNTS */
+          $oldvalues =  [
+              "taxon_id" => null,
+              "location_id" => null,
+              "project_id" => null,
+          ];
+          $target = 'vouchers';
+          $datasets = null;
+          Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,0);
+        /* END SUMMARY UPDATE */
+
 
         return redirect('vouchers/'.$voucher->id)->withStatus(Lang::get('messages.stored'));
     }
@@ -319,7 +358,23 @@ class VoucherController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
+
+        //for summary counts
+        $oldvalues = [
+            'project_id' => $voucher->project_id,
+            'location_id' => $voucher->parent_type=="App\Plant" ? $voucher->parent->location_id : $voucher->parent_id,
+            'taxon_id' => $voucher->parent_type=="App\Plant" ? $voucher->parent->identification->taxon_id : $voucher->identification->taxon_id
+        ];
+
         if ("App\Location" == $request->parent_type) {
+
+            //for summary counts
+              $newvalues = [
+                  'location_id' => $request->parent_location_id,
+                  'taxon_id' => $request->taxon_id,
+                  'project_id' => $request->project_id
+              ];
+
             $voucher->update(array_merge(
                 $request->only(['person_id', 'number', 'notes', 'project_id', 'parent_type']), [
                     'parent_id' => $request->parent_location_id,
@@ -356,6 +411,15 @@ class VoucherController extends Controller
 
         } else { // Plant
             $plant = Plant::findOrFail($request->parent_plant_id);
+
+            //for summary counts
+            $newvalues = [
+                'location_id' =>  $plant->location_id,
+                'taxon_id' =>  $plant->identification->taxon_id,
+                'project_id' => $request->project_id
+            ];
+
+
             $voucher->update(array_merge(
                 $request->only(['person_id', 'number', 'notes', 'parent_type']), [
                     'project_id' => $plant->project_id,
@@ -384,8 +448,18 @@ class VoucherController extends Controller
 
         }
 
-        $voucher->setHerbariaNumbers($request->herbarium);
-        //activity()->log(serialize($request->herbarium));
+        if ($request->herbarium) {
+          $voucher->setHerbariaNumbers($request->herbarium);
+        }
+
+
+        /* UPDATE SUMMARY COUNTS */
+          $target = 'vouchers';
+          $datasets = array_unique($voucher->measurements()->withoutGlobalScopes()->pluck('dataset_id')->toArray());
+          $measurements_count = $voucher->measurements()->withoutGlobalScopes()->count();
+          Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,$measurements_count);
+        /* END SUMMARY UPDATE */
+
 
         return redirect('vouchers/'.$voucher->id)->withStatus(Lang::get('messages.saved'));
     }

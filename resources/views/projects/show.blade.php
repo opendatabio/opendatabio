@@ -74,6 +74,7 @@
   &nbsp;&nbsp;
   <a href="{{ url('datasets/'. $project->id. '/project')  }}" class="btn btn-default">
     <i class="fa fa-btn fa-search"></i>
+    {{ $project->getCount('all',null,'datasets') }}
     @lang('messages.datasets')
   </a>
 
@@ -89,29 +90,31 @@
   <!-- RELATED MODELS BUTTONS -->
   <div class="col-sm-12">
   <br>
-    @if ($project->vouchers()->count())
+    @if ($project->getCount('all',null,'vouchers'))
     <a href="{{ url('projects/'. $project->id. '/vouchers')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
-      {{ $project->vouchers()->count() }}
+      {{ $project->getCount('all',null,'vouchers') }}
       @lang('messages.vouchers')
     </a>
     &nbsp;&nbsp;
     @endif
-    @if ($project->plants()->count())
+    @if ($project->getCount('all',null,'plants'))
       <a href="{{ url('projects/'. $project->id. '/plants')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
-      {{ $project->plants()->count() }}
+      {{ $project->getCount('all',null,'plants') }}
       @lang('messages.plants')
     </a>
     @endif
     &nbsp;&nbsp;
     <a href="{{ url('projects/'. $project->id. '/taxons')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
+      {{ $project->taxonsCount() }}
       @lang('messages.taxons')
     </a>
     &nbsp;&nbsp;
     <a href="{{ url('locations/'. $project->id. '/project')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
+      {{ $project->getCount('all',null,'locations') }}
       @lang('messages.locations')
     </a>
   </div>

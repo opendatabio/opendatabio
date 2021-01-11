@@ -37,7 +37,7 @@ class ProjectsDataTable extends DataTable
           return '<a href="'.url('vouchers/'. $project->id. '/project').'" >'.$vouchers_count.'</a>';
         })
         ->addColumn('taxons', function ($project) {
-          $taxons_count = $project->getCount('all',null,"taxons");
+          $taxons_count = $project->taxonsCount();
           return '<a href="'.url('taxons/'. $project->id. '/project').'" >'.$taxons_count.'</a>';
         })
         ->addColumn('locations', function ($project) {
