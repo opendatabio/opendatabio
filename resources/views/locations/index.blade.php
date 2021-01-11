@@ -63,6 +63,28 @@
 @push ('scripts')
 {!! $dataTable->scripts() !!}
 
+
+<script>
+    const table = $('#dataTableBuilder');
+    table.on('preXhr.dt',function(e,settings,data) {
+      data.adm_level = $("#location_level option").filter(':selected').val();
+      /* an any defined in the export form */
+      data.project = $("input[name='project']").val();
+      data.location = $("input[name='location_root']").val();
+      data.taxon = $("input[name='taxon_root']").val();
+      /*console.log(data.level,data.project,data.location,data.taxon); */
+    });
+    $('#location_level').on('change',function() {
+       table.DataTable().ajax.reload();
+       return false;
+    });
+</script>
+
+
+
+
+
+
 <script>
 
 $(document).ready(function() {

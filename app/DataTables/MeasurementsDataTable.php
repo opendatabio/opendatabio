@@ -97,7 +97,7 @@ class MeasurementsDataTable extends DataTable
         if ($this->odbtrait) {
             $query = $query->where('trait_id', $this->odbtrait);
         }
-        if ($this->taxon) {
+        if ($this->taxon and !isset($this->location)) {
           $taxon_list = Taxon::findOrFail($this->taxon)->getDescendantsAndSelf()->pluck('id')->toArray();
           $query = $query->where(function($subquery) use($taxon_list) {
             $subquery->whereHasMorph('measured',['App\Plant','App\Voucher'],function($measured) use($taxon_list) {
@@ -106,11 +106,24 @@ class MeasurementsDataTable extends DataTable
                     $qq->where('measured_type',"=",'App\Taxon')->whereIn('measured_id',$taxon_list);
           });});
         }
-
-        if ($this->location) {
+        if ($this->location and !isset($this->taxon)) {
           $locations_ids = Location::findOrFail($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
           $query = $query->whereIn('measured_id', $locations_ids)->where('measured_type', "App\Location");
         }
+
+        if ($this->location and $this->taxon) {
+            $taxon_list = Taxon::findOrFail($this->taxon)->getDescendantsAndSelf()->pluck('id')->toArray();
+            $locations_ids = Location::findOrFail($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
+            $query = $query->where(function($subquery) use($taxon_list,$locations_ids) {
+              $subquery->whereHasMorph('measured',['App\Plant'],function($measured) use($taxon_list,$locations_ids) {
+                  $measured->whereHas('identification',function($idd) use($taxon_list,$locations_ids)  {
+                    $idd->whereIn('taxon_id',$taxon_list);})->whereIn('location_id',$locations_ids);
+                  });})->orWhere(function($subquery) use($taxon_list,$locations_ids) {
+                      $subquery->whereHasMorph('measured',['App\Voucher'],function($measured) use($taxon_list,$locations_ids) {
+                          $measured->whereHas('identification',function($idd) use($taxon_list,$locations_ids)  {
+                            $idd->whereIn('taxon_id',$taxon_list);})->whereIn('parent_id',$locations_ids)->where('parent_type','App\Location');});});
+        }
+
         return $this->applyScopes($query);
 
     }

@@ -29,9 +29,13 @@
 
             <div class="panel-body">
             <div class="col-sm-6">
-            <a href="{{url ('plants/create')}}" class="btn btn-success">
+            @if (isset($object) and class_basename($object) == 'Location') <!-- we're inside a Location, Project or Taxon view -->
+              <a href="{{url ('locations/' . $object->id . '/plants/create')}}" class="btn btn-success">
+            @else
+              <a href="{{url ('plants/create')}}" class="btn btn-success">
+            @endif
                 <i class="fa fa-btn fa-plus"></i>
-@lang('messages.create')
+                @lang('messages.create')
             </a>
             &nbsp;&nbsp;
             <button class="btn btn-primary" id='batch_identify'>
@@ -194,33 +198,33 @@
 
 
 <!-- Registered Plants -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                      @if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
-                          @lang('messages.plant_list_for')<strong> {{ class_basename($object) }}</strong>
-                          {!! $object->rawLink() !!}
-                      @else
-                        @lang('messages.plants')
-                      @endif
-                      @if (isset($object_second))
-                      &nbsp;>>&nbsp;<strong>{{class_basename($object_second )}}</strong> {!! $object_second->rawLink(true) !!}
-                      @endif
-                      &nbsp;&nbsp;
-                      <a href="#" id="about_list" class="btn btn-default"><i class="fas fa-question"></i></a>
-                      <div id='about_list_text' ></div>
-                    </div>
-                      @if (Auth::user())
-                      {!! View::make('common.exportdata')->with([
-                            'object' => isset($object) ? $object : null,
-                            'object_second' => isset($object_second) ? $object_second : null,
-                            'export_what' => 'Plant'
-                      ]) !!}
-                      @endif
+          <div class="panel panel-default">
+              <div class="panel-heading">
+                @if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
+                    @lang('messages.plant_list_for')<strong> {{ class_basename($object) }}</strong>
+                    {!! $object->rawLink() !!}
+                    @if (isset($object_second))
+                    &nbsp;>>&nbsp;<strong>{{class_basename($object_second )}}</strong> {!! $object_second->rawLink(true) !!}
+                    @endif
+                    <a href="#" id="about_list" class="btn btn-default"><i class="fas fa-question"></i></a>
+                    <div id='about_list_text' ></div>
+                @else
+                  @lang('messages.plants')
+                @endif
+              </div>
 
-                  <div class="panel-body">
-                      {!! $dataTable->table([],true) !!}
-                  </div>
-                </div>
+                @if (Auth::user())
+                {!! View::make('common.exportdata')->with([
+                      'object' => isset($object) ? $object : null,
+                      'object_second' => isset($object_second) ? $object_second : null,
+                      'export_what' => 'Plant'
+                ]) !!}
+                @endif
+
+            <div class="panel-body responsive">
+              {!! $dataTable->table([],true) !!}
+            </div>
+          </div>
         </div>
     </div>
 @endsection

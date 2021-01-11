@@ -36,7 +36,17 @@ class PlantsDataTable extends DataTable
         })
         ->filterColumn('tag', function ($query, $keyword) {
             $sql = " tag='".$keyword."' OR tag like '%-".$keyword."'";
-            $query->whereRaw($sql);
+            $taxon = Taxon::whereRaw("odb_txname(name, level, parent_id) like '%".$keyword."%'");
+            if ($taxon->count()) {
+              $taxon_list = $taxon->cursor()->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+              $query->where(function($subquery) use($taxon_list,$sql) {
+                $subquery->whereHas('identification', function ($q) use ($taxon_list) {
+                  $q->whereIn('taxon_id',$taxon_list);
+                })->orWhereRaw($sql);
+              });
+            } else {
+              $query->whereRaw($sql);
+            }
         })
         ->addColumn('project', function ($plant) { return $plant->project->name; })
         ->addColumn('identification', function ($plant) {

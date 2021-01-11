@@ -61,6 +61,10 @@
              @endif
            </div>
 
+
+
+
+
            @if (Auth::user())
             {!! View::make('common.exportdata')->with([
                   'object' => isset($object) ? $object : null,
@@ -69,7 +73,7 @@
             ]) !!}
             @endif
           <div class="panel-body">
-            {!! $dataTable->table() !!}
+              {!! $dataTable->table() !!}
           </div>
         </div>
     </div>
@@ -78,7 +82,27 @@
 @push ('scripts')
 {!! $dataTable->scripts() !!}
 
-<script type="text/javascript">
+
+
+
+<script>
+    const table = $('#dataTableBuilder');
+    table.on('preXhr.dt',function(e,settings,data) {
+      data.level = $("#taxon_level option").filter(':selected').val();
+      data.project = $("input[name='project']").val();
+      data.location = $("input[name='location_root']").val();
+      data.taxon = $("input[name='taxon_root']").val();
+      //console.log(data.level,data.project,data.location,data.taxon);
+    });
+    $('#taxon_level').on('change',function() {
+       table.DataTable().ajax.reload();
+       return false;
+    });
+</script>
+
+
+
+<script>
 $(document).ready(function() {
 
 $("#about_list").on('click',function(){
