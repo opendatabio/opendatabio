@@ -11,7 +11,7 @@ use App\Measurement;
 use App\Location;
 use App\Taxon;
 use App\Person;
-use App\Plant;
+use App\Individual;
 use App\Voucher;
 use App\ODBFunctions;
 use App\ODBTrait;
@@ -110,9 +110,9 @@ class ImportMeasurements extends AppJob
 
     protected function validateObjetType($object_type)
     {
-        $res =  in_array($object_type,["Plant","Voucher","Location","Taxon"]);
+        $res =  in_array($object_type,["Individual","Voucher","Location","Taxon"]);
         if (!$res) {
-          $this->appendLog('object_type '.$object_type.' not found in ['.implode(";",["Plant","Voucher","Location","Taxon"]).']');
+          $this->appendLog('object_type '.$object_type.' not found in ['.implode(";",["Individual","Voucher","Location","Taxon"]).']');
         }
         return $res;
     }
@@ -147,8 +147,8 @@ class ImportMeasurements extends AppJob
         } elseif ('Taxon' === $object_type) {
             // TODO: perhaps add restriction to bibreference when type is taxon
             $query = Taxon::select('id')->where('id', $measurement['object_id'])->get();
-        } elseif ('Plant' === $object_type) {
-            $query = Plant::select('plants.id')->where('id', $measurement['object_id'])->get();
+        } elseif ('Individual' === $object_type) {
+            $query = Individual::select('individuals.id')->where('id', $measurement['object_id'])->get();
         } elseif ('Voucher' === $object_type) {
             $query = Voucher::select('id')->where('id', $measurement['object_id'])->get();
         }
@@ -227,9 +227,9 @@ class ImportMeasurements extends AppJob
                     return false;
                   }
                   break;
-                case (Plant::class):
-                  $plant = Plant::where('id','=',$value['link_id'])->get();
-                  if (count($plant)==0) {
+                case (Individual::class):
+                  $individual = Individual::where('id','=',$value['link_id'])->get();
+                  if (count($individual)==0) {
                     return false;
                   }
                   break;
@@ -314,8 +314,8 @@ class ImportMeasurements extends AppJob
     }
     private function getObjectTypeClass($object_type) {
       switch ($object_type) {
-        case "Plant":
-           return Plant::class;
+        case "Individual":
+           return Individual::class;
         case "Voucher":
            return Voucher::class;
         case "Location":
@@ -373,11 +373,11 @@ class ImportMeasurements extends AppJob
         $taxon_id = null;
         $project_id = null;
         $location_id = null;
-        if ($measurement->measured_type == Plant::class) {
-          $plant = Plant::findOrFail($measurement->measured_id);
-          $taxon_id = $plant->identification->taxon_id;
-          $location_id = $plant->location_id;
-          $project_id = $plant->project_id;
+        if ($measurement->measured_type == Individual::class) {
+          $individual = Individual::findOrFail($measurement->measured_id);
+          $taxon_id = $individual->identification->taxon_id;
+          $location_id = $individual->location_id;
+          $project_id = $individual->project_id;
         }
         if ($measurement->measured_type == Voucher::class) {
             $voucher = Voucher::findOrFail($measurement->measured_id);

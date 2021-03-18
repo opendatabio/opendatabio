@@ -1,4 +1,4 @@
-<?php
+Individual<?php
 
 namespace App\Jobs;
 
@@ -8,7 +8,7 @@ use App\UserTranslation;
 use App\Location;
 use App\Voucher;
 use App\Taxon;
-use App\Plant;
+use App\Individual;
 use App\ODBFunctions;
 use App\Tag;
 use Spatie\SimpleExcel\SimpleExcelReader;
@@ -168,8 +168,8 @@ class ImportPictures extends ImportCollectable
   protected function validateObject(&$data)
   {
       $object_type = $data['object_type'];
-      if (!in_array($data['object_type'],["Plant","Voucher","Location","Taxon"])) {
-          $this->appendLog('object_type '.$object_type.' not found in ['.implode(";",["Plant","Voucher","Location","Taxon"]).']');
+      if (!in_array($data['object_type'],["Individual","Voucher","Location","Taxon"])) {
+          $this->appendLog('object_type '.$object_type.' not found in ['.implode(";",["Individual","Voucher","Location","Taxon"]).']');
           return false;
       }
       if ('Location' === $object_type) {
@@ -178,9 +178,9 @@ class ImportPictures extends ImportCollectable
       } elseif ('Taxon' === $object_type) {
           $query = Taxon::select('id')->where('id', $data['object_id'])->get();
           $data['object_type'] = Taxon::class;
-      } elseif ('Plant' === $object_type) {
-          $query = Plant::select('plants.id')->where('id', $data['object_id'])->get();
-          $data['object_type'] = Plant::class;
+      } elseif ('Individual' === $object_type) {
+          $query = Individual::select('individuals.id')->where('id', $data['object_id'])->get();
+          $data['object_type'] = Individual::class;
       } elseif ('Voucher' === $object_type) {
           $query = Voucher::select('id')->where('id', $data['object_id'])->get();
           $data['object_type'] = Voucher::class;
@@ -201,14 +201,25 @@ class ImportPictures extends ImportCollectable
     $picture = Picture::create($object);
 
     //save image
-    $contents = file_get_contents($filepath);
+    //$contents = file_get_contents($filepath);
+    $metadata = null;
     try {
-        $picture->saveImage($contents);
+        $img = Image::make($filepath);
+        $metadata = $img->exif();
+        $picture->saveImage($img);
+        //$picture->saveImage($contents);
     } catch (\Intervention\Image\Exception\NotReadableException $e) {
         $picture->delete();
         $this->skipEntry($line,$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on picture  ['.$line['object_type'].' '.$line['object_id'].'] '.$e->getTraceAsString());
         return false;
     }
+
+    if (null != $metadata) {
+      $picture->metadata = json_encode($metadata);
+      $picture->save();
+    }
+
+
     // syncs tags
     if (isset($line['tags'])) {
       $picture->tags()->sync($line['tags']);

@@ -9,11 +9,16 @@ namespace App\Jobs;
 
 use App\Voucher;
 use App\Location;
-use App\Plant;
+use App\Individual;
 use App\Project;
 use App\ODBFunctions;
-use App\Herbarium;
+use App\Biocollection;
+use Illuminate\Http\Request;
+
 use Lang;
+
+
+
 
 class ImportVouchers extends ImportCollectable
 {
@@ -28,7 +33,7 @@ class ImportVouchers extends ImportCollectable
         if (!$this->setProgressMax($data)) {
             return;
         }
-        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['number', 'date', 'collector']);
+        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['individual', 'biocollection']);
         $this->validateHeader();
         foreach ($data as $voucher) {
             if ($this->isCancelled()) {
@@ -38,6 +43,8 @@ class ImportVouchers extends ImportCollectable
 
             if ($this->validateData($voucher)) {
                 // Arrived here: let's import it!!
+                //am I entering here?
+                //$this->appendLog('YESSESSSSS');
                 try {
                     $this->import($voucher);
                 } catch (\Exception $e) {
@@ -53,253 +60,169 @@ class ImportVouchers extends ImportCollectable
         if (!$this->hasRequiredKeys($this->requiredKeys, $voucher)) {
             return false;
         }
+
+        if (!$this->validateIndividual($voucher)) {
+            return false;
+        }
+
         if (!$this->validateProject($voucher)) {
             return false;
         }
 
-        //validate parent
-        $parent = $this->validParent($voucher);
-        // TODO: if lat and long are informed, then create location or search for registered location with same coordinates.
-        if (null === $parent) {
-            $this->skipEntry($voucher, 'especified parent was not found in the database');
+        //collectors (at least a valid one must exist if informed) but is not mandatory
+        $hascollector  = array_key_exists('collector',$voucher) ? ((null != $voucher['collector']) ? $voucher['collector'] : null) : null;
+        $collectors = $this->extractCollectors('Voucher', $voucher, 'collector');
+        if (null == $collectors  and $hascollector) {
+          return false;
+        }
+        $voucher['collector'] = $collectors;
 
+        //if collector is informed, then number is mandatory
+        $hasnumber   = array_key_exists('number',$voucher) ? ((null != $voucher['number']) ? $voucher['number'] : null) : null;
+        if ($hascollector and !$hasnumber) {
+          $this->skipEntry($voucher, 'Because you informed the collector you must also inform number. Note that neither is mandatory for voucher');
+          return false;
+        }
+        //if collector and number is informed, a date must be provided as well
+        if ($hascollector and !$this->validateDate($voucher)) {
+          $this->skipEntry($voucher,'Collector was informed, then date must also be informed. Note that neither is mandatory for voucher, which inherits these from the individual if empty');
+          return false;
+        }
+
+        if (!$this->validateBiocollection($voucher)) {
             return false;
         }
-        $voucher['parent_id'] = $parent['id'];
-        $voucher['parent_type'] = $parent['type'];
-
         return true;
     }
 
-    private function validParent($voucher)
+    public function validateBiocollection(&$voucher)
     {
+      $query = Biocollection::select(['id', 'acronym', 'name', 'irn']);
+      $fields = ['id', 'acronym', 'name', 'irn'];
+      $valid = ODBFunctions::validRegistry($query, $voucher['biocollection'], $fields);
+      if (!$valid) {
+        $this->skipEntry($voucher,'You informed an invalid Biocollection reference: '.$voucher['biocollection']);
+        return false;
+      }
+      $voucher['biocollection_id'] = $valid->id;
 
-        $validtypes = array('Plant' => Plant::class,'Location' => Location::class);
-        if (array_key_exists('parent_id', $voucher)) {
-            if (array_key_exists('parent_type', $voucher) and (array_key_exists($voucher['parent_type'],$validtypes) or array_key_exists($voucher['parent_type'],array_flip($validtypes))) {
-                return array(
-                    'id' => $voucher['parent_id'],
-                    'type' => array_key_exists($voucher['parent_type'],$validtypes) ? $validtypes[$voucher['parent_type']] : $voucher['parent_type'];
-                );
-            }
-            return null; // has id, but not type of parent
-        } elseif (array_key_exists('parent_type', $voucher)) {
-            return null; // has type, but not id of parent
-        } elseif (array_key_exists('location', $voucher)) {
-            if (array_key_exists('plant_tag', $voucher)) {
-                $valid = $this->validate($voucher['location'], $voucher['plant_tag']);
-                if (null === $valid) {
-                    return null;
-                }
-
-                return array(
-                    'id' => $valid,
-                    'type' => 'App\Plant',
-                );
-            } else {
-                $fields = ['id', 'name'];
-                $valid = ODBFunctions::validRegistry(Location::select('id'), $location,$fields);
-                if (null === $valid) {
-                    return null;
-                }
-
-                return array(
-                    'id' => $valid->id,
-                    'type' => 'App\Location',
-                );
-            }
-        } elseif (array_key_exists('plant', $voucher)) {
-            $valid = Plant::select('id')
-                    ->where('id', $voucher['plant'])
-                    ->get();
-            if (0 === count($valid)) {
-                return null;
-            }
-
-            return array(
-                'id' => $valid->first()->id,
-                'type' => 'App\Plant',
-            );
-        }
-    }
-
-    // Given a location name or id and a plant tag, returns the id of the plant with this tag and location if exists, otherwise returns null.
-    private function validate($location, $plant)
-    {
-        $fields = ['id', 'name'];
-        $valid = ODBFunctions::validRegistry(Location::select('id'), $location,$fields);
-        if (null === $valid) {
-            return null;
-        }
-        $location = $valid->id;
-        $valid = Plant::select('plants.id as plant_id')
-                ->where('plants.location_id', $location)
-                ->where('plants.tag', $plant)
-                ->get();
-        if (0 === count($valid)) {
-            return null;
-        }
-
-        return $valid->first()->plant_id;
-    }
-
-    public function extractHerbariaNumbers($herbarios)
-    {
-        $herbaria = array();
-        if (!is_array($herbarios)) {
-          if (!empty($herbarios)) {
-            $herbarios = explode(",",$herbarios);
-          } else {
-            $herbarios = array();
+      $biocollection_type =  array_key_exists('biocollection_type',$voucher) ? ((null != $voucher['biocollection_type']) ? $voucher['biocollection_type'] : 0) : 0;
+      if (!in_array($biocollection_type,Biocollection::NOMENCLATURE_TYPE)) {
+        $validtype = null;
+        $btype = mb_strtolower($biocollection_type);
+        foreach (Biocollection::NOMENCLATURE_TYPE as $type) {
+          $en = mb_strtolower(Lang::get('levels.vouchertype.'.$type));
+          $pt = mb_strtolower(Lang::choice('levels.vouchertype.'.$type,1,[],'pt'));
+          if ($en==$btype or $pt==$btype) {
+            $validtype = $type;
           }
         }
-        foreach ($herbarios as $key => $value) {
-            //validate acronym or id
-            if (!array_key_exists('herbarium_code',$value) && !is_array($value)) {
-                $herbarium_code = $value;
-                $value = array('herbarium_type' => 0);
-            } else {
-                $herbarium_code = $value['herbarium_code'];
-                $value = $value;
-            }
-            $query = Herbarium::select(['id', 'acronym', 'name', 'irn']);
-            $fields = ['id', 'acronym', 'name', 'irn'];
-            $valid = ODBFunctions::validRegistry($query, $herbarium_code, $fields);
-            if (null !== $valid) {
-              unset($value['herbarium_code']);
-              if (array_key_exists('herbarium_number',$value) && 0 == $value['herbarium_number']) {
-                unset($value['herbarium_number']);
-              }
-              $herbaria[$valid->id] = $value;
-            }
+        //not found in translations nor as numeric return
+        if (null == $validtype) {
+          $this->skipEntry($voucher,'You informed an invalid NOMENCLATURE_TYPE reference: '.$biocollection_type);
+          return false;
         }
-        return $herbaria;
+        $voucher['biocollection_type'] = $validtype;
+      } else {
+        /* this is required as 0 may have been defined here */
+        $voucher['biocollection_type'] = $biocollection_type;
+      }
+      return true;
+     }
+
+    public function validateDate(&$voucher)
+    {
+      //validate date
+      $date = array_key_exists('date', $voucher) ? $voucher['date'] : (isset($this->header['date']) ? $this->header['date'] : null);
+      if (null == $date) {
+        $year = array_key_exists('date_year', $voucher) ? $voucher['date_year'] : (isset( $voucher['year']) ? $voucher['year'] : null);
+        $month = array_key_exists('date_month', $voucher) ? $voucher['date_month'] : (isset( $voucher['month']) ? $voucher['month'] : null);
+        $day = array_key_exists('date_day', $voucher) ? $voucher['date_day'] : (isset( $voucher['day']) ? $voucher['day'] : null);
+        $date = array($month,$day,$year);
+      }
+      if (is_string($date)) {
+        if (preg_match("/\//",$date)) {
+            $date = explode("/",$date);
+            $date = [$date[1],$date[2],$date[0]];
+        } elseif (preg_match("/-/",$date)) {
+            $date = explode("-",$date);
+            $date = [$date[1],$date[2],$date[0]];
+        }
+      } elseif (!is_array($date)) {
+        if (get_class($date)==="DateTime") {
+           $year = $date->format('Y');
+           $day = $date->format('d');
+           $month = $date->format('m');
+           $date = [$month,$day,$year];
+        }
+      }
+      $hasdate = array_filter($date);
+      if (count($hasdate)>0) {
+        if (!(Individual::checkDate($date))) {
+          $this->skipEntry($voucher,'Informed date is invalid! Date'.json_encode($date));
+          return false;
+        }
+        $voucher['date'] = $date;
+        return true;
+      }
+      return false;
     }
 
+    public function validateIndividual(&$voucher)
+    {
+      if (array_key_exists('individual', $voucher)) {
+          $individual = $voucher['individual'];
+          if (((int)($individual))>0) {
+              $ref = Individual::where('id',$individual);
+          } else {
+              $ref = Individual::whereRaw('odb_ind_fullname(id,tag) like "'.$individual.'"');
+          }
+          if ($ref->count()==1) {
+              $voucher['individual_id'] = $ref->get()->first()->id;
+              //add project if does not exists
+              if (null == $voucher['project']) {
+                $voucher['project'] = $ref->get()->first()->project_id;
+              }
+              return true;
+          }
+      }
+      $this->skipEntry($voucher, ' Individual '.$voucher['individual'].' not found in the database');
+      return false;
+    }
 
 
     public function import($voucher)
     {
 
-        $number = $voucher['number'];
-        $date = array_key_exists('date', $this->header) ? $this->header['date'] : $voucher['date'];
-        $project = array_key_exists('project', $this->header) ? $this->header['project'] : $voucher['project'];
-        $parent_id = $voucher['parent_id'];
-        $parent_type = $voucher['parent_type'];
-        $created_at = array_key_exists('created_at', $voucher) ? $voucher['created_at'] : null;
-        $updated_at = array_key_exists('updated_at', $voucher) ? $voucher['updated_at'] : null;
-        $notes = array_key_exists('notes', $voucher) ? $voucher['notes'] : null;
-        $collectors = $this->extractCollectors('Voucher '.$number, $voucher);
-
-        //validate herbaria
-        $herbaria = null;
-        if (array_key_exists("herbaria",$voucher) && !empty($voucher['herbaria'])) {
-            $herbaria = $this->extractHerbariaNumbers($voucher['herbaria']);
-            if (count($herbaria)==0 && count($voucher['herbaria'])>0) {
-              $this->skipEntry($voucher, Lang::get('messages.invalid_herbaria'));
-              return;
-            }
-        }
-
-        if (0 === count($collectors)) {
-            $this->skipEntry($voucher, 'Can not found any collector of this voucher in the database');
-            return;
-        }
-        $same = Voucher::where('person_id', '=', $collectors[0])->where('number', '=', $number)->get();
-        if (count($same)) {
-            $this->skipEntry($voucher, 'There is another registry of a voucher with main collector '.$collectors[0].' and number '.$number.' and this must be UNIQUE');
-            return;
-        }
-
-        if (is_array($date)) {
-          if (!$this->hasRequiredKeys(['year'], $date)) {
-              $this->skipEntry($value, Lang::get('messages.invalid_date_error')." Date is array and at least year key must exist");
-              return ;
-          } else {
-            $year = array_key_exists('year', $date) ? $date['year'] : null;
-            $month = array_key_exists('month', $date) ? $date['month'] : null;
-            $day = array_key_exists('day', $date) ? $date['day'] : null;
-            $date = array($month,$day,$year);
-          }
-        } else {
-           //format MUST BE YYYY-MM-DD
-           $date = explode("-",$date);
-           if (3 === count($date)) {
-             $date = array($date[1],$date[2],$date[0]);
-           } else {
-             $date = array();
-           }
-        }
-        if (!Voucher::checkDate($date)) {
-            $this->skipEntry($voucher, Lang::get('messages.invalid_date_error'));
-            return ;
-        }
-        // collection date must be in the past or today
-        if (!Voucher::beforeOrSimilar($date, date('Y-m-d'))) {
-            $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
-            return ;
-        }
-
-        // vouchers' fields is ok, what about related tables?
-        if ('App\Location' === $parent_type) {
-          // add corrected date if need to be used as identification date WHEN MISSING
-            $voucher['date'] = $date;
-            $identification = $this->extractIdentification($voucher);
-            if (null === $identification) {
-                $this->skipEntry($voucher, 'Vouchers of location must have taxonomic information');
-                return;
-            }
-            $location_id = $parent_id;
-            $taxon_id = $identification['taxon_id'];
-        } else {
-            $parent = Plant::withoutGlobalScopes()->findOrFail($parent_id);
-            $location_id = $parent->location_id;
-            $taxon_id = $parent->identification->taxon_id;
-            $identification = null;
-        }
-
-        //Finaly create the registries:
-        // - First voucher's registry, to get their id
-        $voucher = new Voucher([
-            'person_id' => $collectors[0],
-            'number' => $number,
-            'project_id' => $project,
-            'parent_type' => $parent_type,
-            'parent_id' => $parent_id,
-            'created_at' => $created_at,
-            'updated_at' => $updated_at,
-            'notes' => $notes,
-        ]);
-        //date can not be set into constructor due to IncompleteDate compatibility
-        $voucher->setDate($date[0],$date[1],$date[2]);
-        /*
-        if (is_array($date[0])) {
-          $this->appendLog("nao passou aqui mm ".serialize($date[0]));
-        } else {
-          $this->appendLog("NOT ARRAY ".serialize($date));
-        }
-        return;
-        */
-        $voucher->save();
-        if (!is_null($herbaria)) {
-          $voucher->setHerbariaNumbers($herbaria);
-        }
-        $this->affectedId($voucher->id);
-
-        // - Then create the related registries (for identification and collector), if requested
-        $this->createCollectorsAndIdentification('App\Voucher', $voucher->id, $collectors, $identification);
-
-
-        //UPDATE SUMMARY counts
-        $newvalues =  [
-             "taxon_id" => $taxon_id,
-             "location_id" => $location_id,
-             "project_id" => $project
+        $keys_mandatory = ['individual','biocollection'];
+        $keys_other = ['biocollection_type','biocollection_number','project','collector','number','notes','date'];
+        $store_request = [
+          'from_the_api' => 1,
+          'individual_id' => (int) $voucher['individual_id'],
+          'biocollection_id' => (int) $voucher['biocollection_id'],
+          'biocollection_type' => (int) $voucher['biocollection_type'],
+          'project_id' => (int) $voucher['project'],
+          'biocollection_number' => array_key_exists('biocollection_number',$voucher) ? ((null != $voucher['biocollection_number']) ? $voucher['biocollection_number'] : null) : null,
+          'number' =>  array_key_exists('number',$voucher) ? ((null != $voucher['number']) ? (string) $voucher['number'] : null) : null,
+          'collector' => array_key_exists('collector',$voucher) ? ((null != $voucher['collector']) ? $voucher['collector'] : null) : null,
+          'notes' => array_key_exists('notes',$voucher) ? ((null != $voucher['notes']) ?  (string) $voucher['notes'] : null) : null,
+          'date' => array_key_exists('date',$voucher) ? ((null != $voucher['date']) ? $voucher['date'] : null) : null,
         ];
 
-        $target = 'vouchers';
-        Summary::updateSummaryCounts($newvalues,null,$target,null,0);
+        //transform info in a request
+        $saverequest = new Request;
+        $saverequest->merge($store_request);
 
+        //store the record, which will result in the individual
+        $savedvoucher = app('App\Http\Controllers\VoucherController')->store($saverequest);
+        if (is_string($savedvoucher)) {
+          $this->skipEntry($voucher,'This voucher could not be imported. Possible errors may be: '.$savedvoucher);
+          return false;
+        }
+
+
+
+        $this->affectedId($savedvoucher->id);
 
 
         return;

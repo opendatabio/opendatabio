@@ -8,7 +8,7 @@
 namespace App\Jobs;
 
 use App\Person;
-use App\Herbarium;
+use App\Biocollection;
 
 class ImportPersons extends AppJob
 {
@@ -45,7 +45,7 @@ class ImportPersons extends AppJob
             return false;
         } elseif (!$this->validateAbbreviation($person)) {
             return false;
-        } elseif (!$this->validateHerbarium($person)) {
+        } elseif (!$this->validateBiocollection($person)) {
             return false;
         } else {
             return true;
@@ -69,21 +69,21 @@ class ImportPersons extends AppJob
         }
     }
 
-    protected function validateHerbarium(&$person)
+    protected function validateBiocollection(&$person)
     {
-        if (array_key_exists('herbarium', $person) and ('' != $person['herbarium'])) {
-            if (!is_numeric($person['herbarium'])) { // It is the herbarium name
-                $herbarium_obj = Herbarium::where('name', '=', $person['herbarium'])
-                                    ->orWhere('acronym', '=', $person['herbarium'])->get();
-                if ($herbarium_obj->count()) {
-                    $person['herbarium'] = $herbarium_obj->first()->id;
+        if (array_key_exists('biocollection', $person) and ('' != $person['biocollection'])) {
+            if (!is_numeric($person['biocollection'])) { // It is the biocollection name
+                $biocollection_obj = Biocollection::where('name', '=', $person['biocollection'])
+                                    ->orWhere('acronym', '=', $person['biocollection'])->get();
+                if ($biocollection_obj->count()) {
+                    $person['biocollection'] = $biocollection_obj->first()->id;
                 } else { // Not found
-                    $this->appendLog('WARNING: Herbarium for person '.$person['full_name'].' is listed as '.$person['herbarium'].', but this was not found in the database. Ignoring field...');
-                    $person['herbarium'] = null;
+                    $this->appendLog('WARNING: Biocollection for person '.$person['full_name'].' is listed as '.$person['biocollection'].', but this was not found in the database. Ignoring field...');
+                    $person['biocollection'] = null;
                 }
             }
         } else { // Not informed
-            $person['herbarium'] = null;
+            $person['biocollection'] = null;
         }
 
         return true;
@@ -93,7 +93,7 @@ class ImportPersons extends AppJob
     {
         $full_name = $person['full_name'];
         $abbreviation = $person['abbreviation'];
-        $herbarium = $person['herbarium'];
+        $biocollection = $person['biocollection'];
 
         $notes = array_key_exists('notes', $person) ? $person['notes'] : null;
         $email = array_key_exists('email', $person) ? $person['email'] : null;
@@ -103,11 +103,10 @@ class ImportPersons extends AppJob
             $same = Person::where('abbreviation', '=', $abbreviation)->get();
             if (count($same)) {
                 $this->skipEntry($person, 'There is another registry of a person with abbreviation '.$abbreviation);
-
                 return;
             }
             //MAYBE THIS IS TOO MUCH WARNING. SHOW ONLY IF ABBREVIATION IS THE SAME
-            $this->appendLog('WARNING: There is another registry of a person with name like '.$full_name.' or abbreviation like '.$abbreviation);
+            //$this->appendLog('WARNING: There is another registry of a person with name like '.$full_name.' or abbreviation like '.$abbreviation);
         }
 
         $person = new Person([
@@ -115,7 +114,7 @@ class ImportPersons extends AppJob
             'abbreviation' => $abbreviation,
             'email' => $email,
             'institution' => $institution,
-            'herbarium_id' => $herbarium,
+            'biocollection_id' => $biocollection,
             'notes' => $notes,
         ]);
         $person->save();

@@ -17,7 +17,42 @@ class ImportLocations extends AppJob
      */
     public function inner_handle()
     {
-        $data = $this->extractEntrys();
+
+        $data = $this->userjob->data['data'];
+
+        /* if a file has been uploaded */
+        if (isset($data['filename'])) {
+          $filename = $data['filename'];
+          $path = 'downloads_temp/'.$filename;
+          $stdin = fopen(public_path($path),'r');
+          $idx = 1;
+          $olddata = $data;
+          $data = [];
+          while (false !== ($line = fgetcsv($stdin))) {
+            if ($idx==1) {
+              $head = $line;
+            }  else {
+              $line = array_combine($head,$line);
+              $data[] = $line;
+            }
+            $idx =  $idx+1;
+          }
+          fclose($stdin);
+
+          //rename the file do be able to delete when deleting the job
+          $newfilename = "job-".$this->userjob->id."_".$filename;
+          $newpath = 'downloads_temp/'.$newfilename;
+          $renamed = rename(public_path($path),public_path($newpath));
+          $olddata['filename'] = $newfilename;
+          $this->userjob->rawdata = serialize($olddata);
+          $this->userjob->save();
+        } else {
+          /* this has recieved a json */
+          $data = $this->extractEntrys();
+        }
+        //return false;
+
+
         if (!$this->setProgressMax($data)) {
             return;
         }
@@ -37,6 +72,7 @@ class ImportLocations extends AppJob
                 }
             }
         }
+
     }
 
     protected function validateData(&$location)
@@ -79,8 +115,7 @@ class ImportLocations extends AppJob
         if ($this->validateRelatedLocation($location, 'parent')) {
             return true;
         } else {
-            $this->skipEntry($location, 'Parent for location '.$location['name'].' is listed as '.$location['parent'].', but this was not found in the database, or locations does not fall within it ');
-
+            $this->skipEntry($location, 'Parent for location '.$location['name'].' is listed as '.$location['parent'].', but this was not found in the database, or locations does not fall within it');
             return false;
         }
     }
@@ -102,22 +137,34 @@ class ImportLocations extends AppJob
             $location[$field] = $guessedParent;
             return true;
         } else { //If this is given, we need validate it
-            if (0 == $location[$field]) {  // forces null if this was explicitly passed as zero
+            if (0 === $location[$field]) {  // forces null if this was explicitly passed as zero
                 $location[$field] = null;
                 return true;
             } else {
-                $valid = ODBFunctions::validRegistry(Location::select('id'), $location[$field]);
-                if (null === $valid) {
-                    return false;
+                $hasparent = $location[$field];
+                if (((int) $hasparent) >0) {
+                  $valid = Location::where('id',$hasparent);
                 } else {
-                    //use guessed if different
-                    if ($guessedParent == $valid->id) {
-                      $location[$field] = $valid->id;
-                      return true;
+                    if ($field != "uc") {
+                      $parlevel = ($location['adm_level']-1);
+                      $parlevel = ($parlevel<(-1)) ? -1 : $parlevel;
                     } else {
-                      return false;
+                      $parlevel = Location::LEVEL_UC;
                     }
+                    $valid = Location::where('name','like',$location[$field])->where('adm_level',$parlevel);
                 }
+                if ($valid->count()==1) {
+                  //use guessed if different
+                  $valid = $valid->first();
+                  if ($guessedParent == $valid->id) {
+                    $location[$field] = $valid->id;
+                    return true ;
+                  } else {
+                    $valid = Location::findOrFail($guessedParent);
+                    $this->appendLog('FAILED: Location '.$location['name'].' informed parent '.$hasparent." is different from actual spatial parent ".$valid->name);
+                  }
+                }
+                return false;
             }
         }
     }
@@ -151,6 +198,11 @@ class ImportLocations extends AppJob
         $x = array_key_exists('x', $location) ? $location['x'] : null;
         $y = array_key_exists('y', $location) ? $location['y'] : null;
 
+
+        //if (null == $parent) {
+        //    $this->appendLog("FAILED: Parent:".$parent." for location ".$name);
+        //    return false;
+        //}
         // TODO: several other validation checks
         // Is this location already imported?
         if ($parent) {
