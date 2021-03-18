@@ -50,7 +50,15 @@
 @if(is_array($item))
   <li> {{ serialize($item) }} </li>
 @else
-  <li> {{!! $item !!}} </li>
+  @php
+    $pattern = "/warning|file/i";
+    if (preg_match($pattern, $item)) {
+      $lineclass = 'alert alert-success';
+    } else {
+      $lineclass = 'alert alert-danger';
+    }
+  @endphp
+  <li class="{{$lineclass}}" > {{!! $item !!}} </li>
 @endif
 @endforeach
 				@endif

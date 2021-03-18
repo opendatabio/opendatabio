@@ -18,7 +18,9 @@
     </div>
   </div>
 
-@if (isset($object))
+
+
+@if (isset($object->typename))
 @can ('create', App\Measurement::class)
             <div class="panel panel-default">
                 <div class="panel-heading">

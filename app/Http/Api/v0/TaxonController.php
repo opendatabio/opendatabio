@@ -77,7 +77,7 @@ class TaxonController extends Controller
         }
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $simple =  ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','author_id','family'];
+        $simple =  ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','parent_name','author_id','family'];
         //include here to be able to add mutators and categories
         if ('all' == $fields) {
             $keys = array_keys($taxons->first()->toArray());

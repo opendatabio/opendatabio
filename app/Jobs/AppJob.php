@@ -170,6 +170,6 @@ class AppJob implements ShouldQueue
         } elseif ('object' == gettype($entry)) {
             $entry = serialize($entry);
         }
-        $this->appendLog('WARNING: '.$cause.'. Skipping import of '.$entry);
+        $this->appendLog('ERROR: '.$cause.'. Skipping import of '.$entry);
     }
 }

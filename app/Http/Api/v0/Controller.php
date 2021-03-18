@@ -35,7 +35,7 @@ class Controller extends BaseController
     // Filters the designated fields in the collection to be returned
     public function setFields($collection, $fields, $simple)
     {
-        // Special keyword "all", returns the collection untransformed and all mutators defined in simple
+        // Special keyword "all", returns the collection untransformed
         if ('all' == $fields) {
             return $collection;
         }
@@ -48,15 +48,20 @@ class Controller extends BaseController
         }
 
         $collection = $collection->map(function ($obj) use ($fields) {
+            $result = [];
             foreach ($fields as $field) {
                 // appends custom accessors to the JSON response
-                if ($obj->hasGetMutator($field)) {
-                    $obj->append($field);
-                }
+
+                //if ($obj->hasGetMutator($field)) {
+                    //$obj->append($field);
+                //}
+                //just get all values as array, including mutators to preserve order in $fields
+                $result[$field] = isset($obj[$field]) ? $obj[$field] : null;
+
             }
-              return collect($obj->toArray())
-                ->only($fields)
-                ->all();
+            //$objarr = collect($obj->toArray())->only($fields)->all();
+            return $result;
+
         });
 
         return $collection;

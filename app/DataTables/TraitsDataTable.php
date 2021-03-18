@@ -33,13 +33,15 @@ class TraitsDataTable extends DataTable
         ->addColumn('details', function ($odbtrait) {return $odbtrait->details(); })
         ->addColumn('measurements', function ($odbtrait) {
           if ($this->dataset) {
-            return '<a href="'.url('measurements/'.$odbtrait->id.'|'.$this->dataset.'/plant_dataset').'">'.$odbtrait->measurements()->withoutGlobalScopes()->where('dataset_id','=',$this->dataset)->count().'</a>';
+            return '<a href="'.url('measurements/'.$odbtrait->id.'|'.$this->dataset.'/individual_dataset').'">'.$odbtrait->measurements()->withoutGlobalScopes()->where('dataset_id','=',$this->dataset)->count().'</a>';
           }
           return '<a href="'.url('measurements/'.$odbtrait->id.'/trait').'">'.$odbtrait->measurements()->withoutGlobalScopes()->count().'</a>';
         })
         ->filterColumn('name', function ($query, $keyword) {
-            $translations = UserTranslation::where('translation', 'like', '%'.$keyword.'%')->where('translatable_type','like','%ODBTrait%')->get()->pluck('translatable_id')->toArray();
-            $query->whereIn('id', $translations);
+            $query->whereHas('translations',function($trn) use ($keyword) { $trn->where('translation','like','%'.$keyword.'%');})->orWhere('export_name','like','%'.$keyword.'%');
+
+            //$translations = UserTranslation::where('translation', 'like', '%'.$keyword.'%')->where('translatable_type','like','%ODBTrait%')->get()->pluck('translatable_id')->toArray();
+            //$query->whereIn('id', $translations);
         })
         ->rawColumns(['name','measurements']);
 
@@ -52,7 +54,8 @@ class TraitsDataTable extends DataTable
      */
     public function query()
     {
-      $query = ODBTrait::query()->with(['translations','categories.translations'])->withCount("measurements")->orderBy('export_name', 'asc');
+      $query = ODBTrait::query()->with(['translations','categories.translations'])->withCount("measurements");
+      //->orderBy('export_name', 'asc');
       return $this->applyScopes($query);
     }
 
@@ -65,8 +68,9 @@ class TraitsDataTable extends DataTable
     {
         return $this->builder()
             ->columns([
-                'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
+                'export_name' => ['title' => Lang::get('messages.export_name'), 'searchable' => false, 'orderable' => true],
+                'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => false],
                 'type' => ['title' => Lang::get('messages.type'), 'searchable' => false, 'orderable' => true],
                 'details' => ['title' => Lang::get('messages.details'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
@@ -83,7 +87,7 @@ class TraitsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [1],
+                    'targets' => [0,1],
                     'visible' => false,
                 ]],
             ]);
