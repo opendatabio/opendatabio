@@ -9,11 +9,17 @@ namespace App\Http\Controllers;
 
 use Config;
 use Session;
+use Auth;
 
 class WelcomeController extends Controller
 {
+
+
     public function index()
     {
+        if (Auth::user()) {
+          return redirect('home/'.Session::get('applocale'));
+        }
         return view('welcome');
     }
 

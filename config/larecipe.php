@@ -126,8 +126,8 @@ return [
     */
 
     'ui'                 => [
-        'code_theme'     => 'dark', // or: light
-        'fav'            => '',     // eg: fav.png
+        'code_theme'     => 'light', // or: light ir dark
+        'fav'            => 'favicon_io/favicon.ico',     // eg: fav.png
         'fa_v4_shims'    => true, // Add FontAwesome v4 shims prevent BC break
         'show_side_bar'  => true,
         'colors'         => [

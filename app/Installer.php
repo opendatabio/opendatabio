@@ -19,10 +19,10 @@ class Installer
     protected function versions()
     {
         return [
-            ['name' => 'PHP', 'command' => 'php -v', 'min' => '7.0'],
+            ['name' => 'PHP', 'command' => 'php -v', 'min' => '7.3'],
             ['name' => 'Apache Web Server', 'command' => $this->apachecmd.' -v', 'min' => '2.2', 'recommended' => '2.4'],
             ['name' => 'Pandoc', 'command' => 'pandoc --version', 'min' => '1.10'],
-            ['name' => 'Supervisor', 'command' => 'supervisord --version', 'min' => '3.0', 'recommended' => '3.3'],
+            ['name' => 'Supervisor', 'command' => 'supervisord --version', 'min' => '3.0', 'recommended' => '4.2'],
             // notice MySQL version is set up below
         ];
     }

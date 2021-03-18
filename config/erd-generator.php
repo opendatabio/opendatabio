@@ -43,7 +43,7 @@ return [
         /* project_model.png */
           //App\Project::class,
           //App\Voucher::class,
-          //App\Plant::class,
+          //App\Individual::class,
           //App\User::class,
 
         /* user_model.png */
@@ -56,43 +56,50 @@ return [
           //App\User::class,
           //App\UserJob::class,
 
-        /* herbarium_model.png */
-          //App\Herbarium::class,
+        /* biocollection_model.png */
+          //App\Biocollection::class,
           //App\Voucher::class,
           //App\Person::class,
 
-        /* model_coreobjects.png */
-          //App\Voucher::class,
-          //App\Location::class,
-          //App\Taxon::class,
-          //App\Plant::class,
-          //App\Measurement::class,
-
-        /* location_model.png */
-        //  App\Voucher::class,
+        /* model_coreobjects.png
+          App\Voucher::class,
+          App\Location::class,
+          App\Taxon::class,
+          App\Individual::class,
+          App\Measurement::class,
+          App\Identification::class,
+          */
+        /* location_model.png
+          App\Location::class,
+          App\Individual::class,
+          App\Measurement::class,
+          */
+        /* Individual_model.png
+        App\Individual::class,
+        App\Voucher::class,
         //App\Location::class,
-        //App\Plant::class,
-        //App\Measurement::class,
+        App\Project::class,
+        App\Identification::class,
+        App\Taxon::class,
+        App\Collector::class,
+        App\Person::class,
+        */
 
-        /* plant_model.png */
-        //App\Voucher::class,
-        //App\Location::class,
-        //App\Plant::class,
-        //App\Identification::class,
-        //App\Taxon::class,
-        //App\Collector::class,
-        //App\Person::class,
+        /* taxon_model.png
+        App\Taxon::class,
+        App\TaxonExternal::class,
+        App\Person::class,
+        App\Identification::class,
+        App\BibReference::class
+        */
 
-        /* taxon_model.png */
-        //App\Taxon::class,
-        //App\TaxonExternal::class,
-        //App\Person::class,
-        //App\Identification::class,
-        //App\BibReference::class
-
-        /* voucher_model.png */
-        //App\Voucher::class,
-        //App\Herbarium::class,
+        /* voucher_model.png
+        App\Individual::class,
+        App\Collector::class,
+        App\Person::class,
+        App\Biocollection::class,
+        App\Project::class,
+        */
 
         /* persons_model.png */
         //App\Person::class,
@@ -104,16 +111,30 @@ return [
         //App\User::class,
 
         /* persons_table.png */
-        //App\Person::class
+        App\Person::class,
+        App\Collector::class,
+        App\Biocollection::class,
+        App\Identification::class,
+        App\Measurement::class,
+        App\Taxon::class,
+        App\User::class,
 
-
-        /* bibreferences_model.png */
+        /* bibreferences_model.png
         App\Dataset::class,
         App\BibReference::class,
         App\Taxon::class,
         App\Measurement::class,
         App\ODBTrait::class,
+        */
 
+        /* identification_model
+        //App\Voucher::class,
+        App\Individual::class,
+        App\Identification::class,
+        App\Person::class,
+        App\Taxon::class,
+        App\Biocollection::class,
+        */
 
         /* persons_table.png */
         //App\TraitCategory::class,
@@ -125,7 +146,7 @@ return [
         //App\Location::class,
         //App\Collector::class,
         //App\Taxon::class,
-        //App\Plant::class,
+        //App\Individual::class,
         //App\Picture::class,
         //App\Tag::class,
         //App\UserTranslation::class,
@@ -155,13 +176,6 @@ return [
         App\BibReference::class,
         */
 
-        /* identification_model */
-        //App\Voucher::class,
-        //App\Plant::class,
-        //App\Identification::class,
-        //App\Person::class,
-        //App\Taxon::class,
-        //App\Herbaria::class,
 
         /* user translations */
         //App\UserTranslation::class,
@@ -186,8 +200,8 @@ return [
      */
 
      /* use false for  model_coreobjects.png */
-     /* also for location_model.png and plant_model.png, because plant and location for some reason not working */
-     /* // TODO: understand why plant and location don't show table columns, others do and there is no obvious differences among models */
+     /* also for location_model.png and Individual_model.png, because Individual and location for some reason not working */
+     /* // TODO: understand why Individual and location don't show table columns, others do and there is no obvious differences among models */
      /* also for the person_model.png */
      /* also for the picture_model.png */
      /* also for the tag_model.png */
@@ -238,27 +252,35 @@ return [
 
 
         /* model_coreobjects.png*/
-        //'rankdir' => 'TB',
+        //'rankdir' => 'RL',
         //'ranksep' => 1,
         //'nodesep' => 0.6,
 
-        /* location_model.png*/
-        //'rankdir' => 'LR',
-        //'ranksep' => 0.8,
+        /* location_model.png Individual_model.png*/
+        //'rankdir' => 'RL',
+        //'ranksep' => 1,
         //'nodesep' => 0.6,
 
 
-        /* plant_model.png and taxon_model.png trait_model.png*/
+        /* taxon_model.png trait_model.png and bibreference person */
         'rankdir' => 'LR',
         'ranksep' => 2,
         'nodesep' => 0.5,
-        /* for dataset_bibreference.png users_model.png user_userjob.png  herbarium_model*/
+
+
+        /* for identification_model
+        'rankdir' => 'RL',
+        'ranksep' => 2,
+        'nodesep' => 1,
+        */
+
+        /*dataset_bibreference.png users_model.png user_userjob.png  biocollection_model*/
         //'rankdir' => 'RL',
         //'ranksep' => 2,
         //'nodesep' => 2,
 
 
-        'esep' => true,
+        'esep' => false,
         'rotate' => 0,
         'fontname' => 'Helvetica Neue',
     ],
@@ -318,7 +340,7 @@ return [
             'color' => '#EA4335',
             'fontcolor' => '#EA4335',
             'arrowhead' => 'normal',
-            'arrowtail' => 'none',
+            'arrowtail' => 'dot',
             'style' => 'dotted',
         ],
 
@@ -327,6 +349,14 @@ return [
             'color' => '#A4C639',
             'fontcolor' => '#A4C639',
             'arrowhead' => 'crow',
+            'arrowtail' => 'dot',
+            'style' => 'dashed'
+        ],
+        'HasOneThrough' => [
+            'dir' => 'both',
+            'color' => '#FFCC00',
+            'fontcolor' => '#FFCC00',
+            'arrowhead' => 'normal',
             'arrowtail' => 'dot',
             'style' => 'dashed'
         ],

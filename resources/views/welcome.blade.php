@@ -9,6 +9,7 @@
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="{{ asset('favicon_io/favicon.ico') }}" >
 
         <!-- Styles -->
         <style>
@@ -91,7 +92,7 @@
                     Open Data Bio
                 </div>
                 <div class="subtitle m-b-md">
-		    @lang ('messages.version', ['version' => config('app.version')])
+		    <img src="{{ asset('favicon_io/favicon.ico') }}" > @lang ('messages.version', ['version' => config('app.version')])
                 </div>
                 <div class="subtitle m-b-md">
 		@lang ('messages.subtitle')

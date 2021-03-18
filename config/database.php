@@ -57,7 +57,7 @@ return [
             'prefix' => '',
             'strict' => true,
             'engine' => null,
-            // modes are default for Laravel 5.4, EXCEPT no_zero_in_date, which is required for Plant->setDate
+            // modes are default for Laravel 5.4, EXCEPT no_zero_in_date, which is required for individual->setDate
             'modes' => [
                 'ONLY_FULL_GROUP_BY',
                 'STRICT_TRANS_TABLES',

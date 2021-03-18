@@ -17,7 +17,7 @@ $(document).ready(function(){
                 if (typeof invalidateCallback === "function")
                     invalidateCallback();
             },
-            minChars: 3,
+            minChars: 1,
             onSearchStart: function() {
                 $(".minispinner").remove();
                 $(this).after("<div class='spinner minispinner'></div>");
@@ -59,7 +59,7 @@ $(document).ready(function(){
 		$("#submit").trigger("click");
 	});
 
-	/** Ajax handling for registering herbaria */
+	/** Ajax handling for registering biocollections */
 	$("#checkih").click(function(e) {
 		$( "#spinner" ).css('display', 'inline-block');
 		$.ajaxSetup({ // sends the cross-forgery token!
@@ -85,7 +85,7 @@ $(document).ready(function(){
 					$("#name").val(data.ihdata[1]);
 				}
 			},
-			error: function(e){ 
+			error: function(e){
 				$( "#spinner" ).hide();
 				$( "#ajax-error" ).collapse("show");
 				$( "#ajax-error" ).text('Error sending AJAX request');
