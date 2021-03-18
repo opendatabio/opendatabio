@@ -13,6 +13,7 @@ use Lang;
 use DB;
 use App\Taxon;
 use Spatie\Activitylog\Traits\LogsActivity;
+use CodeInc\StripAccents\StripAccents;
 
 
 class Project extends Model
@@ -28,13 +29,13 @@ class Project extends Model
     const COLLABORATOR = 1;
     const ADMIN = 2;
 
-    protected $fillable = ['name', 'description', 'privacy','url','details'];
+    protected $fillable = ['name', 'description', 'privacy','policy','details','license','title'];
 
 
     //activity log trait
     protected static $logName = 'project';
     protected static $recordEvents = ['updated','deleted'];
-    protected static $ignoreChangedAttributes = ['updated_at','url','details'];
+    protected static $ignoreChangedAttributes = ['updated_at','details'];
     protected static $logFillable = true;
     protected static $logOnlyDirty = true;
     protected static $submitEmptyLogs = false;
@@ -47,9 +48,9 @@ class Project extends Model
     }
 
 
-    public function plants()
+    public function individuals()
     {
-        return $this->hasMany(Plant::class);
+        return $this->hasMany(Individual::class);
     }
 
 
@@ -58,42 +59,54 @@ class Project extends Model
         return $this->hasMany(Voucher::class);
     }
 
+    public function individual_locations( )
+    {
+      return $this->hasManyThrough(
+                    'App\IndividualLocation',
+                    'App\Individual',
+                    'project_id', // Foreign key on individuals table...
+                    'individual_id', // Foreign key on Measurements table...
+                    'id', // Local key on Project table...
+                    'id' // Local key on individuals table...
+                    );
+    }
 
-    public function plant_measurements( )
+
+    public function individual_measurements( )
     {
       return $this->hasManyThrough(
                     'App\Measurement',
-                    'App\Plant',
-                    'project_id', // Foreign key on Plants table...
+                    'App\Individual',
+                    'project_id', // Foreign key on individuals table...
                     'measured_id', // Foreign key on Measurements table...
                     'id', // Local key on Project table...
-                    'id' // Local key on Plants table...
-                    )->where('measurements.measured_type', 'App\Plant');
+                    'id' // Local key on individuals table...
+                    )->where('measurements.measured_type', 'App\Individual');
     }
 
 
-    public function plant_identifications( )
+    public function individual_identifications( )
     {
       return $this->hasManyThrough(
                     'App\Identification',
-                    'App\Plant',
-                    'project_id', // Foreign key on Plants table...
+                    'App\Individual',
+                    'project_id', // Foreign key on individuals table...
                     'object_id', // Foreign key on Measurements table...
                     'id', // Local key on Project table...
-                    'id' // Local key on Plants table...
-                    )->where('identifications.object_type', 'App\Plant');
+                    'identification_individual_id' // Local key on individuals table...
+                    )->where('identifications.object_type', 'App\Individual');
     }
 
-    public function plants_pictures( )
+    public function individuals_pictures( )
     {
       return $this->hasManyThrough(
                     'App\Picture',
-                    'App\Plant',
-                    'project_id', // Foreign key on Plants table...
+                    'App\Individual',
+                    'project_id', // Foreign key on individuals table...
                     'object_id', // Foreign key on Measurements table...
                     'id', // Local key on Project table...
-                    'id' // Local key on Plants table...
-                    )->where('pictures.object_type', 'App\Plant');
+                    'id' // Local key on individuals table...
+                    )->where('pictures.object_type', 'App\Individual');
     }
 
     public function voucher_identifications( )
@@ -101,11 +114,11 @@ class Project extends Model
       return $this->hasManyThrough(
                     'App\Identification',
                     'App\Voucher',
-                    'project_id', // Foreign key on Plants table...
+                    'project_id', // Foreign key on individuals table...
                     'object_id', // Foreign key on Measurements table...
                     'id', // Local key on Project table...
-                    'id' // Local key on Plants table...
-                    )->where('identifications.object_type', 'App\Voucher');
+                    'individual_id' // Local key on voucher table...
+                    )->where('identifications.object_type', 'App\Individual');
     }
 
     public function vouchers_pictures( )
@@ -113,10 +126,10 @@ class Project extends Model
       return $this->hasManyThrough(
                     'App\Picture',
                     'App\Voucher',
-                    'project_id', // Foreign key on Plants table...
+                    'project_id', // Foreign key on individuals table...
                     'object_id', // Foreign key on Measurements table...
                     'id', // Local key on Project table...
-                    'id' // Local key on Plants table...
+                    'id' // Local key on individuals table...
                     )->where('pictures.object_type', 'App\Voucher');
     }
 
@@ -151,6 +164,20 @@ class Project extends Model
     {
         return $this->users()->wherePivot('access_level', '=', self::ADMIN)->first()->email;
     }
+
+
+    /* authorship */
+    public function authors()
+    {
+      return $this->morphMany(Collector::class, 'object')->with('person');
+    }
+
+    public function author_first()
+    {
+        return $this->authors()->where('main',1);
+    }
+
+
 
     /* TAG related functions */
     public function tags()
@@ -219,16 +246,16 @@ class Project extends Model
 
     public function taxons_ids()
     {
-      $q1 =  $this->plant_identifications()->withoutGlobalScopes()->distinct('taxon_id')->pluck('taxon_id')->toArray();
-      $q2 =  $this->voucher_identifications()->withoutGlobalScopes()->distinct('taxon_id')->pluck('taxon_id')->toArray();
-      return array_unique(array_merge($q1,$q2));
+      $ids = $this->individual_identifications()->withoutGlobalScopes()->distinct('taxon_id')->pluck('taxon_id')->toArray();
+      return array_unique($ids);
     }
+
+
 
     public function locations_ids()
     {
-      $q1 =  $this->plants()->withoutGlobalScopes()->distinct('location_id')->cursor()->pluck('location_id')->toArray();
-      $q2 =  $this->vouchers()->withoutGlobalScopes()->distinct('parent_id')->where('parent_type','App\Location')->cursor()->pluck('parent_id')->toArray();
-      return array_unique(array_merge($q1,$q2));
+      $ids = $this->individual_locations()->distinct('location_id')->pluck('location_id')->toArray();
+      return array_unique($ids);
     }
 
 
@@ -243,7 +270,7 @@ class Project extends Model
         return $this->morphMany("App\Summary", 'scope');
     }
 
-    public function getCount($scope="all",$scope_id=null,$target='plants')
+    public function getCount($scope="all",$scope_id=null,$target='individuals')
     {
       $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
       if (null !== $scope_id) {
@@ -260,12 +287,12 @@ class Project extends Model
 
     public function locationsCount()
     {
-      return count($this->locations_ids());
+      return $this->individual_locations()->distinct('location_id')->count();
     }
 
-    public function plantsCount()
+    public function individualsCount()
     {
-       return $this->plants()->withoutGlobalScopes()->count();
+       return $this->individuals()->withoutGlobalScopes()->count();
     }
 
     public function vouchersCount()
@@ -274,21 +301,14 @@ class Project extends Model
     }
     public function measurementsCount()
     {
-      return ($this->vouchersMeasurementsCount())+($this->plantsMeasurementsCount());
+      return ($this->vouchersMeasurementsCount())+($this->individualsMeasurementsCount());
     }
 
-    /*count distinct plant and voucher identification taxon at or below the species level*/
-    public function count_taxons($what=null)
+    /*count distinct individual and voucher identification taxon at or below the species level*/
+    public function speciesCount()
     {
-      $taxonsp = [];
-      if ($what == null or $what=='plants') {
-        $taxonsp = $this->plant_identifications()->withoutGlobalScopes()->with('taxon')->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
-      }
-      $taxonsv = [];
-      if ($what == null or $what=='vouchers') {
-        $taxonsv = $this->voucher_identifications()->withoutGlobalScopes()->with('taxon')->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
-      }
-      $taxons = array_unique(array_merge($taxonsp,$taxonsv));
+      $taxonsp = $this->individual_identifications()->withoutGlobalScopes()->with('taxon')->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+      $taxons = array_unique($taxonsp);
       return count($taxons);
     }
 
@@ -299,10 +319,10 @@ class Project extends Model
       return $this->summary_scopes()->whereHasMorph('object',['App\Taxon'],function($object) use($count_level) { $object->where('level','>=',$count_level);})->where('object_type','App\Taxon')->selectRaw("DISTINCT object_id")->cursor()->count();
     }
 
-    /* pictures of plants and vouchers only */
+    /* pictures of individuals and vouchers only */
     public function picturesCount()
     {
-      $picturesp = $this->plants_pictures()->withoutGlobalScopes()->count();
+      $picturesp = $this->individuals_pictures()->withoutGlobalScopes()->count();
       $picturesv = $this->vouchers_pictures()->withoutGlobalScopes()->count();
       return ($picturesp+$picturesv);
     }
@@ -312,9 +332,9 @@ class Project extends Model
     {
       return $this->voucher_identifications()->withoutGlobalScopes()->distinct('taxon_id')->count();
     }
-    public function plantsTaxonsCount()
+    public function individualsTaxonsCount()
     {
-      return $this->plant_identifications()->withoutGlobalScopes()->distinct('taxon_id')->count();
+      return $this->individual_identifications()->withoutGlobalScopes()->distinct('taxon_id')->count();
     }
 
 
@@ -323,15 +343,15 @@ class Project extends Model
       return $this->voucher_measurements()->withoutGlobalScopes()->count();
     }
 
-    public function plantsMeasurementsCount()
+    public function individualsMeasurementsCount()
     {
-      return $this->plant_measurements()->withoutGlobalScopes()->count();
+      return $this->individual_measurements()->withoutGlobalScopes()->count();
 
     }
 
     public function datasetIDS()
     {
-      $query = DB::select('(SELECT DISTINCT dataset_id FROM measurements INNER JOIN plants ON plants.id=measurements.measured_id WHERE measured_type="App\\\Plant" AND plants.project_id='.$this->id.') UNION (SELECT DISTINCT dataset_id FROM measurements INNER JOIN vouchers ON vouchers.id=measurements.measured_id WHERE measured_type="App\\\Voucher" AND vouchers.project_id='.$this->id.")");
+      $query = DB::select('SELECT DISTINCT tb.dataset_id FROM ((SELECT DISTINCT dataset_id FROM measurements INNER JOIN individuals ON individuals.id=measurements.measured_id WHERE measured_type="App\\\Individual" AND individuals.project_id='.$this->id.') UNION (SELECT DISTINCT dataset_id FROM measurements INNER JOIN vouchers ON vouchers.id=measurements.measured_id WHERE measured_type="App\\\Voucher" AND vouchers.project_id='.$this->id.')) as tb');
       $query  = array_map(function($value) { return (array)$value;},$query);
       return $query;
     }
@@ -344,7 +364,7 @@ class Project extends Model
     /* summarize the counts of identifications per taxons.level and published vs unpublished names*/
     public function identification_summary()
     {
-        $query = DB::select('SELECT tb.level, SUM(CASE tb.status  WHEN 0 THEN 1 ELSE 0 END) AS unpublished, SUM(CASE tb.status  WHEN 1 THEN 1 ELSE 0 END) AS published, count(tb.taxon_id) as total FROM (SELECT identifications.taxon_id,taxons.level, IF(taxons.author_id IS NULL,1,0) as status FROM plants RIGHT JOIN identifications ON plants.id=identifications.object_id LEFT JOIN taxons ON taxons.id=identifications.taxon_id WHERE identifications.object_type="App\\\Plant" AND project_id='.$this->id.' AND (identifications.taxon_id IS NOT NULL) UNION SELECT identifications.taxon_id,taxons.level,IF(taxons.author_id IS NULL,1,0) as status FROM vouchers RIGHT JOIN identifications ON vouchers.id=identifications.object_id LEFT JOIN taxons ON taxons.id=identifications.taxon_id WHERE identifications.object_type="App\\\Voucher" AND project_id='.$this->id.' AND (identifications.taxon_id IS NOT NULL)) as tb WHERE tb.taxon_id>0 GROUP BY tb.level');
+        $query = DB::select('SELECT tb.level, SUM(CASE tb.status  WHEN 0 THEN 1 ELSE 0 END) AS unpublished, SUM(CASE tb.status  WHEN 1 THEN 1 ELSE 0 END) AS published, count(tb.taxon_id) as total FROM (SELECT identifications.taxon_id,taxons.level, IF(taxons.author_id IS NULL,1,0) as status FROM individuals RIGHT JOIN identifications ON individuals.id=identifications.object_id LEFT JOIN taxons ON taxons.id=identifications.taxon_id WHERE identifications.object_type="App\\\Individual" AND project_id='.$this->id.' AND (identifications.taxon_id IS NOT NULL) UNION SELECT identifications.taxon_id,taxons.level,IF(taxons.author_id IS NULL,1,0) as status FROM vouchers RIGHT JOIN identifications ON vouchers.individual_id=identifications.object_id LEFT JOIN taxons ON taxons.id=identifications.taxon_id WHERE identifications.object_type="App\\\Individual" AND project_id='.$this->id.' AND (identifications.taxon_id IS NOT NULL)) as tb WHERE tb.taxon_id>0 GROUP BY tb.level');
       return $query;
     }
 
@@ -363,6 +383,115 @@ class Project extends Model
       }
     }
 
+
+    public function getAllAuthorsAttribute()
+    {
+      if ($this->authors->count()==0) {
+        return null;
+      }
+      $persons = $this->authors->map(function($person) { return $person->person->abbreviation;})->toArray();
+      $persons = implode(' and ',$persons);
+      return $persons;
+    }
+
+    public function getShortAuthorsAttribute()
+    {
+      if ($this->authors->count()==0) {
+        return null;
+      }
+      $persons = $this->authors->map(function($person) { return $person->person->abbreviation;})->toArray();
+      if (count($persons)>2) {
+        $persons = implode(' and ',$persons);
+      } elseif (count($persons)>0) {
+        $persons = $persons[0]." et al.";
+      }
+      return $persons;
+    }
+
+    public function getYearAttribute()
+    {
+      if ($this->last_edition_date) {
+        return $this->last_edition_date->format('Y');
+      }
+      return null;
+    }
+
+    public function getVersionAttribute()
+    {
+      if ($this->last_edition_date) {
+        return $this->last_edition_date->format("Y-m-d");
+      }
+      return null;
+    }
+
+    public function getCitationAttribute()
+    {
+      return $this->generateCitation($short=false,$for_dt=false);
+    }
+
+    public function generateCitation($short=true,$for_dt=false)
+    {
+      if ($short) {
+        $author = $this->short_authors;
+      } else {
+        $author = $this->all_authors;
+      }
+      $when = today()->format("Y-m-d");
+      $year = isset($this->last_edition_date) ? $this->last_edition_date->format('Y') : 'no data yet';
+      $version = isset($this->last_edition_date) ? $this->last_edition_date->format('Y-m-d') : 'no data yet';
+      $license = (null != $this->license) ? $this->license : 'not defined, some restrictions may apply';
+      $title = isset($this->title) ? $this->title  : $this->name;
+      if ($for_dt) {
+        $title = "<a href='".url('projects/'.$this->id)."'>".htmlspecialchars($title).'</a>';
+      }
+      if (preg_match("/CC0/i",$license)) {
+        $license = "Public domain - CC0";
+      }
+      if ($author != null) {
+        $citation = $author." (".$year.").  <strong>".$title."</strong>. Occurrence data. Version: ".$version.". License: ".$license;
+      } else {
+        $citation = "<strong>".$title."</strong>. Occurrence data. Version: ".$version.". License: ".$license;
+      }
+      if (!$for_dt) {
+        $url =  url('project/'.$this->id);
+        $citation .= '. From '.$url.', accessed '.$when.".";
+      }
+      return $citation;
+    }
+
+    public function getBibtexAttribute()
+    {
+      if ($this->individuals()->withoutGlobalScopes()->count() ==0 ) {
+        return null;
+      }
+      $bibkey = preg_replace('[,| |\\.|-|_]','',StripAccents::strip( (string) $this->name ))."_".$this->last_edition_date->format("Y");
+      $version = $this->last_edition_date->format("Y-m-d");
+      $license = (null != $this->license) ? $this->license : 'Not defined, restrictions may apply.';
+      if (preg_match("/CC0/i",$license)) {
+        $license = "Public domain - CC0";
+      }
+      $bib =  [
+         'title' => $this->title,
+         'year' => $this->last_edition_date->format("Y"),
+         'author' => $this->all_authors,
+         'howpublished' => "url\{".url('project/'.$this->id)."}",
+         'version' => $version,
+         'license' => $license,
+         'note' => 'Species Occurrence data. Version: '.$version.'. License: '.$license.". Accessed: ".today()->format("Y-m-d"),
+         'url' => "{".url('project/'.$this->id)."}",
+      ];
+      return "@misc{".$bibkey.",\n".json_encode($bib,JSON_PRETTY_PRINT);
+    }
+
+    //get date of last edit in this dataset
+    public function getLastEditionDateAttribute()
+    {
+      if ($this->individuals()->withoutGlobalScopes()->count() ==0 ) {
+        return null;
+      }
+      $lastdate = $this->individuals()->withoutGlobalScopes()->select('individuals.updated_at')->orderBy('updated_at','desc')->first()->updated_at;
+      return $lastdate;
+    }
 
 
 }

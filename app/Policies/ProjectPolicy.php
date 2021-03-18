@@ -31,5 +31,9 @@ class ProjectPolicy
         return in_array($user->id,$project->users()->get()->pluck('id')->toArray());
     }
 
-
+    public function export(User $user, Project $project)
+    {
+      $valid_users = $project->users()->pluck('users.id')->toArray();
+      return User::ADMIN == $user->access_level or in_array($user->id,$valid_users) or $project->privacy >= 1;
+    }
 }

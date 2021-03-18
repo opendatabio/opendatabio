@@ -17,11 +17,13 @@ use App\Language;
 use App\Tag;
 use App\Location;
 use App\Voucher;
-use App\Plant;
+use App\Individual;
 use App\UserJob;
 use Log;
 use Filepond;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
+
 //use App\Jobs\ImportPictures;
 
 
@@ -91,9 +93,9 @@ class PictureController extends Controller
         return $this->create($object);
     }
 
-    public function createPlants($id)
+    public function createIndividuals($id)
     {
-        $object = Plant::findOrFail($id);
+        $object = Individual::findOrFail($id);
 
         return $this->create($object);
     }
@@ -128,23 +130,54 @@ class PictureController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Picture::class);
+        $licenses = implode(',',config('app.creativecommons_licenses'));
+
         $this->validate($request, [
             'image' => 'file|required',
             'description' => 'array',
             'tags' => 'array',
             'collector' => 'required|array|min:1',
+            'license' => 'required|string|max:191|in:'.$licenses,
         ]);
-        $picture = Picture::create($request->only(['object_id', 'object_type']));
-        $contents = file_get_contents($request->image->getRealPath());
+
+        //add version to license field
+        $license = null;
+        if (isset($request->license)) {
+          $version = isset($request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
+          $license = $request->license." ".$version;
+        }
+        $data = $request->only(['object_id', 'object_type','notes']);
+        $data['license'] = $license;
+        $picture = Picture::create($data);
+
+        //in this way the exif of the image is lost
+        //$contents = file_get_contents($request->image->getRealPath());
+        $metadata = null;
         try {
-            $picture->saveImage($contents);
+            $img = Image::make($request->image->getRealPath());
+            $metadata = $img->exif();
+            $picture->saveImage($img);
         } catch (\Intervention\Image\Exception\NotReadableException $e) {
             $picture->delete();
-
             return redirect()->back()
                 ->withErrors(['image' => Lang::get('messages.invalid_image')])
                 ->withInput();
         }
+
+        $picture_date = $request->date;
+        if (null != $metadata) {
+          if (null != $picture_date or !array_key_exists('DateTimeDigitized',$metadata)) {
+            $metadata['DateTimeDigitized'] = (null != $picture_date) ? $picture_date : now()->toDateTimeString();
+          }
+        } else {
+          if (null == $picture_date) {
+            $picture_date = now()->toDateTimeString();
+          }
+          $metadata = ['DateTimeDigitized' => $picture_date];
+        }
+        $picture->metadata = json_encode($metadata);
+        $picture->save();
+
         $picture->tags()->sync($request->tags);
         // syncs collectors
         foreach ($request->collector as $collector) {
@@ -155,6 +188,10 @@ class PictureController extends Controller
             $picture->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
         }
 
+        // TODO: embbed iptc metadata to be displayed on google iamge search engine, for example
+        // embed it into the image after saving (or updating)
+        //exemplo https://www.php.net/manual/en/function.iptcembed.php   here on how to do that
+
         return redirect('pictures/'.$picture->id)->withStatus(Lang::get('messages.stored'));
     }
 
@@ -162,12 +199,35 @@ class PictureController extends Controller
     {
         $picture = Picture::findOrFail($id);
         $this->authorize('update', $picture);
+        $licenses = implode(',',config('app.creativecommons_licenses'));
+
         $this->validate($request, [
             'description' => 'array',
             'tags' => 'array',
             'collector' => 'required|array|min:1',
+            'license' => 'required|string|max:191|in:'.$licenses,
         ]);
+        //add version to license field
+        $license = null;
+        if (isset($request->license)) {
+          $version = isset($request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
+          $license = $request->license." ".$version;
+        }
+        $picture->update(['license' => $license, 'notes' => $request->notes]);
+
+        $picture_date = $request->date;
+        if (null != $picture_date) {
+           $metadata = [];
+           if (null != $picture->metadata) {
+             $metadata = json_decode($picture->metadata);
+           }
+           $metadata['DateTimeDigitized'] = $picture_date;
+           $picture->metadata = json_encode($metadata);
+           $picture->save();
+        }
+
         $picture->tags()->sync($request->tags);
+
         // syncs collectors
         if ($request->collector) {
             // sync collectors. See app/Project.php / setusers()

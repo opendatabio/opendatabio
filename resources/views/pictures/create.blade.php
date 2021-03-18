@@ -92,10 +92,65 @@
 </div>
 </div>
 
+
+<!-- license object must be an array with CreativeCommons license codes applied to the model --->
+<div class="form-group" id='creativecommons' >
+    <label for="license" class="col-sm-3 control-label mandatory">
+      @lang('messages.public_license')
+    </label>
+    <a data-toggle="collapse" href="#creativecommons_pictures_hint" class="btn btn-default">?</a>
+    <div class="col-sm-6">
+      @php
+        $currentlicense = "CC-BY";
+        $currentversion = config('app.creativecommons_version')[0];
+        if (isset($picture)) {
+           if (null != $picture->license) {
+             $license = explode(' ',$picture->license);
+             $currentlicense = $license[0];
+             $currentversion = $license[1];
+           }
+        }
+        $oldlicense = old('license', $currentlicense);
+        $oldversion = old('version',$currentversion);
+        $readonly = null;
+        if (count(config('app.creativecommons_version'))==1) {
+          $readonly = 'readonly';
+        }
+      @endphp
+      <select name="license" id="license" class="form-control" >
+        @foreach (config('app.creativecommons_licenses') as $level)
+          <option value="{{ $level }}" {{ $level == $oldlicense ? 'selected' : '' }}>
+            {{$level}} - @lang('levels.' . $level)
+          </option>
+        @endforeach
+      </select>
+      <strong>version:</strong>
+      @if (null != $readonly)
+        <input type="hidden" name="license_version" value=" {{ $oldversion }}">
+        {{ $oldversion }}
+      @else
+      <select name="license_version" class="form-control" {{ $readonly }}>
+        @foreach (config('app.creativecommons_version') as $version)
+          <option value="{{ $version }}" {{ $version == $oldversion ? 'selected' : '' }}>
+            {{ $version}}
+          </option>
+        @endforeach
+      </select>
+      @endif
+    </div>
+    <div class="col-sm-12">
+      <div id="creativecommons_pictures_hint" class="panel-collapse collapse">
+        <br>
+        @lang('messages.creativecommons_picture_hint')
+      </div>
+    </div>
+</div>
+
 <div class="form-group">
 <label for="tags" class="col-sm-3 control-label">
 @lang('messages.tags')
 </label>
+<a data-toggle="collapse" href="#tags_hint" class="btn btn-default">?</a>
 <div class="col-sm-6">
 {!! Multiselect::select(
     'tags',
@@ -103,8 +158,34 @@
      ['class' => 'multiselect form-control']
 ) !!}
 </div>
+  <div id="tags_hint" class="col-sm-12 collapse">
+    @lang('messages.tags_hint')
+  </div>
 </div>
-		        <div class="form-group">
+
+
+<div class="form-group" >
+  <label for="date" class="col-sm-3 control-label">@lang('messages.date')</label>
+  <a data-toggle="collapse" href="#date_hint" class="btn btn-default">?</a>
+  <div class="col-sm-6">
+    <input type="date" name="date" value="{{ old('date',isset($picture) ? $picture->date : null) }}" min="1600-01-01" max={{today()}}>
+  </div>
+  <div id="date_hint" class="col-sm-12 collapse">
+    @lang('messages.picture_date_hint')
+  </div>
+</div>
+
+
+<div class="form-group">
+<label for="notes" class="col-sm-3 control-label">
+@lang('messages.notes')
+</label>
+<div class="col-sm-6">
+  <textarea name="notes" id="notes" class="form-control">{{ old('notes', isset($picture) ? $picture->notes : null) }}</textarea>
+</div>
+</div>
+
+  <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>

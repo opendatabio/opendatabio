@@ -12,10 +12,13 @@ use Lang;
 use App\User;
 use App\Taxon;
 use DB;
+use CodeInc\StripAccents\StripAccents;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Activity;
 
 class Dataset extends Model
 {
-    use HasAuthLevels;
+    use HasAuthLevels, LogsActivity;
 
     // These are the same from Project, but are copied in case we decide to add new levels to either model
     const PRIVACY_AUTH = 0;
@@ -23,7 +26,16 @@ class Dataset extends Model
     const PRIVACY_PUBLIC = 2;
     const PRIVACY_LEVELS = [self::PRIVACY_AUTH, self::PRIVACY_REGISTERED, self::PRIVACY_PUBLIC];
 
-    protected $fillable = ['name', 'description', 'privacy', 'policy','metadata'];
+    protected $fillable = ['name', 'description', 'privacy', 'policy','metadata','title','license'];
+
+    //activity log trait to audit changes in record
+    protected static $logName = 'dataset';
+    protected static $recordEvents = ['updated','deleted'];
+    protected static $ignoreChangedAttributes = ['updated_at'];
+    protected static $logFillable = true;
+    protected static $logOnlyDirty = true;
+    protected static $submitEmptyLogs = false;
+
 
     public function rawLink()
     {
@@ -42,28 +54,41 @@ class Dataset extends Model
                       'App\Voucher',
                       'App\Measurement',
                       'dataset_id', // Foreign key on Measurement table...
-                      'id', // Foreign key on Plant table...
+                      'id', // Foreign key on individual table...
                       'id', // Local key on Dataset table...
                       'measured_id' // Local key on Measurement table...
                       )->where('measurements.measured_type', 'App\Voucher')->distinct();
     }
 
-    public function plants( )
+    public function individuals( )
     {
         return $this->hasManyThrough(
-                      'App\Plant',
+                      'App\Individual',
                       'App\Measurement',
                       'dataset_id', // Foreign key on Measurement table...
-                      'id', // Foreign key on Plant table...
+                      'id', // Foreign key on individual table...
                       'id', // Local key on Dataset table...
                       'measured_id' // Local key on Measurement table...
-                      )->where('measurements.measured_type', 'App\Plant')->distinct();
+                      )->where('measurements.measured_type', 'App\Individual')->distinct();
     }
 
     public function tags()
     {
         return $this->belongsToMany(Tag::class)->withTimestamps();
     }
+
+
+    /* authorship */
+    public function authors()
+    {
+      return $this->morphMany(Collector::class, 'object')->with('person');
+    }
+
+    public function author_first()
+    {
+        return $this->authors()->where('main',1);
+    }
+
 
     public function getTagLinksAttribute()
     {
@@ -122,56 +147,56 @@ class Dataset extends Model
       return DB::table('measurements')->selectRaw('measured_type,count(*) as count')->where('dataset_id',$this->id)->groupBy('measured_type')->get();
     }
 
-public function identification_summary()
-{
-  return DB::table('identifications')->join('measurements','measured_id','=','object_id')->join('taxons','taxon_id','=','taxons.id')->selectRaw(
-"taxons.level, SUM(IF(taxons.author_id IS NULL,1,0)) as published,  SUM(IF(taxons.author_id IS NULL,0,1)) as unpublished, COUNT(taxons.id) as total")->whereRaw('measured_type=object_type')->where('dataset_id',$this->id)->groupBy('level')->get();
-}
 
-public function traits_summary()
-{
+    // TODO: NEEDS UPDATE - ignores voucher identification
+    public function identification_summary()
+    {
+      return DB::table('identifications')->join('measurements','measured_id','=','object_id')->join('taxons','taxon_id','=','taxons.id')->selectRaw(
+    "taxons.level, SUM(IF(taxons.author_id IS NULL,1,0)) as published,  SUM(IF(taxons.author_id IS NULL,0,1)) as unpublished, COUNT(taxons.id) as total")->whereRaw('measured_type=object_type')->where('dataset_id',$this->id)->groupBy('level')->get();
+  }
 
-  $trait_summary = DB::select("SELECT measurements.trait_id,traits.export_name,
-    SUM(CASE measured_type WHEN 'App\\\Plant' THEN 1 ELSE 0 END) AS plants,
-    SUM(CASE measured_type WHEN 'App\\\Voucher' THEN 1 ELSE 0 END) AS vouchers,
-    SUM(CASE measured_type WHEN 'App\\\Taxon' THEN 1 ELSE 0 END) AS taxons,
-    SUM(CASE measured_type WHEN 'App\\\Location' THEN 1 ELSE 0 END) AS locations,
-    count(*)  as total
-    FROM measurements LEFT JOIN traits ON traits.id=measurements.trait_id WHERE measurements.dataset_id= ? GROUP BY measurements.trait_id,traits.export_name  ORDER BY traits.export_name",[$this->id]);
-    return $trait_summary;
-}
+    public function traits_summary()
+    {
+
+      $trait_summary = DB::select("SELECT measurements.trait_id,traits.export_name,
+        SUM(CASE measured_type WHEN 'App\\\Individual' THEN 1 ELSE 0 END) AS individuals,
+        SUM(CASE measured_type WHEN 'App\\\Voucher' THEN 1 ELSE 0 END) AS vouchers,
+        SUM(CASE measured_type WHEN 'App\\\Taxon' THEN 1 ELSE 0 END) AS taxons,
+        SUM(CASE measured_type WHEN 'App\\\Location' THEN 1 ELSE 0 END) AS locations,
+        count(*)  as total
+        FROM measurements LEFT JOIN traits ON traits.id=measurements.trait_id WHERE measurements.dataset_id= ? GROUP BY measurements.trait_id,traits.export_name  ORDER BY traits.export_name",[$this->id]);
+        return $trait_summary;
+    }
 
 
 
- public function taxons_ids()
- {
-   $taxons_ids =  [];
-   $taxons_ids2 = [];
-   $query = DB::select("(SELECT DISTINCT taxon_id  FROM identifications  JOIN measurements ON measurements.measured_id=identifications.object_id WHERE identifications.object_type=measurements.measured_type AND measurements.dataset_id=".$this->id.")");
-   if (count($query)) {
-    $taxons_ids  = array_map(function($value) { return $value->taxon_id;},$query);
+   public function taxons_ids()
+   {
+     $taxons_individuals  = $this->individuals()->withoutGlobalScopes()->cursor()->map(function($individual) {
+       return $individual->identification->taxon_id;
+     })->toArray();
+     $taxons_vouchers  = $this->vouchers()->withoutGlobalScopes()->cursor()->map(function($voucher) {
+       return $voucher->identification->taxon_id;
+     })->toArray();
+     $taxons_direct =  $this->measurements()->withoutGlobalScopes()->where('measured_type','=','App\Taxon')->pluck('measured_id')->toArray();
+     $taxons = array_unique(array_merge($taxons_individuals,$taxons_vouchers,$taxons_direct));
+
+     return $taxons;
+  }
+   public function taxonomic_summary()
+   {
+     $taxons_ids = $this->taxons_ids();
+
+     if (count($taxons_ids)) {
+       $ids = implode(",",$taxons_ids);
+       $query = DB::select('SELECT COUNT(DISTINCT tb.fam) as families, COUNT(DISTINCT tb.genus) as genera, COUNT(DISTINCT tb.species) as species FROM (SELECT odb_txparent(taxons.lft,120) as fam,odb_txparent(taxons.lft,180) as genus, odb_txparent(taxons.lft,210) as species FROM taxons WHERE taxons.id IN('.$ids.')) as tb');
+       $query  = array_map(function($value) { return (array)$value;},$query);
+
+       return $query[0];
+     } else {
+       return null;
+     }
    }
-   $query2 = DB::select('(SELECT DISTINCT measured_id  FROM measurements  WHERE measured_type="App\\\Taxon" AND measurements.dataset_id='.$this->id.')');
-   if (count($query2)) {
-    $taxons_ids2  = array_map(function($value) { return $value->measured_id;},$query2);
-   }
-   return array_unique(array_merge($taxons_ids,$taxons_ids2));
-
-}
- public function taxonomic_summary()
- {
-   $taxons_ids = $this->taxons_ids();
-
-   if (count($taxons_ids)) {
-     $ids = implode(",",$taxons_ids);
-     $query = DB::select('SELECT COUNT(DISTINCT tb.fam) as families, COUNT(DISTINCT tb.genus) as genera, COUNT(DISTINCT tb.species) as species FROM (SELECT odb_txparent(taxons.lft,120) as fam,odb_txparent(taxons.lft,180) as genus, odb_txparent(taxons.lft,210) as species FROM taxons WHERE taxons.id IN('.$ids.')) as tb');
-     $query  = array_map(function($value) { return (array)$value;},$query);
-
-     return $query[0];
-   } else {
-     return null;
-   }
- }
 
    /* functions to interact with COUNT model*/
    public function summary_counts()
@@ -184,7 +209,7 @@ public function traits_summary()
        return $this->morphMany("App\Summary", 'scope');
    }
 
-   public function getCount($scope="all",$scope_id=null,$target='plants')
+   public function getCount($scope="all",$scope_id=null,$target='individuals')
    {
      $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
      if (null !== $scope_id) {
@@ -199,9 +224,9 @@ public function traits_summary()
    }
 
    /* functions to generate counts */
-   public function plantsCount()
+   public function individualsCount()
    {
-      return $this->plants()->withoutGlobalScopes()->distinct('plants.id')->count();
+      return $this->individuals()->withoutGlobalScopes()->distinct('individuals.id')->count();
    }
 
    public function vouchersCount()
@@ -217,42 +242,208 @@ public function traits_summary()
    public function taxonsCountOld()
    {
      $count_level = Taxon::getRank('species');
-     $measured_objects_taxon_id  = DB::table('identifications')->join('measurements','measured_id','=','object_id')->join('taxons','taxon_id','=','taxons.id')->distinct('taxon_id')->whereRaw('measured_type=object_type')->where('dataset_id',$this->id)->where('taxons.level',">=",$count_level)->pluck('taxon_id')->toArray();
-     $measured_taxon_id =  $this->measurements()->withoutGlobalScopes()->where('measured_type','=','App\Taxon')->whereHasMorph( 'measured',['App\Taxon'],function($object) use($count_level){ $object->where('level','>=',$count_level);})->distinct('measured_id')->pluck('measured_id')->toArray();
-     return count(array_unique(array_merge($measured_objects_taxon_id,$measured_taxon_id)));
+     $taxons_individuals  = $this->individuals()->withoutGlobalScopes()->cursor()->map(function($individual) {
+       return $individual->identification->taxon_id;
+     });
+     $taxons_vouchers  = $this->vouchers()->withoutGlobalScopes()->cursor()->map(function($voucher) {
+       return $voucher->identification->taxon_id;
+     });
+     $taxons_direct =  $this->measurements()->withoutGlobalScopes()->where('measured_type','=','App\Taxon')->pluck('measured_id')->toArray();
+     $taxons = array_unique(array_merge($taxons_individuals,$taxons_vouchers,$taxons_direct));
+     $count = Taxon::whereIn('id',$taxons)->where('level',">=",$count_level);
+     return  $count;
    }
 
+   // TODO: weird count for dataset taxa
    public function taxonsCount()
    {
-     $count_level = Taxon::getRank('species');
-     return $this->summary_scopes()->whereHasMorph('object',['App\Taxon'],function($object) use($count_level) { $object->where('level','>=',$count_level);})->where('object_type','App\Taxon')->selectRaw("DISTINCT object_id")->cursor()->count();
+     //$count_level = Taxon::getRank('species');
+     //return $this->summary_scopes()->whereHasMorph('object',['App\Taxon'],function($object) use($count_level) { $object->where('level','>=',$count_level);})->where('object_type','App\Taxon')->selectRaw("DISTINCT object_id")->cursor()->count();
+     //$ids = $this->taxons_ids();
+     //$count_level = Taxon::getRank('species');
+     //return Taxon::whereIn('id',$ids)->where('level',$count_level)->count();
+     return count($this->taxons_ids());
    }
 
 
    public function locationsCount()
    {
-     $plants = $this->plants()->withoutGlobalScopes()->cursor()->pluck('location_id')->toArray();
-     $vouchers = $this->vouchers()->withoutGlobalScopes()->cursor()->map(function($voucher) {
-       if ($voucher->parent_type=="App\Plant") {
-         return $voucher->parent()->withoutGlobalScopes()->first()->location_id;
-       } else  {
-         return $voucher->parent_id;
-       }
+     $individuals = $this->individuals()->withoutGlobalScopes()->cursor()->map(function($individual) {
+       return $individual->location_first->pluck('location_id')->toArray()[0];
      })->toArray();
-     return count(array_unique(array_merge($plants,$vouchers)));
+     return count(array_unique(array_merge($individuals)));
    }
 
 
    public function projectsCount()
    {
-     $plants = $this->plants()->withoutGlobalScopes()->cursor()->pluck('project_id')->toArray();
+     $individuals = $this->individuals()->withoutGlobalScopes()->cursor()->pluck('project_id')->toArray();
      $vouchers = $this->vouchers()->withoutGlobalScopes()->cursor()->pluck('project_id')->toArray();
-     return count(array_unique(array_merge($plants,$vouchers)));
+     return count(array_unique(array_merge($individuals,$vouchers)));
    }
 
 
+   public function getAllAuthorsAttribute()
+   {
+     if ($this->authors->count()==0) {
+       return null;
+     }
+     $persons = $this->authors->map(function($person) { return $person->person->abbreviation;})->toArray();
+     $persons = implode(' and ',$persons);
+     return $persons;
+   }
+
+   public function getShortAuthorsAttribute()
+   {
+     if ($this->authors->count()==0) {
+       return null;
+     }
+     $persons = $this->authors->map(function($person) { return $person->person->abbreviation;})->toArray();
+     if (count($persons)>2) {
+       $persons = implode(' and ',$persons);
+     } elseif (count($persons)>0) {
+       $persons = $persons[0]." et al.";
+     }
+     return $persons;
+   }
+
+   public function getCitationAttribute()
+   {
+     return $this->generateCitation($short=false,$for_dt=false);
+   }
+
+   public function generateCitation($short=true,$for_dt=false)
+   {
+     if ($short) {
+       $author = $this->short_authors;
+     } else {
+       $author = $this->all_authors;
+     }
+     $when = today()->format("Y-m-d");
+     $year = isset($this->last_edition_date) ? $this->last_edition_date->format('Y') : 'no data yet';
+     $version = isset($this->last_edition_date) ? $this->last_edition_date->format('Y-m-d') : 'no data yet';
+     $license = (null != $this->license) ? $this->license : 'not defined, some restrictions may apply';
+     if (preg_match("/CC0/i",$license)) {
+       $license = "Public domain - CC0";
+     }
+     $title = isset($this->title) ? $this->title : $this->name;
+     if ($for_dt) {
+       $title = "<a href='".url('datasets/'.$this->id)."'>".htmlspecialchars($title).'</a>';
+     }
+     if (null != $author) {
+       $citation = $author." (".$year.").  <strong>".$title."</strong>. Version: ".$version.". License: ".$this->license;
+     } else {
+       $citation = "<strong>".$title."</strong>. Version: ".$version.". License: ".$this->license;
+     }
+     if (!$for_dt) {
+       $url =  url('dataset/'.$this->id);
+       $citation .= '. From '.$url.', accessed '.$when.".";
+     }
+     return $citation;
+   }
+
+  public function getYearAttribute()
+  {
+    if ($this->last_edition_date) {
+      return $this->last_edition_date->format('Y');
+    }
+    return null;
+  }
+
+  public function getVersionAttribute()
+  {
+    if ($this->last_edition_date) {
+      return $this->last_edition_date->format("Y-m-d");
+    }
+    return null;
+  }
+
+   public function getBibtexAttribute()
+   {
+     if ($this->measurements()->withoutGlobalScopes()->count() ==0 ) {
+       return null;
+     }
+     $url =  $this->name;
+     $bibkey = preg_replace('[,| |\\.|-|_]','',StripAccents::strip( (string) $this->name ))."_".$this->last_edition_date->format("Y");
+     $license = (null != $this->license) ? "License: ".$this->license.". " : "";
+     $version = "Version: ".$this->last_edition_date->format("Y-m-d")." ";
+     $bib =  [
+        'title' => isset($this->title) ? $this->title : $this->name,
+        'year' => $this->last_edition_date->format("Y"),
+        'author' => $this->all_authors,
+        'howpublished' => "url\{".url('dataset/'.$this->id)."}",
+        'version' => $version,
+        'license' => (null != $this->license) ? $this->license : 'License not defined, use restrictions may apply.',
+        'note' => $version.$license." Accessed: ".today()->format("Y-m-d"),
+        'url' => "{".url('dataset/'.$this->id)."}",
+     ];
+     return "@misc{".$bibkey.",\n".json_encode($bib,JSON_PRETTY_PRINT);
+   }
 
 
+    //get date of last edit in this dataset
+    public function getLastEditionDateAttribute()
+    {
+      if ($this->measurements()->withoutGlobalScopes()->count() ==0 ) {
+        return null;
+      }
+      $lastdate = $this->measurements()->withoutGlobalScopes()->select('measurements.updated_at')->orderBy('updated_at','desc')->first()->updated_at;
+      //should get date of last identification also?
+      $id1 = [];
+      if ($this->individuals->count()) {
+        $id1 = $this->individuals()->withoutGlobalScopes()->pluck('id')->toArray();
+      }
+      if ($this->vouchers->count()) {
+        $id2 = $this->vouchers()->withoutGlobalScopes()->pluck('individual_id')->toArray();
+        $id1 = array_unique(array_merge($id1,$id2));
+      }
+      if (count($id1)>0) {
+        $identification_last_editions = Identification::select('identifications.updated_at')->whereIn('object_id',$id1)->where('object_type','App\Individual')->orderBy('updated_at','desc')->first()->updated_at;
+        if ($identification_last_editions>$lastdate) {
+            $lastdate = $identification_last_editions;
+        }
+      }
+      return $lastdate;
+   }
+
+   public function getDownloadsAttribute()
+   {
+     return $this->morphMany("Activity", 'subject')->where('description','like','%downloads%')->count();
+   }
+
+
+   /*this will check whether a zipped filed with free access dataset exists */
+   /*saving would allow unlogged users to download */
+   public function hasPublicfile()
+    {
+      /* a file with this name will saved if the dataset is of public_access */
+      $filename = 'dataset-'.$this->id.'_'.$this->last_edition_date->format('Y-m-d').'_.zip';
+      $path = 'downloads_temp/'.$filename;
+      if (file_exists(public_path($path))) {
+          return [
+            'file' => $filename,
+            'version' => $this->last_edition_date->format('Y-m-d'),
+            'last' => true
+          ];
+      }
+      /* check if an older version exists */
+      $files = scandir(public_path('downloads_temp'));
+      $fn ='dataset-'.$this->id;
+      $hasother = Arr::where($files, function ($value, $key) use($fn) {
+          if ($start[0] == $fn) {
+            return $value;
+          }
+      });
+      if (count($hasother)>0) {
+         $dt = explode("_",$hasother)[1];
+         return [
+           'file' => $hasother,
+           'version' => $dt,
+           'last' => false
+         ];
+      }
+      return null;
+    }
 
 
 }

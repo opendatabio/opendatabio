@@ -17,96 +17,152 @@
       </div>
       <div class="panel-body">
 
+        <!--- DEFINE LOCK IMAGES BASED ON PRIVACY OF DATA -->
+        <!-- DEFINE LICENSE IMAGE BASED ON LICENSE -->
+        @php
+          $lockimage= '<i class="fas fa-lock"></i>';
+          if ($project->privacy != App\Project::PRIVACY_AUTH) {
+            $license = explode(" ",$project->license);
+            $license_logo = 'images/'.mb_strtolower($license[0]).".png";
+          } else {
+            $license_logo = 'images/cc_srr_primary.png';
+          }
+          if ($project->privacy == App\Project::PRIVACY_PUBLIC) {
+            $lockimage= '<i class="fas fa-lock-open"></i>';
+          }
+        @endphp
 
+        @if(isset($logo))
+          <div class="float-right">
+            <img src='{{ url($logo) }}' width='150'>
+          </div>
+        @endif
 
-<div class="col-sm-12">
-  <div class="col-sm-9">
-    @if ($project->description)
-      <p>
-        {{$project->description}}
+        <h3>
+          {{ isset($project->title) ? $project->title : $project->name }}
+        </h3>
+        <!-- short description -->
+        @if (isset($project->description))
+        <p>
+          {{ $project->description }}
+        </p>
+
+        @endif
+        @if ($project->tags)
+        <br>
+        <p>
+          <strong>
+            @lang('messages.tagged_with')
+          </strong>:
+          {!! $project->tagLinks !!}
+        </p>
+        <br>
+        @endif
+        
+
+        <p>
+          <a href="http://creativecommons.org/license" target="_blank">
+            <img src="{{ asset($license_logo) }}" alt="{{ $project->license }}" width='100px'>
+          </a>
+          {!! $lockimage !!} @lang('levels.privacy.'.$project->privacy)
+
+        </p>
+
+        @if (isset($project->citation))
+          <br>
+          <p>
+            <strong>@lang('messages.howtocite')</strong>:
+            <br>
+            {!! $project->citation !!} <a data-toggle="collapse" href="#bibtex" class="btn-sm btn-primary">BibTeX</a>
+          </p>
+          <div id='bibtex' class='panel-collapse collapse'>
+            <pre><code>{{ $project->bibtex }}</code></pre>
+          </div>
+        @endif
+
+      @if ($project->individuals()->withoutGlobalScopes()->count())
+          <p>
+          @can('export', $project)
+            <form action="{{ url('exportdata')}}" method="POST" class="form-horizontal" >
+            <!-- csrf protection -->
+              {{ csrf_field() }}
+            <!--- field to fill with ids to export --->
+              <input type='hidden' name='object_type' value='individual' >
+              <input type='hidden' name='project' value='{{ $project->id }}' >
+              <input type='hidden' name='filetype' value='csv' >
+              <input type='hidden' name='fields' value='all' >
+              <button  type='submit' class="btn btn-success">
+                <span class="glyphicon glyphicon-download-alt unstyle"></span>
+                @lang('messages.data_download')
+              </button>
+            </form>
+          @else
+            @if ($project->privacy ==0)
+              <a href="{{ url('projects/'.$project->id."/request") }}" class="btn btn-warning">
+                <span class="glyphicon glyphicon-download-alt unstyle"></span>
+                @lang('messages.data_request')
+              </a>
+            @else
+              <a href="{{ route('login') }}" class="btn btn-warning">
+                <span class="glyphicon glyphicon-warning-sign unstyle"></span>
+                @lang('messages.download_login')
+              </a>
+            @endif
+        @endcan
       </p>
     @endif
 
-    <p>
-      <strong>
-        @lang('messages.privacy')
-      </strong>
-      :
-      @lang ('levels.privacy.' . $project->privacy)
-    </p>
-
-    @if ($project->tags)
-      <p><strong>
-        @lang('messages.tagged_with')
-        : </strong> {!! $project->tagLinks !!}
-      </p>
-    @endif
-
-    @if ($project->url)
-      <p>
-        <strong>
-          URL
-        </strong>
-        :
-        <a href="{!! $project->url !!}">{{ $project->url }}</a>
-      </p>
-    @endif
-  </div>
 
 
 
-  <div class="col-sm-2">
-    @if(isset($logo))
-      <div class="float-right">
-        <img src='{{ url($logo) }}' width='150'>
-      </div>
-    @endif
-  </div>
-</div>
+        <!-- START people  BLOCK -->
+        <p class="panel-collapse collapse" id='project_details'>
+            {{ $project->details }}
+        </p>
 
-
-
-<!-- SUMMARY BUTTONS -->
-<div class="col-sm-12">
   <br><br>
-  <a data-toggle="collapse" href="#project_people" class="btn btn-default">@lang('messages.persons')</a>
+  <p>
+    @can('view_details',$project)
+      @if(isset($project->details))
+        <a data-toggle="collapse" href="#project_details" class="btn btn-default">@lang('messages.project_details')</a>
+      @endif
+    @endcan
+    &nbsp;&nbsp;
+    <button id='summary_button' type="button" class="btn btn-default">
+      <span id='summary_loading' hidden><i class="fas fa-sync fa-spin"></i></span>
+      @lang('messages.summary')
+    </button>
+    &nbsp;&nbsp;
+    <button id='identifications_summary_button' type="button" class="btn btn-default">
+      <span id='identifications_summary_loading' hidden><i class="fas fa-sync fa-spin"></i></span>
+      @lang('messages.identifications_summary')
+    </button>
+    &nbsp;&nbsp;
+    <a data-toggle="collapse" href="#project_people" class="btn btn-default">@lang('messages.persons')</a>
+  </p>
 
-  &nbsp;&nbsp;
-  <a href="{{ url('datasets/'. $project->id. '/project')  }}" class="btn btn-default">
+  <p>
+    <a href="{{ url('datasets/'. $project->id. '/project')  }}" class="btn btn-default">
+      <i class="fa fa-btn fa-search"></i>
+      {{ $project->getCount('all',null,'datasets') }}
+      @lang('messages.datasets')
+    </a>
+    &nbsp;&nbsp;
+    <a href="{{ url('individuals/'. $project->id. '/project')  }}" class="btn btn-default">
     <i class="fa fa-btn fa-search"></i>
-    {{ $project->getCount('all',null,'datasets') }}
-    @lang('messages.datasets')
-  </a>
-
-  @can('view_details',$project)
-    @if(isset($project->details))
-      &nbsp;&nbsp;
-      <a data-toggle="collapse" href="#project_details" class="btn btn-default">@lang('messages.project_details')</a>
-    @endif
-  @endcan
-</div>
-
-
-  <!-- RELATED MODELS BUTTONS -->
-  <div class="col-sm-12">
-  <br>
+    {{ $project->getCount('all',null,'individuals') }}
+      @lang('messages.individuals')
+    </a>
     @if ($project->getCount('all',null,'vouchers'))
-    <a href="{{ url('projects/'. $project->id. '/vouchers')  }}" class="btn btn-default">
-      <i class="fa fa-btn fa-search"></i>
-      {{ $project->getCount('all',null,'vouchers') }}
-      @lang('messages.vouchers')
-    </a>
-    &nbsp;&nbsp;
-    @endif
-    @if ($project->getCount('all',null,'plants'))
-      <a href="{{ url('projects/'. $project->id. '/plants')  }}" class="btn btn-default">
-      <i class="fa fa-btn fa-search"></i>
-      {{ $project->getCount('all',null,'plants') }}
-      @lang('messages.plants')
-    </a>
+      &nbsp;&nbsp;
+      <a href="{{ url('vouchers/'. $project->id. '/project')  }}" class="btn btn-default">
+        <i class="fa fa-btn fa-search"></i>
+        {{ $project->getCount('all',null,'vouchers') }}
+        @lang('messages.vouchers')
+      </a>
     @endif
     &nbsp;&nbsp;
-    <a href="{{ url('projects/'. $project->id. '/taxons')  }}" class="btn btn-default">
+    <a href="{{ url('taxons/'. $project->id. '/project')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
       {{ $project->taxonsCount() }}
       @lang('messages.taxons')
@@ -117,54 +173,24 @@
       {{ $project->getCount('all',null,'locations') }}
       @lang('messages.locations')
     </a>
+  </p>
+
+  @can ('update', $project)
+  <p>
+      <a href="{{ url('projects/'. $project->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
+        @lang('messages.edit')
+      </a>
+  </p>
+  @endcan
+
   </div>
-
-  <div class="col-sm-12">
-  <br>
-  <button id='summary_button' type="button" class="btn btn-default">
-    <span id='summary_loading' hidden><i class="fas fa-sync fa-spin"></i></span>
-    @lang('messages.summary')
-  </button>
-  &nbsp;&nbsp;
-  <button id='identifications_summary_button' type="button" class="btn btn-default">
-    <span id='identifications_summary_loading' hidden><i class="fas fa-sync fa-spin"></i></span>
-    @lang('messages.identifications_summary')
-  </button>
-  <!--- <?php // TODO: requires a faster summary  ?>
-  &nbsp;&nbsp;
-  <button id='taxonomic_summary_button' type="button" class="btn btn-default">
-    <span id='taxonomic_summary_loading' hidden><i class="fas fa-sync fa-spin"></i></span>
-  </button>
-  --->
-  </div>
-
-@can ('update', $project)
-  <div class="col-sm-12">
-    <br>
-    <a href="{{ url('projects/'. $project->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
-      @lang('messages.edit')
-    </a>
-  </div>
-@endcan
-
-
-</div>
-</div>
 
 <!-- START people  BLOCK -->
-<div class="panel panel-default panel-collapse collapse" id='project_details'>
-  <div class="panel-body">
-    {{ $project->details }}
-  </div>
-</div>
-
-
-<!-- START people  BLOCK -->
-  <div class="panel panel-default panel-collapse collapse" id='project_people'>
+<div class="hiddeninfo collapse" id='project_people'>
     <div class="panel-heading">
-      <strong>
+      <h4>
         @lang('messages.persons')
-      </strong>
+      </h4>
     </div>
     <div class="panel-body">
       <p><strong>@lang('messages.admins'): </strong>
@@ -193,17 +219,19 @@
 
 
 <!-- START summary BLOCK -->
-<div class="panel panel-default" id='project_summary' hidden></div>
-<div class="panel panel-default" id='project_identification_block' hidden></div>
+<div class="hiddeninfo" id='project_summary' hidden></div>
+<div class="hiddeninfo" id='project_identification_block' hidden></div>
 <!-- end -->
 
-</div>
+<!--- <input type="hidden" id='project_id' value="{{ $project->id }}" > -->
 
 
 
 </div>
-<input type="hidden" id='project_id' value="{{ $project->id }}" >
+</div>
+</div>
 @endsection
+
 @push ('scripts')
 
 <script>

@@ -13,10 +13,19 @@ use App\DataTables\ProjectsDataTable;
 use App\Project;
 use App\Dataset;
 use App\User;
+use App\Collector;
 use Auth;
 use Lang;
 use App\Tag;
+use App\Person;
+use Mail;
+use App\UserJob;
+
+use Activity;
+use App\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
+
+
 
 class ProjectController extends Controller
 {
@@ -59,8 +68,9 @@ class ProjectController extends Controller
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
         $tags = Tag::all();
+        $persons=Person::all();
 
-        return view('projects.create', compact('fullusers', 'allusers','tags'));
+        return view('projects.create', compact('fullusers', 'allusers','tags','persons'));
     }
 
     /**
@@ -73,11 +83,13 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
 
+
         $message = "";
         $this->authorize('create', Project::class);
         $fullusers = User::where('access_level', '=', User::USER)
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
+        $licenses = implode(',',config('app.creativecommons_licenses'));
         $this->validate($request, [
             'name' => 'required|string|max:191',
             'privacy' => 'required|integer',
@@ -86,14 +98,29 @@ class ProjectController extends Controller
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:'.$fullusers,
             'url' => 'nullable|regex:/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/',
+            'title' => 'nullable|string|max:191',
+            'license' => 'nullable|string|max:191|in:'.$licenses,
         ]);
-
+        //add version to license field
+        $license = null;
+        if (isset($request->license)) {
+          if ($request->license != "CC0") {
+              //THEN TITLE AND AUTHORS ARE required
+              if (!isset($request->title) or !isset($request->authors)) {
+                $message .= Lang::get('messages.missing_project_title_author');
+                return redirect('projects/'.$project->id)->withStatus(Lang::get('messages.stored')." ".$message);
+              }
+          }
+          $version = (null != $request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
+          $license = $request->license." ".$version;
+        }
         if (filter_var($request->url, FILTER_VALIDATE_URL) !== false) {
           $request->url = null;
           $message .= Lang::get('messages.invalid_url');
         }
-
-        $project = new Project($request->only(['name', 'description', 'privacy','details', 'url']));
+        $data = $request->only(['name', 'description', 'privacy','details', 'url','license','title','policy']);
+        $data['license'] = $license;
+        $project = new Project($data);
         $project->save(); // needed to generate an id?
         $project->setusers($request->viewers, $request->collabs, $request->admins);
         $project->tags()->attach($request->tags);
@@ -112,6 +139,18 @@ class ProjectController extends Controller
               $message .= " ". Lang::get('messages.invalid_image');
             }
         }
+
+        //authors
+        $first = true;
+        foreach ($request->authors as $author) {
+            $theauthor = new Collector(['person_id' => $author]);
+            if ($first) {
+                $theauthor->main = 1;
+            }
+            $dataset->authors()->save($theauthor);
+            $first = false;
+        }
+
         return redirect('projects/'.$project->id)->withStatus(Lang::get('messages.stored')." ".$message);
     }
 
@@ -152,8 +191,8 @@ class ProjectController extends Controller
         if (file_exists(public_path($logo_file))) {
           $logo = $logo_file;
         }
-
-        return view('projects.create', compact('project', 'fullusers', 'allusers','tags','logo'));
+        $persons=Person::all();
+        return view('projects.create', compact('project', 'fullusers', 'allusers','tags','logo','persons'));
     }
 
     /**
@@ -166,13 +205,16 @@ class ProjectController extends Controller
      */
     public function update(Request $request, $id)
     {
+
+
+
         $project = Project::findOrFail($id);
         $this->authorize('update', $project);
         $fullusers = User::where('access_level', '=', User::USER)
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
         $message = "";
-
+        $licenses = implode(',',config('app.creativecommons_licenses'));
         $this->validate($request, [
             'name' => 'required|string|max:191',
             'privacy' => 'required|integer',
@@ -180,12 +222,31 @@ class ProjectController extends Controller
             'admins.*' => 'numeric|in:'.$fullusers,
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:'.$fullusers,
+            'title' => 'nullable|string|max:191',
+            'license' => 'nullable|string|max:191|in:'.$licenses,
         ]);
+        /*
         if (filter_var($request->url, FILTER_VALIDATE_URL) !== false) {
           $request->url = null;
           $message .= Lang::get('messages.invalid_url');
         }
-        $project->update($request->only(['name', 'description', 'privacy','details','url']));
+        */
+        //add version to license field
+        $license = null;
+        if (isset($request->license)) {
+          if ($request->license != "CC0") {
+              //THEN TITLE AND AUTHORS ARE required
+              if (!isset($request->title) or !isset($request->authors)) {
+                $message .= Lang::get('messages.missing_project_title_author');
+                return redirect('projects/'.$id)->withStatus(Lang::get('messages.stored')." ".$message);
+              }
+          }
+          $version = isset($request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
+          $license = $request->license." ".$version;
+        }
+        $data = $request->only(['name', 'description', 'privacy','details','url','title','license','policy']);
+        $data['license'] = $license;
+        $project->update($data);
         $project->setusers($request->viewers, $request->collabs, $request->admins);
         $project->tags()->sync($request->tags);
 
@@ -206,7 +267,30 @@ class ProjectController extends Controller
           }
         }
 
-
+        //did authors changed?
+        $current = $project->authors->pluck('person_id');
+        $detach = $current->diff($request->authors)->all();
+        $attach = collect($request->authors)->diff($current)->all();
+        if (count($detach) or count($attach)) {
+            //delete old authors
+            $project->authors()->delete();
+            //save authors and identify first author
+            $newauthors = [];
+            if ($request->authors) {
+              $newauthors = $request->authors;
+              $first = true;
+              foreach ($request->authors as $author) {
+                  $theauthor = new Collector(['person_id' => $author]);
+                  if ($first) {
+                    $theauthor->main = 1;
+                  }
+                  $project->authors()->save($theauthor);
+                  $first = false;
+                }
+            }
+            //log authors changed if any
+            ActivityFunctions::logCustomPivotChanges($project,$current->all(),$newauthors,'project','authors updated',$pivotkey='person');
+        }
 
         return redirect('projects/'.$id)->withStatus(Lang::get('messages.saved')." ".$message);
     }
@@ -241,6 +325,81 @@ class ProjectController extends Controller
       $project = Project::findOrFail($id);
       $html = view("projects.taxoninfo",compact('project'))->render();
       return $html;
+    }
+
+    /* DOWNLOAD AND REQUEST DATASET FUNCTIONS */
+    public function projectRequestForm($id)
+    {
+        $project = Project::findOrFail($id);
+        return view('projects.export', compact('project'));
+    }
+
+    //send email to user
+    public function sendEmail($id,Request $request)
+    {
+        if (!Auth::user() and !isset($request->email)) {
+          $msg = Lang::get('messages.email_mandatory');
+          return redirect('projects/'.$id)->withStatus($msg);
+        }
+
+        $project = Project::findOrFail($id);
+
+        //send to the first dataset admin with cc to rest
+        $admins = $project->admins()->pluck('email')->toArray();
+        $person = $project->admins()->first()->person;
+        $to_email = $admins[0];
+        if (isset($person)) {
+            $to_name = $person->full_name;
+        } else {
+            $to_name = $to_email;
+        }
+        //with copy cc to requester and other admins
+        if (Auth::user()) {
+          $from_email =  Auth::user()->email;
+          if (isset(Auth::user()->person)) {
+            $from_name= Auth::user()->person->fullname;
+          } else {
+            $from_name = Auth::user()->email;
+          }
+        } else {
+          $from_email = $request->email;
+          $from_name = $request->email;
+        }
+        $admins[0] = $from_email;
+        $cc_email = $admins;
+
+
+        //prep de content html to send as the email text
+        $content = Lang::get('messages.dataset_request_to_admins')."  <strong>".$project->name."</strong> ".Lang::get('messages.from')."  <strong>".
+              htmlentities($from_name)
+        ."</strong> ".Lang::get('messages.from')." <a href='".env('APP_URL')."'>".htmlentities(env('APP_URL'))."</a>.";
+        $content .= "<hr><strong>".Lang::get('messages.dataset_request_use')."</strong>: ".$request->dataset_use_type;
+        $content .= "<br>";
+        $content .= "<strong>".Lang::get('messages.description')."</strong><br>".$request->dataset_use_description;
+        $content .= "<br><hr>";
+        if (isset($project->license)) {
+          $content .= "<strong>".Lang::get('messages.license')."</strong><br>".$project->license;
+        }
+        if (isset($project->policy)) {
+          $content .= "<br><strong>".Lang::get('messages.data_policy')."</strong><br>".$project->policy;
+        }
+        $content .= "</ul><br><br>**".Lang::get('messages.no_reply_email')."**<br>";
+        $subject = Lang::get('messages.dataset_request').' - '.$project->name.' - '.env('APP_NAME');
+        $data = array(
+          'to_name' => $to_name,
+          'content' => $content
+        );
+        //send email
+        try {
+          Mail::send('common.email', $data, function($message) use ($to_name, $to_email, $subject,$cc_email) {
+              $message->to($to_email, $to_name)->cc($cc_email)->subject($subject);
+          });
+        } catch (\Exception $e) {
+          $msg = Lang::get('messages.error_sending_email');
+          return redirect('projects/'.$id)->withStatus($msg);
+        }
+        $msg = Lang::get('messages.dataset_request_email_sent');
+        return redirect('projects/'.$id)->withStatus($msg);
     }
 
 

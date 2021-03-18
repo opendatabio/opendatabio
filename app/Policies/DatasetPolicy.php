@@ -30,6 +30,6 @@ class DatasetPolicy
     public function export(User $user, Dataset $dataset)
     {
       $valid_users = $dataset->users()->pluck('users.id')->toArray();
-      return User::ADMIN == $user->access_level or in_array($user->id,$valid_users) or $dataset->privacy == 2;
+      return User::ADMIN == $user->access_level or in_array($user->id,$valid_users) or $dataset->privacy > 0;
     }
 }

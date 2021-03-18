@@ -30,6 +30,7 @@
     </div>
 </div>
 
+
 <div class="form-group">
     <label for="description" class="col-sm-3 control-label">
       @lang('messages.dataset_short_description')
@@ -47,7 +48,7 @@
 
 
 <div class="form-group">
-    <label for="description" class="col-sm-3 control-label">
+    <label for="details" class="col-sm-3 control-label">
       @lang('messages.project_details')
     </label>
     <a data-toggle="collapse" href="#dataset_details" class="btn btn-default">?</a>
@@ -107,24 +108,6 @@
 
 
 
-<div class="form-group">
-  <label for="url" class="col-sm-3 control-label ">
-      URL
-  </label>
-  <a data-toggle="collapse" href="#url_hint" class="btn btn-default">?</a>
-  <div class="col-sm-6">
-    <input type="url" name="url" id="url"  placeholder="https://example.com" >
-  </div>
-  <div class="col-sm-12">
-    <div id="url_hint" class="panel-collapse collapse">
-@lang('messages.project_url_hint')
-    </div>
-  </div>
-</div>
-
-
-
-
 <hr>
 
 <div class="form-group">
@@ -146,6 +129,131 @@
   <div class="col-sm-12">
     <div id="hint1" class="panel-collapse collapse">
 	@lang('messages.project_privacy_hint')
+    </div>
+  </div>
+</div>
+
+
+<!-- license object must be an array with CreativeCommons license codes applied to the model --->
+@php
+  $cc_mandatory = '';
+  $show_project_viewers = '';
+  $privacy = old('privacy', isset($project) ? $project->privacy : 0);
+  if ($privacy!=App\Dataset::PRIVACY_AUTH) {
+    $cc_mandatory = 'mandatory';
+    $show_project_viewers = 'hidden';
+  }
+
+
+@endphp
+<div class="form-group" id='creativecommons'>
+    <label for="license" class="col-sm-3 control-label {{ $cc_mandatory }} " id='licenselabel'>
+      @lang('messages.public_license')
+    </label>
+    <a data-toggle="collapse" href="#creativecommons_licenses_hint" class="btn btn-default">?</a>
+    <div class="col-sm-6">
+      @php
+        $currentlicense = "CC0";
+        $currentversion = config('app.creativecommons_version')[0];
+        if (isset($project)) {
+           if (null != $project->license) {
+             $license = explode(' ',$project->license);
+             $currentlicense = $license[0];
+             $currentversion = $license[1];
+           }
+        }
+        $oldlicense = old('license', $currentlicense);
+        $oldversion = old('version',$currentversion);
+        $readonly = null;
+        if (count(config('app.creativecommons_version'))==1) {
+          $readonly = 'readonly';
+        }
+        $title_mandatory = null;
+        $show_policy = 'hidden';
+        if ($oldlicense != "CC0") {
+          $title_mandatory = 'mandatory';
+          $show_policy = '';
+        }
+
+      @endphp
+      <select name="license" id="license" class="form-control" >
+        @foreach (config('app.creativecommons_licenses') as $level)
+          <option value="{{ $level }}" {{ $level == $oldlicense ? 'selected' : '' }}>
+            {{$level}} - @lang('levels.' . $level)
+          </option>
+        @endforeach
+      </select>
+      <strong>version:</strong>
+      @if (null != $readonly)
+        <input type="hidden" name="license_version" value=" {{ $oldversion }}">
+        {{ $oldversion }}
+      @else
+      <select name="license_version" class="form-control" {{ $readonly }}>
+        @foreach (config('app.creativecommons_version') as $version)
+          <option value="{{ $version }}" {{ $version == $oldversion ? 'selected' : '' }}>
+            {{ $version}}
+          </option>
+        @endforeach
+      </select>
+      @endif
+    </div>
+    <div class="col-sm-12">
+      <div id="creativecommons_licenses_hint" class="panel-collapse collapse">
+        <br>
+        @lang('messages.creativecommons_project_hint')
+      </div>
+    </div>
+</div>
+
+<!-- title is, like for datasets, to generate citations. For occurrence data within projects -->
+<div class="form-group">
+    <label for="title" class="col-sm-3 control-label {{ $title_mandatory }}" id='titlelabel'>
+      @lang('messages.title')
+    </label>
+    <a data-toggle="collapse" href="#project_title_hint" class="btn btn-default">?</a>
+    <div class="col-sm-6">
+      <input type="text" name="title" id="title" class="form-control" value="{{ old('title', isset($project) ? $project->title : null) }}" maxlength="191">
+    </div>
+    <div class="col-sm-12">
+      <div id="project_title_hint" class="panel-collapse collapse">
+         @lang('messages.project_title_hint')
+       </div>
+     </div>
+</div>
+
+
+<!-- title is, like for datasets, to generate citations. For occurrence data within projects -->
+<div class="form-group">
+  <label for="authors" class="col-sm-3 control-label {{ $title_mandatory}}" id='authorslabel'>
+  @lang('messages.authors')
+  </label>
+  <a data-toggle="collapse" href="#authors_hint" class="btn btn-default">?</a>
+  <div class="col-sm-6">
+    {!! Multiselect::autocomplete('authors',
+    $persons->pluck('abbreviation', 'id'),
+    isset($project->authors) ? $project->authors->pluck('person_id') : '',
+    ['class' => 'multiselect form-control'])
+    !!}
+  </div>
+  <div class="col-sm-12">
+    <div id="authors_hint" class="panel-collapse collapse">
+      @lang('messages.project_authors_hint')
+    </div>
+  </div>
+</div>
+
+<!-- following creative commons, filling here implicate the dataset has sui generis database rights, which will be indicated here -->
+<div class="form-group" id='show_policy' {{ $show_policy }}>
+    <label for="policy" class="col-sm-3 control-label">
+      @lang('messages.data_policy')
+    </label>
+    <a data-toggle="collapse" href="#data_policy" class="btn btn-default">?</a>
+    <div class="col-sm-6">
+      <textarea name="policy" id="policy" class="form-control">{{ old('policy', isset($project) ? $project->policy : null) }}</textarea>
+     </div>
+    <div class="col-sm-12">
+    <div id="data_policy" class="panel-collapse collapse">
+      @lang('messages.data_policy_hint')
     </div>
   </div>
 </div>
@@ -175,40 +283,89 @@
      ['class' => 'multiselect form-control']
 ) !!}
 </div>
-</div><div class="form-group">
-<label for="collabs" class="col-sm-3 control-label">
-@lang('messages.viewers')
-</label>
-<div class="col-sm-6">
-{!! Multiselect::autocomplete(
-    'viewers',
-    $allusers->pluck('email', 'id'), isset($project) ? $project->viewers->pluck('id') : [],
-     ['class' => 'multiselect form-control']
-) !!}
 </div>
-<div class="col-sm-12">
-    <div id="hint2" class="panel-collapse collapse">
-	@lang('messages.project_admins_hint')
+
+<div class="form-group" id='project_viewers' {{ $show_project_viewers }} >
+  <label for="collabs" class="col-sm-3 control-label">
+    @lang('messages.viewers')
+  </label>
+  <div class="col-sm-6">
+    {!! Multiselect::autocomplete(
+      'viewers',
+      $allusers->pluck('email', 'id'), isset($project) ? $project->viewers->pluck('id') : [],
+      ['class' => 'multiselect form-control']
+      ) !!}
     </div>
+    <div class="col-sm-12">
+      <div id="hint2" class="panel-collapse collapse">
+	       @lang('messages.project_admins_hint')
+       </div>
+     </div>
 </div>
+
+<div class="form-group">
+  <div class="col-sm-offset-3 col-sm-6">
+    <button type="submit" class="btn btn-success" name="submit" value="submit">
+      <i class="fa fa-btn fa-plus"></i>
+      @lang('messages.add')
+    </button>
+    <a href="{{url()->previous()}}" class="btn btn-warning">
+      <i class="fa fa-btn fa-plus"></i>
+      @lang('messages.back')
+    </a>
+  </div>
 </div>
-		        <div class="form-group">
-			    <div class="col-sm-offset-3 col-sm-6">
-				<button type="submit" class="btn btn-success" name="submit" value="submit">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.add')
-				</button>
-				<a href="{{url()->previous()}}" class="btn btn-warning">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.back')
-				</a>
-			    </div>
-			</div>
-		    </form>
+
+
+        </form>
         </div>
     </div>
 @endsection
 @push ('scripts')
+<script>
+$(document).ready(function() {
+
+/* show or hide elements depending on type of privacy */
+$('#privacy').on('change',function() {
+    var privacy = $('#privacy option:selected').val();
+    if (privacy == {{ App\Dataset::PRIVACY_AUTH}}) {
+        $('#project_viewers').show();
+        $('#licenselabel').removeClass('mandatory');
+
+        //$('#titlelabel').removeClass('mandatory');
+        //$('#authorslabel').removeClass('mandatory');
+    } else {
+        //$('#authorslabel').addClass('mandatory');
+        $('#licenselabel').addClass('mandatory');
+        //$('#titlelabel').addClass('mandatory');
+        $('#project_viewers').hide();
+    }
+});
+
+
+/* if license is different than public domain, title and authors must be informed */
+/* and sui generis database policies may be included */
+$('#license').on('change',function() {
+    var license = $('#license option:selected').val();
+    if (license == "CC0") {
+        $('#titlelabel').removeClass('mandatory');
+        $('#authorslabel').removeClass('mandatory');
+        $('#policy').val(null);
+        $('#show_policy').hide();
+    } else {
+        $('#authorslabel').addClass('mandatory');
+        $('#titlelabel').addClass('mandatory');
+        $('#show_policy').show();
+    }
+});
+
+
+});
+
+</script>
+
+
+{!! Multiselect::scripts('authors', url('persons/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 {!! Multiselect::scripts('admins', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 {!! Multiselect::scripts('collabs', url('users/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 {!! Multiselect::scripts('viewers', url('users/autocomplete_all'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}

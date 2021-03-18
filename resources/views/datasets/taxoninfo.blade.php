@@ -3,9 +3,9 @@
   $taxonomic_summary = $dataset->taxonomic_summary();
 @endphp
 <div class='panel-heading'>
-  <strong>
+  <h4>
     @lang('messages.identifications_summary')
-  </strong>
+  </h4>
 </div>
 @if(!is_null($taxonomic_summary) or !is_null($identification_summary))
   <div class='panel-body'>

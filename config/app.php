@@ -113,6 +113,23 @@ return [
 
     'valid_abbreviation' => '/^[A-z,\. -]+$/',
 
+    /*
+     * This string represents the base name for Point locations included as Individual coordinates
+     */
+    'unnamedPoint_basename' => env('unnamedPoint_basename', 'UnnamedPoint'),
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Licenses
+    |--------------------------------------------------------------------------
+    | The array regulate which of the CreativeCommons Licenses
+    | shall be made avaliable for Datasets, Pictures and Occurrence data in Projects.
+    | The version is informed separately
+    | Name for popus are defined in lang/levels
+    */
+    'creativecommons_licenses' => env('creativecommons_licenses', ['CC0','CC-BY','CC-BY-SA','CC-BY-ND','CC-BY-NC','CC-BY-NC-SA','CC-BY-NC-ND']),
+    'creativecommons_version' => env('creativecommons_version',['4.0']),
 
 
     /* API KEYS
@@ -300,5 +317,6 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
     ],
+
 
 ];

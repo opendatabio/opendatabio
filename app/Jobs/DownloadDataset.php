@@ -9,7 +9,7 @@ namespace App\Jobs;
 use App\Dataset;
 use App\Project;
 use App\Measurement;
-use App\Plant;
+use App\Individual;
 use App\Voucher;
 use App\Taxon;
 use App\Location;
@@ -71,7 +71,7 @@ class DownloadDataset extends AppJob
         $this->userjob->setProgressMax($nrecs);
 
         /* Empty arrays for associated models exports */
-        $measured_plants = array();
+        $measured_individuals = array();
         $measured_vouchers = array();
         $measured_taxons = array();
         $measured_locations = array();
@@ -87,8 +87,8 @@ class DownloadDataset extends AppJob
             $locations[] = $measurement->location_id;
             $measured_traits[] = $measurement->trait_id;
             $taxons[] = $measurement->taxon_id;
-            if ($measurement->measured_type == 'App\Plant') {
-              $measured_plants[] = $measurement->measured_id;
+            if ($measurement->measured_type == 'App\Individual') {
+              $measured_individuals[] = $measurement->measured_id;
             }
             if ($measurement->measured_type == 'App\Voucher') {
               $measured_vouchers[] = $measurement->measured_id;
@@ -116,7 +116,7 @@ class DownloadDataset extends AppJob
         }
 
         /* Unique related values */
-        $measured_plants = array_unique($measured_plants);
+        $measured_individuals = array_unique($measured_individuals);
         $measured_vouchers = array_unique($measured_vouchers);
         $measured_taxons = array_unique($measured_taxons);
         $measured_locations = array_unique($measured_locations);
@@ -127,36 +127,44 @@ class DownloadDataset extends AppJob
         $measured_locations = array_unique(array_merge($measured_locations,$locations));
 
         /* Define progress for rest */
-        $totals = count($measured_plants)+count($measured_vouchers)+count($measured_taxons)+count($measured_locations);
+        $totals = count($measured_individuals)+count($measured_vouchers)+count($measured_taxons)+count($measured_locations);
         $step = ceil($totals/50);
         $progress_echo = range(1,$totals,$step);
         $progress_idx = 1;
         //$progress = round(100 * $this->userjob->progress / $this->userjob->progress_max);
 
 
-        /* Measured Plants */
-        if (count($measured_plants)>0) {
+        /* Measured Individuals */
+        if (count($measured_individuals)>0) {
           //get these locations with stringfied geometries
-          $plants_chunk = array_chunk($measured_plants,10000);
+          $individuals_chunk = array_chunk($measured_individuals,10000);
 
           //save locations to file
-          $filename = $basename."_measuredPlants.csv";
+          $filename = $basename."_measuredIndividuals.csv";
           $files[] = $filename;
           $path = 'downloads_temp/'.$filename;
           $lwriter = SimpleExcelWriter::create(public_path($path));
 
 
 
-          $plant_fields = ['id','fullName', 'taxonName', 'taxonFamily','location_id', 'locationName', 'locationParentName','tag', 'date', 'notes', 'relativePosition','xInParentLocation','yInParentLocation','projectName'];
+          //$individual_fields = ['id','fullName', 'taxonName', 'taxonFamily','location_id', 'locationName', 'locationParentName','tag', 'date', 'notes', 'relativePosition','xInParentLocation','yInParentLocation','projectName'];
 
-          foreach($plants_chunk as $chunk) {
-            $plants = Plant::select('*', DB::raw('AsText(plants.relative_position) as relativePosition'))->whereIn('id',$chunk)->cursor();
+          $individual_fields = ['id','fullname','main_collector','individual_tagnumber','all_collectors','individual_date','taxon_name','taxon_name_modifier','taxon_name_with_author','taxon_family','identification_date','identified_by','identification_notes','location_name','location_fullname','location_parent','location_longitude','location_latitude','coordinates_precision','project_name','notes','x_in_parent_location','y_in_parent_location','relativePosition','x','y','angle','distance'];
+          foreach($individuals_chunk as $chunk) {
+            $individuals = Individual::select(
+                'individuals.id',
+                'individuals.tag as individual_tagnumber',
+                'individuals.project_id',
+                'individuals.date as individual_date',
+                'individuals.notes',
+                DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),
+                DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'))->whereIn('id',$chunk)->cursor();
 
-            foreach ($plants as $plant) {
+            foreach ($individuals as $individual) {
               if (in_array($progress_idx,$progress_echo)) {
                 $this->userjob->tickProgress();
               }
-              $lwriter->addRow($plant->only($plant_fields));
+              $lwriter->addRow($individual->only($individual_fields));
               $progress_idx = $progress_idx++;
             }
           }
@@ -173,7 +181,8 @@ class DownloadDataset extends AppJob
           $files[] = $filename;
           $path = 'downloads_temp/'.$filename;
           $lwriter = SimpleExcelWriter::create(public_path($path));
-          $voucher_fields = ['fullname', 'taxonName', 'id', 'parent_type', 'parent_id', 'date', 'notes', 'project_id'];
+          //$voucher_fields = ['fullname', 'taxonName', 'id', 'parent_type', 'parent_id', 'date', 'notes', 'project_id'];
+          $voucher_fields = ['id','fullname', "individual_id",'individual_fullname', 'biocollection_acronym','is_type','biocollection_number','main_collector','collector_number','all_collectors','collection_date','taxon_name','taxon_name_modifier','taxon_name_with_author','taxon_family','identification_date','identified_by','identification_notes','location_name','location_fullname','longitude','latitude','coordinates_precision','project_name','notes'];
 
           foreach($vouchers_chunk as $chunk) {
             $vouchers = Voucher::select('*')->whereIn('id',$chunk)->cursor();
@@ -200,7 +209,7 @@ class DownloadDataset extends AppJob
           //save
           $taxons = Taxon::select('*',DB::raw('odb_txname(name, level, parent_id) as fullname'))->whereIn('id',$measured_taxons)->cursor();
 
-          $taxon_fields = ['id','fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','author_id','family','notes'];
+          $taxon_fields =  ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','parent_name','author_id','family','notes'];
           foreach ($taxons as $taxon) {
             if (in_array($progress_idx,$progress_echo)) {
               $this->userjob->tickProgress();
@@ -222,7 +231,7 @@ class DownloadDataset extends AppJob
           $measured_locations = array_merge($measured_locations,$locations_parents);
 
           //get these locations with stringfied geometries
-          $locations = Location::select('*')->whereIn('id',$locations)->withGeom()->orderBy('adm_level')->cursor();
+          $locations = Location::select('*')->whereIn('id',$locations)->withGeom()->noWorld()->orderBy('adm_level')->cursor();
 
           //save locations to file
           $filename = 'dataset_'.Auth::user()->id.'_'.$data['id']."_measuredLocations.csv";
@@ -234,6 +243,8 @@ class DownloadDataset extends AppJob
           $progress = round(100 * $this->userjob->progress / $this->userjob->progress_max);
 
           $loc_fields = ['id', 'name', 'levelName', 'parentName','parent_id','x','y','startx','starty','centroid_raw','area','geom', 'distance','full_name'];
+
+
           foreach ($locations as $location) {
             if (in_array($progress_idx,$progress_echo)) {
               $this->userjob->tickProgress();
@@ -247,7 +258,7 @@ class DownloadDataset extends AppJob
         /* PREP TRAIT DEFINITIONS AS METADATA TABLE */
         if (count($measured_traits)>0) {
           //get these locations with stringfied geometries
-          $odbtraits = ODBTrait::select('*',DB::raw('odb_traittypename(type) as trait_type'))->whereIn('id',$measured_traits)->cursor();
+          $odbtraits = ODBTrait::select('*',DB::raw('odb_traittypename(type) as typename'))->whereIn('id',$measured_traits)->cursor();
 
           //save locations to file
           $filename = $basename."_measuredTraits.csv";
@@ -255,15 +266,38 @@ class DownloadDataset extends AppJob
           $path = 'downloads_temp/'.$filename;
           $lwriter = SimpleExcelWriter::create(public_path($path));
 
+          $catfilename = $basename."_measuredTraits_categories.csv";
+          $catpath = 'downloads_temp/'.$catfilename;
+          $lwritercats = SimpleExcelWriter::create(public_path($catpath));
+          $hascategories = false;
 
           $progress = round(100 * $this->userjob->progress / $this->userjob->progress_max);
-          $odbtrait_fields = ['id', 'trait_type','export_name','unit','link_type','name','description'];
+          //$odbtrait_fields = ['id', 'trait_type','export_name','unit','link_type','name','description'];
+          $odbtrait_fields = ['id', 'type', 'typename','export_name','unit', 'range_min', 'range_max', 'link_type','value_length','name','description','objects'];
+          $odbcat_fields = ['name','description','lang','rank'];
           foreach ($odbtraits as $odbtrait) {
             if (in_array($progress_idx,$progress_echo)) {
               $this->userjob->tickProgress();
             }
             $lwriter->addRow($odbtrait->only($odbtrait_fields));
+            //write categories into a separate file
+            $cats = $odbtrait->categories;
+            if ($cats->count()) {
+              $categories = $cats->map(function($cat) { return ['rank' => $cat->rank, 'name' => $cat->name, 'description' => $cat->description];})->toArray();
+              foreach ($categories as $value) {
+                $value['trait_export_name'] = $odbtrait->export_name;
+                $value['trait_id'] = $odbtrait->id;
+                $lwritercats->addRow($value);
+              }
+              $hascategories = true;
+            }
             $progress_idx = $progress_idx++;
+          }
+
+          if ($hascategories) {
+            $files[] = $catfilename;
+          } else {
+            unlink(public_path($catpath));
           }
         }
 
@@ -275,6 +309,8 @@ class DownloadDataset extends AppJob
         $readme .= Lang::get('messages.downloaded')." - ".now()." - ";
         $readme .= env('APP_URL')."\n";
         $readme .= "\n================\n";
+
+        /* who are the administrators */
         $readme .= Lang::get('messages.admins').":\n";
         foreach($dataset->users()->wherePivot('access_level', '=',Project::ADMIN)->get() as $admin) {
           if ($admin->person->fullname) {
@@ -285,15 +321,20 @@ class DownloadDataset extends AppJob
           $readme .= "\t".$adm."\n";
         }
         $readme .= "\n\n================\n";
-        if ($dataset->notes) {
-          $readme .=  Lang::get('messages.notes').": ".$dataset->notes;
-          $readme .= "\n\n================\n";
-        }
 
-        if ($dataset->policy) {
-          $readme .=  Lang::get('messages.dataset_policy').": ".$dataset->policy;
-          $readme .= "\n\n================\n";
+        $readme .= Lang::get('messages.howtocite').":\n";
+        $readme .= $dataset->citation."\n\n";
+        $readme .= $dataset->bibtex."\n\n";
+        $readme .= "\n\n================\n";
+
+        if ($dataset->license) {
+          $readme .=  Lang::get('messages.license').":\n".$dataset->license;
         }
+        if ($dataset->policy) {
+          $readme .=  "\nBut some restrictions may apply. ".Lang::get('messages.data_policy').":\n".$dataset->policy;
+        }
+        $readme .= "\n\n================\n";
+
         if($dataset->references->where('mandatory',1)->count()) {
           $readme .=  Lang::get('messages.dataset_bibreferences_mandatory').": \n";
           foreach($dataset->references->where('mandatory',1) as $reference)
@@ -307,8 +348,6 @@ class DownloadDataset extends AppJob
         foreach($files as $file) {
           $readme .=  $file." \n";
         }
-        $readme .= "\n\n================\n";
-        $readme .= Lang::get('messages.dataset_request_distribution_agreement');
         $readme .= "\n\n================\n";
         $filename = "README_".$basename.".txt";
         $files[] = $filename;
@@ -351,8 +390,6 @@ class DownloadDataset extends AppJob
             }
         }
 
-
-
         //LOG THE FILE FOR USER DOWNLOAD
         $file = "Files for dataset <strong>".$datasetname."</strong> prepared ".$today." ";
         $tolog = $file."<br><a href='".url('downloads_temp/'.$zipFileName)."' download >".$zipFileName."</a><br>".Lang::get('messages.dataset_download_file_tip');
@@ -372,26 +409,29 @@ class DownloadDataset extends AppJob
           ->performedOn(Dataset::find($data['id']))
           ->withProperties($tolog)
           ->log('Authorized download');
-
         $this->userjob->progress = $this->userjob->progress_max;
         $this->userjob->save();
 
         //send email to user
-        $to_email = Auth::user()->email;
-        if (isset(Auth::user()->person->full_name)) {
-          $to_name = Auth::user()->person->full_name;
-        } else {
-          $to_name = $to_email;
+        if (null != env('MAIL_USERNAME')) {
+          $to_email = Auth::user()->email;
+          if (isset(Auth::user()->person->full_name)) {
+            $to_name = Auth::user()->person->full_name;
+          } else {
+            $to_name = $to_email;
+          }
+          $data = array(
+            'to_name' => $to_name,
+            'content' => Lang::get('messages.dataset_downloaded_message').":<br><br>".Lang::get('messages.dataset').":  &nbsp;<strong>".$datasetname."</strong> [".$today.",  @ Job Id# ".$this->userjob->id."].<br>URL:&nbsp;<a href='".env('APP_URL')."'>".env('APP_URL')."</a><br><br>".Lang::get('messages.dataset_download_file_tip')
+          );
+          try {
+            Mail::send('common.email', $data, function($message) use ($to_name, $to_email) {
+              $message->to($to_email, $to_name)->subject(Lang::get('messages.dataset_request').' - '.env('APP_NAME'));
+            });
+          } catch (\Exception $e) {
+            $tolog = "Error: Could not send email";
+            $this->appendLog($tolog);
+          }
         }
-        $data = array(
-          'to_name' => $to_name,
-          'content' => Lang::get('messages.dataset_downloaded_message').":<br><br>".Lang::get('messages.dataset').":  &nbsp;<strong>".$datasetname."</strong> [".$today.",  @ Job Id# ".$this->userjob->id."].<br>URL:&nbsp;<a href='".env('APP_URL')."'>".env('APP_URL')."</a><br><br>".Lang::get('messages.dataset_download_file_tip')
-        );
-        Mail::send('common.email', $data, function($message) use ($to_name, $to_email) {
-          $message->to($to_email, $to_name)->subject(Lang::get('messages.dataset_request').' - '.env('APP_NAME'));
-        });
-
-
-
       }
 }

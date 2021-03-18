@@ -3,9 +3,9 @@
   $taxonomic_summary = $project->taxonomic_summary();
 @endphp
 <div class='panel-heading'>
-  <strong>
+  <h4>
     @lang('messages.identifications_summary')
-  </strong>
+  </h4>
 </div>
 <div class='panel-body'>
 

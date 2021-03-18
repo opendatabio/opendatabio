@@ -10,15 +10,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\DataTables\DatasetsDataTable;
-use App\DataTables\ActivityDataTable;
 use App\Jobs\DownloadDataset;
 use App\Tag;
 use App\BibReference;
 use App\Dataset;
 use App\Measurement;
 use App\User;
+use App\Collector;
 use App\Project;
-use Activity;
+use App\Person;
 use DB;
 use Auth;
 use Lang;
@@ -26,6 +26,10 @@ use Gate;
 use Mail;
 use App\UserJob;
 use Log;
+
+use Activity;
+use App\ActivityFunctions;
+use App\DataTables\ActivityDataTable;
 
 
 class DatasetController extends Controller
@@ -74,9 +78,10 @@ class DatasetController extends Controller
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
         $tags = Tag::all();
+        $persons = Person::all();
         $references = BibReference::select('*',DB::raw('odb_bibkey(bibtex) as bibkey'))->get();
 
-        return view('datasets.create', compact('fullusers', 'allusers', 'tags', 'references'));
+        return view('datasets.create', compact('fullusers', 'allusers', 'tags', 'references','persons'));
     }
 
     /**
@@ -92,15 +97,26 @@ class DatasetController extends Controller
         $fullusers = User::where('access_level', '=', User::USER)
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
+        $licenses = implode(',',config('app.creativecommons_licenses'));
         $this->validate($request, [
-            'name' => 'required|string|max:191',
+            'name' => 'required|string|max:50',
             'privacy' => 'required|integer',
             'admins' => 'required|array|min:1',
             'admins.*' => 'numeric|in:'.$fullusers,
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:'.$fullusers,
+            'title' => 'nullable|string|max:191|required_if:privacy,'.Dataset::PRIVACY_PUBLIC,
+            'license' => 'nullable|string|max:191|in:'.$licenses.'|required_if:privacy,'.Dataset::PRIVACY_PUBLIC,
         ]);
-        $dataset = Dataset::create($request->only(['name', 'description', 'privacy','policy','metadata']));
+        //add version to license field
+        $newlicense = null;
+        if (isset($request->license)) {
+          $version = isset($request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
+          $newlicense = $request->license." ".$version;
+        }
+        $data = $request->only(['name', 'description', 'privacy', 'policy','metadata','title','license']);
+        $data['license'] = $newlicense;
+        $dataset = Dataset::create($data);
         $dataset->setusers($request->viewers, $request->collabs, $request->admins);
         $dataset->tags()->attach($request->tags);
 
@@ -129,7 +145,16 @@ class DatasetController extends Controller
           $dataset->references()->attach($references);
         }
 
-
+        //authors
+        $first = true;
+        foreach ($request->authors as $author) {
+            $theauthor = new Collector(['person_id' => $author]);
+            if ($first) {
+                $theauthor->main = 1;
+            }
+            $dataset->authors()->save($theauthor);
+            $first = false;
+        }
 
         return redirect('datasets/'.$dataset->id)->withStatus(Lang::get('messages.stored'));
     }
@@ -167,8 +192,9 @@ class DatasetController extends Controller
         $dataset = Dataset::findOrFail($id);
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
+        $persons = Person::all();
 
-        return view('datasets.create', compact('dataset', 'fullusers', 'allusers', 'tags', 'references'));
+        return view('datasets.create', compact('dataset', 'fullusers', 'allusers', 'tags', 'references','persons'));
     }
 
     /**
@@ -181,20 +207,34 @@ class DatasetController extends Controller
      */
     public function update(Request $request, $id)
     {
+
+
+
         $dataset = Dataset::findOrFail($id);
         $this->authorize('update', $dataset);
         $fullusers = User::where('access_level', '=', User::USER)
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
+        $licenses = implode(',',config('app.creativecommons_licenses'));
         $this->validate($request, [
-            'name' => 'required|string|max:191',
+            'name' => 'required|string|max:50',
             'privacy' => 'required|integer',
             'admins' => 'required|array|min:1',
             'admins.*' => 'numeric|in:'.$fullusers,
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:'.$fullusers,
+            'title' => 'nullable|string|max:191|required_if:privacy,'.Dataset::PRIVACY_PUBLIC,
+            'license' => 'nullable|string|max:191|in:'.$licenses.'|required_if:privacy,'.Dataset::PRIVACY_PUBLIC,
         ]);
-        $dataset->update($request->only(['name', 'description', 'privacy', 'policy','metadata']));
+        //add version to license field
+        $newlicense = null;
+        if (isset($request->license)) {
+          $version = isset($request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
+          $newlicense = $request->license." ".$version;
+        }
+        $data = $request->only(['name', 'description', 'privacy', 'policy','metadata','title','license']);
+        $data['license'] = $newlicense;
+        $dataset->update($data);
         $dataset->setusers($request->viewers, $request->collabs, $request->admins);
         $dataset->tags()->sync($request->tags);
         /*mandatory references */
@@ -222,6 +262,26 @@ class DatasetController extends Controller
           $dataset->references()->sync($references);
         }
 
+        //did authors changed?
+        $current = $dataset->authors->pluck('person_id');
+        $detach = $current->diff($request->authors)->all();
+        $attach = collect($request->authors)->diff($current)->all();
+        if (count($detach) or count($attach)) {
+            //delete old authors
+            $dataset->authors()->delete();
+            //save authors and identify first author
+            $first = true;
+            foreach ($request->authors as $author) {
+                $theauthor = new Collector(['person_id' => $author]);
+                if ($first) {
+                    $theauthor->main = 1;
+                }
+                $dataset->authors()->save($theauthor);
+                $first = false;
+            }
+        }
+        //log authors changed if any
+        ActivityFunctions::logCustomPivotChanges($dataset,$current->all(),$request->authors,'dataset','authors updated',$pivotkey='person');
 
         return redirect('datasets/'.$id)->withStatus(Lang::get('messages.saved'));
     }
@@ -249,34 +309,47 @@ class DatasetController extends Controller
     public function datasetRequestForm($id)
     {
         $dataset = Dataset::findOrFail($id);
-        if (Auth::user()) {
+        //if (Auth::user()) {
           return view('datasets.export', compact('dataset'));
-        } else {
-          return redirect('login')->withStatus(Lang::get('messages.dataset_request_nouser'));
-        }
+        //} else {
+          //return redirect('login')->withStatus(Lang::get('messages.dataset_request_nouser'));
+        //}
     }
 
     //send email to user
     public function sendEmail($id,Request $request)
     {
+        if (!Auth::user() and !isset($request->email)) {
+          $msg = Lang::get('messages.email_mandatory');
+          return redirect('datasets/'.$id)->withStatus($msg);
+        }
+
         $dataset = Dataset::findOrFail($id);
 
         //send to the first dataset admin with cc to rest
-        $admins = $dataset->admins()->get()->pluck('email')->toArray();
+        $admins = $dataset->admins()->pluck('email')->toArray();
+        $person = $dataset->admins()->first()->person;
         $to_email = $admins[0];
-        if (isset($dataset->admins()->get()->first()->person->fullname)) {
-            $to_name = $dataset->admins()->get()->first()->person->full_name;
+        if (isset($person)) {
+            $to_name = $person->full_name;
         } else {
             $to_name = $to_email;
         }
         //with copy cc to requester and other admins
-        $admins[0] = Auth::user()->email;
-        $cc_email = $admins;
-        if (isset(Auth::user()->person->fullname)) {
-          $from_name= Auth::user()->person->fullname;
+        if (Auth::user()) {
+          $from_email =  Auth::user()->email;
+          if (isset(Auth::user()->person)) {
+            $from_name= Auth::user()->person->fullname;
+          } else {
+            $from_name = Auth::user()->email;
+          }
         } else {
-          $from_name = Auth::user()->email;
+          $from_email = $request->email;
+          $from_name = $request->email;
         }
+        $admins[0] = $from_email;
+        $cc_email = $admins;
+
 
         //prep de content html to send as the email text
         $content = Lang::get('messages.dataset_request_to_admins')."  <strong>".$dataset->name."</strong> ".Lang::get('messages.from')."  <strong>".
@@ -286,8 +359,11 @@ class DatasetController extends Controller
         $content .= "<br>";
         $content .= "<strong>".Lang::get('messages.description')."</strong><br>".$request->dataset_use_description;
         $content .= "<br><hr>";
+        if (isset($dataset->license)) {
+          $content .= "<strong>".Lang::get('messages.license')."</strong><br>".$dataset->license;
+        }
         if (isset($dataset->policy)) {
-          $content .= "<strong>".Lang::get('messages.dataset_policy')."</strong><br>".$dataset->policy;
+          $content .= "<br><strong>".Lang::get('messages.data_policy')."</strong><br>".$dataset->policy;
         }
         if ($dataset->references->where('mandatory',1)->count()) {
          $content .= "<br><br><strong>".Lang::get('messages.dataset_bibreferences_mandatory')."</strong><ul>";
@@ -296,11 +372,13 @@ class DatasetController extends Controller
           }
           $content .= "</ul>";
         }
+        /*
         $content .= "<strong>".$from_name."</strong> ".Lang::get('messages.dataset_request_agreed_text').":<ul>";
         foreach($request->dataset_agreement as $value) {
           $content .=  "<li>".$value."</li>";
         }
         $content .= "</ul><hr>";
+        */
         $content .= "</ul><br><br>**".Lang::get('messages.no_reply_email')."**<br>";
         $subject = Lang::get('messages.dataset_request').' - '.$dataset->name.' - '.env('APP_NAME');
         $data = array(
@@ -308,11 +386,19 @@ class DatasetController extends Controller
           'content' => $content
         );
         //send email
-        Mail::send('common.email', $data, function($message) use ($to_name, $to_email, $subject,$cc_email) {
-            $message->to($to_email, $to_name)->cc($cc_email)->subject($subject);
-        });
+        try {
+          Mail::send('common.email', $data, function($message) use ($to_name, $to_email, $subject,$cc_email) {
+              $message->to($to_email, $to_name)->cc($cc_email)->subject($subject);
+          });
+        } catch (\Exception $e) {
+          $msg = Lang::get('messages.error_sending_email');
+          return redirect('datasets/'.$id)->withStatus($msg);
+        }
+
+
 
         //log dataset request for tracking use history
+        /*
         $logName  = 'dataset_requests';
         $tolog = [
             'attributes' => [
@@ -328,7 +414,7 @@ class DatasetController extends Controller
           ->performedOn($dataset)
           ->withProperties($tolog)
           ->log('Dataset request');
-
+        */
 
         //return to view with message
         $msg = Lang::get('messages.dataset_request_email_sent');

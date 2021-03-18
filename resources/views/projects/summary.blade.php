@@ -1,8 +1,8 @@
 @if(isset($project))
 <div class='panel-heading'>
-  <strong>
+  <h4>
     @lang('messages.project_summary')
-  </strong>
+  </h4>
 </div>
 <div class='panel-body'>
   <div class="col-sm-12">
@@ -16,16 +16,16 @@
     <tbody>
       <tr>
           <td class='table-text'>
-            @lang('messages.plants')
+            @lang('messages.individuals')
           </td>
           <td class='table-text'>
-              {{ $project->plantsCount() }}
+              {{ $project->individualsCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->plantsMeasurementsCount() }}
+              {{ $project->individualsMeasurementsCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->count_taxons('plants') }}
+              {{ $project->taxonsCount() }}
           </td>
       </tr>
       <tr>
@@ -39,7 +39,7 @@
               {{ $project->vouchersMeasurementsCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->count_taxons('vouchers') }}
+              
           </td>
       </tr>
     </tbody>
