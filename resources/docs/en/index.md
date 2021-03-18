@@ -1,5 +1,5 @@
 * ## [Home](Home)
-* ## API
+* ## Imports & Exports
   * [API Explained](API)
   * [API EndPoints](API#endpoints)
   * [API Tester](API-tester)
@@ -7,7 +7,7 @@
   * [**Model overview**](Home#data_model)
   * [**Core Objects**](Core-Objects)
       * [Location](Core-Objects#locations)
-      * [Plant](Core-Objects#plants)
+      * [Individual](Core-Objects#individuals)
       * [Voucher](Core-Objects#vouchers)
       * [Taxons](Core-Objects#taxons)
 
@@ -26,7 +26,7 @@
   * [**Data Access Objects**](Data-Access-Objects)
       * [Dataset](Data-Access-Objects#datasets)
       * [Projects](Data-Access-Objects#projects)
-      * [Herbarium](Data-Access-Objects#herbaria)
+      * [Biocollection](Data-Access-Objects#biocollections)
       * [User](Data-Access-Objects#users)      
       * [User Jobs](Data-Access-Objects#jobs)
 

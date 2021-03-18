@@ -31,7 +31,7 @@ The **Measurements** table stores the values for [traits](#traits) measured for 
 <a name="traits"></a>
 ***
 ## Trait Model
-The **ODBTrait** table represents user defined traits for which [Measurements](#measurements) by associated with one of the [core object](core_objects), either [Plant](core_objects#plants), [Voucher](core_objects#vouchers), [Location](core_objects#locations) or [Taxon](core_objects#taxons).
+The **ODBTrait** table represents user defined traits for which [Measurements](#measurements) by associated with one of the [core object](core_objects), either [Individual](core_objects#individuals), [Voucher](core_objects#vouchers), [Location](core_objects#locations) or [Taxon](core_objects#taxons).
 
 These custom traits give enormous flexibility to users to register their variables of interest. Clearly, such flexibility has a cost in data standardization, as the same variable may be registered as different Traits in any OpenDataBio installation. To minimize redundancy in trait ontology, users creating traits are warned about this issue and a list of similar traits is presented in case found by trait name comparison.
 
@@ -56,7 +56,7 @@ The Trait definition should be as specific as needed. The measurement of tree he
   * **Color** - for any color value, specified by the hexadecimal color code, allowing renderizations of the actual color.
   * **Link** - this is a special trait type in OpenDataBio to link to database object. Currently, only link to [Taxons](core_objects#taxons) and [Voucher](core_objects#vouchers) are  allowed as a link type traits. Use ex:  if you want to store species counts conducted in a [location](core_objects#location), you may create a Taxon link type or a Voucher link type if the taxon has vouchers. A measurement for such trait will have an optional `value` field to store the counts. This trait type  may also be used to specify the host of a parasite, or the number of predator insects.
   * **Spectral** - this is designed to accomodate Spectral data, composed of multiple absorbance or reflectance values for different wavenumbers.
-  * **GenBank** - this stores [GenBank](https://www.ncbi.nlm.nih.gov/genbank/) accessions numbers allowing to retrieve molecular data linked to plants or vouchers stored in the database through the [GenBank API Service](https://www.ncbi.nlm.nih.gov/home/develop/api/). **NOT YET IMPLEMENTED**
+  * **GenBank** - this stores [GenBank](https://www.ncbi.nlm.nih.gov/genbank/) accessions numbers allowing to retrieve molecular data linked to individuals or vouchers stored in the database through the [GenBank API Service](https://www.ncbi.nlm.nih.gov/home/develop/api/). **NOT YET IMPLEMENTED**
 * The Traits table contains fields that allow measurement value validation, depending on trait type:
   * `range_max` and `range_min` - if defined for Quantitative traits, measurements will have to fit the specified range;
   * `value_length` - mandatory for Spectral Traits only, validate the length (number of values) of a spectral measurement;

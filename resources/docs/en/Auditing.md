@@ -6,7 +6,7 @@ Modifications in database records are logged to the **activity_log** table. This
 1. The package stores changes as json in the `properties` field, which contains two elements: `attributes`  and `old`, which are basically the new vs old values that have been changed. This structure must be respected.
 1. Class **ActivityFunctions** contain custom functions to read the the properties Json record stored in the `activity_log` table and finds the values to show in the History datatable;
 1. Most changes are logged by the package as `trait` called within the Class. These allow to automatically log most updates and are all configured to log only the fields that have changed, not entire records (option `dirty`). Also record creation are not logged as activity, only changes.
-1. Some changes, like Plant and Vouchers collectors and identifications are manually logged, as they involve Pivot tables and logging is specified in the Controller files;
+1. Some changes, like Individual and Vouchers collectors and identifications are manually logged, as they involve Pivot tables and logging is specified in the Controller files;
 1. Logging contain a `log_name` field that groups log types and used to distinguish types of activity and usefull to search the History Datatable;
 1. Two special logging are also done:
   1. Any Dataset download is logged, so administrators may track who and when the dataset was downloaded;
@@ -35,8 +35,8 @@ The ActivityLog table has the following structure:
         "person_id":"2",
         "taxon_id":"1424",
         "modifier":"2",
-        "herbarium_id":"1",
-        "herbarium_reference":"1234",
+        "biocollection_id":"1",
+        "biocollection_reference":"1234",
         "notes":"A new fake note has been inserted",
         "date":"2020-02-08"},
     "old":{
@@ -44,9 +44,9 @@ The ActivityLog table has the following structure:
         "taxon_id":1413,
         "date":"1995-00-00",
         "modifier":0,
-        "herbarium_id":null,
+        "biocollection_id":null,
         "notes":null,
-        "herbarium_reference":null
+        "biocollection_reference":null
     }
 }
 

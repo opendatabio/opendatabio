@@ -1,7 +1,7 @@
 * [Data Access Objects](#)
   * [Datasets](#datasets)
   * [Projects](#projects)
-  * [Herbaria](#herbaria)
+  * [Biocollections](#biocollections)
   * [User](#users)      
   * [UserJobs](#jobs)      
 * [**Core Objects**](Core-Objects)
@@ -11,14 +11,14 @@
 
 # Data Access Objects (Management)
 
-[Datasets](#datasets) and [Projects](#projects) are a ways to group data in OpenDataBio and define data policy access to them. Datasets group [Measurements](Trait-Objects#measurements) and Projects group [Plants](Core-Objects#plants) and [Vouchers](Core-Objects#vouchers).
+[Datasets](#datasets) and [Projects](#projects) are a ways to group data in OpenDataBio and define data policy access to them. Datasets group [Measurements](Trait-Objects#measurements) and Projects group [Individuals](Core-Objects#individuals) and [Vouchers](Core-Objects#vouchers).
 
 Both must have at least one [User](#users) defined as `administrator`, who has total control over the project or dataset, including granting the following roles to other users: `administrator`, `collaborator` or `viewer`:
-    * **Collaborators** are able to insert and edit objects (Plants and Vouchers) into the Project, or Measurements into the Dataset, but are not able to delete records nor change the project's configuration.
+    * **Collaborators** are able to insert and edit objects (Individuals and Vouchers) into the Project, or Measurements into the Dataset, but are not able to delete records nor change the project's configuration.
     * **Viewers** have read-only access to the Project's or Dataset data, including downloads;
     * Only **Full Users** and **SuperAdmins** may be assigned as **administrators** or **collaborators**. Thus, if a user who was administrator or collaborator of a project is demoted to "Registered User", she or he will become a viewer in the project or dataset.
 
-[Herbaria](#herbaria) are Museum Collections, including Herbaria but not limited to plant Collections, to which [Vouchers](Core-Objects#vouchers) may belong to. It is included in this page because this model will be improved to permit such collections to use OpenDataBio for their data management and curational purposes. With this improvement the Herbaria Model will be renamed and gain additional management tools for Curators and museum staff. This will required the solving of possible conflicts of permissions with Projects privacy level.
+[Biocollections](#biocollections) are Museum Collections, including Biocollections but not limited to individual Collections, to which [Vouchers](Core-Objects#vouchers) may belong to. It is included in this page because this model will be improved to permit such collections to use OpenDataBio for their data management and curational purposes. With this improvement the Biocollections Model will be renamed and gain additional management tools for Curators and museum staff. This will required the solving of possible conflicts of permissions with Projects privacy level.
 
 
 <a name="datasets"></a>
@@ -39,33 +39,33 @@ Datasets may also have many [Bibliographic References](Auxiliary-Objects#bibrefe
 <img src="{{ asset('images/docs/dataset_bibreference.png') }}" alt="Datasets model" with=350>
 
 
-<a name="herbaria"></a>
+<a name="biocollections"></a>
 ***
-## Herbaria
-The **Herbarium** object currenlty only stores basic information about Biological Collections that may be used to link to [Vouchers](Core-Objects#voucher), to indicate in which Biological Collections the voucher is deposited. The Herbarium object may be an Herbarium registered in the Index Herbariorum (http://sweetgum.nybg.org/science/ih/) or any other Museum Collection, formal or informal.  *Data access:* only [SuperAdmins](#users) can register or remove this entities.
+## Biocollections
+The **Biocollection** object currenlty only stores basic information about Biological Collections that may be used to link to [Vouchers](Core-Objects#voucher), to indicate in which Biological Collections the voucher is deposited. The Biocollection object may be an Biocollection registered in the Index Herbariorum (http://sweetgum.nybg.org/science/ih/) or any other Museum Collection, formal or informal.  *Data access:* only [SuperAdmins](#users) can register or remove this entities.
 
-The Herbarium object also interacts with the [Person](Auxiliary-Objects#persons) model. When a Person is linked to an herbarium it will be listed as a taxonomic specialist.
+The Biocollection object also interacts with the [Person](Auxiliary-Objects#persons) model. When a Person is linked to an biocollection it will be listed as a taxonomic specialist.
 
-**Herbaria will renamed to a generic name to be more clear that it also allow the registration of non-plant collections. It will also be improved to permit such collections to use the OpenDataBio system to manage their vouchers (loans, donations, etc).**
-
-
-![](https://github.com/opendatabio/datamodel/blob/master/herbaria_model.png)
-<img src="{{ asset('images/docs/herbaria_model.png') }}" alt="Datasets model" with=350>
+**Biocollections will renamed to a generic name to be more clear that it also allow the registration of non-individual collections. It will also be improved to permit such collections to use the OpenDataBio system to manage their vouchers (loans, donations, etc).**
 
 
-**Data Access** - only administrators can register new Herbaria and delete unused herbarium. Updates are not yet implemented.
+![](https://github.com/opendatabio/datamodel/blob/master/biocollections_model.png)
+<img src="{{ asset('images/docs/biocollections_model.png') }}" alt="Datasets model" with=350>
+
+
+**Data Access** - only administrators can register new Biocollections and delete unused biocollection. Updates are not yet implemented.
 
 <a name="projects"></a>
 ***
 ## Projects
-The **Project** model groups [Plants](Core-Objects#plants) and [Vouchers](Core-Objects#vouchers) and interacts with [Users](#users) in the same way as Datasets, having  `administrators`, `collaborators` or `viewers` users. Administrators may set the `privacy level` to *public access*, *restricted to registered users* or *restricted to authorized users*, which controls the data for the Plants and Vouchers objects belonging to the Project.
+The **Project** model groups [Individuals](Core-Objects#individuals) and [Vouchers](Core-Objects#vouchers) and interacts with [Users](#users) in the same way as Datasets, having  `administrators`, `collaborators` or `viewers` users. Administrators may set the `privacy level` to *public access*, *restricted to registered users* or *restricted to authorized users*, which controls the data for the Individuals and Vouchers objects belonging to the Project.
 
 
 ![](https://github.com/opendatabio/datamodel/blob/master/project_model.png)
 <img src="{{ asset('images/docs/project_model.png') }}" alt="Projects model" with=350>
 
 
-**Data access**: Measurements related to Plants or Vouchers in a Project should be accessible to users having access to datasets with such measurements. The most restricted policy will be applied when they conflict. Datasets are independent from Projects and may aggregate Measurements from plants and vouchers belonging to different projects. To avoid such conflict between Project and Dataset policies, consider defining a **public access**  policy to Projects as soon as possible as they do not control measurements.
+**Data access**: Measurements related to Individuals or Vouchers in a Project should be accessible to users having access to datasets with such measurements. The most restricted policy will be applied when they conflict. Datasets are independent from Projects and may aggregate Measurements from individuals and vouchers belonging to different projects. To avoid such conflict between Project and Dataset policies, consider defining a **public access**  policy to Projects as soon as possible as they do not control measurements.
 
 
 <a name="users"></a>
@@ -85,7 +85,7 @@ There are three possible **access levels** for a user:
 Each user is assigned to the **registered user** level when she or he registers in an OpenDataBio system. After that, a **SuperAdmin** may promote her/him to Full User or SuperAdmin. SuperAdmins also have the ability to edit other users and remove them from the database.
 
 
-Every registered user is created along with a restricted Project and Dataset,  which are referred to as her **user Workspace**. This allows users to import plant and voucher data before incorporating them into a larger project. [TO IMPLEMENT: export batches of objects from one project to another].
+Every registered user is created along with a restricted Project and Dataset,  which are referred to as her **user Workspace**. This allows users to import individual and voucher data before incorporating them into a larger project. [TO IMPLEMENT: export batches of objects from one project to another].
 
 
 **Data Access**:users are created upon registration. Only administrators can update and delete user records.

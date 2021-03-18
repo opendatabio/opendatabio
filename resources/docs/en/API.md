@@ -3,12 +3,12 @@
 - [API EndPoints](#endpoints)
   - [BibReferences EndPoint](#endpoint_bibreferences)
   - [Datasets EndPoint](#endpoint_datasets)
-  - [Herbaria EndPoint](#endpoint_herbaria)
+  - [Biocollections EndPoint](#endpoint_biocollections)
   - [Locations EndPoint](#endpoint_locations)
   - [Language EndPoint](#endpoint_languages)
   - [Measurements EndPoint](#endpoint_measurements)
   - [Persons EndPoint](#endpoint_persons)
-  - [Plants EndPoint](#endpoint_plants)
+  - [Individuals EndPoint](#endpoint_individuals)
   - [Projects EndPoint](#endpoint_projects)
   - [Taxons EndPoint](#endpoint_taxons)
   - [Traits EndPoint](#endpoint_traits)
@@ -44,7 +44,7 @@ The API call exemplified above can be entered in a browser, by using the full UR
 Authentication is done using an `API token`, that can be found under your user profile on the web interface. Authentication is required, so only registered users can access the API. The token is assigned to a single database user, and should not be shared, exposed, e-mailed or stored in version controls. To authenticate against the OpenDataBio API, use the token in the "Authorization" header of the API request. When using the R client, pass the token to the `odb_config` function `cfg = odb_config(token="your-token-here")`.
 
 
-Users will only have access to the data for which the user has permission and to, or any data with public access in the database, which by default includes locations, taxons, bibliographic references, persons and traits. Measurements, plants, and Vouchers access depends on permissions understood by the users token.
+Users will only have access to the data for which the user has permission and to, or any data with public access in the database, which by default includes locations, taxons, bibliographic references, persons and traits. Measurements, individuals, and Vouchers access depends on permissions understood by the users token.
 
 <a name="api_versions"></a>
 ***
@@ -76,15 +76,15 @@ Most Endpoints accept all the common parameters described below. They may also a
 | [/](#endpoint_test) | `GET` | Tests your access | none |
 | [bibreferences](#endpoint_bibreferences) | `GET` | Lists of bibliographic references | `id`, `bibkey` |
 | [datasets](#endpoint_datasets) | `GET` | Lists registered datasets | `id` only|
-| [herbaria](#endpoint_herbaria) | `GET` | List of Herbaria and other vouchers Repositories |  `id` only |
-| [measurements](#endpoint_measurements) | `GET` | Lists Measurements | `id`, `taxon`,`dataset`,`trait`,`plant`,`voucher`,`location`,`limit`,`offset`|
+| [biocollections](#endpoint_biocollections) | `GET` | List of Biocollections and other vouchers Repositories |  `id` only |
+| [measurements](#endpoint_measurements) | `GET` | Lists Measurements | `id`, `taxon`,`dataset`,`trait`,`individual`,`voucher`,`location`,`limit`,`offset`|
 | [locations](#endpoint_locations) | `GET` | Lists locations | `root`, `id`, `parent_id`,`adm_level`, `name`, `limit`, `querytype`, `lat`, `long` |
 | [persons](#endpoint_persons) | `GET` | Lists registered people |`id`, `search`, `name`, `abbrev`, `email`, `limit` |
-| [plants](#endpoint_plants) | `GET` | Lists registered plants |`id`, `location`, `taxon`, `tag`,`project`, `dataset`, `limit`, `offset`|
+| [individuals](#endpoint_individuals) | `GET` | Lists registered individuals |`id`, `location`, `taxon`, `tag`,`project`, `dataset`, `limit`, `offset`|
 | [projects](#endpoint_projects) | `GET` | Lists registered projects | `id` only|
 | [taxons](#endpoint_taxons) | `GET` | Lists taxonomic names |`root`, `id`, `name`,`level`, `valid`, `external`, `limit` |
 | [traits](#endpoint_traits) | `GET` | Lists variables (traits) list |`id`, `name`,`limit`,`offset`|
-| [vouchers](#endpoint_vouchers) | `GET` | Lists registered voucher specimens | `id`, `number`, `plant`, `location`, `collector`, `taxon`, `project`, `dataset` |
+| [vouchers](#endpoint_vouchers) | `GET` | Lists registered voucher specimens | `id`, `number`, `individual`, `location`, `collector`, `taxon`, `project`, `dataset` |
 | [userjobs](#endpoint_jobs) | `GET` | Lists user Jobs | `id`, `status`|
 
 
@@ -100,7 +100,7 @@ The [OpenDataBio R package]()
 | [measurements](#endpoint_measurements) | `POST` | Importo Measurements to Datasets |
 | [locations](#endpoint_locations) | `POST` | Imports locations |
 | [persons](#endpoint_persons) | `POST` | Imports a list of people |
-| [plants](#endpoint_plants) | `POST` | Imports a list of plants |
+| [individuals](#endpoint_individuals) | `POST` | Imports a list of individuals |
 | [traits](#endpoint_traits) | `POST` | Import traits |
 | [taxons](#endpoint_taxons)  | `POST` | Imports taxonomic names |
 | [vouchers](#endpoint_taxons)  | `POST` | Imports voucher specimens |
@@ -163,46 +163,46 @@ The `datasets` endpoint interact with the [datasets](management_objects#datasets
   - `taggedWidth` - the list of tags applied to the dataset
 
 
-<a name="endpoint_herbaria"></a>
+<a name="endpoint_biocollections"></a>
 ***
-### Herbaria Endpoint
-The `herbaria` endpoint interact with the [herbaria](management_objects#herbaria) table. Their basic usage is getting the list of Biological Collections (Herbaria and other plant and non-plant repositories of biological samples) registered in the database. Using for getting `herbarium_id` for importing data with the [Vouchers API](#endpoint_vouchers)).
+### Biocollections Endpoint
+The `biocollections` endpoint interact with the [biocollections](management_objects#biocollections) table. Their basic usage is getting the list of Biological Collections (Biocollections and other individual and non-individual repositories of biological samples) registered in the database. Using for getting `biocollection_id` for importing data with the [Vouchers API](#endpoint_vouchers)).
 
 
 #### GET optional parameters  `id` only
-- `id=list` return only 'herbaria' having the id or ids provided (ex `id=1,2,3,10`)
+- `id=list` return only 'biocollections' having the id or ids provided (ex `id=1,2,3,10`)
 
 
 #### Fields obtained with 'simple' option
-  - `id` - the id of the repository or museum in the herbaria table (a local database id)
+  - `id` - the id of the repository or museum in the biocollections table (a local database id)
   - `name` - the name of the repository or museum
   - `acronym` - the repository or museum acronym
-  - `irn` - only for Herbaria, the number of the herbarium in the [Index Herbariorum](http://sweetgum.nybg.org/science/ih/)
+  - `irn` - only for Biocollections, the number of the biocollection in the [Index Herbariorum](http://sweetgum.nybg.org/science/ih/)
 
 <a name="endpoint_measurements"></a>
 ***
 ### Measurements Endpoint
-The `measurements` endpoint interact with the [measurements](Auxiliary-Objects#measurements) table. Their basic usage is getting Data linked to Plants, Taxons, Locations or Vouchers, regardless of datasets, so it is usefull when you want particular measurements from different datasets that you have access for. If you want a full dataset, use the web interface, as it prepares a complete set of the dataset measurements and their associated data tables for download in your Job tab.
+The `measurements` endpoint interact with the [measurements](Auxiliary-Objects#measurements) table. Their basic usage is getting Data linked to Individuals, Taxons, Locations or Vouchers, regardless of datasets, so it is usefull when you want particular measurements from different datasets that you have access for. If you want a full dataset, use the web interface, as it prepares a complete set of the dataset measurements and their associated data tables for download in your Job tab.
 
 
-#### GET optional parameters `id`, `taxon`,`dataset`,`trait`,`plant`,`voucher`,`location`,`limit`,`offset`
+#### GET optional parameters `id`, `taxon`,`dataset`,`trait`,`individual`,`voucher`,`location`,`limit`,`offset`
 - `id=list of ids` return only the measurement or measurements having the id or ids provided (ex `id=1,2,3,10`)
-- `taxon=list of ids or names` return only the measurements related to the Taxons, both direct taxon measurements and indirect taxon measurements from their plants and vouchers (ex `taxon=Aniba,Licaria`). Does not consider descendants taxons for this use `taxon_root` instead. In the example only measurements directly linked to the genus and genus level identified vouchers and plants will be retrieved.
+- `taxon=list of ids or names` return only the measurements related to the Taxons, both direct taxon measurements and indirect taxon measurements from their individuals and vouchers (ex `taxon=Aniba,Licaria`). Does not consider descendants taxons for this use `taxon_root` instead. In the example only measurements directly linked to the genus and genus level identified vouchers and individuals will be retrieved.
 - `taxon_root=list of ids or names` similar to `taxon`, but get also measurements for descendants taxons of the informed query (ex `taxon=Lauraceae` will get measurements linked to Lauraceae and any taxon that belongs to it;
 - `dataset=list of ids` return only the  measurements belonging to the datasets informed (ex `dataset=1,2`) - allows to get all data from a dataset.
 - `trait=list of ids or export_names` return only the  measurements for the traits informed (ex `trait=DBH,DBHpom` or `dataset=2?trait=DBH`) - allows to get data for a particular trait
-- `plant=list of plant ids` return only the  measurements for the plant ids informed (ex `plant=1000,1200`)
+- `individual=list of individual ids` return only the  measurements for the individual ids informed (ex `individual=1000,1200`)
 - `voucher=list of voucher ids` return only the  measurements for the voucher ids informed (ex `voucher=345,321`)
-- `location=list of voucher ids` return only measurements for the locations ids informed (ex `location=4,321`)- does not retrieve measurements for plants and vouchers in those locations, only measured locations, like plot soil surveys data.
+- `location=list of voucher ids` return only measurements for the locations ids informed (ex `location=4,321`)- does not retrieve measurements for individuals and vouchers in those locations, only measured locations, like plot soil surveys data.
 - `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of measurements, as the request may fail due to memory constraints. See [Common endpoints](#endpoint_common).
 
 
 
 #### Fields obtained with 'simple' option
   - `id` - the id of the measurement in the measurements table (a local database id)
-  - `measured_type` - the measured object, one of Plant, Location, Taxon or Voucher
-  - `measured_id` - the id of the measured object in the respective object table (plants.id, locations.id, taxons.id, vouchers.id)
-  - `measuredFullname` - the fullname of the measured object (for a Plant will be Location+Tag, for a Voucher Collector+Number, for a Location is name and for the Taxon its fullname)
+  - `measured_type` - the measured object, one of Individual, Location, Taxon or Voucher
+  - `measured_id` - the id of the measured object in the respective object table (individuals.id, locations.id, taxons.id, vouchers.id)
+  - `measuredFullname` - the fullname of the measured object (for a Individual will be Location+Tag, for a Voucher Collector+Number, for a Location is name and for the Taxon its fullname)
   - `traitName` - the export_name for the trait measured
   - `valueActual` - the value for the measurement (format depends on trait type)
   - `traitUnit` - the unit of measurement for quantitative traits
@@ -212,8 +212,8 @@ The `measurements` endpoint interact with the [measurements](Auxiliary-Objects#m
 
 
 #### Addition relevant fields
-  - `measuredTaxonName` - the taxon name in case the measurement is from a Taxon, Voucher or Plant
-  - `measuredTaxonFamily` - the taxon Family name in case the measurement is from a Taxon, Voucher or Plant
+  - `measuredTaxonName` - the taxon name in case the measurement is from a Taxon, Voucher or Individual
+  - `measuredTaxonFamily` - the taxon Family name in case the measurement is from a Taxon, Voucher or Individual
   - `measuredProject` - the project that indirectly the measurement belongs to, if any.
 
 
@@ -225,8 +225,8 @@ The following fields are allowed in a post API:
 
 * `dataset=number` -  the id of the dataset where the measurement should be placed **required**
 * `date=YYYY-MM-DD` - the observation date for the measurement, must be passed as YYYY-MM-DD  **required**
-* `object_type=string` - either 'Plant','Location','Taxon' or 'Voucher', i.e. the object from where the measurement was taken **required**
-* `object_type=number` - the id of the measured object, either (plants.id, locations.id, taxons.id, vouchers.id) **required**
+* `object_type=string` - either 'Individual','Location','Taxon' or 'Voucher', i.e. the object from where the measurement was taken **required**
+* `object_type=number` - the id of the measured object, either (individuals.id, locations.id, taxons.id, vouchers.id) **required**
 * `person=number or string` either the 'id', 'abbreviation', 'full_name' or 'email' of the person that measured the object **required**
 * `trait_id=number or string` - either the id or export_name for the measurement. **required**
 * `value=number, string list` - this will depend on the trait type, see tutorial **required, optional for trait type LINK**
@@ -336,7 +336,7 @@ The `persons` endpoint interact*** with the [Person](Auxiliary-Objects#persons) 
 - `email` - the email, if registered or person is user
 - `institution` - the persons institution, if registered
 - `notes` - any registered notes;
-- `herbarium` - the name of the Biological Collection (Herbaria, etc) that the person is associated with; not included in simple)
+- `biocollection` - the name of the Biological Collection (Biocollections, etc) that the person is associated with; not included in simple)
 
 
 
@@ -351,26 +351,26 @@ The following fields are allowed in a post API:
 - `abbreviation` - abbreviated name, as used by the person in publications, as collector, etc. (if left blank, a standard abbreviation will be generated using the full_name);
 - `email` - an email address,
 - `institution` - to which institution this person is associated;
-- `herbarium` - name or acronym of the Herbarium to which this person is associated.
+- `biocollection` - name or acronym of the Biocollection to which this person is associated.
 
 
-<a name="endpoint_plants"></a>
+<a name="endpoint_individuals"></a>
 ***
-### Plants
-The `plants` endpoints interact with the [Plant](Core-Objects#plants) table. Their basic usage is getting a list of plants or import new ones.
+### Individuals
+The `individuals` endpoints interact with the [Individual](Core-Objects#individuals) table. Their basic usage is getting a list of individuals or import new ones.
 
 
 
 #### GET optional parameters `id`, `location`, `taxon`, `tag`,`project`, `dataset`, `limit`, `offset`
-- `id=number or list` - return plants that have id or ids ex: `id=2345,345`
-- `location=mixed` - return by location id or name or ids or names ex: `location=24,25,26` `location=Parcela 25ha` of the locations where the plants
+- `id=number or list` - return individuals that have id or ids ex: `id=2345,345`
+- `location=mixed` - return by location id or name or ids or names ex: `location=24,25,26` `location=Parcela 25ha` of the locations where the individuals
 - `location_root` - same as location but return  also from the descendants of the locations informed
 - `taxon=mixed` - the id or ids, or canonicalName taxon names (fullnames) ex: `taxon=Aniba,Ocotea guianensis,Licaria cannela tenuicarpa` or `taxon=456,789,3,4`
-- `taxon_root` - same as taxon but return also all the plants identified as any of the descendants of the taxons informed
+- `taxon_root` - same as taxon but return also all the individuals identified as any of the descendants of the taxons informed
 - `project=mixed` - the id or ids or names of the project, ex: `project=3` or `project=OpenDataBio`
-- `tag=list` - one or more plant tag number\/code, ex: `tag=planta1,2345,2345A`
-- `dataset=mixed` - the id or ids or names of the datasets, return plants having measurements in the datasets informed
-- `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of plants, as the request may fail due to memory constraints. See [Common endpoints](endpoint_common).
+- `tag=list` - one or more individual tag number\/code, ex: `tag=individuala1,2345,2345A`
+- `dataset=mixed` - the id or ids or names of the datasets, return individuals having measurements in the datasets informed
+- `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of individuals, as the request may fail due to memory constraints. See [Common endpoints](endpoint_common).
 
 
 
@@ -379,53 +379,77 @@ Notice that all search fields (taxon, location and project) may be specified as 
 
 
 #### Fields obtained with 'simple' option
-- `id` - the id of the plant in the plants table (a local database id)
-- `fullName` - the plant fullName is a unique identifier composed of `LocationName+Tag`
-- `taxonName`- the current taxonomic identification of the plant in a canonicalName format (no authors) or "unidentified"
+- `id` - the id of the individual in the individuals table (a local database id)
+- `fullName` - the individual fullName is a unique identifier composed of `LocationName+Tag`
+- `taxonName`- the current taxonomic identification of the individual in a canonicalName format (no authors) or "unidentified"
 - `taxonFamily` - the taxon Family level parent
-- `location_id` - the where the plant is located for link with location data
+- `location_id` - the where the individual is located for link with location data
 - `locationName` - the location name
 - `locationParentName` - the parent location, to simplify when location is subplot
-- `tag` - the plant number code on an physical tag on a living plant in the field
-- `date` - the date the plant was marked and tagged
-- `relativePosition` - if plant has X and Y cartesian coordinates within location, their [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation, ex: POINT(X,Y)
-- `xInParentLocation` - x cartesian position in relation to parent location when plant location is subplot
-- `yInParentLocation` - y cartesian position in relation to parent location when plant location is subplot
+- `tag` - the individual number code on an physical tag on a living individual in the field
+- `date` - the date the individual was marked and tagged
+- `relativePosition` - if individual has X and Y cartesian coordinates within location, their [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation, ex: POINT(X,Y)
+- `xInParentLocation` - x cartesian position in relation to parent location when individual location is subplot
+- `yInParentLocation` - y cartesian position in relation to parent location when individual location is subplot
 - `notes` - any note
-- `projectName` - the projectName the plant belongs to
+- `projectName` - the projectName the individual belongs to
 
 #### Additional relevant fields
-- `angle` and `distance` - azimuth in degrees and distance in meteres of the plant position in relation to its location (which in this case would be a geographical POINT). This may be used in some specific plant inventory surveys
+- `angle` and `distance` - azimuth in degrees and distance in meteres of the individual position in relation to its location (which in this case would be a geographical POINT). This may be used in some specific individual inventory surveys
 
-
+<br>
 
 #### POST format
 
-
-See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Plants](Core-Objects#plants).
+See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Individuals](Core-Objects#individuals).
 The following fields are allowed in a post API:
 
+* `collector=mixed` - **required**  - persons  'id', 'abbreviation', 'full_name', 'email'; if multiple persons, separate values in your list with  pipe `|` or `;` because commas may be present within names. Main collector is the first on the list;
+* `tag=string` -  **required** -  the individual number or code (if the individual identifier is as MainCollector+Number, this is the field for Number);
+* `project=mixed` - **required** - name or id or the Project;
+* `date=YYYY-MM-DD or array` - the date the individual was recorded/tagged, for historical records you may inform an incomplete string in the form "1888-05-NA" or "1888-NA-NA" when day and/or month are unknown. You may also inform as an array in the form "date={ 'year' : 1888, 'month': 5}". OpenDataBio deals with incomplete dates, see the [IncompleteDate Model](Auxiliary-Objects#incompletedate). At least `year` is **required**.
+* `notes` - any annotation for the Individual;
 
-* `location` - the location name or id; **required**
-* `tag` - the plant field tag number or code **required**
-* `project` - name or id **required**
-* `date` - format YYYY-MM-DD  **required**
-* `notes` - any text note
-* `tagging_team` - persons  'id', 'abbreviation', 'full_name', 'email'; if multiple persons, separate values in your list with  pipe `|` because commas may be present within names
-* `taxon` - name or id of the identified taxon, e.g. 'Ocotea delicata' or its id
-* `identifier` - name or id of the person responsible for identification;
-* `modifier` - name or number for identification modifier. Possible values 's.s.'=1, 's.l.'=2, 'cf.'=3, 'aff.'=4, 'vel aff.'=5, defaults to 0 (none).
-* `identification_notes` - any identification notes
-* `identification_based_on_herbarium` - the herbarium name or id if the identification is based on a reference specimen deposited in an herbarium
-* `identification_based_on_herbarium_id` - only fill if `identification_based_on_herbarium` is present;
-* `relative_position` - cartesian position in meters relative to the 0,0 location coordinate in WKT format: `POINT(x,y)`
+Location fields (one or multiple locations may be informed for the individual). Possible fields are:
+  * `location` - the Individual's location name or id **required if longitude and latitude are not informed**
+  * `latitude` and `longitude`- geographical coordinates in decimal degrees; **required if location is not informed**
+  * `altitude` - the Individual location elevation (altitude) in meters above see level;
+  * `location_notes` - any note for the individual location;
+  * `location_date_time` - if different than the individual's date, a complete date or a date+time value for the individual first location. Mandatory for multiple locations;
+  * `x` - if location is of Plot type, the x coordinate of the individual in the location;
+  * `y` - if location is of Plot type, the y coordinate of the individual in the location;
+  * `distance` - if location is of POINT type, the individual distance in meters from the location;
+  * `angle` - if location is of POINT type, the individual azimuth (angle) from the location;
+
+Identification fields. Identification is not mandatory, and may be informed in two different ways: (1) self identification - the individual may have its own identification; or (2), other identification - the identification is the same as that of another individual (for example, from an individual having a voucher in some biocollection).
+  1. The following fields may be used for (self) individual's identification (taxon and identifier are mandatory):
+    * `taxon=mixed` - name or id of the identified taxon, e.g. 'Ocotea delicata' or its id
+    * `identifier=mixed` - 'id', 'abbreviation', 'full_name' or  'email' of the person responsible for the taxonomic identification;
+    * `identification_date` or `identification_date_year`, `identification_date_month`, and/or `identification_date_day` - complete or incomplete. If empty, the individual's date is used;
+    * `modifier` - name or number for the identification modifier. Possible values 's.s.'=1, 's.l.'=2, 'cf.'=3, 'aff.'=4, 'vel aff.'=5, defaults to 0 (none).
+    * `identification_notes` - any identification notes
+    * `identification_based_on_biocollection` - the biocollection name or id if the identification is based on a reference specimen deposited in an biocollection
+    * `identification_based_on_biocollection_id` - only fill if `identification_based_on_biocollection` is present;
+  2. If the identification is other:
+    * `identification_individual` - id or fullname of the Individual having the identification.
+
+If the Individual has Vouchers **with the same** Collectors, Date and CollectorNumber (Tag) as those of the Individual, the following fields and options allow to store the vouchers while importing the Individual record (alternatively, you may import voucher after importing individuals using the [Voucher EndPoint](#endpoint_vouchers). Vouchers for the individual may be informed in two ways:
+1. As separate string fields:
+  * `biocollection` - A string with a single value or a comma separated list of values. Values may be the `id` or `acronym` values of the [Biocollection Model](management_objects#biocollections). Ex:  "{ 'biocollection' : 'INPA;MO;NY'}" or "{ 'biocollection' : '1,10,20'}";
+  * `biocollection_number` - A string with a single value or a comma separated list of values with the BiocollectionNumber for the Individual Voucher. If a list, then must have the same number of values as `biocollection`;
+  * `biocollection_type` - A string with a single numeric code value or a comma separated list of values for Nomenclatural Type for the Individual Vouchers. The default value is 0 (Not a Type). See [nomenclatural types list](API#nomenclaturaltypes).
+2. AS a single field `biocollection` containing an array with each element having the fields above for a single Biocollection:
+  "{
+    { 'biocollection_code' : 'INPA', 'biocollection_number' : 59786, 'biocollection_type' : 0},
+    { 'biocollection_code' : 'MG', 'biocollection_number' : 34567, 'biocollection_type' : 0}
+  }"
 
 
 
 <a name="endpoint_projects"></a>
 ***
 ### Projects EndPoint
-The `projects` endpoint interact with the [projects](management_objects#projects) table. The basic usage is getting the registered Projects, but not the plants nor vouchers in the projects, only counts and some basic info. Usefull for getting project_ids for importing Plants and Vouchers.
+The `projects` endpoint interact with the [projects](management_objects#projects) table. The basic usage is getting the registered Projects, but not the individuals nor vouchers in the projects, only counts and some basic info. Usefull for getting project_ids for importing Individuals and Vouchers.
 
 
 
@@ -437,9 +461,9 @@ The `projects` endpoint interact with the [projects](management_objects#projects
 #### Fields obtained with 'simple' option
   - `id` - the id of the Project in the projects table (a local database id)
   - `fullname` - project name
-  - `privacyLevel` - the access level for plants and vouchers in Project
+  - `privacyLevel` - the access level for individuals and vouchers in Project
   - `contactEmail` - the project administrator email
-  - `plants_count` - the number of plants in the project
+  - `individuals_count` - the number of individuals in the project
   - `vouchers_count` - the number of vouchers in the project
 
 
@@ -550,14 +574,17 @@ The following fields are allowed in a post API:
 **Fields for the POST method**:
 * `export_name=string` - a short name for the Trait, which will be used during data exports, are more easily used in trait selection inputs in the web-interface and also during data analyses outside OpenDataBio. **Export names must be unique** and have no translation. Short and [CamelCase](https://en.wikipedia.org/wiki/Camel_case) export names are recommended. Avoid diacritics (accents), special characters, dots and even white-spaces. **required**
 * `type=number` - a numeric code specifying the trait type. See the [Trait Model](Trait-Objects#traits) for a full list. **required**
-* `objects=list` - a list of the [Core objects](Core-Objects) the trait is allowed to be measured for. Possible values are 'Plant', 'Voucher', 'Location' and/or 'Taxon', singular and case sensitive. Ex:  "{'object': 'Plant,Voucher'}"; **required**
+* `objects=list` - a list of the [Core objects](Core-Objects) the trait is allowed to be measured for. Possible values are 'Individual', 'Voucher', 'Location' and/or 'Taxon', singular and case sensitive. Ex:  "{'object': 'Individual,Voucher'}"; **required**
 * `name=json` - see translations below; **required**
 * `description=json` - see translations below; **required**
 * **Trait specific fields**:
   * `units=string` - required for quantitative traits only (the unit o measurement). recommened to use English standards and full words, e.g. ('meters' instead of just 'm')
-  * `range_min=number` - optional for quantitative traits. specify the minimum value allowed as a Trait [Measurement](Trait-Objects#measurements)
+  * `range_min=number` - optional for quantitative traits. specify the minimum value allowed for a [Measurement](Trait-Objects#measurements).
   * `range_max=number` - optional for quantitative. maximum allowed value for the trait.
   * `categories=json` - **required for categorical and ordinal traits**; see translations below
+  * `wavenumber_min` and `wavenumber_max` - **required for spectral traits** = minimum and maximum WaveNumber within which the 'value_length' absorbance or reflectance values are equally distributed. May be informed in `range_min` and `range_max`, priority for prefix wavenumber over range if both informed.
+  * `value_length` - **required for spectral traits** = number of values in spectrum
+  * `link_type`- **required for Link traits** - the class of link type, fullname or basename:  eg. 'Taxon' or 'App\Taxon'.
 * `bibreference=number` - the id of a [BibReference](Auxiliary-Objects#bibreferences) object from which the trait definition and or trait categories are based upon.
 
 #### translations
@@ -589,21 +616,20 @@ The following fields are allowed in a post API:
 The `vouchers` endpoints interact with the [Voucher](Core-Objects#vouchers) table. Their basic usage is getting and importing voucher specimens into the database.
 
 
-
-#### GET parameters `id`, `number`, `plant`, `location`, `collector`, `taxon`, `project`, `dataset`, `limit`, `offset`
+#### GET parameters `id`, `number`, `individual`, `location`, `collector`, `taxon`, `project`, `dataset`, `limit`, `offset`
 * `id=list` return only vouchers having the id or ids provided (ex `id=1,2,3,10`)
 * `number=string` returns only vouchers for the informed collector number (but is a string and may contain non-numeric codes)
 * `collector=mixed` one of id or ids or abbreviations, returns only vouchers for the informed **main collector**
 * `project=mixed` one of ids or names, returns only the vouchers for informed project.
-* `location=mixed` one of ids or names; (1) if `plant_tag` is also requested returns only vouchers for those plants (or use *"plant=\*"* to get all vouchers for any plant collected at the location); (2) if `plant` and `plant_tag` are not informed, then returns vouchers linked to locations and to the plants at the locations.
+* `location=mixed` one of ids or names; (1) if `individual_tag` is also requested returns only vouchers for those individuals (or use *"individual=\*"* to get all vouchers for any individual collected at the location); (2) if `individual` and `individual_tag` are not informed, then returns vouchers linked to locations and to the individuals at the locations.
 * `location_root=mixed` - same as location, but include also the vouchers for the descendants of the locations informed. e.g. *"location_root=Manaus"* to get any voucher collected within the Manaus administrative area;
-* `plant=mixed` either a plant_id or a list of ids, or `*` - returns only vouchers for the informed plants; when *"plant=\*"* then location must be informed, see above;
-* `plant_tag` - to inform `plant_tag` you must inform `location`, if location is not informed, this will be ignored;
-* `taxon=mixed` one of ids or names, returns only vouchers for the informed taxons. This could be either vouchers referred as parent of the requested taxon or vouchers of plants of the requested taxons.
+* `individual=mixed` either a individual_id or a list of ids, or `*` - returns only vouchers for the informed individuals; when *"individual=\*"* then location must be informed, see above;
+* `individual_tag` - to inform `individual_tag` you must inform `location`, if location is not informed, this will be ignored;
+* `taxon=mixed` one of ids or names, returns only vouchers for the informed taxons. This could be either vouchers referred as parent of the requested taxon or vouchers of individuals of the requested taxons.
 * `taxon_root=mixed` - same as taxon, but will include in the return also the vouchers for the descendants of the taxons informed. e.g. *"taxon_root=Lauraceae"* to get any Lauraceae voucher;
-* `dataset=list` - id or ids list, return all vouchers with measurements in the informed datasets; this will not include vouchers of measured plants in the dataset, only vouchers measured directly.
+* `dataset=list` - id or ids list, return all vouchers with measurements in the informed datasets; this will not include vouchers of measured individuals in the dataset, only vouchers measured directly.
 * `with_identification=boolean` - if set to 1, include the identification object in the result.
-* `with_herbaria=boolean` - must be used with `fields=all`, if set to true (1), returns the related herbaria table
+* `with_biocollections=boolean` - must be used with `fields=all`, if set to true (1), returns the related biocollections table
 * `with_collectorsa=boolean` - must be used with `fields=all`, if set to true (1), returns the related collectors table
 
 
@@ -631,45 +657,25 @@ Notice that some search fields (taxon, location, project and collector) may be s
 * `latitudeDecimalDegrees` - the latitude in decimal degrees
 * `coordinatesPrecision` - whether the coordinates are from "Point", when location is of POINT type; "Plot" when location is of PLOT type, or the "Centroid" of the `locationName` when location is a larger area;
 * `coordinatesWKT` - coordinates in [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation; e.g. 'POINT(long lat)'
-* `plantTag` - if parent is plant, then the Plant fullname, which is the combination of Location+FieldTag
+* `individualTag` - if parent is individual, then the Individual fullname, which is the combination of Location+FieldTag
 * `projectName` - the project the voucher belongs too
 * `notes` - a note that has been associated with the voucher (does not include notes assigned as measurements values, these should be gathered through the [Measurements API Endpoints](API#measurements).
 
 
 
 #### POST format
-
-
 See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import [Vouchers](Core-Objects#vouchers). The main validation restriction is that `main_collector+number` must be unique in the database and duplicated values are not allowed.
 The following fields are allowed in a post API:
 
-
-* `number=string` - the *main collector number*  **required**
-* `collector=mixed` - either ids or abbreviations of persons. At least one value is **required**, which is the main collector. When multiple values are informed, then the first is the *main collector*. Ex: "collector=9,10" or "collector=Mori, S.A."
-* `date=YYYY-MM-DD or array` - the date the voucher was collected, for historical records you may inform an incomplete string in the form "1888-05-NA" or "1888-NA-NA" when day and/or month are unknown. You may also inform as array "date={ 'year' : 1888, 'month': 5}". OpenDataBio deals with incomplete dates, see the [IncompleteDate Model](Auxiliary-Objects#incompletedate). At least year, however, is **required**
-* `project=number` - id of the Project the voucher belongs to. **required**
-* `parent_type=string` - either 'Plant' or 'Location' case sensitive, as vouchers can be linked to either of these objects
-* `parent_id=number` - the id of the `parent_type` object that the voucher belongs to. If informed requires `parent_type` and will ignore `location`, `plant` and `plant_tag`
-* `location=id or name`- if used, `parent_type` and `parent_id` cannot be included in the same request as they preceed the location parameter. Must be used alone or with the `plant_tag` parameter. If alone indicates that the voucher parent is the informed location, if posted with `plant_tag`, then it will search 'location+plant_tag' and if found link to the plant parent.
-* `plant=number` -  the **id** of the plant the voucher belongs to; cannot be used with `parent_type` and `parent_id` nor `location` as they preceed the `plant` parameter.
-* `plant_tag=string` - the **tag** column of the Plant object, which is the plant code on its physical tag in the  field.
-* `notes=string` - any text note to add to the voucher, like the label note of traditional specimens records. However, you should consider normalizing traditional notes data as measurements whenever possible. Ex. is better to inform the height of plant as a measurement than placing it in this note, although you may do both.
-* Identification keys:
-  * `taxon=string or number` - name or id of the identified taxon, e.g. 'Ocotea delicata' or its id, any taxon level the identification has.
-  * `identifier=string or number` - name or id of the person responsible for the voucher identification;
-  * `modifier=string or number` - name or number for an identification modifier. Possible values 's.s.'=1, 's.l.'=2, 'cf.'=3, 'aff.'=4, 'vel aff.'=5, defaults to 0 (none).
-  * `identification_notes` - any specific identification notes
-  * `identification_based_on_herbarium` - the herbarium acronym or id if the identification is based on another specimen deposited in any herbarium or museum registered, even if the reference is not in this database.
-  * `identification_based_on_herbarium_id` - the herbarium code or id of the collection compared from which the identification was retrieved. comparsion.only used if `identification_based_on_herbarium` is also informed;
-* `herbaria=mixed` - this may be a string or a table like structure with a list of all physical repositories where the voucher is deposited, the deposit reference number or id and whether the deposited specimen is a nomenclatural type, with different type options included in the system. A POST request for this parameter may be:
-    * A string with a single value or comma separated list of values. Values may be the `id`,`acronym`, `name` or `irn` values of the [Herbarium Model](management_objects#herbaria). Ex:  "?herbaria=INPA;MO,NY" or "?herbaria=1,10,20"
-    * A array in which each element contains a single herbarium record:
-        * `herbarium_code=string` - one of id, acronym, name or irn of a single herbarium;
-        * `herbarium_number=string` - the voucher number or id in the herbarium;
-        * `herbarium_type=numeric` - numeric code representing the kind of nomenclatural type the voucher represents in this repository. The default value is 0 (Not a Type). See [nomenclatural types list](API#nomenclaturaltypes)
-* `created_at` and `updated_at` - may also be added in the import, if you want to preserve some tracking history when transfering data from a different platform.
-
-
+* `individual=mixed` - the numeric id or fullname of the Individual the Voucher belongs to **required**;
+* `biocollection=mixed` - the id, name or acronym of a registered  [Biocollection](management_objects#biocollections) the Voucher belongs to **required**;
+* `biocollection_type=mixed` - the name or numeric code of numeric representing the kind of nomenclatural type the voucher represents in the Biocollection. If not informed, defaults to 0 = 'Not a Type'. See [nomenclatural types list](API#nomenclaturaltypes) for a full list of options;
+* `biocollection_number=mixed` - the alpha numeric code of the voucher in the biocollection;
+* `number=string` - the main *collector number*  -only if different from the *tag* value of the Individual the voucher belongs to;
+* `collector=mixed` - either ids or abbreviations of persons. When multiple values are informed the first is the *main collector*. Only if different from the Individual collectors list;
+* `date=YYYY-MM-DD or array` - needed only if, with collector and number, different from Individual values.  Date may be an [IncompleteDate Model](Auxiliary-Objects#incompletedate).
+* `project=number` - inherits the project the Individual belongs too, but you may provide a different project if needed
+* `notes=string` - any text note to add to the voucher.
 
 <a name='nomenclaturaltypes'></a>
 

@@ -5,8 +5,8 @@ The OpenDatabBio is an open-source database developed to provide a flexible but 
 
 The main features of this database include:
 
-1. The ability to define custom [traits](https://github.com/opendatabio/opendatabio/wiki/Trait-Objects#traits) of diferent types, including some special cases like Spectral Data, Colors and Links. Measuhttps://github.com/opendatabio/opendatabio/wiki/Trait-Objects#traitsrements for these traits can be from marked [plants](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#plants), [vouchers specimens](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#vouchers), [taxonomic entities](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#taxons) and [locations](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#locations).
-1. [Taxons](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#taxons) can be published or unpublished names, synonyms or valid names, and any node of the tree of life may be stored. Taxon insertion are checked through APIs to different plant, fungi and animal data sources (Tropicos, IPNI, MycoBank,ZOOBANK).
+1. The ability to define custom [traits](https://github.com/opendatabio/opendatabio/wiki/Trait-Objects#traits) of diferent types, including some special cases like Spectral Data, Colors and Links. Measuhttps://github.com/opendatabio/opendatabio/wiki/Trait-Objects#traitsrements for these traits can be from marked [individuals](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#individuals), [vouchers specimens](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#vouchers), [taxonomic entities](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#taxons) and [locations](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#locations).
+1. [Taxons](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#taxons) can be published or unpublished names, synonyms or valid names, and any node of the tree of life may be stored. Taxon insertion are checked through APIs to different individual, fungi and animal data sources (Tropicos, IPNI, MycoBank,ZOOBANK).
 1. [Locations](https://github.com/opendatabio/opendatabio/wiki/Core-Objects#locations) are stored with their Geometries, allowing location parent autodetection and spatial queries. Special location types, such as Plots, can be defined and Conservation Units are treated separetely - because they may transverse different administrative areas.
 1. Data are organized in [Datasets](https://github.com/opendatabio/opendatabio/wiki/Data-Access-Objects#datasets) and [Projects](https://github.com/opendatabio/opendatabio/wiki/Data-Access-Objects#projects), entities that have different user-access options, with administrator being able to track downloads and requests histories for datasets. These entities allow different research groups to use the same installation, having total control over their particular research data edition and access, while sharing common libraries such as Taxonomy, Locations,  Bibliographic References and Traits.
 1. Tools for data exports and imports are provided through [API services](https://github.com/opendatabio/opendatabio/wiki/APi), along with a API client in R language, the [OpenDataBio-R package](https://github.com/opendatabio/opendatabio-r).
@@ -104,6 +104,26 @@ Remember to restart the Apache server after editing the files. In Ubuntu would b
 sudo systemctl restart apache2.service
 
 ```
+
+
+##### Mysql Charset and Collation
+
+1. If using MariaDB or Mysql you should add the following to your configuration file (mariadb.cnf or my.cnf), i.e. the Charset and Collation you choose for your installation must match that in the 'config/database.php'
+
+```
+[mysqld]
+character-set-client-handshake = FALSE  #without this, there is no effect of the init_connect
+collation-server      = utf8mb4_unicode_ci
+init-connect          = "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
+character-set-server  = utf8mb4
+
+[mariadb]
+max_allowed_packet=100M
+innodb_log_file_size=300M
+
+```
+2. If using MariaDB and you have problems of type **#1267 Illegal mix of collations**, then check [](https://github.com/phpmyadmin/phpmyadmin/issues/15463) on how to fix that,
+
 
 #### Create Dedicated User
 The recommended way to install OpenDataBio is using a **dedicated system user**. In this instructions this user is  **odbserver**.

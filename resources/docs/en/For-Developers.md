@@ -33,9 +33,9 @@ The [Location](Core-Objects#locations) and the [Taxon](Core-Objects#locations) u
 
 * The Hierarchical relation implemented through informing the parent-child paths for Locations and Taxons also means that queries for these objects have to query the descendants of any node. Ex: searching for 'Lauraceae' may need to return all the genera and species and infraspecies within this family. Similarly, searching form 'Brazil', should return data from all locations within Brazil. These is easly implemented with the Baum package and columns `lft` and `rgt` allow fast search for acenstors and descendants if a raw query is needed. Locations also have geometries, that could be used directly to query objects as well.
 
-* Datatables for Locations and Taxon have counts for Plants, Vouchers, Measurements and these counts MUST convey the sum of related objects to all Location and Taxon descendants. Depending on  the `depth` of the tree structure in each case, it may become too slow to render the datatable, even the initial server side page as they usually will be nodes with the largest number of descendants.
+* Datatables for Locations and Taxon have counts for Individuals, Vouchers, Measurements and these counts MUST convey the sum of related objects to all Location and Taxon descendants. Depending on  the `depth` of the tree structure in each case, it may become too slow to render the datatable, even the initial server side page as they usually will be nodes with the largest number of descendants.
 
-* There are different ways of retriving such counts. The code below may be run in `Tinker` to compare the different performance for such queries. Compare with or withoutGlobalScopes from the queries, i.e. including or excluding the check of permissions to plants, vouchers and measurements to count them. When including global scopes you must be logged.
+* There are different ways of retriving such counts. The code below may be run in `Tinker` to compare the different performance for such queries. Compare with or withoutGlobalScopes from the queries, i.e. including or excluding the check of permissions to individuals, vouchers and measurements to count them. When including global scopes you must be logged.
 
 *  **withoutGlobalScopes**:
 
@@ -45,7 +45,7 @@ $taxon_id=1; $project_id = 2;
 //option 1 FASTER
 $start = microtime(true);
 $taxons_ids = Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-$plants_count = Plant::whereHas('identification', function($query) use($taxons_ids) {
+$individuals_count = Individual::whereHas('identification', function($query) use($taxons_ids) {
     $query->whereIn('identifications.taxon_id',$taxons_ids);})->withoutGlobalScopes()->count();
 $end = microtime(true);
 $time1 = ($end - $start);
@@ -53,7 +53,7 @@ $time1 = ($end - $start);
 //with project scopeLeaf
 $start = microtime(true);
 $taxons_ids = Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-$plants_count = Plant::whereHas('identification', function($query) use($taxons_ids) {
+$individuals_count = Individual::whereHas('identification', function($query) use($taxons_ids) {
     $query->whereIn('identifications.taxon_id',$taxons_ids);})->where('project_id',"=",$project_id)->withoutGlobalScopes()->count();
 $end = microtime(true);
 $time1p = ($end - $start);
@@ -62,30 +62,30 @@ $time1p = ($end - $start);
 
 //option 2
 $start = microtime(true);
-$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) { return $taxon->plants()->withoutGlobalScopes()->count();})->toArray());
+$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) { return $taxon->individuals()->withoutGlobalScopes()->count();})->toArray());
 $end = microtime(true);
 $time2 = ($end - $start);
 
 
 $start = microtime(true);
-$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) use($project_id) { return $taxon->plants()->where('project_id','=',$project_id)->withoutGlobalScopes()->count();})->toArray());
+$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) use($project_id) { return $taxon->individuals()->where('project_id','=',$project_id)->withoutGlobalScopes()->count();})->toArray());
 $end = microtime(true);
 $time2p = ($end - $start);
 
 
 //option 3
 $start = microtime(true);
-$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['plants' => function ($query) {
+$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['individuals' => function ($query) {
     $query->withoutGlobalScopes();
-}])->pluck('plants_count')->toArray());
+}])->pluck('individuals_count')->toArray());
 $end = microtime(true);
 $time3 = ($end - $start);
 
 //with project scope
 $start = microtime(true);
-$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['plants' => function ($query) use($project_id) {
+$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['individuals' => function ($query) use($project_id) {
     $query->withoutGlobalScopes()->where('project_id',$project_id);
-}])->pluck('plants_count')->toArray());
+}])->pluck('individuals_count')->toArray());
 $end = microtime(true);
 $time3p = ($end - $start);
 
@@ -101,7 +101,7 @@ $taxon_id=1; $project_id = 2;
 //option 1
 $start = microtime(true);
 $taxons_ids = Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-$plants_count = Plant::whereHas('identification', function($query) use($taxons_ids) {
+$individuals_count = Individual::whereHas('identification', function($query) use($taxons_ids) {
     $query->whereIn('identifications.taxon_id',$taxons_ids);})->count();
 $end = microtime(true);
 $time1ws = ($end - $start);
@@ -109,7 +109,7 @@ $time1ws = ($end - $start);
 //with project scopeLeaf
 $start = microtime(true);
 $taxons_ids = Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-$plants_count = Plant::whereHas('identification', function($query) use($taxons_ids) {
+$individuals_count = Individual::whereHas('identification', function($query) use($taxons_ids) {
     $query->whereIn('identifications.taxon_id',$taxons_ids);})->where('project_id',"=",$project_id)->count();
 $end = microtime(true);
 $time1pws = ($end - $start);
@@ -118,28 +118,28 @@ $time1pws = ($end - $start);
 
 //option 2
 $start = microtime(true);
-$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) { return $taxon->plants()->count();})->toArray());
+$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) { return $taxon->individuals()->count();})->toArray());
 $end = microtime(true);
 $time2ws = ($end - $start);
 
 
 $start = microtime(true);
-$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) use($project_id) { return $taxon->plants()->where('project_id','=',$project_id)->count();})->toArray());
+$tx = array_sum(Taxon::whereIn('id',$taxons_ids)->cursor()->map(function($taxon) use($project_id) { return $taxon->individuals()->where('project_id','=',$project_id)->count();})->toArray());
 $end = microtime(true);
 $time2pws= ($end - $start);
 
 
 //option 3
 $start = microtime(true);
-$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount('plants')->pluck('plants_count')->toArray());
+$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount('individuals')->pluck('individuals_count')->toArray());
 $end = microtime(true);
 $time3ws = ($end - $start);
 
 //with project scope
 $start = microtime(true);
-$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['plants' => function ($query) use($project_id) {
+$count = array_sum(Taxon::where('id','=',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(['individuals' => function ($query) use($project_id) {
     $query->where('project_id',$project_id);
-}])->pluck('plants_count')->toArray());
+}])->pluck('individuals_count')->toArray());
 $end = microtime(true);
 $time3pws = ($end - $start);
 
@@ -195,12 +195,12 @@ echo
 ```php
 $start = microtime(true);
 $tx = Taxon::where('id',$taxon_id)->first()->getDescendantsAndSelf()->loadCount(
-            ['plant_measurements' => function ($query) {
+            ['individual_measurements' => function ($query) {
                 $query->withoutGlobalScopes(); } ])->loadCount(['voucher_measurements' => function ($query) {
                     $query->withoutGlobalScopes(); } ])->loadCount(['measurements' => function ($query) {
                         $query->withoutGlobalScopes(); } ]);
 $n1 = array_sum($tx->pluck('voucher_measurements_count')->toArray());
-$n2 = array_sum($tx->pluck('plant_measurements_count')->toArray());
+$n2 = array_sum($tx->pluck('individual_measurements_count')->toArray());
 $n3 = array_sum($tx->pluck('measurements_count')->toArray());
 ($n1+$n2+$n3);
 $end = microtime(true);
@@ -208,7 +208,7 @@ $time1 = ($end - $start);
 
 $start = microtime(true);
 $taxon_list = Taxon::find($taxon_id)->getDescendantsAndSelf()->pluck('id')->toArray();
-$query = Measurement::whereHasMorph('measured',['App\Plant','App\Voucher'],function($mm) use($taxon_list) { $mm->withoutGlobalScopes()->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
+$query = Measurement::whereHasMorph('measured',['App\Individual','App\Voucher'],function($mm) use($taxon_list) { $mm->withoutGlobalScopes()->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
 $query = $query->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$taxon_id);
 $query->count();
 $end = microtime(true);
