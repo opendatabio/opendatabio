@@ -185,8 +185,8 @@ $(document).ready(function() {
      @if ($measurement->odbtrait->link_type == "App\Person")
           $("#link_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
      @endif
-     @if ($measurement->odbtrait->link_type == "App\Plant")
-          $("#link_autocomplete").odbAutocomplete("{{url('plants/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+     @if ($measurement->odbtrait->link_type == "App\Individuals")
+          $("#link_autocomplete").odbAutocomplete("{{url('individuals/autocomplete')}}","#link_id", "@lang('messages.noresults')");
      @endif
     @endif
     $("#person_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#person_id", "@lang('messages.noresults')");

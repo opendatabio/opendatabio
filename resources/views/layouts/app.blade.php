@@ -13,23 +13,28 @@
 
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-
+    <link rel="shortcut icon" href="{{ asset('favicon_io/favicon.ico') }}" >
     <!-- Chart.js -->
     <script src="{{ asset('js/Chart.min.js') }}"></script>
 
     <!-- Scripts -->
     <script>
         window.Laravel = {!! json_encode([
-            'csrfToken' => csrf_token(),
+          'csrfToken' => csrf_token(),
         ]) !!};
     </script>
+
+
 </head>
 <body>
 <div id="app">
   <nav class="navbar navbar-default navbar-static-top">
+    <br>
     <div class="container">
       <div class="navbar-header">
-
+        <img src="{{ asset('favicon_io/favicon.ico') }}" >&nbsp;&nbsp;
+      </div>
+      <div class="navbar-header">
         <!-- Collapsed Hamburger -->
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#app-navbar-collapse">
             <span class="sr-only">Toggle Navigation</span>
@@ -57,8 +62,8 @@
           </a>
         </li>
   			<li>
-          <a href="{{ route('plants.index') }}">
-            @lang('messages.plants')
+          <a href="{{ route('individuals.index') }}">
+            @lang('messages.individuals')
           </a>
         </li>
   			<li>
@@ -95,8 +100,8 @@
                 </a>
               </li>
         			<li>
-                <a href="{{ route('herbaria.index') }}">
-                  @lang('messages.herbaria')
+                <a href="{{ route('biocollections.index') }}">
+                  @lang('messages.biocollections')
                 </a>
               </li>
 
@@ -131,20 +136,31 @@
                 @lang('messages.imports') <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
+              <li>
+                <a href="{{ route('references.index') }}">
+                  @lang('messages.references')
+                </a>
+              </li>
+              <li><a href="{{ url('import/biocollections') }}">
+                @lang('messages.biocollections')
+              </a></li>
+              <li><a href="{{ url('import/individuals') }}">
+                @lang('messages.individuals')
+              </a></li>
               <li><a href="{{ url('import/locations') }}">
                 @lang('messages.locations')
               </a></li>
-              <li><a href="{{ url('import/plants') }}">
-                @lang('messages.plants')
+              <li><a href="{{ url('import/measurements') }}">
+                @lang('messages.measurements')
+              </a></li>
+              <li><a href="{{ url('import/persons') }}">
+                @lang('messages.persons')
               </a></li>
               <li><a href="{{ route('uploadPictures') }}">
                 @lang('messages.pictures')
               </a></li>
               <li><a href="{{ url('import/traits') }}">
                 @lang('messages.traits')
-              </a></li>
-              <li><a href="{{ url('import/measurements') }}">
-                @lang('messages.measurements')
               </a></li>
               <li><a href="{{ url('import/taxons') }}">
                 @lang('messages.taxons')
@@ -156,45 +172,17 @@
           </li>
         @endif
 
-        <li class="dropdown">
-          <a href="{{ url('docs')}}">
-            @lang('messages.help')
-          </a>
-        </li>
-
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-              @php
-                if (Session::has('applocale')) {
-                  $flag_class = "flag-icon flag-icon-".Config::get('languages_flags')[Session::get('applocale')];
-                } else {
-                  $flag_class = "flag-icon flag-icon-".array_values(Config::get('languages_flags'))[0];
-                }
-              @endphp
-              <span class="{{$flag_class}}"></span>
-              <span class="caret"></span>
-            </a>
-            <ul class="dropdown-menu" role="menu">
-              @foreach (Config::get('languages') as $lang => $language)
-                @if(Session::get('applocale') !== $lang)
-                <li>
-                  @if(Auth::user())
-                    <a href="{{ url('home/'.$lang) }}">
-                  @else
-                    <a href="{{ url('welcome/'.$lang) }}">
-                  @endif
-                    <span class="flag-icon flag-icon-{{ Config::get('languages_flags')[$lang]}}"></span>
-                    {{ $language }}</a></li>
-                @endif
-              @endforeach
-            </ul>
-          </li>
-      </ul>
 
 
-        <!-- Right Side Of Navbar -->
+
+
+        <!-- Right Side Of Navbar
+        </ul>
         <ul class="nav navbar-nav navbar-right">
-        <!-- Authentication Links -->
+
+
+
+        Authentication Links -->
         @if (Auth::guest())
           <li>
             <a href="{{ route('login') }}">
@@ -242,6 +230,44 @@
             </ul>
           </li>
         @endif
+
+
+
+        <li class="dropdown">
+          <a href="{{ url('docs')}}">
+            @lang('messages.help')
+          </a>
+        </li>
+
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+              @php
+                if (Session::has('applocale')) {
+                  $flag_class = "flag-icon flag-icon-".Config::get('languages_flags')[Session::get('applocale')];
+                } else {
+                  $flag_class = "flag-icon flag-icon-".array_values(Config::get('languages_flags'))[0];
+                }
+              @endphp
+              <span class="{{$flag_class}}"></span>
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+              @foreach (Config::get('languages') as $lang => $language)
+                @if(Session::get('applocale') !== $lang)
+                <li>
+                  @if(Auth::user())
+                    <a href="{{ url('home/'.$lang) }}">
+                  @else
+                    <a href="{{ url('welcome/'.$lang) }}">
+                  @endif
+                    <span class="flag-icon flag-icon-{{ Config::get('languages_flags')[$lang]}}"></span>
+                    {{ $language }}</a></li>
+                @endif
+              @endforeach
+            </ul>
+          </li>
+
+
         </ul>
 
 

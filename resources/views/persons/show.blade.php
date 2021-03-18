@@ -40,12 +40,12 @@
 	{{ $person->institution }}
 </p>
 @endif
-@if ($person->herbarium)
+@if ($person->biocollection)
 <p>
 	<strong>
-	@lang('messages.herbarium')
+	@lang('messages.biocollection')
 :</strong>
-{!! $person->herbarium->rawLink() !!}
+{!! $person->biocollection->rawLink() !!}
 @endif
 </p>
 
@@ -69,9 +69,9 @@
 </p>
 @endif
 <div class="col-sm-3">
-    <a href="{{ url('persons/'. $person->id. '/plants')  }}" class="btn btn-default">
+    <a href="{{ url('persons/'. $person->id. '/individuals')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
-@lang('messages.plants')
+@lang('messages.individuals')
     </a>
 </div>
 <div class="col-sm-4">

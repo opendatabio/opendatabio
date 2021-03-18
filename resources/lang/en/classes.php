@@ -1,7 +1,7 @@
 <?php
 return [
     'App\Location' => 'Location',
-    'App\Plant' => 'Plant',
+    'App\Individual' => 'Individual',
     'App\Voucher' => 'Voucher',
     'App\Taxon' => 'Taxon',
     'App\Person' => 'Person'

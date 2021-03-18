@@ -9,7 +9,7 @@ namespace App;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Herbarium extends Model
+class Biocollection extends Model
 {
 
     const NotType =0;
@@ -47,11 +47,13 @@ class Herbarium extends Model
       self::Phototype,
     ];
 
+    protected $table = 'biocollections';
+
     protected $fillable = ['name', 'acronym', 'irn'];
 
     public function rawLink()
     {
-        return "<a href='".url('herbaria/'.$this->id)."'>".htmlspecialchars($this->acronym).'</a>';
+        return "<a href='".url('biocollections/'.$this->id)."'>".htmlspecialchars($this->acronym).'</a>';
     }
 
     public function persons()
@@ -61,7 +63,8 @@ class Herbarium extends Model
 
     public function vouchers()
     {
-        return $this->belongsToMany(Voucher::class)->withPivot('herbarium_number');
+        //return $this->belongsToMany(Voucher::class)->withPivot('biocollection_number');
+        return $this->hasMany(Voucher::class);
     }
 
     // For Revisionable
@@ -69,4 +72,6 @@ class Herbarium extends Model
     {
         return $this->acronym;
     }
+
+
 }

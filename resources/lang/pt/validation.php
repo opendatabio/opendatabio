@@ -125,7 +125,7 @@ return [
     'full_name' => 'nome completo',
     'abbreviation' => 'abreviação',
     'institution' => 'instituição',
-    'herbarium_id' => 'herbário',
+    'biocollection_id' => 'herbário',
 
     ],
 

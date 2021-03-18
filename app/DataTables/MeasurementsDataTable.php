@@ -89,7 +89,7 @@ class MeasurementsDataTable extends DataTable
             $query = $query->where('dataset_id', $this->dataset);
         }
         if ($this->project) {
-            $query = $query->whereHasMorph('measured',['App\Voucher',"App\Plant"],function($measured) {
+            $query = $query->whereHasMorph('measured',['App\Voucher',"App\Individual"],function($measured) {
                 $measured->where('project_id','=',$this->project);
             });
         }
@@ -100,7 +100,7 @@ class MeasurementsDataTable extends DataTable
         if ($this->taxon and !isset($this->location)) {
           $taxon_list = Taxon::findOrFail($this->taxon)->getDescendantsAndSelf()->pluck('id')->toArray();
           $query = $query->where(function($subquery) use($taxon_list) {
-            $subquery->whereHasMorph('measured',['App\Plant','App\Voucher'],function($measured) use($taxon_list) {
+            $subquery->whereHasMorph('measured',['App\Individual','App\Voucher'],function($measured) use($taxon_list) {
               $measured->whereHas('identification',function($idd) use($taxon_list)  {
                 $idd->whereIn('taxon_id',$taxon_list);});})->orWhere(function($qq) use($taxon_list) {
                     $qq->where('measured_type',"=",'App\Taxon')->whereIn('measured_id',$taxon_list);
@@ -114,14 +114,13 @@ class MeasurementsDataTable extends DataTable
         if ($this->location and $this->taxon) {
             $taxon_list = Taxon::findOrFail($this->taxon)->getDescendantsAndSelf()->pluck('id')->toArray();
             $locations_ids = Location::findOrFail($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
-            $query = $query->where(function($subquery) use($taxon_list,$locations_ids) {
-              $subquery->whereHasMorph('measured',['App\Plant'],function($measured) use($taxon_list,$locations_ids) {
-                  $measured->whereHas('identification',function($idd) use($taxon_list,$locations_ids)  {
-                    $idd->whereIn('taxon_id',$taxon_list);})->whereIn('location_id',$locations_ids);
-                  });})->orWhere(function($subquery) use($taxon_list,$locations_ids) {
-                      $subquery->whereHasMorph('measured',['App\Voucher'],function($measured) use($taxon_list,$locations_ids) {
-                          $measured->whereHas('identification',function($idd) use($taxon_list,$locations_ids)  {
-                            $idd->whereIn('taxon_id',$taxon_list);})->whereIn('parent_id',$locations_ids)->where('parent_type','App\Location');});});
+            $query = $query->whereHasMorph('measured',['App\Individual','App\Voucher'],function($measured) use($taxon_list,$locations_ids) {
+                  $measured->whereHas('identification',function($idd) use($taxon_list)  {
+                    $idd->whereIn('taxon_id',$taxon_list);})
+                    ->whereHas('locations',function($loc) use ($locations_ids) {
+                      $loc->whereIn('location_id',$locations_ids);
+                  });
+        });
         }
 
         return $this->applyScopes($query);

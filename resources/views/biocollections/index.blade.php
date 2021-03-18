@@ -13,14 +13,14 @@
     </div>
     <div id="help" class="panel-collapse collapse">
       <div class="panel-body">
-@lang('messages.hint_herbaria_page')
+@lang('messages.hint_biocollections_page')
       </div>
     </div>
   </div>
-@can ('create',App\Herbarium::class)
+@can ('create',App\Biocollection::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-		@lang('messages.new_herbarium')
+		@lang('messages.new_biocollection')
                 </div>
 
                 <div class="panel-body">
@@ -30,10 +30,10 @@
 <div id="ajax-error" class="collapse alert alert-danger">
 @lang('messages.whoops')
 </div>
-		    <form action="{{ url('herbaria')}}" method="POST" class="form-horizontal">
+		    <form action="{{ url('biocollections')}}" method="POST" class="form-horizontal">
 		    <input type="hidden" name="route-url" value="{{ route('checkih') }}">
 		     {{ csrf_field() }}
-		    @include('herbaria.form')
+		    @include('biocollections.form')
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-primary" id="checkih">
@@ -63,7 +63,7 @@
 @endcan
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        @lang('messages.registered_herbaria')
+                        @lang('messages.registered_biocollections')
                     </div>
 
                     <div class="panel-body">
@@ -80,15 +80,15 @@
 </th>
                             </thead>
                             <tbody>
-                                @foreach ($herbaria as $herbarium)
+                                @foreach ($biocollections as $biocollection)
                                     <tr>
 					<td class="table-text"><div>
-                    {!! $herbarium->rawLink() !!}
+                    {!! $biocollection->rawLink() !!}
 					</div></td>
-                                        <td class="table-text">{{ $herbarium->name }}</td>
+                                        <td class="table-text">{{ $biocollection->name }}</td>
 					<td class="table-text">
-          @if($herbarium->irn >0)
-					<a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn={{$herbarium->irn}}">Details</a>
+          @if($biocollection->irn >0)
+					<a href="http://sweetgum.nybg.org/science/ih/biocollection_details.php?irn={{$biocollection->irn}}">Details</a>
           @else
           @lang('messages.noih')
           @endif
@@ -97,7 +97,7 @@
                                 @endforeach
                             </tbody>
                         </table>
-			 {{ $herbaria->links() }}
+			 {{ $biocollections->links() }}
                     </div>
                 </div>
         </div>

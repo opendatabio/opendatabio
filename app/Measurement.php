@@ -45,37 +45,30 @@ class Measurement extends Model
 
     public function getLocationIdAttribute()
     {
-      if ($this->measured_type == Plant::class) {
-        return $this->measured->location_id;
+      if ($this->measured_type == Individual::class) {
+        return $this->measured->location_first()->first()->id;
       }
       if ($this->measured_type == Location::class) {
         return $this->measured_id;
       }
       if ($this->measured_type == Voucher::class) {
-        if ($this->measured->parent_type == Location::class) {
-           return $this->measured->parent_id;
-        } else {
-           return $this->measured->parent->location->id;
-        }
+        return $this->measured->location_first()->first()->id;
       }
       return NULL;
     }
 
     public function getTaxonIdAttribute()
     {
-      if ($this->measured_type == Plant::class && isset($this->measured->identification)) {
+      if ($this->measured_type == Individual::class && isset($this->measured->identification)) {
         return $this->measured->identification->taxon_id;
       }
-      if ($this->measured_type == Voucher::class) {
-          if ($this->measured->parent_type == Location::class && isset($this->measured->identification)) {
-            return $this->measured->identification->taxon_id;
-          }
-          if ($this->measured->parent_type == Plant::class && isset($this->measured->parent->identification)) {
-            return $this->measured->parent->identification->taxon_id;
-          }
+
+      if ($this->measured_type == Voucher::class && isset($this->measured->identification))
+      {
+        return $this->measured->identification->taxon_id;
       }
       if ($this->measured_type == Taxon::class) {
-          return $this->measured_id;
+        return $this->measured_id;
       }
       return NULL;
     }

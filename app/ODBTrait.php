@@ -25,7 +25,7 @@ class ODBTrait extends Model
     // Types that can have measurements associated with
     // If this is ever changed, remember to edit getObjectTypeNames!
     const OBJECT_TYPES = [
-        Plant::class,
+        Individual::class,
         Voucher::class,
         Location::class,
         Taxon::class,
@@ -35,7 +35,7 @@ class ODBTrait extends Model
     const LINK_TYPES = [
         Taxon::class,
         //Person::class,
-        //Plant::class,
+        //Individual::class,
     ];
 
     const QUANT_INTEGER = 0;
@@ -80,7 +80,7 @@ class ODBTrait extends Model
     public static function getObjectTypeNames()
     {
         return [
-            Lang::get('classes.'.Plant::class),
+            Lang::get('classes.'.Individual::class),
             Lang::get('classes.'.Voucher::class),
             Lang::get('classes.'.Location::class),
             Lang::get('classes.'.Taxon::class),

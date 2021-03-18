@@ -38,9 +38,9 @@ trait IncompleteDate
             return $this->setDateFromString($month);
           }
         }
-        $year = (int) $year;
-        $month = (int) $month;
-        $day = (int) $day;
+        $year = (int) ((null == $year and is_array($month)) ? (isset($month['year']) ? $month['year'] : $month[2]) : $year);
+        $day = (int) ((null == $day and is_array($month)) ? (isset($month['day']) ? $month['day'] : $month[1]) : $day);
+        $month = (int) (is_array($month) ? (isset($month['month']) ? $month['month'] : $month[0]) : $month);
         $this->date = $this->_zeroPad($year, 4).'-'.$this->_zeroPad($month).'-'.$this->_zeroPad($day);
     }
 
@@ -64,36 +64,39 @@ trait IncompleteDate
 
     public function getFormatDateAttribute()
     {
-        if ($this->day) {
+        if ($this->day>0) {
             return $this->date;
         }
-        if ($this->month) {
+        if ($this->month>0) {
             return substr($this->date, 0, 7);
         }
-
         return substr($this->date, 0, 4);
     }
 
     public static function checkDate($month, $day = null, $year = null)
     {
         if (is_array($month)) {
-            $year = $month[2];
-            $day = $month[1];
-            $month = $month[0];
+            $year = isset($month['year']) ? $month['year'] : (isset($month[2]) ? $month[2] : null) ;
+            $day = isset($month['day']) ? $month['day'] : (isset($month[1]) ? $month[1] : null) ;
+            $month = isset($month['month']) ? $month['month'] : (isset($month[0]) ? $month[0] : null) ;
         }
+
         $year = (int) $year;
         $month = (int) $month;
         $day = (int) $day;
         // if month is unknown, day must be unknown too
-        if (0 == $month and 0 != $day) {
+        //and month must be valid
+        if ((0 == $month and 0 != $day) or $month>12) {
             return false;
         }
-        // if date is incomplete, we only require 0 <= $month <= 12
-        // TODO: MUST ALLOW ONLY year BUT is required so add or (0==$day and 0==$month and $year>0
-        //otherwise will fail)
-        if (0 == $day and $month <= 12 and $month >= 0) {
-            return true;
+        $current_year = (int) Date('Y');
+        if ($year==0 or $year>$current_year) {
+          return false;
         }
+        if (0 == $day and $year>0) {
+          return true;
+        }
+
         // if the date is complete, just run php checkdate
         return checkdate($month, $day, $year);
     }

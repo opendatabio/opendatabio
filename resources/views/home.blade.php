@@ -9,7 +9,7 @@
         </div>
         <div class="panel-body">
           <div class="col-sm-12">
-          <p>@lang('messages.welcome_summary',compact('nplants', 'nvouchers','ndatasets','nprojects','nmeasurements'))</p>
+          <p>@lang('messages.welcome_summary',compact('nindividuals', 'nvouchers','ndatasets','nprojects','nmeasurements'))</p>
           <br>
           @if (Auth::user()->person)
           <p>

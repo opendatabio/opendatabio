@@ -10,12 +10,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Person;
-use App\Herbarium;
+use App\Biocollection;
 use Illuminate\Support\Facades\Lang;
 //use Illuminate\Support\Facades\Request;
 use App\DataTables\PersonsDataTable;
 use App\DataTables\ActivityDataTable;
+
+use App\Jobs\ImportPersons;
+use Spatie\SimpleExcel\SimpleExcelReader;
+
 use Response;
+use App\UserJob;
+
 
 class PersonController extends Controller
 {
@@ -38,10 +44,10 @@ class PersonController extends Controller
      */
     public function index(PersonsDataTable $dataTable)
     {
-        $herbaria = Herbarium::all();
+        $biocollections = Biocollection::all();
 
         return $dataTable->render('persons.index', [
-            'herbaria' => $herbaria,
+            'biocollections' => $biocollections,
     ]);
     }
 
@@ -123,10 +129,10 @@ class PersonController extends Controller
     public function edit($id)
     {
         $person = Person::findOrFail($id);
-        $herbaria = Herbarium::all();
+        $biocollections = Biocollection::all();
         $taxons = $person->taxons();
 
-        return view('persons.edit', compact('person', 'herbaria', 'taxons'));
+        return view('persons.edit', compact('person', 'biocollections', 'taxons'));
     }
 
     /**
@@ -143,7 +149,7 @@ class PersonController extends Controller
         $this->authorize('update', $person);
         $this->checkValid($request, $id);
 
-        $person->update($request->only(['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes']));
+        $person->update($request->only(['full_name', 'abbreviation', 'email', 'institution', 'biocollection_id','notes']));
         // add/remove specialists
         $person->taxons()->sync($request->specialist);
 
@@ -177,4 +183,42 @@ class PersonController extends Controller
       $object = Person::findOrFail($id);
       return $dataTable->with('person', $id)->render('common.activity',compact('object'));
     }
+
+
+    public function importJob(Request $request)
+    {
+      $this->authorize('create', Person::class);
+      $this->authorize('create', UserJob::class);
+      if (!$request->hasFile('data_file')) {
+          $message = Lang::get('messages.invalid_file_missing');
+      } else {
+        /*
+            Validate attribute file
+            Validate file extension and maintain original if valid or else
+            Store may save a csv as a txt, and then the Reader will fail
+        */
+        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
+        $ext = $request->file('data_file')->getClientOriginalExtension();
+        if (!in_array($ext,$valid_ext)) {
+          $message = Lang::get('messages.invalid_file_extension');
+        } else {
+          try {
+            $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
+          } catch (\Exception $e) {
+            $data = [];
+            $message = json_encode($e);
+          }
+          if (count($data)>0) {
+            UserJob::dispatch(ImportPersons::class,[
+              'data' => ['data' => $data]
+            ]);
+            $message = Lang::get('messages.dispatched');
+          } else {
+            $message = 'Something wrong with file';
+          }
+        }
+      }
+      return redirect('import/persons')->withStatus($message);
+    }
+
 }

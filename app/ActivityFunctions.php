@@ -7,15 +7,18 @@
 
 namespace App;
 
-use App\Plant;
+use App\Individual;
 use App\User;
 use App\Person;
 use App\Voucher;
 use App\Taxon;
 use App\ODBTrait;
 use App\Location;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Lang;
+
+
+use Spatie\Activitylog\Traits\LogsActivity;
+
 
 class ActivityFunctions
 {
@@ -236,7 +239,7 @@ class ActivityFunctions
                     }
                     if ($relatedmodel=='bibreference') {
                       $relatedmodel = 'BibReference';
-                    }                    
+                    }
                       $identifiablenew = self::getIdentifiableName($relatedmodel,$newvalue);
                       if (null !== $old) {
                         $identifiableold = self::getIdentifiableName($relatedmodel,$oldvalue);

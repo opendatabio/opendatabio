@@ -16,6 +16,8 @@ use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
 use DB;
+use Auth;
+
 class VouchersDataTable extends DataTable
 {
     /**
@@ -33,48 +35,45 @@ class VouchersDataTable extends DataTable
             $taxon = Taxon::whereRaw('odb_txname(name, level, parent_id) like ?', ["%".$keyword."%"])->cursor();
             if ($taxon->count()) {
               $taxon_list = $taxon->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-              $query->where('number', 'like', ["%{$keyword}%"])->orWhere('persons.full_name','like',["%{$keyword}%"])->orWhere(function($subquery) use($taxon_list) {
-                $subquery->whereHas('identification', function ($q) use ($taxon_list) {$q->whereIn('taxon_id',$taxon_list); })->orWhereHas('plant_identification',function($q) use($taxon_list) {
-              $q->whereIn('taxon_id',$taxon_list);
-              });});
-            } else {
-              $query->where('number', 'like', ["%{$keyword}%"])->orWhere('persons.full_name','like',["%{$keyword}%"]);
+              $query->whereHas('identification',function($q) use($taxon_list) {
+                $q->whereIn('taxon_id',$taxon_list);
+              });
             }
+            $query->whereRaw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id) like ?', ["%".$keyword."%"]);
         })
-        ->addColumn('project', function ($voucher) { return $voucher->project->name; })
+        ->editColumn('biocollection_id', function ($voucher) {
+            return $voucher->biocollection->rawLink();
+        })
+        ->editColumn('biocollection_type', function ($voucher) {
+            return $voucher->is_type;
+        })
         ->addColumn('identification', function ($voucher) {
-            return $voucher->taxonName == Lang::get('messages.unidentified') ?
-                   $voucher->taxonName : '<em>'.htmlspecialchars($voucher->taxonName).'</em>';
+            return $voucher->taxon_name == Lang::get('messages.unidentified') ?
+                   $voucher->taxon_name : '<em>'.htmlspecialchars($voucher->taxon_name).'</em>';
         })
-
         ->addColumn('collectors', function ($voucher) {
-            $col = $voucher->collectors;
-            return implode(', ',$col->map(function ($c) {return $c->person->fullname; })->all()
-          );
+            return $voucher->all_collectors;
         })
-        ->editColumn('parent_type', function ($voucher) {
-            $text = 'Linked to location';
-            if ($voucher->parent_type ==  'App\Plant') {
-              $text = $voucher->parent->rawLink();
-            }
-            return $text;
+        ->addColumn('individual', function ($voucher) {
+            return $voucher->individual->rawLink();
         })
         ->addColumn('location',function($voucher) {
-            $text = "";
-            if (null !== $voucher->locationWithGeom) {
-                $text = $voucher->locationWithGeom->first()->rawLink();
-                $text .= "<br>".$voucher->locationWithGeom->first()->coordinatesSimple;
-            }
-            return $text;
+            //return $voucher->location_first()->first()->location()->first()->rawLink();
+            return $voucher->LocationDisplay;
         })
-        ->editColumn('date', function ($voucher) { return $voucher->formatDate; })
+        ->editColumn('date', function ($voucher) {
+            return $voucher->collection_date;
+        })
         ->addColumn('measurements', function ($voucher) {
             return '<a href="'.url('vouchers/'.$voucher->id.'/measurements').'">'.$voucher->measurements()->withoutGlobalScopes()->count().'</a>';
         })
         ->addColumn('select_vouchers',  function ($voucher) {
             return $voucher->id;
         })
-        ->rawColumns(['fullname', 'identification','location','measurements','parent_type']);
+        ->addColumn('project', function ($voucher) {
+          return $voucher->project_name;
+        })
+        ->rawColumns(['fullname', 'identification','location','measurements','parent_type','individual','biocollection_id']);
     }
 
     /**
@@ -85,33 +84,27 @@ class VouchersDataTable extends DataTable
     public function query()
     {
         //This slows down and is not needed here
-        $query = Voucher::query()
-            ->select([
-                'vouchers.id',
-                'number',
-                'person_id',
-                'project_id',
-                'parent_id',
-                'parent_type',
-                'date',
-                'persons.full_name',
-            ])->join('persons','person_id','=','persons.id');
-            //with(['identification.taxon', 'person']);
-            //->withCount('measurements');
+        $query = Voucher::query()->select([
+          'vouchers.id',
+          'vouchers.individual_id',
+          'vouchers.biocollection_id',
+          'vouchers.biocollection_number',
+          'vouchers.biocollection_type',
+          'vouchers.notes',
+          'vouchers.number',
+          'vouchers.project_id',
+          'vouchers.date',
+          DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id) as fullname')
+        ]);
         // customizes the datatable query
         if ($this->location) {
             $locationsids = Location::find($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
-            $query = $query->where(function($q) use($locationsids) {
-              $q->where(function($subquery) use($locationsids) {
-                $subquery->where('parent_type', 'App\Location')->whereIn('parent_id',$locationsids);
-              })->orWhereHasMorph('parent',["App\Plant"],function($plant) use($locationsids) {
-                  $plant->whereIn('location_id',$locationsids); });
+            $query = $query->whereHas('location_first',function($q) use($locationsids) {
+                $q->whereIn('location_id',$locationsids);
             });
-
-
         }
-        if ($this->plant) {
-            $query = $query->where('parent_type', 'App\Plant')->where('parent_id', '=', $this->plant);
+        if ($this->individual) {
+            $query = $query->where('individual_id',$this->individual);
         }
         if ($this->project) {
             $query = $query->where('project_id', '=', $this->project);
@@ -119,35 +112,21 @@ class VouchersDataTable extends DataTable
         if ($this->taxon) {
             $taxon = $this->taxon;
             $taxon_list = Taxon::where('id',$taxon)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-            $query = $query->where(function($subquery) use($taxon_list) {
-              $subquery->whereHas('identification', function ($q) use ($taxon_list) {$q->whereIn('taxon_id',$taxon_list); })->orWhereHas('plant_identification',function($q) use($taxon_list) {
-                $q->whereIn('taxon_id',$taxon_list);
-            });});
+            $query = $query->whereHas('identification', function ($q) use ($taxon_list) { $q->whereIn('taxon_id',$taxon_list); });
         }
         if ($this->person) {
             $person = $this->person;
-            $q1 = $query->whereHas('collectors', function ($q) use ($person) {$q->where('person_id', '=', $person); });
-            $query2 = Voucher::query()->with(['identification.taxon', 'project', 'parent'])
-                ->select([
-                    'vouchers.id',
-                    'number',
-                    'person_id',
-                    'project_id',
-                    'parent_id',
-                    'parent_type',
-                    'date',
-                ]);
-                //->withCount('measurements');
-            $query = $query2->where('person_id', $person)->union($q1);
+            $query = $query->whereHas('collectors', function ($q) use ($person) {
+                $q->where('person_id', '=', $person);
+            });
         }
         if ($this->dataset) {
             $dataset  = $this->dataset;
             $query = $query->whereHas('measurements', function ($q) use ($dataset) {$q->where('dataset_id', '=', $dataset); });
 
         }
-        if ($this->herbarium_id) {
-            $herbid =$this->herbarium_id;
-            $query = $query->whereHas('herbaria', function ($q) use ($herbid) {$q->where('herbarium_id', '=', $herbid); });
+        if ($this->biocollection_id) {
+            $query = $query->where('biocollection_id',$this->biocollection_id);
         }
         return $this->applyScopes($query);
     }
@@ -159,16 +138,25 @@ class VouchersDataTable extends DataTable
      */
     public function html()
     {
+        if (Auth::user()) {
+          $hidcol = [1,4,6,7,10,12];
+        } else {
+          $hidcol = [0,1,4,6,7,10,12];
+        }
+
         return $this->builder()
             ->columns([
                 'select_vouchers' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
-                'fullname' => ['title' => Lang::get('messages.collector_and_number'), 'searchable' => true, 'orderable' => true],
-                'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => true, 'orderable' => false],
-                'parent_type' => ['title' => Lang::get('messages.planttag'), 'searchable' => false, 'orderable' => true],
+                'fullname' => ['title' => Lang::get('messages.voucher'), 'searchable' => true, 'orderable' => true],
+                'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
+                'individual' => ['title' => Lang::get('messages.individual'), 'searchable' => false, 'orderable' => false],
+                'biocollection_id' => ['title' => Lang::get('messages.biocollection'), 'searchable' => false, 'orderable' => false],
+                'biocollection_number' => ['title' => Lang::get('messages.biocollection_number'), 'searchable' => false, 'orderable' => false],
+                'biocollection_type' => ['title' => Lang::get('messages.voucher_isnomenclatural_type'), 'searchable' => false, 'orderable' => false],
                 'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
-                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
-                'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
+                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
+                'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => false],
                 'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
                 'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => false, 'orderable' => false],
             ])
@@ -185,7 +173,7 @@ class VouchersDataTable extends DataTable
                 ],
                 'columnDefs' => [
                   [
-                    'targets' => [1,4,9],
+                    'targets' => $hidcol,
                     'visible' => false,
                   ],
                   [

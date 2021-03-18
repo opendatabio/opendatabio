@@ -20,7 +20,7 @@
 @lang('messages.form_type')
 : </strong> @lang('classes.'. $form->measured_type )</p>
 
-@if ($form->notes) 
+@if ($form->notes)
 		    <p><strong>
 @lang('messages.notes')
 : </strong> {{$form->notes}}
@@ -49,7 +49,7 @@
                 </div>
             </div>
 </div>
-<!-- Other details (specialist, herbarium, collects, etc?) -->
+<!-- Other details (specialist, biocollection, collects, etc?) -->
 @if (Auth::user())
         <div class="col-sm-offset-2 col-sm-8">
             <div class="panel panel-default">

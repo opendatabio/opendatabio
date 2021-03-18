@@ -128,18 +128,18 @@
            @endcan
          @endif
 
-         @if ($location->getCount('all',null,'plants'))
-             <a href="{{ url('locations/'. $location->id. '/plants')  }}" class="btn btn-default">
+         @if ($location->getCount('all',null,'individuals'))
+             <a href="{{ url('locations/'. $location->id. '/individuals')  }}" class="btn btn-default">
                <i class="fa fa-btn fa-search"></i>
-               {{ $location->getCount('all',null,'plants')}}
-               @lang('messages.plants')
+               {{ $location->getCount('all',null,'individuals')}}
+               @lang('messages.individuals')
              </a>
              &nbsp;&nbsp;
          @else
-           @can ('create', App\Plant::class)
-                <a href="{{url ('locations/' . $location->id . '/plants/create')}}" class="btn btn-default">
+           @can ('create', App\Individual::class)
+                <a href="{{url ('locations/' . $location->id . '/individuals/create')}}" class="btn btn-default">
                  <i class="fa fa-btn fa-plus"></i>
-                 @lang('messages.create_plant')
+                 @lang('messages.create_individual')
                </a>
                &nbsp;&nbsp;
            @endcan
@@ -208,15 +208,15 @@
 </div>
 
 
-<!--- PLANTS ON LOCATION  -->
-@if ($location->plants()->count()  and isset($chartjs))
+<!--- individualS ON LOCATION  -->
+@if ($location->individuals()->count()  and isset($chartjs))
 <div class="panel panel-default">
   <div class="panel-heading">
-    <a data-toggle="collapse" href="#plants_map" class="btn btn-default">
-    @lang('messages.plants')
+    <a data-toggle="collapse" href="#individuals_map" class="btn btn-default">
+    @lang('messages.individuals')
   </a>
   </div>
-  <div class="panel-body panel-collapse collapse"  id='plants_map'>
+  <div class="panel-body panel-collapse collapse"  id='individuals_map'>
     @if (isset($chartjs))
       <div style = "width:100%; height:400px; overflow:auto;">
         {!! $chartjs->render() !!}
@@ -312,7 +312,7 @@ function initMap() {
       @php
         $locacentroids = $location->centroid;
         $localcontent = "<strong>".$location->name."</strong><br><br>";
-        $localcontent .= Lang::get('messages.plants').":  <strong>".$location->getCount("all",null,"plants")."</strong><br>";
+        $localcontent .= Lang::get('messages.individuals').":  <strong>".$location->getCount("all",null,"individuals")."</strong><br>";
         $localcontent .= Lang::get('messages.vouchers').":  <strong>".$location->getCount("all",null,"vouchers")."</strong><br>";
         $localcontent .= Lang::get('messages.taxons').":  <strong>".$location->getCount("all",null,"taxons")."</strong><br>";
         $localcontent .= Lang::get('messages.measurements').":  <strong>".$location->getCount("all",null,"measurements")."</strong><br>";
@@ -326,7 +326,7 @@ function initMap() {
             $centroid = $parent->centroid;
             $hasparent = true;
             $parentcontent = "<strong>".$parent->name."</strong><br><br>";
-            $parentcontent .= Lang::get('messages.plants').":  <strong>".$parent->getCount("all",null,"plants")."</strong><br>";
+            $parentcontent .= Lang::get('messages.individuals').":  <strong>".$parent->getCount("all",null,"individuals")."</strong><br>";
             $parentcontent .= Lang::get('messages.vouchers').":  <strong>".$parent->getCount("all",null,"vouchers")."</strong><br>";
             $parentcontent .= Lang::get('messages.taxons').":  <strong>".$parent->getCount("all",null,"taxons")."</strong><br>";
             $parentcontent .= Lang::get('messages.measurements').":  <strong>".$parent->getCount("all",null,"measurements")."</strong><br>";

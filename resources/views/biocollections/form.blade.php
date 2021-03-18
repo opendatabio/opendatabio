@@ -9,7 +9,7 @@
             </div>
   <div class="col-sm-12">
     <div id="hint1" class="panel-collapse collapse">
-	@lang ('messages.hint_herbaria')
+	@lang ('messages.hint_biocollections')
     </div>
   </div>
 </div>

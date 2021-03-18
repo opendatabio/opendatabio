@@ -4,53 +4,80 @@
 <div class="container">
   <div class="col-sm-offset-2 col-sm-8">
     <div class="panel panel-default">
-
-
       <div class="panel-heading">
-          @lang('messages.voucher')
+          @lang('messages.voucher')&nbsp;&nbsp;
+          <strong>
+            {{ $voucher->fullname }}
+          </strong>
           <span class="history" style="float:right">
           <a href="{{url("vouchers/$voucher->id/activity")}}">
           @lang ('messages.see_history')
           </a>
           </span>
       </div>
-	     <div class="panel-body">
-         <p>
-           <strong>
-           @lang ('messages.main_collector')
-           </strong>:
-           {!! $voucher->person->rawLink() !!}
-           <br>
-           <strong>
-         @lang('messages.voucher_number')
-         :</strong>
-         {{ $voucher->number }}
-          <br>
-            <strong>
-         @lang('messages.collection_date')
-         :</strong>
-         {{$voucher->formatDate}}
-         </p>
-         <hr>
-          <p><strong>
-           @lang('messages.identification')
-           : </strong>
+
+      <div class="panel-body">
+        <p>
+          <strong>@lang ('messages.main_collector')</strong>:
+          {!! $voucher->main_collector !!}
+        </p>
+        <p>
+          <strong>@lang('messages.voucher_number')</strong>:
+          {{ isset($voucher->number) ? $voucher->number : $voucher->individual->tag }}
+        </p>
+        <p>
+          <strong>@lang('messages.collection_date')</strong>:
+          {{ $voucher->collection_date }}
+        </p>
+        @if ($voucher->main_collector != $voucher->all_collectors)
+          <p>
+            <strong>@lang('messages.collectors')</strong>:
+            {{ $voucher->all_collectors }}
+          </p>
+        @endif
+        <hr>
+        <p>
+          <strong>@lang('messages.biocollection')</strong>:
+          {!! $voucher->biocollection->rawLink() !!} -
+          {{ $voucher->biocollection->name }}
+        </p>
+        @if ($voucher->biocollection_number)
+          <p>
+            <strong>@lang('messages.biocollection_number')</strong>:
+            {{ $voucher->biocollection_number }}
+          </p>
+        @endif
+        <p>
+          <strong>@lang('messages.voucher_isnomenclatural_type')</strong>?
+          {{ $voucher->is_type }}
+        </p>
+
+        <hr>
+           <p>
+            <strong>@lang('messages.individual')</strong>:
+            {!! $voucher->individual->rawLink() !!}
+          </p>
+
+          <p>
+          <strong>@lang('messages.identification')</strong>:
            @if (is_null($identification))
              @lang ('messages.unidentified')
+            </p>
            @else
              {!! $identification->rawLink() !!}
-           </p>
-           <p><strong>
+        </p>
+        <p>
+          <strong>
              @lang('messages.identified_by')
              :</strong>
              {!! $identification->person ? $identification->person->rawLink() : Lang::get('messages.not_registered') !!}
              ({{ $identification->formatDate }})
            </p>
-           @if ($identification->herbarium_id)
+           @if ($identification->biocollection_id)
              <p><strong>
                @lang('messages.identification_based_on')
                :</strong>
-               @lang('messages.voucher_deposited_at') {!! $identification->herbarium->rawLink() !!}  @lang('messages.under_herbaria_id') {{ $identification->herbarium_reference }}
+               @lang('messages.voucher_deposited_at') {!! $identification->biocollection->rawLink() !!}  @lang('messages.under_biocollections_id') {{ $identification->biocollection_reference }}
              </p>
            @endif
            @if ($identification->notes)
@@ -61,87 +88,43 @@
              </a>
             </p>
             @endif
-          @endif <!-- identification -->
-          <hr>
-          @if ($voucher->parent instanceof App\Plant)
-            <p><strong>
-              @lang('messages.plant')
-              : </strong>
-              {!! $voucher->parent->rawLink() !!}
-              {!! $voucher->parent->location ? $voucher->parent->locationWithGeom->first()->coordinatesSimple : '' !!}
+          @endif
+
+
+          <!-- END identification -->
+
+
+            <p>
+             <strong>@lang('messages.location')</strong>:
+              <br>
+                {!! $voucher->location_display !!}
+              <br><br>
+              {{ $voucher->locationWithGeom->centroid_raw }}&nbsp;&nbsp;
+              <a data-toggle="collapse" href='#hintp' class="btn btn-default">{!! $voucher->individual->location_first->first()->precision !!}</a>
+              <div id='hintp' class='panel-collapse collapse'>
+                @lang('messages.location_precision_hint')
+              </div>
             </p>
-            <p><strong>
-              @lang('messages.location_precision')
-              :</strong>
-              {{ $voucher->parent->location ? $voucher->parent->location->precision : '' }}
-              <a data-toggle="collapse" href='#hintp'>?</a>
-            </p>
-          @elseif ($voucher->parent instanceof App\Location)
-            <p><strong>
-              @lang('messages.location')
-              : </strong>
-              {!! $voucher->parent->rawLink() !!}
-              {!! $voucher->locationWithGeom->first()->coordinatesSimple !!}
-            </p>
-            <p><strong>
-              @lang('messages.location_precision')
-              :</strong>
-              {{ $voucher->parent->precision }} <a data-toggle="collapse" href='#hintp'>?</a>
-            </p>
-          @else
-            <p><strong>
-              @lang('messages.voucher_parent_missing_error')
-            </strong>
-          </p>
-        @endif
-        <div id='hintp' class='panel-collapse collapse'>
-          @lang('messages.location_precision_hint')
-        </div>
+
+            <hr>
+            @if ($voucher->notes)
+              <p>
+                <strong>@lang('messages.notes')</strong>:
+                {{$voucher->notes}}
+              </p>
+            <hr>
+            @endif
 
 
-@if ($voucher->herbaria->count())
-<p><strong>
-@lang('messages.voucher_herbaria')
-:</strong>
-<ul>
-@foreach ($voucher->herbaria as $herb)
-<li>{!! $herb->rawLink() !!} (@php if(isset($herb->pivot->herbarium_number)) {
-  echo $herb->pivot->herbarium_number." - "; } @endphp @lang('levels.vouchertype.'.$herb->pivot->herbarium_type))</li>
-@endforeach
-</ul>
-@endif
+        <p>
+        <strong>@lang('messages.project')</strong>:
+          {!! $voucher->project->rawLink() !!}
+        </p>
 
-<p><strong>
-@lang('messages.project')
-:</strong>
-{!! $voucher->project->rawLink() !!}
-</p>
-
-
-@if ($voucher->notes)
-<p><strong>
-@lang('messages.notes')
-:</strong>
-{{$voucher->notes}}
-</p>
-@endif
-
-@if ($collectors->count()>1)
-  <p><strong>
-    @lang ('messages.additional_collectors')
-  </strong>:
-    @foreach ($collectors as $collector)
-      @if($collector->person->id !== $voucher->person->id)
-        {!! " | ".$collector->person->rawLink() !!}
-      @endif;
-    @endforeach
-
-  </p>
-@endif
-<hr>
-<div class="col-sm-12">
+        <hr>
+        <div class="col-sm-12">
   <br>
-@if ($voucher->measurements()->count())
+  @if ($voucher->measurements()->count())
     <a href="{{ url('vouchers/'. $voucher->id. '/measurements')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
         {{ $voucher->measurements()->count() }}
@@ -178,7 +161,7 @@
 </div>
 </div>
 
-<!-- Other details (specialist, herbarium, collects, etc?) -->
+<!-- Other details (specialist, biocollection, collects, etc?) -->
 @if ($voucher->pictures->count())
 {!! View::make('pictures.index', ['pictures' => $voucher->pictures]) !!}
 @endif

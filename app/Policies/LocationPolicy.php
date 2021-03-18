@@ -54,7 +54,7 @@ class LocationPolicy
         }
         if (User::USER == $user->access_level) {
             $m = $location->measurements()->withoutGlobalScopes()->get()->count();
-            $p = $location->plants()->withoutGlobalScopes()->get()->count();
+            $p = $location->individuals()->withoutGlobalScopes()->get()->count();
             $v = $location->vouchers()->withoutGlobalScopes()->get()->count();
 
             return 0 == $m + $p + $v;
@@ -76,7 +76,7 @@ class LocationPolicy
         if (($user->access_level >= User::USER) and
             (Location::LEVEL_PLOT == $location->adm_level or Location::LEVEL_POINT == $location->adm_level)) {
             $m = $location->measurements()->withoutGlobalScopes()->get()->count();
-            $p = $location->plants()->withoutGlobalScopes()->get()->count();
+            $p = $location->individuals()->withoutGlobalScopes()->get()->count();
             $v = $location->vouchers()->withoutGlobalScopes()->get()->count();
 
             return 0 == $m + $p + $v;

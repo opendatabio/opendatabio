@@ -32,7 +32,7 @@
 
 <input type="hidden" name="notes" id="notes" value="{{ old('notes')}}">
 
-<input type="hidden" name="herbarium_id" value="{{ old('herbarium_id') }}">
+<input type="hidden" name="biocollection_id" value="{{ old('biocollection_id') }}">
 		        <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success">

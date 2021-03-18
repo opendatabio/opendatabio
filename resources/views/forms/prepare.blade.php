@@ -52,7 +52,7 @@
         <a data-toggle="collapse" href="#hintdate" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 {!! View::make('common.incompletedate')->with([
-    'object' => null, 
+    'object' => null,
     'field_name' => 'date'
 ]) !!}
             </div>
@@ -97,16 +97,16 @@
 </div>
 @if ($form->notes)
     <div class="alert alert-warning">
-    <p><strong>@lang('messages.notes'):</strong> 
+    <p><strong>@lang('messages.notes'):</strong>
         {{ $form->notes }}
     </p></div>
 @endif
-    
+
 
 <table class="table table-striped">
 <thead>
     <th>
-@lang('messages.plant')
+@lang('messages.individual')
     </th>
 @foreach ($form->traits as $odbtrait)
     <th>
@@ -122,13 +122,13 @@
 
     @foreach ($form->traits as $traitorder => $odbtrait)
     <td>
-<?php 
+<?php
 // This returns null for no records:
 $measurement = $measurements->filter(function($m) use ($odbtrait, $form_item) {
     return $m->trait_id == $odbtrait->id and $m->measured_id == $form_item->id;
 })->first();
 // TODO: adapt views other than 0 and 2 to use index
-echo View::make('traits.elements.' . $odbtrait->type, 
+echo View::make('traits.elements.' . $odbtrait->type,
 [
     'odbtrait' => $odbtrait,
     'measurement' => $measurement,

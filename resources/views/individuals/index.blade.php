@@ -4,42 +4,25 @@
     <div class="container-fluid">
         <div class="col-sm-offset-2 col-sm-8">
 
-@if (!isset($object))
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">
-@lang('messages.help')
-</a>
-      </h4>
-    </div>
-    <div id="help" class="panel-collapse collapse">
-      <div class="panel-body">
-@lang('messages.plants_hint')
-      </div>
-    </div>
-  </div>
-@endif
-
-@can ('create', App\Plant::class)
+@can ('create', App\Individual::class)
         <div class="panel panel-default">
             <div class="panel-heading">
-  @lang('messages.create_plant')
+              @lang('messages.create_individual')
             </div>
 
             <div class="panel-body">
             <div class="col-sm-6">
             @if (isset($object) and class_basename($object) == 'Location') <!-- we're inside a Location, Project or Taxon view -->
-              <a href="{{url ('locations/' . $object->id . '/plants/create')}}" class="btn btn-success">
+              <a href="{{url ('locations/' . $object->id . '/individuals/create')}}" class="btn btn-success">
             @else
-              <a href="{{url ('plants/create')}}" class="btn btn-success">
+              <a href="{{url ('individuals/create')}}" class="btn btn-success">
             @endif
                 <i class="fa fa-btn fa-plus"></i>
                 @lang('messages.create')
             </a>
             &nbsp;&nbsp;
             <button class="btn btn-primary" id='batch_identify'>
-              @lang('messages.plants_batch_identify')
+              @lang('messages.individuals_batch_identify')
             </button>
           </div>
           </div>
@@ -47,25 +30,25 @@
 @endcan
 
 
-<!--- Batch Identification of plants hidden only registered users will see and project collaborators will be able to use-->
-<?php // TODO: Perhaps make only collaborators of any project having plants to see it. ?>
+<!--- Batch Identification of individuals hidden only registered users will see and project collaborators will be able to use-->
+<?php // TODO: Perhaps make only collaborators of any project having individuals to see it. ?>
 <div class="panel panel-default" id='batch_identification_panel' hidden>
   <div class="panel-heading">
-    @lang('messages.plants_batch_identify')
+    @lang('messages.individuals_batch_identify')
     &nbsp;&nbsp;<a data-toggle="collapse" href="#hint_batch_identify" class="btn btn-default">?</a>
     <div id="hint_batch_identify" class="panel-collapse collapse">
       <div class="panel-body">
-@lang('messages.plants_batch_identify_hint')
+@lang('messages.individuals_batch_identify_hint')
       </div>
   </div>
 </div>
 
   <div class="panel-body">
 
-<form action="{{ url('batchidentifications')}}" method="POST" class="form-horizontal" id='batch_identification_form'>
+<form action="{{url('individuals/batchidentify')}}" method="POST" class="form-horizontal" id='batch_identification_form'>
   <!-- csrf protection -->
   {{ csrf_field() }}
-<input type='hidden' name='plantids_list' id='batch_list' value='' value="">
+<input type='hidden' name='individualids_list' id='batch_list' value='' value="">
 <div class="form-group">
 <label class="col-sm-3 control-label mandatory">
 @lang('messages.taxon')
@@ -77,7 +60,7 @@
 </div>
   <div class="col-sm-12">
     <div id="hint6" class="panel-collapse collapse">
-	@lang('messages.plant_taxon_hint')
+	@lang('messages.individual_taxon_hint')
     </div>
   </div>
 </div>
@@ -98,7 +81,7 @@
             </div>
   <div class="col-sm-12">
     <div id="hint9" class="panel-collapse collapse">
-	@lang('messages.plant_modifier_hint')
+	@lang('messages.individual_modifier_hint')
     </div>
   </div>
 </div>
@@ -116,7 +99,7 @@
       </div>
   <div class="col-sm-12">
     <div id="hint7" class="panel-collapse collapse">
-	@lang('messages.plant_identifier_id_hint')
+	@lang('messages.individual_identifier_id_hint')
     </div>
   </div>
 </div>
@@ -134,37 +117,38 @@
     </div>
   <div class="col-sm-12">
     <div id="hint8" class="panel-collapse collapse">
-	@lang('messages.plant_identification_date_hint')
+	@lang('messages.individual_identification_date_hint')
     </div>
   </div>
 </div>
-@if(isset($herbaria))
+
+@if(isset($biocollections))
 <div class="form-group">
-    <label for="herbarium_id" class="col-sm-3 control-label">
-@lang('messages.id_herbarium')
+    <label for="biocollection_id" class="col-sm-3 control-label">
+@lang('messages.id_biocollection')
 </label>
         <a data-toggle="collapse" href="#hint10" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<select name="identification_based_on_herbarium" id="herbarium_id" class="form-control" >
+	<select name="identification_based_on_biocollection" id="biocollection_id" class="form-control" >
 		<option value='' >&nbsp;</option>
-	@foreach ($herbaria as $herbarium)
-		<option value="{{$herbarium->id}}" {{ '' }}>{{ $herbarium->acronym }} </option>
+	@foreach ($biocollections as $biocollection)
+		<option value="{{$biocollection->id}}" {{ '' }}>{{ $biocollection->acronym }} </option>
 	@endforeach
 	</select>
             </div>
   <div class="col-sm-12">
     <div id="hint10" class="panel-collapse collapse">
-	@lang('messages.plant_herbarium_id_hint')
+	@lang('messages.individual_biocollection_id_hint')
     </div>
   </div>
 </div>
 
-<div class="form-group herbarium_reference">
-    <label for="herbarium_reference" class="col-sm-3 control-label mandatory">
-@lang('messages.herbarium_reference')
+<div class="form-group biocollection_reference">
+    <label for="biocollection_reference" class="col-sm-3 control-label mandatory">
+@lang('messages.biocollection_reference')
 </label>
 	    <div class="col-sm-6">
-	<input type="text" name="identification_based_on_herbarium_id" id="herbarium_reference" class="form-control" value="">
+	<input type="text" name="identification_based_on_biocollection_id" id="biocollection_reference" class="form-control" value="">
       </div>
 </div>
 @endif
@@ -179,6 +163,26 @@
 	<textarea name="identification_notes" id="identification_notes" class="form-control"></textarea>
             </div>
 </div>
+
+<div class="form-group">
+    <label for="update_nonself_identification" class="col-sm-3 control-label mandatory">
+      @lang('messages.individual_update_nonself_identification')
+    </label>
+        <a data-toggle="collapse" href="#update_nonself_identification" class="btn btn-default">?</a>
+	    <div class="col-sm-6">
+    <input type="checkbox" name="update_nonself_identification" value=1 >
+    </div>
+  <div class="col-sm-12">
+    <div id="update_nonself_identification" class="panel-collapse collapse">
+	@lang('messages.individual_update_nonself_identification_hint')
+    </div>
+  </div>
+</div>
+
+
+
+
+
 </form>
             <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
@@ -197,11 +201,11 @@
 
 
 
-<!-- Registered Plants -->
+<!-- Registered individuals -->
           <div class="panel panel-default">
               <div class="panel-heading">
                 @if (isset($object)) <!-- we're inside a Location, Project or Taxon view -->
-                    @lang('messages.plant_list_for')<strong> {{ class_basename($object) }}</strong>
+                    @lang('messages.individuals_list_for')<strong> {{ class_basename($object) }}</strong>
                     {!! $object->rawLink() !!}
                     @if (isset($object_second))
                     &nbsp;>>&nbsp;<strong>{{class_basename($object_second )}}</strong> {!! $object_second->rawLink(true) !!}
@@ -209,17 +213,27 @@
                     <a href="#" id="about_list" class="btn btn-default"><i class="fas fa-question"></i></a>
                     <div id='about_list_text' ></div>
                 @else
-                  @lang('messages.plants')
+                  @lang('messages.individuals')
+                  &nbsp;&nbsp;
+                  <a data-toggle="collapse" href="#help" class="btn btn-default">
+                    @lang('messages.help')
+                  </a>
                 @endif
               </div>
+              <div id="help" class="panel-body collapse">
+                @lang('messages.individuals_hint')
+                <code>@lang('messages.download_login')</code>
 
-                @if (Auth::user())
+              </div>
+              @if (Auth::user())
                 {!! View::make('common.exportdata')->with([
                       'object' => isset($object) ? $object : null,
                       'object_second' => isset($object_second) ? $object_second : null,
-                      'export_what' => 'Plant'
+                      'export_what' => 'Individual'
                 ]) !!}
-                @endif
+              @else
+                <br>
+              @endif
 
             <div class="panel-body responsive">
               {!! $dataTable->table([],true) !!}
@@ -242,7 +256,7 @@ $("#about_list").on('click',function(){
     if (records == 0) {
       $('#about_list_text').html("@lang('messages.no_permission_list')");
     } else {
-      $('#about_list_text').html("@lang('messages.plant_object_list')");
+      $('#about_list_text').html("@lang('messages.individual_object_list')");
     }
   } else {
     $('#about_list_text').html(null);
@@ -254,26 +268,26 @@ $("#taxon_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}", "#tax
             // When the identification clean this
             $('input:radio[name=modifier][value=0]').trigger('click');
             $("#identification_notes").val('');
-            $("#herbarium_id option:selected").removeAttr("selected");
+            $("#biocollection_id option:selected").removeAttr("selected");
             // trigger").val('');
         });
 $("#identifier_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#identifier_id","@lang('messages.noresults')");
 
 function setIdentificationFields(vel) {
-    var adm = $('#herbarium_id option:selected').val();
+    var adm = $('#biocollection_id option:selected').val();
     if ("undefined" === typeof adm) {
         return; // nothing to do here...
     }
     switch (adm) {
-    case "": // no herbarium
-        $(".herbarium_reference").hide(vel);
+    case "": // no biocollection
+        $(".biocollection_reference").hide(vel);
         break;
     default: // other
-        $(".herbarium_reference").show(vel);
+        $(".biocollection_reference").show(vel);
     }
 }
 
-$("#herbarium_id").change(function() { setIdentificationFields(400); });
+$("#biocollection_id").change(function() { setIdentificationFields(400); });
 // trigger this on page load
 setIdentificationFields(0);
 
@@ -302,11 +316,11 @@ $('#submit_batch_identifications').on('click',function(e){
     var identifier = $('#identifier_id').val();
     var adate = $('#identification_date_year').val();
     if (rows_selected.length==0 || taxon==null || identifier==null || adate==0) {
-        var txt = "@lang('messages.plants_batch_identify_alert')";
+        var txt = "@lang('messages.individuals_batch_identify_alert')";
         alert(txt);
     } else {
       $('#batch_list').val( rows_selected.join());
-      var txt = rows_selected.length+" @lang('messages.plants_batch_identify_confirm')";
+      var txt = rows_selected.length+" @lang('messages.individuals_batch_identify_confirm')";
       if (confirm(txt)) {
           $("#batch_identification_form"). submit();
       }

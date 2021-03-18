@@ -60,9 +60,9 @@ class MeasurementController extends Controller
               $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
             }
             $measurements = $measurements->where(function($subquery) use($taxons_ids) {
-              $subquery->whereHasMorph('measured',['App\Plant','App\Voucher'],function($mm) use($taxons_ids) { $mm->whereHas('identification',function($idd) use($taxons_ids)  { $idd->whereIn('taxon_id',$taxons_ids);});})->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$this->taxon);
+              $subquery->whereHasMorph('measured',['App\Individual','App\Voucher'],function($mm) use($taxons_ids) { $mm->whereHas('identification',function($idd) use($taxons_ids)  { $idd->whereIn('taxon_id',$taxons_ids);});})->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$this->taxon);
             });
-            
+
         }
         if ($request->location) {
             $measurements = $measurements->where('measured_type', 'App\\Location')->whereIn('measured_id', explode(',', $request->location));
@@ -71,8 +71,8 @@ class MeasurementController extends Controller
             $locations_ids = Location::where('id','=',$request->location_root)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
             $measurements = $measurements->where('measured_type', 'App\\Location')->whereIn('measured_id', $locations_ids);
         }
-        if ($request->plant) {
-            $measurements = $measurements->where('measured_type', 'App\\Plant')->whereIn('measured_id', explode(',', $request->plant));
+        if ($request->individual) {
+            $measurements = $measurements->where('measured_type', 'App\\Individual')->whereIn('measured_id', explode(',', $request->individual));
         }
         if ($request->voucher) {
             $measurements = $measurements->where('measured_type', 'App\\Voucher')->whereIn('measured_id', explode(',', $request->voucher));

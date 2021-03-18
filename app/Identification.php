@@ -12,7 +12,7 @@ use Lang;
 
 class Identification extends Model
 {
-    use IncompleteDate; 
+    use IncompleteDate;
 
     // Possible modifiers for the identification
     const NONE = 0;
@@ -30,7 +30,7 @@ class Identification extends Model
         self::VEL_AFF,
     ];
 
-    protected $fillable = ['person_id', 'taxon_id', 'object_id', 'object_type', 'date', 'modifier', 'herbarium_id', 'herbarium_reference', 'notes'];
+    protected $fillable = ['person_id', 'taxon_id', 'object_id', 'object_type', 'date', 'modifier', 'biocollection_id', 'biocollection_reference', 'notes'];
 
 
     public function object()
@@ -58,8 +58,8 @@ class Identification extends Model
         return $this->belongsTo(Taxon::class);
     }
 
-    public function herbarium()
+    public function biocollection()
     {
-        return $this->belongsTo(Herbarium::class);
+        return $this->belongsTo(Biocollection::class);
     }
 }

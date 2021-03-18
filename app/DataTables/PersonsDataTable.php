@@ -26,8 +26,8 @@ class PersonsDataTable extends DataTable
         ->editColumn('abbreviation', function ($person) {
             return $person->rawLink();
         })
-        ->addColumn('herbarium', function ($person) {
-            return empty($person->herbarium) ? '' : $person->herbarium->name;
+        ->addColumn('biocollection', function ($person) {
+            return empty($person->biocollection) ? '' : $person->biocollection->name;
         })
         ->rawColumns(['abbreviation']);
     }
@@ -39,7 +39,7 @@ class PersonsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Person::query()->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes'])->with('herbarium');
+        $query = Person::query()->select(['id', 'full_name', 'abbreviation', 'email', 'institution', 'biocollection_id','notes'])->with('biocollection');
 
         return $this->applyScopes($query);
     }
@@ -59,7 +59,7 @@ class PersonsDataTable extends DataTable
                 'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => true, 'orderable' => true],
                 'email' => ['title' => Lang::get('messages.email'), 'searchable' => true, 'orderable' => true],
                 'institution' => ['title' => Lang::get('messages.institution'), 'searchable' => true, 'orderable' => true],
-                'herbarium' => ['title' => Lang::get('messages.herbarium'), 'searchable' => false, 'orderable' => false],
+                'biocollection' => ['title' => Lang::get('messages.biocollection'), 'searchable' => false, 'orderable' => false],
                 'notes' => ['title' => Lang::get('messages.notes'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([

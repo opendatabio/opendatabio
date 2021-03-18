@@ -37,7 +37,7 @@ class MeasurementPolicy
         if (is_null($dataset)) {
             return User::USER == $user->access_level;
         }
-        // for regular users, when actually creating a plant
+        // for regular users, when actually creating a measurement
         return User::USER == $user->access_level and
             ($dataset->admins->contains($user) or $dataset->users->contains($user));
 

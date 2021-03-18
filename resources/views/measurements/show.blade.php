@@ -83,7 +83,7 @@
 
 
             </div>
-<!-- Other details (specialist, herbarium, collects, etc?) -->
+<!-- Other details (specialist, biocollection, collects, etc?) -->
     </div>
 
 

@@ -84,7 +84,28 @@ class LocationController extends Controller
             }
         }
 
-        return Response::json(['detectdata' => [$parent->fullname, $parent->id, $uc_ac, $uc_id]]);
+        //does an exact match exists
+        $loc_id =null;
+        $loc_name = null;
+        $loc_level = null;
+        $return_geom = null;
+        if (Location::LEVEL_POINT == $request->adm_level) {
+          $exists_exact = Location::whereRaw("geom=geomfromtext('$geom')")->cursor();
+          if ($exists_exact->count()) {
+            $loc_id = $exists_exact->first()->id;
+            $loc_name = $exists_exact->first()->searchablename;
+            $loc_level = $exists_exact->first()->adm_level;
+          } else {
+            $return_geom = $geom;
+          }
+        }
+
+
+        return Response::json(
+        [
+          'detectdata' => [$parent->fullname, $parent->id, $uc_ac, $uc_id,$return_geom],
+          'detectedLocation' => [$loc_id,$loc_name,$loc_level],
+        ]);
     }
 
 
@@ -178,7 +199,7 @@ class LocationController extends Controller
                     'starty' => 'required|numeric|min:0|max:'.$parent->y,
                 ]);
             }
-        } elseif (Location::LEVEL_POINT == $request->adm_level) { //POINT
+        } elseif (Location::LEVEL_POINT == $request->adm_level and !isset($request->geom)) { //POINT
             $rules = array_merge($rules, [
                 'lat1' => 'required|numeric|min:0',
                 'long1' => 'required|numeric|min:0',
@@ -195,17 +216,25 @@ class LocationController extends Controller
         $validator = Validator::make($request->all(), $rules);
         // Now we check if the geometry received is valid, and if it falls inside the parent geometry
         $validator->after(function ($validator) use ($request) {
-            if ((Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type) or Location::LEVEL_POINT == $request->adm_level) {
+            //case point locations, either Plot or Point, then validate exact duplicate geometry
+            if (
+                (Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type)
+                or
+                (Location::LEVEL_POINT == $request->adm_level)
+               ) {
+                if (!isset($request->geom)) {
+                  $geom = Location::geomFromParts($request);
+                } else {
+                  $geom = $request->geom;
+                }
                 // we check if this exact geometry is already registered
-                $geom = Location::geomFromParts($request);
                 $exact = Location::whereRaw("geom=geomfromtext('$geom')")->get();
                 if (sizeof($exact)) {
                     $validator->errors()->add('geom', Lang::get('messages.geom_duplicate'));
                 }
-
                 return;
             }
-            // Dimension returns NULL for invalid geometries
+            // Case poligons, validate dimensions , returns NULL for invalid geometries
             $valid = DB::select('SELECT Dimension(GeomFromText(?)) as valid', [$request->geom]);
 
             if (is_null($valid[0]->valid)) {
@@ -215,9 +244,9 @@ class LocationController extends Controller
         $validator->after(function ($validator) use ($request) {
             if ($request->parent_id < 1 or 0 == $request->adm_level) {
                 return;
-            } // don't validate if parent = 0 for none
+            } // don't validate if parent = 0 (country) for none
             $geom = $request->geom;
-            if ((Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type) or Location::LEVEL_POINT == $request->adm_level) {
+            if ((Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type) or (Location::LEVEL_POINT == $request->adm_level and $geom == null)) {
                 $geom = Location::geomFromParts($request);
             }
             $parent = Location::withGeom()->findOrFail($request->parent_id);
@@ -333,13 +362,13 @@ class LocationController extends Controller
             }
 
             $chartjs = app()->chartjs
-                ->name('LocationPlants')
+                ->name('LocationIndividuals')
                 ->type('scatter')
                 ->size(['width' => $width, 'height' => $height])
-                ->labels($location->plants->map(function ($x) {return $x->tag; })->all())
+                ->labels($location->individuals->map(function ($x) {return $x->tag; })->all())
                 ->datasets([
                     [
-                        'label' => 'Plants in location',
+                        'label' => 'Individuals in location',
                         'showLine' => false,
                         'backgroundColor' => 'rgba(38, 185, 154, 0.31)',
                         'borderColor' => 'rgba(38, 185, 154, 0.7)',
@@ -347,7 +376,7 @@ class LocationController extends Controller
                         'pointBackgroundColor' => 'rgba(38, 185, 154, 0.7)',
                         'pointHoverBackgroundColor' => 'rgba(220,220,20,0.7)',
                         'pointHoverBorderColor' => 'rgba(220,220,20,1)',
-                        'data' => $location->plants->map(function ($x) {return ['x' => $x->x, 'y' => $x->y]; })->all(),
+                        'data' => $location->individuals->map(function ($x) {return ['x' => $x->x, 'y' => $x->y]; })->all(),
                     ],
                 ])
                 ->options([
@@ -501,6 +530,51 @@ class LocationController extends Controller
     }
 
 
+
+
+    /* WILL SAVE A NEW LOCATION FROM THE Individual MODEL CREATION OR EDITION */
+    public function saveForIndividual(Request $request)
+    {
+        $this->authorize('create', Location::class);
+
+        //if identical geometry exists return
+        if ($request->geom) {
+          $geom = $request->geom;
+          $exact = Location::whereRaw("geom=geomfromtext('$geom')")->get();
+          if (sizeof($exact)) {
+            return Response::json(
+            [
+              'savedLocation' => [$exact->id,$exact->searchablename,$exact->adm_level],
+            ]);
+          }
+        }
+        $validator = $this->customValidate($request);
+        if ($validator->fails()) {
+            $text = "<ul>";
+            foreach ($validator->errors()->all() as $key => $error) {
+                      $text .= "<li>".$error."</li>";
+            }
+            $text .= "<ul>";
+            return Response::json(['error' => $text]);
+        }
+        $newloc = new Location($request->only(['name', 'adm_level','parent_id']));
+        if (isset($request->uc_id)) {
+            $newloc->uc_id = $request->uc_id;
+        }
+        $newloc->geom = $request->geom;
+        $newloc->save();
+
+        return Response::json(
+        [
+          'savedLocation' => [$newloc->id,$newloc->searchablename,$newloc->adm_level],
+        ]);
+    }
+
+
+
+
+
+
     public function activity($id, ActivityDataTable $dataTable)
     {
         $object = Location::findOrFail($id);
@@ -526,15 +600,39 @@ class LocationController extends Controller
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {
-          $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
-          if (count($data)>0) {
+          $filename = null;
+          try {
+            $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
+          } catch (\Exception $e) {
+             //read differently if it failed above and a csv has been submitted (memory problems over large geometries)
+             $data = null;
+              if (in_array($ext,['CSV','csv'])) {
+                //$data =file($request->file('data_file'));
+                //$data = $request->file('data_file');
+                $filename = uniqid().".txt";
+                $path = 'downloads_temp/'.$filename;
+                $file = fopen(public_path($path),'w');
+                $stdin = fopen($request->file('data_file'), 'r');
+                while (false !== ($line = fgets($stdin))) {
+                  fwrite($file,$line);
+                }
+                fclose($file);
+                fclose($stdin);
+              }
+
+          }
+          if (!is_null($data) or !is_null($filename)) {
             UserJob::dispatch(ImportLocations::class,[
-              'data' => $data,
+              'data' => [
+                  'data' => $data,
+                  'filename' => $filename,
+                ],
             ]);
             $message = Lang::get('messages.dispatched');
           } else {
             $message = 'Something wrong with file';
           }
+
         }
       }
       return redirect('import/locations')->withStatus($message);

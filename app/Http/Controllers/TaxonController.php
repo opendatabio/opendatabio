@@ -25,6 +25,7 @@ use App\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
 
 use App\UserJob;
+
 use App\Jobs\ImportTaxons;
 use Spatie\SimpleExcel\SimpleExcelReader;
 use DB;
@@ -139,7 +140,7 @@ class TaxonController extends Controller
     public function autocomplete(Request $request)
     {
        //orderBy('fullname', 'ASC')
-        $taxons = Taxon::with('parent')->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) LIKE ?', ['%'.$request->input('query').'%'])
+        $taxons = Taxon::noRoot()->with('parent')->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) LIKE ?', ['%'.$request->input('query').'%'])
             ->selectRaw('id as data, odb_txname(taxons.name, taxons.level, taxons.parent_id) as fullname, taxons.level, taxons.valid')
             ->take(30);
         if (!$request->full) {
@@ -465,7 +466,7 @@ class TaxonController extends Controller
         // WARNING: MYCOBANK API OUT OF SERVICE 18-11-2020
         //THEY PROVIDE A STATIC ZIP FILE THAT COULD USED LOCALLY TO SEARCH names
         //WAIT FOR API, as no rush
-        //only search fungi if not found as plant
+        //only search fungi if not found as Individual
         /*
         if ($mobotdata[0] == ExternalAPIs::NOT_FOUND  and $ipnidata[0] == ExternalAPIs::NOT_FOUND) {
           $mycobankdata = $apis->getMycobank($request->name);
@@ -476,6 +477,13 @@ class TaxonController extends Controller
         $mycobankdata = [ExternalAPIs::NOT_FOUND];
         $gbifdata = [ExternalAPIs::NOT_FOUND];
         $zoobankdata = [ExternalAPIs::NOT_FOUND];
+        if (null == $ipnidata) {
+          $ipnidata = [ExternalAPIs::NOT_FOUND];
+        }
+        if (null == $mobotdata) {
+          $mobotdata = [ExternalAPIs::NOT_FOUND];
+        }
+
 
         //this is for animal names (and fungi), so only if not found previously
         if ($mobotdata[0] == ExternalAPIs::NOT_FOUND  and $ipnidata[0] == ExternalAPIs::NOT_FOUND and $mycobankdata[0] == ExternalAPIs::NOT_FOUND) {
@@ -561,7 +569,7 @@ class TaxonController extends Controller
         if (!is_null($mycobankdata) && array_key_exists('author', $mycobankdata)) {
             $author = $mycobankdata['author'];
         }
-        //gbif only if not found before, as plants and animals may share names
+        //gbif only if not found before, as Individuals and animals may share names
         if (is_null($author) and !is_null($gbifdata) && array_key_exists('author', $gbifdata)) {
             $author = $gbifdata['author'];
         }
@@ -581,7 +589,6 @@ class TaxonController extends Controller
         }
 
         $rank = Taxon::getRank($rank);
-
         $valid = null;
         if (!is_null($mobotdata) && array_key_exists('valid', $mobotdata)) {
             $valid = in_array($mobotdata['valid'], [
@@ -704,10 +711,15 @@ class TaxonController extends Controller
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {
-          $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
+          try {
+            $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
+          } catch (\Exception $e) {
+            $data = [];
+            $message = json_encode($e);
+          }
           if (count($data)>0) {
             UserJob::dispatch(ImportTaxons::class,[
-              'data' => $data,
+              'data' => ['data' => $data]
             ]);
             $message = Lang::get('messages.dispatched');
           } else {
@@ -717,5 +729,6 @@ class TaxonController extends Controller
       }
       return redirect('import/taxons')->withStatus($message);
     }
+
 
 }

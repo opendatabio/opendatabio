@@ -11,11 +11,11 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\DataTables\VouchersDataTable;
 use Validator;
-use App\Plant;
+use App\Individual;
 use App\Person;
 use App\Project;
 use App\Location;
-use App\Herbarium;
+use App\Biocollection;
 use App\Identification;
 use App\Voucher;
 use App\Taxon;
@@ -24,6 +24,7 @@ use App\Summary;
 use Auth;
 use Lang;
 use Activity;
+use Response;
 use App\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
 
@@ -35,6 +36,22 @@ use Spatie\SimpleExcel\SimpleExcelReader;
 
 class VoucherController extends Controller
 {
+
+    /**
+      * Autocompleting in dropdowns. Expects a $request->query input
+    **/
+    public function autocomplete(Request $request)
+    {
+      $query = $request->input('query');
+      $vouchers = Voucher::join('persons','person_id','=','persons.id')->where('number', 'like', ["{$query}%"])->orWhere('persons.full_name','like',["%{$query}%"])->take(30)->get();
+      $vouchers = collect($vouchers)->transform(function ($voucher) {
+          $voucher->value = $voucher->fullname;
+          return $voucher;
+      });
+      return Response::json(['suggestions' => $vouchers]);
+    }
+
+
     /**
      * Display a listing of the resource.
      *
@@ -111,11 +128,11 @@ class VoucherController extends Controller
     }
 
 
-    public function indexPlants($id, VouchersDataTable $dataTable)
+    public function indexIndividuals($id, VouchersDataTable $dataTable)
     {
-        $object = Plant::findOrFail($id);
+        $object = Individual::findOrFail($id);
 
-        return $dataTable->with('plant', $id)->render('vouchers.index', compact('object'));
+        return $dataTable->with('individual', $id)->render('vouchers.index', compact('object'));
     }
 
     public function indexDatasets($id, VouchersDataTable $dataTable)
@@ -124,69 +141,16 @@ class VoucherController extends Controller
         return $dataTable->with('dataset', $id)->render('vouchers.index',compact('object'));
     }
 
-    public function customValidate(Request $request, Voucher $voucher = null)
-    {
-        // for checking duplicates
-        $voucherid = null;
-        if ($voucher) {
-            $voucherid = $voucher->id;
-        }
-
-        $rules = [
-            'parent_type' => 'required|string',
-            'collector' => 'array|nullable',
-            'herbarium_reference' => 'required_with:herbarium_id',
-            'number' => [ // collector / number must be unique
-                'required',
-                'string',
-                'max:191',
-                Rule::unique('vouchers')->ignore($voucherid)
-                ->where(function ($query) use ($request) {
-                    $query->where('person_id', $request->person_id);
-                }),
-            ],
-        ];
-        $validator = Validator::make($request->all(), $rules);
-        // Some fields that may be required if the parent_type is right
-        $validator->sometimes('parent_plant_id', 'required', function ($data) { return "App\Plant" == $data->parent_type; });
-        $validator->sometimes('parent_location_id', 'required', function ($data) { return "App\Location" == $data->parent_type; });
-        $validator->sometimes('project_id', 'required', function ($data) { return "App\Location" == $data->parent_type; });
-        $validator->sometimes('taxon_id', 'required', function ($data) { return "App\Location" == $data->parent_type; });
-        $validator->sometimes('identifier_id', 'required', function ($data) { return "App\Location" == $data->parent_type; });
-        $validator->after(function ($validator) use ($request) {
-            $colldate = [$request->date_month, $request->date_day, $request->date_year];
-            $iddate = [$request->identification_date_month, $request->identification_date_day, $request->identification_date_year];
-            if (!Voucher::checkDate($colldate)) {
-                $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
-            }
-            if ("App\Location" == $request->parent_type and !Voucher::checkDate($iddate)) {
-                $validator->errors()->add('identification_date_day', Lang::get('messages.invalid_identification_date_error'));
-            }
-            // collection date must be in the past or today
-            if (!Voucher::beforeOrSimilar($colldate, date('Y-m-d'))) {
-                $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
-            }
-            // identification date must be in the past or today AND equal or after collection date
-            if ("App\Location" == $request->parent_type and !(
-                Voucher::beforeOrSimilar($iddate, date('Y-m-d')) and
-                Voucher::beforeOrSimilar($colldate, $iddate))) {
-                $validator->errors()->add('identification_date_day', Lang::get('messages.identification_date_future_error'));
-            }
-        });
-
-        return $validator;
-    }
-
     /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function createPlants($id)
+    public function createIndividuals($id)
     {
-        $plant = Plant::findOrFail($id);
+        $individual = Individual::findOrFail($id);
 
-        return $this->create($plant);
+        return $this->create($individual);
     }
 
     public function createLocations($id)
@@ -196,112 +160,122 @@ class VoucherController extends Controller
         return $this->create($location);
     }
 
-    protected function create($parent)
+    protected function create($individual=null)
     {
         if (!Auth::user()) {
             return view('common.unauthorized');
         }
-        $herbaria = Herbarium::all();
+        $biocollections = Biocollection::orderBy('acronym')->cursor();
         $persons = Person::all();
         $projects = Auth::user()->projects;
 
-        return view('vouchers.create', compact('persons', 'projects', 'herbaria', 'parent'));
+        return view('vouchers.create', compact('persons','biocollections','individual','projects'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+
+
+    //validate request values when storing or updating records
+    public function customValidate(Request $request, Voucher $voucher = null)
     {
-        if ("App\Location" == $request->parent_type) {
-            $project = Project::findOrFail($request->project_id);
-        } else {
-            $project = Plant::findOrFail($request->parent_plant_id)->project;
+        // to check for duplicates
+        $voucherid = null;
+        if ($voucher) {
+            //if editing ignores self
+            $voucherid = $voucher->id;
         }
-        $this->authorize('create', [Voucher::class, $project]);
-        $validator = $this->customValidate($request);
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-        if ("App\Location" == $request->parent_type) {
-            $voucher = new Voucher(array_merge(
-                $request->only(['person_id', 'number', 'notes', 'project_id', 'parent_type']), [
-                    'parent_id' => $request->parent_location_id,
-                ]));
-            $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
-            $voucher->save();
-            $voucher->identification = new Identification([
-                'object_id' => $voucher->id,
-                'object_type' => 'App\Voucher',
-                'person_id' => $request->identifier_id,
-                'taxon_id' => $request->taxon_id,
-                'modifier' => $request->modifier,
-                'herbarium_id' => $request->herbarium_id,
-                'herbarium_reference' => $request->herbarium_reference,
-                'notes' => $request->identification_notes,
-            ]);
-            $voucher->identification->setDate($request->identification_date_month,
-                $request->identification_date_day,
-                $request->identification_date_year);
-            $voucher->identification->save();
 
-            //for summary count updates
-            $newvalues =  [
-                 "taxon_id" => $request->taxon_id,
-                 "location_id" => $request->parent_location_id,
-                 "project_id" => $request->project_id
+        //these are mandatory in any case
+        $rules = [
+            'individual_id' => 'required|integer',
+            'biocollection_id' => 'required|integer',
+            'biocollection_type' => 'required|integer',
+            'project_id' => 'required|integer'
+        ];
+        $checkcollector = false;
+        //if number or collector is provided, then this required different validation
+        if (null != $request->number or null != $request->collector) {
+            $rules['collector'] = 'array';
+            $rules['number'] = [
+                'required',
+                'string',
+                'max:191'
             ];
-        } else { // Plant
-            $plant = Plant::findOrFail($request->parent_plant_id);
-            $voucher = new Voucher(array_merge(
-                $request->only(['person_id', 'number', 'notes', 'parent_type']), [
-                    'project_id' => $plant->project_id,
-                    'parent_id' => $request->parent_plant_id,
-                ]));
-            $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
-            $voucher->save();
-
-            //for summary counts
-            $newvalues = [
-                'location_id' =>  $plant->location_id,
-                'taxon_id' =>  $plant->identification->taxon_id,
-                'project_id' => $request->project_id
-            ];
-
+            $checkcollector = true;
         }
+        //apply rules
+        $validator = Validator::make($request->all(), $rules);
 
-        // common:
-        if ($request->collector) {
-            foreach ($request->collector as $collector) {
-                $voucher->collectors()->create(['person_id' => $collector]);
+        $validator->after(function ($validator) use ($request,$checkcollector,$voucherid) {
+            //validate if collector, number and date if provided
+            if ($checkcollector) {
+              //validate date
+              // validates date
+              if (isset($request->date_month)) {
+                $colldate = [$request->date_month, $request->date_day, $request->date_year];
+              } else {
+                $colldate = $request->date;
+              }
+              if (null == $colldate) {
+                $validator->errors()->add('date_day', Lang::get('messages.missing_date'));
+              } else {
+                if (!Voucher::checkDate($colldate)) {
+                  $validator->errors()->add('date_day', Lang::get('messages.invalid_date_error'));
+                }
+                // collection date must be in the past or today
+                if (!Voucher::beforeOrSimilar($colldate, date('Y-m-d'))) {
+                    $validator->errors()->add('date_day', Lang::get('messages.date_future_error'));
+                  }
+              }
+
+              //validate unique records
+              //vouchers belong to individuals which already controls uniqueness of collector_main+numberOrtag+location
+              //a new voucher with a collector info, can not have: a) an individual other then selfwith same location, tag=number and same main collector; b) a voucher with same number and main collector and same biocollection_id+biocollection_number
+              $individual = Individual::findOrFail($request->individual_id);
+              $locationid = $individual->locations()->pluck('locations.id')->toArray();
+              $number = $request->number;
+              $maincollector= $request->collector[0];
+              $hasotherindividual = Individual::withoutGlobalScopes()->where('tag',$number)->whereHas('collector_main',function($q) use($maincollector) {
+                $q->where('collectors.person_id',$maincollector);
+              })->whereHas('location_first',function($q) use($locationid){
+                $q->whereIn('location_id',$locationid);
+              })->where('individuals.id',"<>",$individual->id)->count();
+
+              $isunique = Voucher::whereHas('collector_main',function($q) use($maincollector) {
+                $q->where('collectors.person_id',$maincollector);
+              })->where('number',$number)->where('biocollection_id',$request->biocollection_id);
+              if ($voucherid) {
+                $isunique = $isunique->where('id',"<>",$voucherid);
+              }
+              if ($request->biocollection_number) {
+                $isunique = $isunique->where('biocollection_number',$request->biocollection_number);
+              } else {
+                $isunique = $isunique->whereNull('biocollection_number');
+              }
+              $isunique = ($isunique->count()) + ($hasotherindividual);
+              if ($isunique > 0) {
+                $validator->errors()->add('number', Lang::get('messages.voucher_duplicate_identifier'));
+              }
             }
-        }
 
+            $isunique = Voucher::where('individual_id',$request->individual_id)->where('biocollection_id',$request->biocollection_id);
+            //ignore if editing;
+            if ($voucherid) {
+              $isunique = $isunique->where('id',"<>",$voucherid);
+            }
 
-        if ($request->herbarium) {
-          $voucher->setHerbariaNumbers($request->herbarium);
-        }
+            if ($request->biocollection_number) {
+              $isunique = $isunique->where('biocollection_number',$request->biocollection_number);
+            } else {
+              $isunique = $isunique->whereNull('biocollection_number');
+            }
+            if ($isunique->count() > 0) {
+              $validator->errors()->add('biocollection_id', Lang::get('messages.voucher_duplicate_identifier'));
+            }
+        });
 
-        /* UPDATE SUMMARY COUNTS */
-          $oldvalues =  [
-              "taxon_id" => null,
-              "location_id" => null,
-              "project_id" => null,
-          ];
-          $target = 'vouchers';
-          $datasets = null;
-          Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,0);
-        /* END SUMMARY UPDATE */
-
-
-        return redirect('vouchers/'.$voucher->id)->withStatus(Lang::get('messages.stored'));
+        return $validator;
     }
+
 
     /**
      * Display the specified resource.
@@ -313,9 +287,8 @@ class VoucherController extends Controller
     public function show($id)
     {
         $voucher = Voucher::findOrFail($id);
-        $identification = $voucher->parent instanceof Plant ? $voucher->parent->identification : $voucher->identification;
+        $identification = $voucher->identification;
         $collectors = $voucher->collectors;
-
         return view('vouchers.show', compact('voucher', 'identification', 'collectors'));
     }
 
@@ -332,12 +305,92 @@ class VoucherController extends Controller
             return view('common.unauthorized');
         }
         $voucher = Voucher::findOrFail($id);
-        $herbaria = Herbarium::all();
+        $biocollections = Biocollection::all();
         $persons = Person::all();
-        //$plants = Plant::with('location')->get();
         $projects = Auth::user()->projects;
-        //, 'plants'
-        return view('vouchers.create', compact('voucher', 'persons', 'projects', 'herbaria'));
+        return view('vouchers.create', compact('voucher', 'persons', 'projects', 'biocollections'));
+    }
+
+
+
+
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+
+        $project = Project::findOrFail($request->project_id);
+        $this->authorize('create', [Voucher::class, $project]);
+        $validator = $this->customValidate($request);
+        if ($validator->fails()) {
+            if ($request->from_the_api) {
+              return implode(" | ",$validator->errors()->all());
+            }
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+        $voucher = new Voucher($request->only(['individual_id','biocollection_id','biocollection_type','biocollection_number','number', 'notes', 'project_id']));
+
+        //date and collector only if provided as they may be that of the individual
+        if (isset($request->date_month)) {
+          $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
+        } elseif (isset($request->date)) {
+          $voucher->setDate($request->date);
+        }
+        $voucher->save();
+
+        // common:
+        if ($request->collector) {
+            $idx = 0;
+            foreach ($request->collector as $collector) {
+                if ($idx==0) {
+                  $values = [
+                    'person_id' => $collector,
+                    'main' => 1,
+                  ];
+                } else {
+                  $values = [
+                    'person_id' => $collector
+                  ];
+                }
+                $voucher->collectors()->create($values);
+                $idx = $idx+1;
+            }
+        }
+
+        //for summary count updates
+        /*
+        $individual = Individual::findOrFail($request->individual_id);
+        $newvalues =  [
+                 "taxon_id" => $individual->identification->taxon_id,
+                 "location_id" => $individual->locations->last()->id,
+                 "project_id" => $request->project_id
+        ];
+
+         //UPDATE SUMMARY COUNTS
+        $oldvalues =  [
+              "taxon_id" => null,
+              "location_id" => null,
+              "project_id" => null,
+        ];
+        $target = 'vouchers';
+        $datasets = null;
+
+        Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,0);
+        */
+        /* END SUMMARY UPDATE */
+
+        if ($request->from_the_api) {
+           return $voucher;
+        }
+        return redirect('vouchers/'.$voucher->id)->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -360,104 +413,69 @@ class VoucherController extends Controller
         }
 
         //for summary counts
+        $oldindividual = $voucher->individual;
         $oldvalues = [
             'project_id' => $voucher->project_id,
-            'location_id' => $voucher->parent_type=="App\Plant" ? $voucher->parent->location_id : $voucher->parent_id,
-            'taxon_id' => $voucher->parent_type=="App\Plant" ? $voucher->parent->identification->taxon_id : $voucher->identification->taxon_id
+            'location_id' => $oldindividual->locations->last()->id,
+            'taxon_id' => $oldindividual->identification->taxon_id
         ];
 
-        if ("App\Location" == $request->parent_type) {
+        //for summary counts
+        $individual = Individual::findOrFail($request->individual_id);
+        $newvalues = [
+            'location_id' => $individual->locations->last()->id,
+            'taxon_id' => $individual->identification->taxon_id,
+            'project_id' => $request->project_id
+        ];
 
-            //for summary counts
-              $newvalues = [
-                  'location_id' => $request->parent_location_id,
-                  'taxon_id' => $request->taxon_id,
-                  'project_id' => $request->project_id
-              ];
+        $voucher->update($request->only(['individual_id','biocollection_id','biocollection_type','biocollection_number','number', 'notes', 'project_id']));
 
-            $voucher->update(array_merge(
-                $request->only(['person_id', 'number', 'notes', 'project_id', 'parent_type']), [
-                    'parent_id' => $request->parent_location_id,
-                ]));
-            $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
-            $voucher->save();
-
-            $ident_array = [
-                'object_id' => $voucher->id,
-                'object_type' => 'App\Voucher',
-                'person_id' => $request->identifier_id,
-                'taxon_id' => $request->taxon_id,
-                'modifier' => $request->modifier,
-                'herbarium_id' => $request->herbarium_id,
-                'herbarium_reference' => $request->herbarium_reference,
-                'notes' => $request->identification_notes,
-            ];
-            if ($voucher->identification()->count()) {
-                $voucherolddet = $voucher->identification()->first()->toArray();
-                $voucher->identification()->update($ident_array);
-            } else {
-                $voucherolddet = null;
-                $voucher->identification = new Identification($ident_array);
-            }
-            $voucher->identification->setDate($request->identification_date_month,
-                $request->identification_date_day,
-                $request->identification_date_year);
-            $voucher->identification->save();
-
-
-            //log identification changes if any
-            $ident_array['date'] = $voucher->identification->date;
-            ActivityFunctions::logCustomChanges($voucher,$voucherolddet,$ident_array,'voucher','identification updated',null);
-
-        } else { // Plant
-            $plant = Plant::findOrFail($request->parent_plant_id);
-
-            //for summary counts
-            $newvalues = [
-                'location_id' =>  $plant->location_id,
-                'taxon_id' =>  $plant->identification->taxon_id,
-                'project_id' => $request->project_id
-            ];
-
-
-            $voucher->update(array_merge(
-                $request->only(['person_id', 'number', 'notes', 'parent_type']), [
-                    'project_id' => $plant->project_id,
-                    'parent_id' => $request->parent_plant_id,
-                ]));
-            $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
-            $voucher->save();
-            if ($voucher->identification()->count()) {
-                $voucher->identification()->delete();
-            }
+        if ($request->date_year) {
+          $voucher->setDate($request->date_month, $request->date_day, $request->date_year);
+          $voucher->save();
+        } else {
+          $voucher->date = null;
+          $voucher->save();
         }
 
-        // common:
+        // COLLECTOR UPDATE:
         if ($request->collector) {
-            // sync collectors. See app/Project.php / setusers()
+          //did collectors changed?
+          // "sync" collectors. See app/Project.php / setusers()
+          $current = $voucher->collectors->pluck('person_id');
+          $detach = $current->diff($request->collector)->all();
+          $attach = collect($request->collector)->diff($current)->all();
+          if ($detach->count() or $attach->count()) {
+              //delete old collectors
+              $voucher->collectors()->delete();
+              //save collectors and identify main collector
+              $first = true;
+              foreach ($request->collector as $collector) {
+                  $thecollector = new Collector(['person_id' => $collector]);
+                  if ($first) {
+                      $thecollector->main = 1;
+                  }
+                  $voucher->collectors()->save($thecollector);
+                  $first = false;
+              }
+          }
+          //log changes in collectors if any
+          ActivityFunctions::logCustomPivotChanges($voucher,$current->all(),$request->collector,'voucher','collector updated',$pivotkey='person');
+        } else {
+        //no more collectors?
+        if ($voucher->collectors->count()) {
             $current = $voucher->collectors->pluck('person_id');
-            $detach = $current->diff($request->collector)->all();
-            $attach = collect($request->collector)->diff($current)->all();
-            $voucher->collectors()->whereIn('person_id', $detach)->delete();
-            foreach ($attach as $collector) {
-                $voucher->collectors()->create(['person_id' => $collector]);
-            }
-
-            //log changes in voucher collectors
-            ActivityFunctions::logCustomPivotChanges($voucher,$current->all(),$request->collector,'voucher','collector updated',$pivotkey='person');
-
+            $voucher->collectors()->delete();
+            ActivityFunctions::logCustomPivotChanges($voucher,$current->all(),[],'voucher','collector updated',$pivotkey='person');
         }
-
-        if ($request->herbarium) {
-          $voucher->setHerbariaNumbers($request->herbarium);
-        }
+      }
 
 
         /* UPDATE SUMMARY COUNTS */
-          $target = 'vouchers';
-          $datasets = array_unique($voucher->measurements()->withoutGlobalScopes()->pluck('dataset_id')->toArray());
-          $measurements_count = $voucher->measurements()->withoutGlobalScopes()->count();
-          Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,$measurements_count);
+        $target = 'vouchers';
+        $datasets = array_unique($voucher->measurements()->withoutGlobalScopes()->pluck('dataset_id')->toArray());
+        $measurements_count = $voucher->measurements()->withoutGlobalScopes()->count();
+        Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,$measurements_count);
         /* END SUMMARY UPDATE */
 
 
@@ -501,18 +519,23 @@ class VoucherController extends Controller
             if (!in_array($ext,$valid_ext)) {
               $message = Lang::get('messages.invalid_file_extension');
             } else {
-              $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
+              try {
+                $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
+              } catch (\Exception $e) {
+                $data = [];
+                $message = json_encode($e);
+              }
               if (count($data)>0) {
                 UserJob::dispatch(ImportVouchers::class,[
-                  'data' => $data,
+                  'data' => ['data' => $data],
                 ]);
                 $message = Lang::get('messages.dispatched');
               } else {
-                $message = 'Something wrong with file';
+                $message = 'Something wrong with file'.$message;
               }
             }
           }
-          return redirect('import/taxons')->withStatus($message);
+          return redirect('import/vouchers')->withStatus($message);
         }
 
 }

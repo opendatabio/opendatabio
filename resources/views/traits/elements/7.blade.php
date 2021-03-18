@@ -76,14 +76,14 @@ if (typeof jQuery !== 'undefined') {
 </script>
     @endif
 
-    @if (!isset($index) && $odbtrait->link_type == "App\Plant")
+    @if (!isset($index) && $odbtrait->link_type == "App\Individual")
   </div>
   </div>
   <script>
   // NOTICE: this will only work if called via AJAX. Set up an alternative for direct loading
   if (typeof jQuery !== 'undefined') {
     $(document).ready(function(){
-      $("#link_autocomplete").odbAutocomplete("{{url('plants/autocomplete')}}","#link_id", "@lang('messages.noresults')");
+      $("#link_autocomplete").odbAutocomplete("{{url('individuals/autocomplete')}}","#link_id", "@lang('messages.noresults')");
     });
   }
   </script>

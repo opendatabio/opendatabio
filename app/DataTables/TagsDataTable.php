@@ -62,7 +62,7 @@ class TagsDataTable extends DataTable
             ->columns([
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
-                'description' => ['title' => Lang::get('messages.tag'), 'searchable' => false, 'orderable' => false],
+                'description' => ['title' => Lang::get('messages.description'), 'searchable' => false, 'orderable' => false],
                 'datasets' => ['title' => Lang::get('messages.datasets'), 'searchable' => false, 'orderable' => false],
                 'projects' => ['title' => Lang::get('messages.projects'), 'searchable' => false, 'orderable' => false],
                 'pictures' => ['title' => Lang::get('messages.pictures'), 'searchable' => false, 'orderable' => false],

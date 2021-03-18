@@ -33,13 +33,13 @@ class Summary extends Model
 
 
 
-    /* FUNCTION TO BE CALLED ON PLANT OR VOUCHER EDITS, updates or insertions */
-    /* UPDATE  Summary->value COUNTS FOR objects: locations and taxons; target plants OR vouchers; and, scopes location,project and datasets*/
+    /* FUNCTION TO BE CALLED ON individual OR VOUCHER EDITS, updates or insertions */
+    /* UPDATE  Summary->value COUNTS FOR objects: locations and taxons; target individuals OR vouchers; and, scopes location,project and datasets*/
     #newvalues and oldvalues are arrays with the following keys
     #$taxon_id
     #location_id
     #project_id
-    #target is one of 'vouchers' or 'plants'
+    #target is one of 'vouchers' or 'individuals'
     #datasets is an array of datasets ids
 
     public static function updateSummaryCounts($newvalues,$oldvalues,$target,$datasets=null,$measurements_count=0)
@@ -381,7 +381,7 @@ class Summary extends Model
       {
         /*define the object for which counts will be calculated */
         /* in the models to calculate counts three public static functions have to exist:
-          * plantsCount($scope,$scope_id)
+          * individualsCount($scope,$scope_id)
           * vouchersCount($scope,$scope_id)
           * measurementsCount($scope,$scope_id)
           * taxonsCount($scope,$scope_id )
@@ -402,22 +402,22 @@ class Summary extends Model
         }
         foreach($objects->cursor() as $object) {
             if ($target==null) {
-              $targets = ['plants','vouchers','measurements','pictures'];
+              $targets = ['individuals','vouchers','measurements','pictures'];
               if (get_class($object) == "App\Location") {
-                $targets = ['plants','vouchers','measurements','pictures'];
+                $targets = ['individuals','vouchers','measurements','pictures'];
               }
               if (get_class($object) == "App\Project") {
-                $targets = ['plants','vouchers','measurements','pictures','locations','datasets'];
+                $targets = ['individuals','vouchers','measurements','pictures','locations','datasets'];
               }
               if (get_class($object) == "App\Dataset") {
-                $targets = ['plants','vouchers','measurements','locations','projects'];
+                $targets = ['individuals','vouchers','measurements','locations','projects'];
               }
             } else {
               $targets = (array)$target;
             }
             foreach($targets as $target) {
-                if ($target=='plants') {
-                  $value = $object->plantsCount($scope,$scope_id);
+                if ($target=='individuals') {
+                  $value = $object->individualsCount($scope,$scope_id);
                 }
                 if ($target=='vouchers') {
                   $value = $object->vouchersCount($scope,$scope_id);
@@ -464,7 +464,7 @@ class Summary extends Model
                 }
             }
           }
-  }
+    }
 
 
 
@@ -494,9 +494,7 @@ class Summary extends Model
             $selfanddescendants = $taxon->getDescendantsAndSelf()->pluck('id')->toArray();
             if ($scope=="all" or $scope=='projects') {
               //get the project the taxon was used for
-              $projects = Project::whereHas('plant_identifications',function($identification) use($selfanddescendants) {
-                $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
-              })->orWhereHas('voucher_identifications',function($identification) use($selfanddescendants) {
+              $projects = Project::whereHas('individual_identifications',function($identification) use($selfanddescendants) {
                 $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
               })->cursor();
               if ($projects->count()) {
@@ -508,9 +506,13 @@ class Summary extends Model
               }
             }
             if ($scope=="all" or $scope=='datasets') {
-              //get the dataset the taxon is measured or has plants or vouchers measured
-              $datasets_ids = DB::select("(SELECT DISTINCT dataset_id  FROM identifications JOIN measurements ON measurements.measured_id=identifications.object_id WHERE identifications.object_type=measurements.measured_type AND identifications.taxon_id IN (".implode(',',$selfanddescendants)."))");
-              $datasets_ids = Arr::flatten(array_map(function($value) { return (array)$value;},$datasets_ids));
+              //get the dataset the taxon is measured or has individuals or vouchers measured
+              $datasets_ids = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Individual',"App\Voucher"],function($measured) {
+                $measured->identification->whereIn('taxon_id',$selfanddescendants);
+              })->cursor()->map(function($q) { return $q->dataset_id; })->toArray();
+              $datasets_ids = array_unique($datasets_ids);
+              //DB::select("(SELECT DISTINCT dataset_id  FROM identifications JOIN measurements ON measurements.measured_id=identifications.object_id WHERE identifications.object_type=measurements.measured_type AND identifications.taxon_id IN (".implode(',',$selfanddescendants)."))");
+              //$datasets_ids = Arr::flatten(array_map(function($value) { return (array)$value;},$datasets_ids));
               $datasets = Dataset::whereIn('id',$datasets_ids)->cursor();
               if ($datasets->count()) {
                 foreach($datasets as $dataset) {
@@ -522,9 +524,7 @@ class Summary extends Model
             }
             if ($scope=="all" or $scope=='locations') {
               //non point locations only (points will have easier counts //
-              $locations = Location::whereHas('plant_identifications',function($identification) use($selfanddescendants) {
-                $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
-              })->orWhereHas('voucher_identifications',function($identification) use($selfanddescendants) {
+              $locations = Location::whereHas('identifications',function($identification) use($selfanddescendants) {
                 $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
               });
               $ancestorsandself = $locations->cursor()->map(function($location) {
@@ -549,8 +549,6 @@ class Summary extends Model
               } else {
                 $locations = $locations->cursor();
               }
-
-
 
               //get_all ancestor locations
               if ($locations->count()) {
@@ -578,7 +576,7 @@ class Summary extends Model
           $locations_ids = array_unique(Arr::flatten($locations_ids));
           $locations = Location::noWorld()->whereIn('id',$locations_ids)->orderBy('adm_level')->cursor();
 
-          //has('vouchers')->orHas('plants')->orderBy('adm_level')
+          //has('vouchers')->orHas('individuals')->orderBy('adm_level')
           //->pluck('id')->toArray();
           //$locations_ids = Location::whereIn('id',$ids)->cursor()->map(function($location) { return $location->getAncestorsAndSelf()->pluck('id')->toArray();})->toArray();
           //$locations_ids = array_unique(Arr::flatten($locations_ids));
@@ -586,17 +584,21 @@ class Summary extends Model
         }
         if ($locations->count()) {
           foreach($locations as $location) {
+
             $scope_type='all';
             $scope_id=null;
             $object_id=$location->id;
             $object_type="App\Location";
+
             self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
             $selfanddescendants = $location->getDescendantsAndSelf()->pluck('id')->toArray();
-            $projects = Project::whereHas('plants',function($plant) use($selfanddescendants) {
-              $plant->withoutGlobalScopes()->whereIn('location_id',$selfanddescendants);
-            })->orWhereHas('vouchers',function($voucher) use($selfanddescendants) {
-              $voucher->withoutGlobalScopes()->whereIn('parent_id',$selfanddescendants)->where('parent_type','=','App\Location');
-            })->cursor();
+
+            $projects = Project::whereHas('individuals',function($individual) use($selfanddescendants) {
+              $individual->withoutGlobalScopes()->whereHas('locations',function($location) use($selfanddescendants) {
+                $location->whereIn('location_id',$selfanddescendants);
+              });
+            });
+
             if ($projects->count()) {
               foreach($projects as $project) {
                 $scope_type="App\Project";
@@ -604,13 +606,13 @@ class Summary extends Model
                 self::fillCounts($object_id,$object_type,$scope_type,$scope_id,$storezeros=false);
               }
             }
-            $datasets = Dataset::whereHas('plants', function($plant) use($selfanddescendants) {
-              $plant->whereIn('location_id',$selfanddescendants);
+            $datasets = Dataset::whereHas('individuals', function($individual) use($selfanddescendants) {
+              $individual->withoutGlobalScopes()->whereHas('locations',function($location) use($selfanddescendants) {
+                $location->whereIn('location_id',$selfanddescendants);
+              });
             })->orWhereHas('vouchers',function($voucher) use($selfanddescendants) {
-              $voucher->whereIn('parent_id',$selfanddescendants)->where('parent_type',"App\Location");
-            })->orWhereHas('vouchers',function($voucher) use($selfanddescendants) {
-              $voucher->whereHasMorph('parent',['App\Plant'],function($plant) use($selfanddescendants) {
-                $plant->whereIn('location_id',$selfanddescendants);
+              $voucher->withoutGlobalScopes()->whereHas('locations',function($location) use($selfanddescendants) {
+                $location->whereIn('location_id',$selfanddescendants);
               });
             })->cursor();
             if ($datasets->count()) {

@@ -12,13 +12,18 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Auth;
 use Lang;
+use DB;
+use App\IndividualLocation;
+use App\Location;
+use App\Project;
+
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Voucher extends Model
 {
     use IncompleteDate, LogsActivity;
 
-    protected $fillable = ['parent_id', 'parent_type', 'person_id', 'number', 'date', 'notes', 'project_id'];
+    protected $fillable = ['individual_id', 'biocollection_id', 'biocollection_type', 'number', 'date', 'notes', 'project_id','biocollection_number'];
 
     //add attributes for automatic use in datatabe
     //protected $appends = ['location_id'];
@@ -38,13 +43,10 @@ class Voucher extends Model
         if ($addId) {
             if ($this->identification) {
                 $text .= ' ('.$this->identification->rawLink().')';
-            } elseif ($this->parent and $this->parent->identification) {
-                $text .= ' ('.$this->parent->identification->rawLink().')';
             } else {
                 $text .= ' '.Lang::get('messages.unidentified');
             }
         }
-
         return $text;
     }
 
@@ -53,6 +55,7 @@ class Voucher extends Model
     {
         return 'vouchers';
     }
+
 
     protected static function boot()
     {
@@ -84,126 +87,173 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         });
     }
 
-    public function identification()
+
+    //get individual the voucher belongs to
+    public function individual()
     {
-        return $this->morphOne(Identification::class, 'object');
+      return $this->belongsTo(Individual::class);
     }
 
-    //vouchers through plants
-    public function plant_identification()
+
+    //voucher location is the location of the individual it relates
+    //this direct functions are to GET data only, not to set the location for a voucher
+    public function locations()
+    {
+      return $this->hasMany(
+          IndividualLocation::class,
+          'individual_id',
+          'individual_id'
+        );
+      /*
+      return $this->hasManyThrough(
+                  Location::class,
+                  IndividualLocation::class,
+                  'individual_id', // Foreign key on the individual_location table...
+                  'id', // Foreign key on the locations table...
+                  'individual_id', // Local key on the vouchers table...
+                  'location_id' // Local key on the individual_location table...
+            );
+        */
+
+    }
+    public function location_first()
+    {
+      return $this->locations()->where('first',1);
+      /*
+      return $this->locations()->addSelect([
+            'date_time',
+            'individual_location.notes as locationNote',
+            'individual_location.altitude as locationAltitude',
+            'odb_ind_relativePosition(relative_position)',
+            ])
+            ->where('individual_location.first',1);
+      */
+    }
+
+    public function getLongitudeAttribute()
+    {
+      return (float) $this->locationWithGeom->centroid["x"];
+    }
+    public function getLatitudeAttribute( )
+    {
+      return (float) $this->locationWithGeom->centroid["y"];
+    }
+
+    // with access to the location geom field
+    public function getLocationWithGeomAttribute()
+    {
+        if ($this->location_first->count()) {
+          $id = $this->location_first->first()->location_id;
+          return Location::withGeom()->addSelect('id', 'name')->find($id);
+        }
+        return;
+    }
+
+    public function getLocationNameAttribute()
+    {
+      return $this->location_first->first()->location_name;
+    }
+
+    public function getLocationFullnameAttribute()
+    {
+      return $this->location_first->first()->location_fullname;
+    }
+
+    public function getLocationDisplayAttribute()
+    {
+      $location = $this->location_first->first()->location_fullname;
+      $coordinates = $this->locationWithGeom->coordinatesSimple;
+      $altitude = $this->location_first->first()->altitude ? $this->location_first->first()->altitude : $this->location_first->first()->location->altitude;
+      $altitude = ($altitude != "" and null != $altitude) ? "<br>".$altitude."m.a.s.l." : null;
+      return $location."<br>".$coordinates.$altitude;
+    }
+
+    public function getCoordinatesPrecisionAttribute()
+    {
+      return strip_tags($this->location_first->first()->location->precision);
+    }
+
+
+    //IDENTIFICATION -similarly, vouchers identification is that of the inidividual
+    public function identification()
     {
       return $this->hasOneThrough(
                     'App\Identification',
-                    'App\Plant',
-                    'id', // Foreign key on plant table...
+                    'App\Individual',
+                    'identification_individual_id', // Foreign key on individual table...
                     'object_id', // Foreign key on identification table...
-                    'parent_id', // Local key on voucher table...
-                    'id' // Local key on plant table...
-                    )->where('object_type', 'App\Plant')->where('parent_type','App\Plant');
+                    'individual_id', // Local key on voucher table...
+                    'id' // Local key on individual table...
+                    )->where('object_type', 'App\Individual');
     }
-
-    public function getIdentificationObjectAttribute()
-    {
-      if ($this->identification) {
-          return $this->identification()->first();
-      }
-      if ($this->parent and $this->parent->identification) {
-          return $this->parent->identification()->first();
-      }
-      return null;
-    }
-
-    public function collectors()
-    {
-        return $this->morphMany(Collector::class, 'object')->with('person');
-    }
-
 
     /* IDENTIFICATION ATTRIBUTES ASSESSORS */
     public function getTaxonNameAttribute()
     {
-        if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+        if ($this->identification) {
             return $this->identification->taxon->fullname;
         }
-        if (Plant::class == $this->parent_type) {
-            return $this->parent->taxonName;
-        }
-
         return Lang::get('messages.unidentified');
     }
 
+    public function getTaxonNameModifierAttribute()
+    {
+      $modifier = null;
+      if ($this->identification) {
+        $modifier = $this->identification->modifier;
+        if ($modifier>0) {
+          $modifier = Lang::get('levels.modifier.'.$modifier);
+          //$modifier = " (".$modifier.")";
+        } else {
+          $modifier = null;
+        }
+      }
+      return $modifier;
+    }
+
+
     public function getTaxonNameWithAuthorAttribute()
     {
-        if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+        if ($this->identification) {
             return $this->identification->taxon->getFullnameWithAuthor();
         }
-        if (Plant::class == $this->parent_type) {
-            return $this->parent->identification->taxon->getFullnameWithAuthor();
-        }
-
         return Lang::get('messages.unidentified');
     }
 
     public function getTaxonFamilyAttribute()
     {
-      if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+      if ($this->identification) {
           return $this->identification->taxon->family;
-      }
-      if (Plant::class == $this->parent_type) {
-          return $this->parent->identification->taxon->family;
       }
       return Lang::get('messages.unidentified');
     }
 
     public function getIdentificationDateAttribute()
     {
-      if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
-          return $this->identification->date;
-      }
-      if (Plant::class == $this->parent_type) {
-          return $this->parent->identification->date;
+      if ($this->identification) {
+          return $this->identification->formatDate;
       }
       return null;
     }
 
     public function getIdentifiedByAttribute()
     {
-      if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
+      if ($this->identification) {
           return $this->identification->person->abbreviation;
-      }
-      if (Plant::class == $this->parent_type) {
-          return $this->parent->identification->person->abbreviation;
       }
       return Lang::get('messages.unidentified');
     }
 
     public function getIdentificationNotesAttribute()
     {
-      if (Location::class == $this->parent_type and $this->identification and $this->identification->taxon) {
-          return $this->identification->notes;
-      }
-      if (Plant::class == $this->parent_type) {
-          return $this->parent->identification->notes;
+      if ($this->identification) {
+          $text = "";
+          if ($this->identification->biocollection_id) {
+            $text = Lang::get('messages.identification_based_on')." ".Lang::get('messages.voucher')." #".$this->identification->biocollection_reference." @".$this->identification->biocollection->acronym.". ";
+          }
+          return $text.$this->identification->notes;
       }
       return "";
-    }
-
-    public function getPlantTagAttribute()
-    {
-      if (Plant::class == $this->parent_type) {
-          return $this->parent->fullname;
-      }
-      return '';
-    }
-
-    /* end identifications attributes */
-
-    public function getLinkedPlanttagAttribute()
-    {
-        if (Plant::class == $this->parent_type) {
-            return $this->parent->rawLink();
-        }
-        return '';
     }
 
 
@@ -213,12 +263,14 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return parent::newQuery($excludeDeleted)->addSelect(
             'vouchers.id',
             'vouchers.number',
+            'vouchers.individual_id',
             'vouchers.project_id',
             'vouchers.date',
             'vouchers.notes',
-            'vouchers.person_id',
-            'vouchers.parent_id',
-            'vouchers.parent_type'
+            'vouchers.biocollection_id',
+            'vouchers.biocollection_type',
+            'vouchers.biocollection_number',
+            DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id) as fullname')
         );
     }
 
@@ -227,190 +279,139 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return $this->morphMany(Measurement::class, 'measured');
     }
 
-    public function getFullnameAttribute()
-    {
-        if ($this->person) {
-            return $this->person->abbreviation.'-'.$this->number;
+
+
+
+    /*  VOUCHER COLLECTOR AND UNIQUE IDENTIFIERS
+      ** vouchers may have it own collector (SELF)
+      ** OR is the same of that of the individual (INDIVIDUAL COLLECTOR AND NUMBER)
+    */
+      //GET ONLY - RELATIONSHIPS
+      public function collectors()
+      {
+          return $this->morphMany(Collector::class, 'object')->with('person');
+      }
+
+      public function collector_main()
+      {
+          return $this->collectors()->where('main',1);
+      }
+
+      //ASSESSORS OR MUTATORS - DEFINED AS ATTRIBUTES
+        //1. fullname attribute depends on type of collector and for voucher is the taxonomy museum standard of collector+collector_number
+        /*public function getFullNameAttribute()
+        {
+            return $this->FullName;
+            if ($this->collector_main()->count()) {
+                return $this->main_collector.' - '.$this->number;
+            }
+            return $this->main_collector." - ".$this->individual->tag;
+
+        }
+        */
+        //voucher collector_main attribute depends on type of collector
+        public function getMainCollectorAttribute()
+        {
+            if ($this->collectors()->count()) {
+                return $this->collector_main()->first()->person->abbreviation;
+            }
+            return $this->individual->main_collector;
         }
 
-        return 'Not registered-'.$this->number;
-    }
-
-    public function getCollectorMainAttribute()
-    {
-        if ($this->person) {
-            return $this->person->abbreviation;
+        public function getCollectorNumberAttribute()
+        {
+          if ($this->collectors()->count()) {
+              return $this->number;
+          }
+          return $this->individual->tag;
         }
-        return 'Not registered-'.$this->number;
-    }
 
-    public function getCollectorsAllAttribute()
-    {
-        if ($this->collectors()->count()) {
-            $persons = $this->collectors()->cursor()->map(function($person) { return $person->person->abbreviation;})->toArray();
-            $persons = implode(' | ',$persons);
+
+        //full list of collectors for display and exports, pipe delimited
+        public function getAllCollectorsAttribute()
+        {
+            if ($this->collectors()->count()) {
+                $collectors = $this->collectors();
+                $persons = $collectors->cursor()->map(function($q) { return $q->person->abbreviation;})->toArray();
+                $persons = implode(' | ',$persons);
+            } else {
+                $persons = $this->individual->all_collectors;
+            }
             return $persons;
         }
-        return '';
-    }
 
 
+        public function getCollectionDateAttribute()
+        {
+          if ($this->collectors()->count()) {
+            return $this->formatDate;
+          } else {
+            return $this->individual->formatDate;
+          }
+        }
 
-    public function person()
-    {
-        return $this->belongsTo(Person::class);
-    }
 
+    /* PROJECT */
     public function project()
     {
         return $this->belongsTo(Project::class);
     }
     public function getProjectNameAttribute()
     {
-        return $this->project->name;
-    }
-
-    public function parent()
-    {
-        return $this->morphTo();
-    }
-
-
-    /* LOCATION attributes and relations  */
-    public function getLocation()
-    {
-        if (is_null($this->parent)) {
-            return null;
+        if ($this->project) {
+            return $this->project->name;
         }
-        if ($this->parent instanceof Location) {
-            return $this->parent();
-        }
-        return $this->parent->location();
+        return 'Unknown project';
     }
 
-    // with access to the location geom field
-    public function getLocationWithGeomAttribute()
-    {
-        return $this->getLocation()->withGeom()->addSelect('id', 'name','adm_level');
-    }
-
-    public function getCoordinatesWKTAttribute()
-    {
-      $centroid = $this->getLocation()->withGeom()->first()->centroidWKT;
-      return $centroid;
-    }
-
-    public function getLatitudeDecimalDegreesAttribute()
-    {
-      return (float) $this->getLocation()->withGeom()->first()->centroid['y'];
-    }
-
-    public function getLongitudeDecimalDegreesAttribute()
-    {
-      return (float) $this->getLocation()->withGeom()->first()->centroid['x'];
-    }
-
-    public function getCoordinatesPrecisionAttribute()
-    {
-      $adm_level = $this->getLocation()->first()->adm_level;
-      if ($adm_level >= 100) {
-          return Lang::get('levels.adm_level.'.$adm_level);
+    /* BIOCOLLECTION RELATIONS */
+      public function biocollection()
+      {
+        return $this->belongsTo(Biocollection::class);
       }
-      return Lang::get('messages.centroid');
-    }
-    public function getLocationFullNameAttribute()
-    {
-      return $this->getLocation()->first()->fullName;
-    }
 
-    public function getLocationShowAttribute()
-    {
-        if (!$this->parent) {
-            return;
-        }
-        $name = $this->getLocation()->first()->name;
-        $coords =  $this->getLocation()->withGeom()->first()->coordinatesSimple;
-        return  $name.' '.$coords;
-    }
 
-    /* this only makes sense if location is not an administrative area nor UC */
-    public function getLocationAltitudeAttribute()
-    {
-        $adm_level = $this->getLocation()->first()->adm_level;
-        if ($adm_level>=100) {
-          return $this->getLocation()->first()->altitude;
+
+      public function getIsTypeAttribute()
+      {
+        if ($this->biocollection_type>0) {
+          return Lang::get('levels.vouchertype.1');
         } else {
-          return null;
+          return Lang::get('levels.vouchertype.0');
         }
-    }
-
-    /* herbaria related functions */
-    public function herbaria()
-    {
-        return $this->belongsToMany(Herbarium::class)->withPivot(['herbarium_number','herbarium_type'])->withTimestamps();
-    }
-
-    public function getDepositedAtAttribute()
-    {
-      $herbaria = $this->herbaria()->cursor()->map(function($herb) {
-        $number = $herb->pivot->herbarium_number;
-        $type = $herb->pivot->herbarium_type;
-        $acronym = $herb->acronym;
-        if ($type>0) {
-          $type = Lang::get('levels.vouchertype'.$type);
-        } else {
-          $type = "";
-        }
-        if ($number) {
-          $number = $number." ".$type;
-          $number = (string)Str::of($number)->trim();
-          $number = "(".$number.")";
-        }
-        return (string)Str::of($herb->acronym." ".$number)->trim();
-      })->toArray();
-      $herbaria = array_filter($herbaria);
-      if (count($herbaria)) {
-        return implode("; ",$herbaria);
       }
-      return '';
-    }
-    public function getIsTypeAttribute()
-    {
-      $hastype = $this->herbaria()->where('herbarium_type','>',0)->count();
-      if ($hastype) {
-        return Lang::get('levels.vouchertype.1');
-      } else {
-        return Lang::get('levels.vouchertype.0');
+
+      public function getBiocollectionAcronymAttribute()
+      {
+        return $this->biocollection->acronym;
       }
-    }
 
-    public function setHerbariaNumbers($herbaria)
-    {
-        // drop "null" values
-       $herbaria = array_filter($herbaria);
-        if (empty($herbaria)) {
-            $this->herbaria()->detach();
-            return;
+      /*
+      public function getBiocollectionNumberAttribute()
+      {
+        if ($this->biocollection_number) {
+          return $this->biocollection_number;
         }
-        // transforms the array to be Laravel-friendly
-        //foreach ($herbaria as $key => &$value) {
-        //    $value = ['herbarium_number' => $value];
-        //}
-        //Commented above: value is a now an array that must have keys: herbarium_type and herbarium_number
-        //which are directly provided in create.blade.php in the herbarium key or in the importsample api
-        $this->herbaria()->sync($herbaria);
-    }
+        return "";
+      }
+      */
 
+      public function getIndividualFullnameAttribute()
+      {
+        return $this->individual->fullname;
+      }
 
+    /* PICTURES */
     public function pictures()
     {
         return $this->morphMany(Picture::class, 'object');
     }
 
-    /* Used in ActivityDataTable change display */
+
+    /* NAME Used in ActivityDataTable change display */
     public function identifiableName()
     {
-        return $this->getFullnameAttribute();
+        return $this->fullname;
     }
 
 }

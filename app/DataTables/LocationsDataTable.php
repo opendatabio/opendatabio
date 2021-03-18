@@ -15,6 +15,8 @@ use DB;
 use App\Voucher;
 use Lang;
 use Log;
+use Auth;
+
 class LocationsDataTable extends DataTable
 {
     /**
@@ -34,17 +36,17 @@ class LocationsDataTable extends DataTable
         })
         ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm_level.'.$location->adm_level); })
         ->addColumn('full_name', function ($location) {return $location->full_name; })
-        ->addColumn('plants', function ($location) {
+        ->addColumn('individuals', function ($location) {
           if ($this->project) {
-            $plant_count = $location->getCount('App\Project',$this->project,'plants');
-            return '<a href="'.url('plants/'.$location->id.'|'.$this->project.'/location_project').'">'.$plant_count.'</a>';
+            $individuals_count = $location->getCount('App\Project',$this->project,'individuals');
+            return '<a href="'.url('individuals/'.$location->id.'|'.$this->project.'/location_project').'">'.$individuals_count.'</a>';
           } else {
             if ($this->dataset) {
-              $plant_count = $location->getCount('App\Dataset',$this->dataset,'plants');
-              return '<a href="'.url('plants/'.$location->id.'|'.$this->dataset.'/location_dataset').'">'.$plant_count.'</a>';
+              $individuals_count = $location->getCount('App\Dataset',$this->dataset,'individuals');
+              return '<a href="'.url('individuals/'.$location->id.'|'.$this->dataset.'/location_dataset').'">'.$individuals_count.'</a>';
             } else {
-              $plant_count = $location->getCount('all',null,"plants");
-              return '<a href="'.url('plants/'.$location->id.'/location').'">'.$plant_count.'</a>';
+              $individuals_count = $location->getCount('all',null,"individuals");
+              return '<a href="'.url('individuals/'.$location->id.'/location').'">'.$individuals_count.'</a>';
             }
           }
         })
@@ -113,7 +115,7 @@ class LocationsDataTable extends DataTable
         ->addColumn('select_locations',  function ($location) {
             return $location->id;
         })
-        ->rawColumns(['name', 'pictures', 'plants','vouchers', 'measurements','latitude','longitude','taxons','parent']);
+        ->rawColumns(['name', 'pictures', 'individuals','vouchers', 'measurements','latitude','longitude','taxons','parent']);
     }
 
     /**
@@ -182,16 +184,21 @@ class LocationsDataTable extends DataTable
           }
           $title_level  .= '</select>';
         }
+        if (Auth::user()) {
+          $hidcol = [1,4,5,11,12,13,14,15,16,17];
+        } else {
+          $hidcol = [0,1,4,5,11,12,13,14,15,16,17];
+        }
 
         return $this->builder()
             ->columns([
                 'select_locations' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
-                'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
+                'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'adm_level' => ['title' => $title_level, 'searchable' => false, 'orderable' => true],
                 'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
                 'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => false, 'orderable' => false],
-                'plants' => ['title' => Lang::get('messages.plants'), 'searchable' => false, 'orderable' => false],
+                'individuals' => ['title' => Lang::get('messages.individuals'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
                 'taxons' => ['title' => Lang::get('messages.taxons'), 'searchable' => false, 'orderable' => false],
@@ -220,7 +227,7 @@ class LocationsDataTable extends DataTable
                 'autoWidth' => false,
                 'columnDefs' => [
                   [
-                    'targets' => [2,4,5,11,12,13,14,15,16,17],
+                    'targets' => $hidcol,
                     'visible' => false,
                   ],
                   [

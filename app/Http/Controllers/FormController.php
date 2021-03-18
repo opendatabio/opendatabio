@@ -10,7 +10,7 @@ namespace App\Http\Controllers;
 use App\Form;
 use App\Dataset;
 use App\Measurement;
-use App\Plant;
+use App\Individual;
 use App\Project;
 use Illuminate\Http\Request;
 use App\DataTables\FormsDataTable;
@@ -139,8 +139,8 @@ class FormController extends Controller
         $datasets = Auth::user()->datasets;
         $traits = $form->traits->pluck('id');
 //        switch ($form->measured_type) {
-//        case Plant::class:
-        $items = Project::findOrFail($request->project_id)->plants;
+//        case Individual::class:
+        $items = Project::findOrFail($request->project_id)->individuals;
 //            break;
 //        default:
 //            $items = [];

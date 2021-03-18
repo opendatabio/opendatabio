@@ -21,7 +21,7 @@ class Person extends Model
     // Gramatically incorrect, but helps development
     protected $table = 'persons';
 
-    protected $fillable = ['full_name', 'abbreviation', 'email', 'institution', 'herbarium_id','notes'];
+    protected $fillable = ['full_name', 'abbreviation', 'email', 'institution', 'biocollection_id','notes'];
 
     //activity log
     protected static $logName = 'person';
@@ -79,9 +79,9 @@ class Person extends Model
         return $persons;
     }
 
-    public function herbarium()
+    public function biocollection()
     {
-        return $this->belongsTo('App\Herbarium');
+        return $this->belongsTo('App\Biocollection');
     }
 
     // for specialist taxons

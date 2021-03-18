@@ -115,11 +115,11 @@
 </a>
 &nbsp;&nbsp;
 @endif
-@if ($taxon->getCount("all",null,'plants'))
-<a href="{{ url('plants/'. $taxon->id. '/taxon')  }}" class="btn btn-default">
+@if ($taxon->getCount("all",null,'individuals'))
+<a href="{{ url('individuals/'. $taxon->id. '/taxon')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
-{{ $taxon->getCount("all",null,'plants') }}
-@lang('messages.plants')
+{{ $taxon->getCount("all",null,'individuals') }}
+@lang('messages.individuals')
     </a>
 &nbsp;&nbsp;
 @endif
@@ -208,7 +208,7 @@
 
 
 
-<!-- Other details (specialist, herbarium, collects, etc?) -->
+<!-- Other details (specialist, biocollection, collects, etc?) -->
 @if ($taxon->senior or $taxon->juniors->count())
 <div class="panel panel-default">
   <div class="panel-heading">

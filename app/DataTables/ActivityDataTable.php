@@ -12,7 +12,7 @@ use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Activity;
 use App\ActivityFunctions;
-use App\Plant;
+use App\Individual;
 use App\User;
 use App\Person;
 use App\Voucher;
@@ -78,8 +78,8 @@ class ActivityDataTable extends DataTable
             'causer_id',
             'created_at',
         ]);
-        if ($this->plant) {
-            $query = $query->where('subject_type' , Plant::class)->where('subject_id',$this->plant);
+        if ($this->individual) {
+            $query = $query->where('subject_type' , Individual::class)->where('subject_id',$this->individual);
         }
         if ($this->location) {
             $query = $query->where('subject_type' , Location::class)->where('subject_id',$this->location);

@@ -8,29 +8,29 @@
 namespace App\Policies;
 
 use App\User;
-use App\Herbarium;
+use App\Biocollection;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class HerbariumPolicy
+class BiocollectionPolicy
 {
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can view the herbarium.
+     * Determine whether the user can view the biocollection.
      *
      * @param \App\User      $user
-     * @param \App\Herbarium $herbarium
+     * @param \App\Biocollection $biocollection
      *
      * @return mixed
      */
-    public function view(User $user, Herbarium $herbarium)
+    public function view(User $user, Biocollection $biocollection)
     {
-        // everyone can view herbaria
+        // everyone can view biocollections
         return true;
     }
 
     /**
-     * Determine whether the user can create herbaria.
+     * Determine whether the user can create biocollections.
      *
      * @param \App\User $user
      *
@@ -42,28 +42,28 @@ class HerbariumPolicy
     }
 
     /**
-     * Determine whether the user can update the herbarium.
+     * Determine whether the user can update the biocollection.
      *
      * @param \App\User      $user
-     * @param \App\Herbarium $herbarium
+     * @param \App\Biocollection $biocollection
      *
      * @return mixed
      */
-    public function update(User $user, Herbarium $herbarium)
+    public function update(User $user, Biocollection $biocollection)
     {
         // Currently impossible!
         return false;
     }
 
     /**
-     * Determine whether the user can delete the herbarium.
+     * Determine whether the user can delete the biocollection.
      *
      * @param \App\User      $user
-     * @param \App\Herbarium $herbarium
+     * @param \App\Biocollection $biocollection
      *
      * @return mixed
      */
-    public function delete(User $user, Herbarium $herbarium)
+    public function delete(User $user, Biocollection $biocollection)
     {
         return User::ADMIN == $user->access_level;
     }

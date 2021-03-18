@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Collector extends Model
 {
-    protected $fillable = ['person_id', 'object_id', 'object_type'];
+    protected $fillable = ['person_id', 'object_id', 'object_type','main'];
 
     public function person()
     {

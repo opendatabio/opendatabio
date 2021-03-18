@@ -8,7 +8,7 @@
 namespace App\DataTables;
 
 use Baum\Node;
-use App\Plant;
+use App\Individual;
 use App\Location;
 use App\Taxon;
 use App\HasAuthLevels;
@@ -16,11 +16,12 @@ use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
+use DB;
 use App\User;
 use Auth;
 
 
-class PlantsDataTable extends DataTable
+class IndividualsDataTable extends DataTable
 {
 
     /**
@@ -31,8 +32,8 @@ class PlantsDataTable extends DataTable
     public function dataTable(DataTables $dataTables, $query)
     {
         return (new EloquentDataTable($query))
-        ->editColumn('tag', function ($plant) {
-            return $plant->rawLink();
+        ->editColumn('tag', function ($individual) {
+            return $individual->rawLink();
         })
         ->filterColumn('tag', function ($query, $keyword) {
             $sql = " tag='".$keyword."' OR tag like '%-".$keyword."'";
@@ -40,7 +41,7 @@ class PlantsDataTable extends DataTable
             if ($taxon->count()) {
               $taxon_list = $taxon->cursor()->first()->getDescendantsAndSelf()->pluck('id')->toArray();
               $query->where(function($subquery) use($taxon_list,$sql) {
-                $subquery->whereHas('identification', function ($q) use ($taxon_list) {
+                $subquery->whereHas('indirectidentification', function ($q) use ($taxon_list) {
                   $q->whereIn('taxon_id',$taxon_list);
                 })->orWhereRaw($sql);
               });
@@ -48,35 +49,30 @@ class PlantsDataTable extends DataTable
               $query->whereRaw($sql);
             }
         })
-        ->addColumn('project', function ($plant) { return $plant->project->name; })
-        ->addColumn('identification', function ($plant) {
-            return $plant->taxonName == Lang::get('messages.unidentified') ?
-                   $plant->taxonName : '<em>'.htmlspecialchars($plant->taxonName).'</em>';
+        ->addColumn('project', function ($individual) { return $individual->project->name; })
+        ->addColumn('identification', function ($individual) {
+            return $individual->taxonName == Lang::get('messages.unidentified') ?
+                   $individual->taxonName : '<em>'.htmlspecialchars($individual->taxonName).'</em>';
         })
-        ->addColumn('tag_team', function ($plant) {
-            $col = $plant->collectors;
+        ->addColumn('collectors', function ($individual) {
+            $col = $individual->collectors;
             return implode(', ', $col->map(function ($c) {return $c->person->fullname; })->all());
         })
-        ->editColumn('date', function ($plant) { return $plant->formatDate; })
-        ->addColumn('measurements', function ($plant) {
+        ->editColumn('date', function ($individual) { return $individual->formatDate; })
+        ->addColumn('measurements', function ($individual) {
             if ($this->dataset) {
-              return '<a href="'.url('measurements/'.$plant->id.'|'.$this->dataset.'/plant_dataset').'">'.$plant->measurements()->withoutGlobalScopes()->where('dataset_id','=',$this->dataset)->count().'</a>';
+              return '<a href="'.url('measurements/'.$individual->id.'|'.$this->dataset.'/individual_dataset').'">'.$individual->measurements()->withoutGlobalScopes()->where('dataset_id','=',$this->dataset)->count().'</a>';
             }
-            return '<a href="'.url('measurements/'.$plant->id.'/plant').'">'.$plant->measurements()->withoutGlobalScopes()->count().'</a>';
+            return '<a href="'.url('measurements/'.$individual->id.'/individual').'">'.$individual->measurements()->withoutGlobalScopes()->count().'</a>';
         })
-        ->addColumn('location', function ($plant) {
-            $loc = $plant->locationWithGeom;
-            if (!$loc) {
-                return;
-            }
-
-            return $loc->coordinatesSimple;
+        ->addColumn('location', function ($individual) {
+            return $individual->LocationDisplay();
         })
-        ->addColumn('select_plants',  function ($plant) {
-            return $plant->id;
+        ->addColumn('select_individuals',  function ($individual) {
+            return $individual->id;
         })
-        ->addColumn('vouchers',function($plant) {
-            return '<a href="'.url('plants/'.$plant->id.'/vouchers').'">'.$plant->vouchers()->withoutGlobalScopes()->count().'</a>';
+        ->addColumn('vouchers',function($individual) {
+            return '<a href="'.url('individuals/'.$individual->id.'/vouchers').'">'.$individual->vouchers()->withoutGlobalScopes()->count().'</a>';
         })
         ->rawColumns(['tag', 'identification','measurements','location','vouchers']);
     }
@@ -88,19 +84,21 @@ class PlantsDataTable extends DataTable
      */
     public function query()
     {
-        $query = Plant::query()->with(['identification', 'project', 'location', 'collectors.person'])
+        $query = Individual::query()->with(['project', 'locations', 'collectors.person'])
             ->select([
-                'plants.id',
-                'tag',
-                'location_id',
-                'project_id',
-                'plants.date',
-            ])->withCount('measurements');
+                'individuals.id',
+                'individuals.tag',
+                'individuals.project_id',
+                'individuals.date',
+                DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),
+                DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'),
+            ])->withCount('measurements','vouchers');
         // customizes the datatable query
         if ($this->location) {
             $locationsids = Location::where('id', '=', $this->location)->first()->getDescendantsAndSelf()->pluck('id');
-            //$locationsids = array_merge((array)$this->location,$locationsids);
-            $query = $query->whereIn('location_id',$locationsids);
+            $query = $query->whereHas('locations',function($q) use($locationsids) {
+              $q->whereIn('location_id',$locationsids);
+            });
         }
         if ($this->project) {
             $query = $query->where('project_id', '=', $this->project);
@@ -129,18 +127,24 @@ class PlantsDataTable extends DataTable
      */
     public function html()
     {
+
+      if (Auth::user()) {
+        $hidcol = [1,5, 6];
+      } else {
+        $hidcol = [0,1,5, 6];
+      }
         return $this->builder()
             ->columns([
-                'select_plants' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
+                'select_individuals' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
-                'tag' => ['title' => Lang::get('messages.location_and_tag'), 'searchable' => true, 'orderable' => true],
+                'tag' => ['title' => Lang::get('messages.individual'), 'searchable' => true, 'orderable' => true],
                 'identification' => ['title' => Lang::get('messages.identification'), 'searchable' => false, 'orderable' => false],
-                'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
-                'tag_team' => ['title' => Lang::get('messages.tag_team'), 'searchable' => false, 'orderable' => false],
+                'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
+                'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => false, 'orderable' => false],
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
-                'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.voucher'), 'searchable' => false, 'orderable' => false],
+                'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -157,7 +161,7 @@ class PlantsDataTable extends DataTable
                 ],
                 'columnDefs' => [
                   [
-                    'targets' => [1,5, 6, 8],
+                    'targets' => $hidcol,
                     'visible' => false,
                   ],
                   [
@@ -182,6 +186,6 @@ class PlantsDataTable extends DataTable
      */
     protected function filename()
     {
-        return 'odb_plants_'.time();
+        return 'odb_individuals_'.time();
     }
 }

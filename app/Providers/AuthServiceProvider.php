@@ -17,7 +17,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array
      */
     protected $policies = [
-        \App\Herbarium::class => \App\Policies\HerbariumPolicy::class,
+        \App\Biocollection::class => \App\Policies\BiocollectionPolicy::class,
         \App\Person::class => \App\Policies\PersonPolicy::class,
         \App\BibReference::class => \App\Policies\BibReferencePolicy::class,
         \App\Location::class => \App\Policies\LocationPolicy::class,
@@ -26,8 +26,8 @@ class AuthServiceProvider extends ServiceProvider
         \App\Taxon::class => \App\Policies\TaxonPolicy::class,
         \App\Project::class => \App\Policies\ProjectPolicy::class,
         \App\Dataset::class => \App\Policies\DatasetPolicy::class,
-        \App\Plant::class => \App\Policies\PlantPolicy::class,
         \App\Voucher::class => \App\Policies\VoucherPolicy::class,
+        \App\Individual::class => \App\Policies\IndividualPolicy::class,
         \App\Tag::class => \App\Policies\TagPolicy::class,
         \App\ODBTrait::class => \App\Policies\TraitPolicy::class,
         \App\Measurement::class => \App\Policies\MeasurementPolicy::class,

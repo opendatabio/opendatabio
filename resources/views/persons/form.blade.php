@@ -38,23 +38,23 @@
 </div>
 
 <div class="form-group">
-    <label for="herbarium_id" class="col-sm-3 control-label">
-@lang('messages.herbarium')
+    <label for="biocollection_id" class="col-sm-3 control-label">
+@lang('messages.biocollection')
 </label>
         <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
-	<?php $selected = old('herbarium_id', isset($person) ? $person->herbarium_id : null); ?>
+	<?php $selected = old('biocollection_id', isset($person) ? $person->biocollection_id : null); ?>
 
-	<select name="herbarium_id" id="herbarium_id" class="form-control" >
+	<select name="biocollection_id" id="biocollection_id" class="form-control" >
 		<option value='' >&nbsp;</option>
-	@foreach ($herbaria as $herbarium)
-		<option value="{{$herbarium->id}}" {{ $herbarium->id == $selected ? 'selected' : '' }}>{{$herbarium->acronym}}</option>
+	@foreach ($biocollections as $biocollection)
+		<option value="{{$biocollection->id}}" {{ $biocollection->id == $selected ? 'selected' : '' }}>{{$biocollection->acronym}}</option>
 	@endforeach
 	</select>
             </div>
   <div class="col-sm-12">
     <div id="hint2" class="panel-collapse collapse">
-	@lang('messages.person_herbarium_hint')
+	@lang('messages.person_biocollection_hint')
     </div>
   </div>
 </div>

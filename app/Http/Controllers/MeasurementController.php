@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use App\DataTables\MeasurementsDataTable;
 use App\Measurement;
 use App\Project;
-use App\Plant;
+use App\Individual;
 use App\Voucher;
 use App\Taxon;
 use App\Location;
@@ -32,22 +32,22 @@ class MeasurementController extends Controller
 {
     // The usual index method is hidden to provide a common interface to all requests
     // coming from different nested routes
-    public function indexPlants($id, MeasurementsDataTable $dataTable)
+    public function indexIndividuals($id, MeasurementsDataTable $dataTable)
     {
-        $object = Plant::findOrFail($id);
+        $object = Individual::findOrFail($id);
 
         return $dataTable->with([
-            'measured_type' => 'App\Plant',
+            'measured_type' => 'App\Individual',
             'measured' => $id,
         ])->render('measurements.index', compact('object'));
     }
 
-    public function indexPlantsDatasets($id, MeasurementsDataTable $dataTable)
+    public function indexIndividualsDatasets($id, MeasurementsDataTable $dataTable)
     {
       $ids = explode('|',$id);
-      $object = Plant::findOrFail($ids[0]);
+      $object = Individual::findOrFail($ids[0]);
       $object_second = Dataset::findOrFail($ids[1]);
-      return $dataTable->with(['measured' => $ids[0],'measured_type'=> 'App\Plant','dataset' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+      return $dataTable->with(['measured' => $ids[0],'measured_type'=> 'App\Individual','dataset' => $ids[1]])->render('measurements.index', compact('object','object_second'));
     }
 
     public function indexLocations($id, MeasurementsDataTable $dataTable)
@@ -174,9 +174,9 @@ class MeasurementController extends Controller
         return view('measurements.create', compact('object', 'references', 'datasets', 'persons'));
     }
 
-    public function createPlants($id)
+    public function createIndividuals($id)
     {
-        $object = Plant::findOrFail($id);
+        $object = Individual::findOrFail($id);
 
         return $this->create($object);
     }
@@ -360,11 +360,11 @@ class MeasurementController extends Controller
         $taxon_id = null;
         $project_id = null;
         $location_id = null;
-        if ($request->measured_type == Plant::class) {
-          $plant = Plant::findOrFail($request->measured_id);
-          $taxon_id = $plant->identification->taxon_id;
-          $location_id = $plant->location_id;
-          $project_id = $plant->project_id;
+        if ($request->measured_type == Individual::class) {
+          $individual = Individual::findOrFail($request->measured_id);
+          $taxon_id = $individual->identification->taxon_id;
+          $location_id = $individual->location_id;
+          $project_id = $individual->project_id;
         }
         if ($request->measured_type == Voucher::class) {
             $voucher = Voucher::findOrFail($request->measured_id);
@@ -429,11 +429,11 @@ class MeasurementController extends Controller
         /*if measured changed need to update counts */
         if ($request->measured_id != $measurement->measured_id) {
           $oldvalues = ['taxon_id' => null, 'location_id' => null, 'project_id' => null];
-          if ($measurement->measured_type == Plant::class) {
-            $plant = Plant::findOrFail($measurement->measured_id);
-            $oldvalues['taxon_id'] = $plant->identification->taxon_id;
-            $oldvalues['location_id'] = $plant->location_id;
-            $oldvalues['project_id'] = $plant->project_id;
+          if ($measurement->measured_type == Individual::class) {
+            $individual = Individual::findOrFail($measurement->measured_id);
+            $oldvalues['taxon_id'] = $individual->identification->taxon_id;
+            $oldvalues['location_id'] = $individual->location_id;
+            $oldvalues['project_id'] = $individual->project_id;
           }
           if ($measurement->measured_type == Voucher::class) {
               $voucher = Voucher::findOrFail($measurement->measured_id);
@@ -457,11 +457,11 @@ class MeasurementController extends Controller
           Summary::updateSummaryMeasurementsCounts($oldvalues,$value="value - 1");
 
           $newvalues = ['taxon_id' => null, 'location_id' => null, 'project_id' => null];
-          if ($request->measured_type == Plant::class) {
-            $plant = Plant::findOrFail($request->measured_id);
-            $newvalues['taxon_id'] = $plant->identification->taxon_id;
-            $newvalues['location_id'] = $plant->location_id;
-            $newvalues['project_id'] = $plant->project_id;
+          if ($request->measured_type == Individual::class) {
+            $individual = Individual::findOrFail($request->measured_id);
+            $newvalues['taxon_id'] = $individual->identification->taxon_id;
+            $newvalues['location_id'] = $individual->location_id;
+            $newvalues['project_id'] = $individual->project_id;
           }
           if ($request->measured_type == Voucher::class) {
               $voucher = Voucher::findOrFail($request->measured_id);
@@ -523,8 +523,13 @@ class MeasurementController extends Controller
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {
-          $data = SimpleExcelReader::create($request->file('data_file'))->getRows()->toArray();
-          if (count($data)>0) {
+          try {
+            $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
+          } catch (\Exception $e) {
+            $data = [];
+            $message = json_encode($e);
+          }
+          if (count($data)>0) {            
             UserJob::dispatch(ImportMeasurements::class,[
               'data' => $data,
             ]);

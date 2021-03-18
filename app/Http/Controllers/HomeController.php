@@ -7,7 +7,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Plant;
+use App\Individual;
 use App\Voucher;
 use App\Project;
 use App\Dataset;
@@ -32,13 +32,13 @@ class HomeController extends Controller
      */
     public function index()
     {
-        $nplants = Plant::withoutGlobalScopes()->count();
+        $nindividuals = Individual::withoutGlobalScopes()->count();
         $nvouchers = Voucher::withoutGlobalScopes()->count();
         $nprojects = Project::withoutGlobalScopes()->count();
         $ndatasets = Dataset::withoutGlobalScopes()->count();
         $nmeasurements = Measurement::withoutGlobalScopes()->count();
 
-        return view('home', compact('nplants', 'nvouchers','nprojects','ndatasets','nmeasurements'));
+        return view('home', compact('nindividuals', 'nvouchers','nprojects','ndatasets','nmeasurements'));
     }
 
 

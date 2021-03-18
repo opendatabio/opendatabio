@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Auth;
 use App\Measurement;
 use App\Taxon;
-use App\Plant;
+use App\Individual;
 use App\Location;
 use App\Voucher;
 use Log;
@@ -40,8 +40,8 @@ class ExportData extends AppJob
          //which model to export
          $object_type = $data['object_type'];
          //which API endpoint to use?
-         if ($object_type == 'Herbarium') {
-           $endpoint = 'herbaria';
+         if ($object_type == 'Biocollection') {
+           $endpoint = 'biocollections';
          } else {
            $endpoint = strtolower($object_type)."s";
          }
@@ -78,8 +78,8 @@ class ExportData extends AppJob
            if (isset($data['location_root'])) {
              $params['location_root'] = $data['location_root'];
            }
-           if (isset($data['plant'])) {
-             $params['plant'] = $data['plant'];
+           if (isset($data['individual'])) {
+             $params['individual'] = $data['individual'];
            }
            if (isset($data['voucher'])) {
              $params['voucher'] = $data['voucher'];
@@ -169,7 +169,7 @@ class ExportData extends AppJob
 
            //LOG THE FILE FOR USER DOWNLOAD
            $today = now();
-           $file = "Your requested export for <strong>".$object_type."</strong> prepared ".$today." ";
+           $file = "This file contains your requested export for <strong>".$object_type."</strong> prepared ".$today." ";
            $tolog = $file."<br><a href='".url('downloads_temp/'.$filename)."' download >".$filename."</a>";
            $this->appendLog($tolog);
 

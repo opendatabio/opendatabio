@@ -39,8 +39,8 @@
     @if (isset($object) and class_basename($object) == "Location")
       <input type='hidden' name='location_root' value='{{ $object->id}}' >
     @endif
-    @if (isset($object) and class_basename($object) == "Plant")
-      <input type='hidden' name='plant' value='{{ $object->id}}' >
+    @if (isset($object) and class_basename($object) == "Individual")
+      <input type='hidden' name='individual' value='{{ $object->id}}' >
     @endif
     @if (isset($object) and class_basename($object) == "Voucher")
       <input type='hidden' name='voucher' value='{{ $object->id}}' >
