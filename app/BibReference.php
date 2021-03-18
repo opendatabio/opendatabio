@@ -49,7 +49,7 @@ class BibReference extends Model
       return $this->belongsToMany(Dataset::class,'dataset_bibreference')->withPivot(['mandatory']);
     }
 
-    
+
     public function measurements()
     {
         return $this->hasMany(Measurement::class, 'bibreference_id');
@@ -115,7 +115,7 @@ class BibReference extends Model
 
     public function getDoiAttribute()
     {
-        if (!is_null($this->attributes['doi'])) {
+        if (isset($this->attributes['doi'])) {
             return $this->attributes['doi'];
         }
 
@@ -147,23 +147,27 @@ class BibReference extends Model
     public function setDoi($newDoi)
     {
         // if receiving a blank and we have attr set, the user is probably trying to remove the information
-        if (array_key_exists('doi', $this->attributes) and $this->attributes['doi'] and !$newDoi) {
+        $olddoi = array_key_exists('doi', $this->attributes)  ? $this->attributes['doi'] : null;
+        if ($olddoi and  null == $newDoi) {
             $this->attributes['doi'] = null;
-
             return;
         }
         // if we are receiving something for $newDoi, use it
-        if ($newDoi) {
+        if (!is_null($newDoi)) {
             $this->attributes['doi'] = $newDoi;
-
             return;
         }
         // else, guess it from the bibTex and fill it
         if (is_null($this->entries)) {
             $this->parseBibtex();
         }
-        if (count($this->entries) > 0 and array_key_exists('doi', $this->entries[0])) {
-            $this->doi = $this->entries[0]['doi'];
+
+        $entry = $this->entries[0];
+        $hasdoi = array_key_exists('doi',$entry) ? $entry['doi'] : (array_key_exists('DOI',$entry) ? $entry['DOI'] : null );
+        if (!is_null($hasdoi)) {
+            //$this->attributes['doi'] = $hasdoi;
+            $this->doi = $hasdoi;
+            //$this->attributes['doi'] = $newDoi;
         }
     }
 

@@ -11,6 +11,7 @@ use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Str;
 use Log;
+use App\BibReference;
 
 class ExternalAPIs
 {
@@ -55,6 +56,100 @@ class ExternalAPIs
           return null;
         }
         //
+    }
+
+
+    public static function getBibtexFromDoi($doi)
+    {
+        if (null != $doi and BibReference::isValidDoi($doi)) {
+        $uri = "https://api.crossref.org/works/".$doi;
+        //$client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
+        $client = new Guzzle(); // 'proxy' => $this->proxystring]);
+          try {
+            $response = $client->request('GET', $uri);
+          } catch (ClientException $e) {
+              return null; //FAILED
+          }
+          if (200 != $response->getStatusCode()) {
+              return null;
+          } // FAILED
+          $answer = json_decode($response->getBody());
+          $answer_arr = json_decode(json_encode($answer->message),true);
+          if (is_array($answer_arr['author'])) {
+              $author = $answer_arr['author'];
+          } else {
+              $author = explode(' and ',$answer_arr['author']);
+          }
+          $authors = [];
+          $family = [];
+          foreach($author as $au) {
+            if (isset($au['given'])) {
+              $authors[] = $au['given']." ".$au['family'];
+              $family[] = $au['family'];
+            } else {
+              $authors[] = $au;
+              $aut = explode(" ",$au);
+              $family[] = $aut[(count($aut)-1)];
+            }
+          }
+          $family = $family[0];
+          $author = implode(" and ",$authors);
+
+          $year = null;
+          if ($year == null and  isset($answer_arr['year'])) {
+            $year = $answer_arr['year'];
+          }
+          if (isset($answer_arr['license']) and $year == null) {
+              $datetime = $answer_arr['license'];
+              if (isset($datetime[0]['start']['date-time'])) {
+                $dtime = $datetime[0]['start']['date-time'];
+                $year = date('Y',strtotime($dtime));
+              }
+          }
+          if (isset($answer_arr['published-print']) and $year == null) {
+              $datetime = $answer_arr['published-print'];
+              $year='here';
+              if (isset($datetime['date-time'])) {
+                $dtime = $datetime['date-time'];
+                $year = date('Y',strtotime($dtime));
+              } elseif (isset($datetime['date-parts'])) {
+                $dtp =  $datetime['date-parts'];
+                if (isset($dtp['year'])) {
+                  $year = $dtp['year'];
+                } elseif (!is_array($dtp[0])) {
+                    $year = $dtp[0];
+                } else {
+                  $year =$dtp[0][0];
+                }
+              }
+          }
+          $bibkey = $family."_".$year;
+          $result = [
+          'author' => $author,
+          'year' => $year,
+          'title' => isset($answer_arr['title']) ? implode(' ',$answer_arr['title']) : null,
+          'issn' => isset($answer_arr['ISSN']) ? implode(" | ",$answer_arr['ISSN']) : null,
+          'issue' => isset($answer_arr['issue']) ? $answer_arr['issue'] : null,
+          'url' => isset($answer_arr['URL']) ? $answer_arr['URL'] : null,
+          'doi'  => $doi,
+          'volume' => isset($answer_arr['volume']) ? $answer_arr['volume'] : null,
+          'page' => isset($answer_arr['page']) ? $answer_arr['page'] : null,
+          'journal' => isset($answer_arr['container-title']) ? implode(" ",$answer_arr['container-title']) : null,
+          'journal_short' => isset($answer_arr['short-container-title']) ? implode(" ",$answer_arr['short-container-title']) : null,
+          'published' => isset($answer->message->publisher) ? $answer->message->publisher : null,
+          ];
+          $bibtex = "@article{".$bibkey;
+          foreach($result as $key => $value) {
+            if (is_array($value)) {
+              $value = implode(' ',$value);
+            }
+            $bibtex .= ",\n     ".$key." = {".$value."}";
+          }
+          $bibtex .= "\n}";
+          //return json_encode($answer_arr);
+          return $bibtex;
+        }
+        return null;
     }
 
     public function getMobot($searchstring)
@@ -111,10 +206,23 @@ class ExternalAPIs
         if (isset($answer[0]->Error)) {
             return [self::NOT_FOUND];
         }
+
         if ($answer[0]->TotalRows > 1) {
-            $flags = $flags | self::MULTIPLE_HITS;
+          //get only valid records
+          $newanswer = [];
+          foreach($answer as $record) {
+              if (in_array($record->NomenclatureStatusName, ['Legitimate', 'No opinion', 'nom. cons.'])) {
+                $newanswer[] = $record;
+              }
+           }
+           if (count($newanswer)>1) {
+             $flags = $flags | self::MULTIPLE_HITS;
+           } elseif (count($newanswer)==1) {
+             $answer = $newanswer;
+           }
         }
-        // Check if this name is accepted
+
+        //get synonyms is is the case
         $senior = null;
         if (!in_array($answer[0]->NomenclatureStatusName, ['Legitimate', 'No opinion', 'nom. cons.'])) {
             //# STEP TWO, look for valid synonyms
@@ -153,23 +261,23 @@ class ExternalAPIs
         $ret = explode('%', $answer[$i]);
         if (count($keys)==count($ret)) {
           $ret = array_combine($keys,$ret);
-          $name = strtolower((string)Str::of($ret["Full name without family and authors"])->trim());
-          if (strtolower($searchstring) == $name) {
+          $name = mb_strtolower((string)Str::of($ret["Full name without family and authors"])->trim());
+          if (mb_strtolower($searchstring) == $name) {
               $rets[] = $ret;
-              $dates[] = (int)$ret['Publication year full'];
+              $dates[] = isset($ret['Publication year full']) ? (int) $ret['Publication year full'] :  (int) $ret['Publication year'];
           }
         }
       }
       if (count($rets) == 1) {
         return $rets[0];
-      } else {
+      } elseif (count($rets)>0) {
         #get oldest record if still more than one (priority)
         $key = array_search(min($dates),$dates);
         if (!is_array($key) and $dates[$key] != null) {
           return $rets[$key];
         }
-        return null;
       }
+      return null;
     }
 
     public function getIpni($searchstring)
@@ -195,7 +303,6 @@ class ExternalAPIs
         } // FAILED
         $answer = array_filter(explode("\n", (string) $response->getBody()));
 
-        //return $answer;
         //if empty or only 1 line found (is heading) then not found
         if ('' === $answer[0] | count($answer)==1) {
             return [self::NOT_FOUND];
@@ -370,8 +477,8 @@ class ExternalAPIs
         if ($values['canonicalName']== $searchstring and !$values['synonym'] and "" !== $values['authorship'] and array_key_exists('rank',$values)) {
             $filtered = [
               'author' => $values['authorship'],
-              'parent' => $values['parent'],
-              'rank' => strtolower($values['rank']),
+              'parent' => isset($values['parent']) ? $values['parent'] : null,
+              'rank' => mb_strtolower($values['rank']),
               'scientificName' => $values['scientificName']
             ];
             $result[$values['key']] = $filtered;

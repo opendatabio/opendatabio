@@ -9,6 +9,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\BibReference;
+use App\ExternalAPIs;
 use App\UserJob;
 use Validator;
 use Illuminate\Support\Facades\Lang;
@@ -67,8 +68,12 @@ class BibReferenceController extends Controller
             $this->validate($request, ['references' => 'required|string']);
             $contents = $request->references;
         }
-        UserJob::dispatch(ImportBibReferences::class, ['contents' => $contents, 'standardize' => $request->standardize]);
-
+        UserJob::dispatch(ImportBibReferences::class,[
+            'contents' => $contents,
+            'standardize' => $request->standardize,
+            'doi' => null,
+            ]
+        );
         return redirect('references')->withStatus(Lang::get('messages.dispatched'));
     }
 
@@ -168,5 +173,23 @@ class BibReferenceController extends Controller
     {
       $object = BibReference::findOrFail($id);
       return $dataTable->with('bibreference', $id)->render('common.activity',compact('object'));
+    }
+
+    public function findBibtexFromDoi(Request $request)
+    {
+        $errors = [];
+        $bibtex = null;
+        if (!$request->doi) {
+            $errors[] = 'DOI not informed';
+        }
+        $bibtex = ExternalAPIs::getBibtexFromDoi($request->doi);
+        if (null == $bibtex) {
+            $errors[] = 'Sorry, could not find the BibReference using the informed doi:'.$request->doi;
+        }
+        $err = null;
+        if (count($errors)) {
+          $err = implode("\n",$errors);
+        }
+        return Response::json(['bibtex' => $bibtex, 'errors' => $err]);
     }
 }

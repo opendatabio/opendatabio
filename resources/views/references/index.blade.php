@@ -3,66 +3,63 @@
 @section('content')
     <div class="container">
         <div class="col-sm-offset-2 col-sm-8">
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">
-@lang('messages.help')
-</a>
-      </h4>
-    </div>
-    <div id="help" class="panel-collapse collapse">
-      <div class="panel-body">
-@lang('messages.references_hint')
-      </div>
-    </div>
-  </div>
+
 
 @can ('create', App\BibReference::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-
                     @lang('messages.import_references')
+                    <a data-toggle="collapse" href="#standardize_keys" class="btn btn-default">?</a>
                 </div>
+                <div class="panel-body panel-collapse collapse"  id="standardize_keys" >
+                  <div class="col-sm-12">
+                    <div >
+                      @lang('messages.references_hint')
+                      <br><br><br>
+                    </div>
+                  </div>
 
-                <div class="panel-body">
                     <!-- Display Validation Errors -->
-		    @include('common.errors')
+		                  @include('common.errors')
 
 <form action="{{ url('references')}}" method="POST" class="form-horizontal" enctype="multipart/form-data">
  {{ csrf_field() }}
+ <div class="form-group" >
+   <div class="col-sm-3" style='float: left;'>
+      <input type="checkbox" name="standardize" id="standardize" class="" checked >&nbsp;@lang('messages.standardize_keys')
+      <br>
+      <br>
+      <span class="btn btn-success fileinput-button" id="fakerfile">
+          <i class="glyphicon glyphicon-file"></i>
+          <span>
+              @lang('messages.import_file')
+          </span>
+      </span>
+      <input type="file" name="rfile" id="rfile" accept=".bib" style="display:none;">
+      <input type="hidden" name="MAX_FILE_SIZE" value="30000">
+      <br><br><br>
+      <input type="text" class='control-form' name="doi" placeholder='DOI here, ex. 10.1038/nrd842'>
+      <br>
+      <button id="checkdoi" type="button" class="btn btn-primary">@lang ('messages.doicheck')</button>
+   </div>
+  <div class="col-sm-7" style='float: right;'>
+       <div class="spinner" id="spinner" hidden> </div>
+       <div class="alert alert-danger" id='common_errors' hidden></div>
+       <textarea id='bibtex' name="references" cols=35 rows=5 placeholder="paste here one or more bibtex records to import"></textarea>
+       <br>
+       <button id="submit" type="submit" value="Submit" class="btn btn-success">
+           @lang ('messages.import_from_text')
+       </button>
+  </div>
+</div>
 
-    <div class="form-group">
-        <div class="col-sm-4" style="float: left">
-            <label for="standardize" class="control-label">
-                <input type="checkbox" name="standardize" id="standardize" class="" checked >
-                @lang('messages.standardize_keys')
-            </label>
-        </div>
-        <div class="col-sm-7" style="float: right">
-            <textarea name="references" cols=35></textarea>
-        </div>
-
-        <div class="col-sm-4" style="float: left">
-            <span class="btn btn-success fileinput-button" id="fakerfile">
-                <i class="glyphicon glyphicon-file"></i>
-                <span>
-                    @lang('messages.import_file')
-                </span>
-            </span>
-            <input type="file" name="rfile" id="rfile" accept=".bib" style="display:none;">
-            <input type="hidden" name="MAX_FILE_SIZE" value="30000">
-        </div>
-        <div class="col-sm-7" style="float: right">
-            <button id="submit" type="submit" value="Submit" class="btn btn-success">
-                @lang ('messages.import_from_text')
-            </button>
-        </div>
-    </div>
 </form>
                 </div>
             </div>
 @endcan
+
+
+
             <!-- Registered References -->
                 <div class="panel panel-default">
                     <div class="panel-heading">
@@ -77,4 +74,60 @@
 @endsection
 @push ('scripts')
 {!! $dataTable->scripts() !!}
+
+<script>
+
+$(document).ready(function() {
+
+  /** USED IN THE LOCATION MODAL TO SAVE A NEW Location*/
+  $("#checkdoi").click(function(e) {
+    $( "#spinner" ).css('display', 'inline-block');
+    $.ajaxSetup({ // sends the cross-forgery token!
+      headers: {
+        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+      }
+    });
+    e.preventDefault(); // does not allow the form to submit
+    $.ajax({
+      type: "POST",
+      url: "{{ route('findbibtexfromdoi') }}",
+      dataType: 'json',
+            data: {
+              'doi': $('input[name=doi]').val(),
+            },
+      success: function (data) {
+
+        $( "#spinner" ).hide();
+        var errors = data.errors;
+        if (errors != null) {
+          $( "#common_errors" ).show();
+          var text = "<strong>" + "@lang ('messages.whoops')" + '</strong>here' + data.errors;
+          $( "#common_errors" ).html(text);
+        } else {
+          var bibtex = data.bibtex;
+          var curval = $("#bibtex").val();
+          if (curval != null) {
+            bibtex = bibtex + "\n" + curval;
+          }
+          $("#bibtex").val(bibtex);
+        }
+        //alert(data.errors);
+      },
+      error: function(e){
+        $( "#spinner" ).hide();
+        $( "#common_errors" ).show();
+        var text = "<strong>" + "@lang ('messages.whoops')" + '</strong>' + e;
+        $( "#common_errors" ).html(text);
+      }
+    })
+  });
+
+
+
+
+});
+
+</script>
+
+
 @endpush

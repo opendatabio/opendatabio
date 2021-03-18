@@ -12,6 +12,7 @@ use RenanBr\BibTexParser\Parser;
 use RenanBr\BibTexParser\Processor;
 //\NamesProcessor as AuthorProcessor;
 use App\BibReference;
+use App\ExternalAPIs;
 
 class ImportBibReferences extends AppJob
 {
@@ -20,8 +21,12 @@ class ImportBibReferences extends AppJob
      */
     public function inner_handle()
     {
+
+
+
         $this->standardize = $this->userjob->data['standardize'];
         $newentries = $this->extractEntrys();
+
         if (!$this->setProgressMax($newentries)) {
             return;
         }
@@ -72,7 +77,14 @@ class ImportBibReferences extends AppJob
 
     public function extractEntrys()
     {
-        $contents = $this->userjob->data['contents'];
+        //if doi has been informed search forthe bibtex record to parse it
+        if (isset($this->userjob->data['doi'])) {
+          $doi = $this->userjob->data['doi'];
+          $contents = ExternalAPIs::getBibtexFromDoi($doi);
+        }  else {
+          //else assumes the content must be a bibtex file;
+          $contents = $this->userjob->data['contents'];
+        }
         $listener = new Listener();
         //$listener->setTagNameCase(CASE_LOWER);
         $listener->addProcessor(new Processor\TagNameCaseProcessor(CASE_LOWER));

@@ -48,7 +48,7 @@
               @lang('messages.doi')
             </strong>
           </div>
-          <div class="col-sm-8">
+          <div class="col-sm-9">
             <a href="https://dx.doi.org/{{ $reference->doi }}">{{$reference->doi}}</a>&nbsp;
           </div>
         @else
@@ -58,7 +58,7 @@
                 @lang('messages.externallink')
               </strong>
             </div>
-            <div class="col-sm-8">
+            <div class="col-sm-9">
               <a href="{{ $reference->url}}">{{$reference->url}}</a>&nbsp;
             </div>
           @endif
@@ -68,10 +68,8 @@
             @lang('messages.bibtex_entry')
           </strong>
         </div>
-        <div class="col-sm-8">
-          <pre><code>
-            {{ $reference->bibtex }}
-          </code></pre>
+        <div class="col-sm-9">
+          <pre><code>{{ $reference->bibtex }}</code></pre>
         </div>
         @can ('update', $reference)
           <div class="col-sm-6">
