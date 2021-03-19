@@ -23,7 +23,6 @@
         "sopamo/laravel-filepond": "^0.5.0",
         "spatie/laravel-activitylog": "^3.16",
         "spatie/simple-excel": "^1.13",
-        "stechstudio/laravel-php-cs-fixer": "^2.2",
         "stichoza/google-translate-php": "^4.0",
         "tanmuhittin/laravel-google-translate": "^2.0.1",
         "wyndow/fuzzywuzzy": "^0.6.0",
@@ -38,6 +37,7 @@
         "doctrine/dbal": "~2.3",
         "doctrine/instantiator": "^1.4",
         "filp/whoops": "^2.0",
+        "friendsofphp/php-cs-fixer": "^2.16",
         "maximebf/debugbar": "^1.16",
         "mockery/mockery": "^1.4.2",
         "phpunit/phpunit": "^9.0"

@@ -16,7 +16,7 @@ $fixers = [
     'ternary_operator_spaces' => true,
     'trailing_comma_in_multiline_array' => true,
 ];
- 
+
 $finder = PhpCsFixer\Finder::create()
     ->notName('*.blade.php')
     ->exclude('vendor')
@@ -27,7 +27,7 @@ $finder = PhpCsFixer\Finder::create()
         __DIR__.'/routes/',
         __DIR__.'/tests/',
     ]);
- 
+
 return PhpCsFixer\Config::create()
     ->setRules($fixers)
     ->setUsingCache(true)
