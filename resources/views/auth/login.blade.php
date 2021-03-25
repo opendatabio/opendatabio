@@ -65,6 +65,12 @@
                                 <a class="btn btn-link" href="{{ route('password.request') }}">
                                     @lang('messages.forgot')
                                 </a>
+
+
+                                <a href="{{ route('register') }}" class="btn btn-link" >
+                                  @lang('messages.register')
+                                </a>
+
                             </div>
                         </div>
                     </form>

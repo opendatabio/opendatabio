@@ -13,8 +13,6 @@ class RenameHerbariumToBiocollection extends Migration
      */
     public function up()
     {
-
-
         Schema::rename('herbaria', 'biocollections');
         Schema::table('biocollections', function (Blueprint $table) {
           $table->dropIndex('herbaria_unique');
@@ -27,26 +25,22 @@ class RenameHerbariumToBiocollection extends Migration
           $table->renameColumn('herbarium_id', 'biocollection_id');
           $table->renameColumn('herbarium_reference', 'biocollection_reference');
           $table->foreign('biocollection_id')->references('id')->on('biocollections');
-          //$table->renameIndex('identifications_herbarium_id_foreign', 'identifications_biocollection_id_foreign');
         });
         Schema::table('persons', function (Blueprint $table) {
           $table->dropForeign('persons_herbarium_id_foreign');
           $table->renameColumn('herbarium_id', 'biocollection_id');
           $table->foreign('biocollection_id')->references('id')->on('biocollections');
-          //$table->renameIndex('persons_herbarium_id_foreign', 'persons_biocollection_id_foreign');
+
         });
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         Schema::table('vouchers', function (Blueprint $table) {
-          //$table->dropForeign(['individual_id']);
-          //$table->dropForeign(['herbarium_id']);
-          //$table->dropIndex('vouchers_unique');
+          $table->dropIndex('vouchers_unique');
           $table->renameColumn('herbarium_id', 'biocollection_id');
           $table->renameColumn('herbarium_number', 'biocollection_number');
           $table->renameColumn('herbarium_type', 'biocollection_type');
-          //$table->unique(['individual_id','biocollection_id','biocollection_number','number'],'vouchers_unique');
           $table->foreign('biocollection_id')->references('id')->on('biocollections');
-          //$table->renameIndex('vouchers_herbarium_id_foreign', 'vouchers_biocollection_id_foreign');
-          //$table->foreign('individual_id')->references('id')->on('individuals');
         });
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
     /**

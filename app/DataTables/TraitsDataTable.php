@@ -84,7 +84,7 @@ class TraitsDataTable extends DataTable
                     'excel',
                     'print',
                     'reload',
-                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
+                    ['extend' => 'colvis'],
                 ],
                 'columnDefs' => [[
                     'targets' => [0,1],

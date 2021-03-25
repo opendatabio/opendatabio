@@ -32,7 +32,7 @@
     <br>
     <div class="container">
       <div class="navbar-header">
-        <img src="{{ asset('favicon_io/favicon.ico') }}" >&nbsp;&nbsp;
+        <img src="{{ asset('favicon_io/favicon.ico') }}" height=30>
       </div>
       <div class="navbar-header">
         <!-- Collapsed Hamburger -->
@@ -81,20 +81,17 @@
             @lang('messages.datasets')
           </a>
         </li>
-
-        @if(Auth::user())
-
+        <li>
+          <a href="{{ route('tags.index') }}">
+            @lang('messages.tags')
+          </a>
+        </li>
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
                 @lang('messages.auxiliary') <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
-        			<li>
-                <a href="{{ route('persons.index') }}">
-                  @lang('messages.persons')
-                </a>
-              </li>
-        			<li>
+              <li>
                 <a href="{{ route('references.index') }}">
                   @lang('messages.references')
                 </a>
@@ -105,17 +102,9 @@
                 </a>
               </li>
 
-              @can ('show', App\User::class)
-              <li>
-                <a href="{{ route('users.index') }}">
-                  @lang('messages.users')
-                </a>
-              </li>
-              @endcan
-
         			<li>
-                <a href="{{ route('tags.index') }}">
-                  @lang('messages.tags')
+                <a href="{{ route('persons.index') }}">
+                  @lang('messages.persons')
                 </a>
               </li>
         			<li>
@@ -123,14 +112,25 @@
                   @lang('messages.traits')
                 </a>
               </li>
+              <!-- requires testing
         			<li>
                 <a href="{{ route('forms.index') }}">
                   @lang('messages.forms')
                 </a>
               </li>
+            -->
+            @can ('show', App\User::class)
+            <li>
+              <a href="{{ route('users.index') }}">
+                @lang('messages.users')
+              </a>
+            </li>
+            @endcan
+
             </ul>
           </li>
 
+      @if(Auth::user())
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
                 @lang('messages.imports') <span class="caret"></span>

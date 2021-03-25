@@ -99,25 +99,24 @@
 @if ( in_array( $odbtrait->type, [\App\ODBTrait::CATEGORICAL, \App\ODBTrait::CATEGORICAL_MULTIPLE, \App\ODBTrait::ORDINAL]) and $odbtrait->categories)
 <p><strong>@lang('messages.categories'):</strong></p>
 <table class="table table-striped"> <thead>
+  @if ($odbtrait->type == \App\ODBTrait::ORDINAL)
+      <th>@lang('messages.rank')</th>
+  @else
+      <th></th>
+  @endif
  <th>
    @lang('messages.name')
   </th>
   <th>
    @lang('messages.description')
   </th>
-@if ($odbtrait->type == \App\ODBTrait::ORDINAL)
-    <th>
-@lang('messages.rank')</th>
-@endif
 </thead>
 <tbody>
 @foreach ($odbtrait->categories as $cat)
 <tr>
+    <td> {{$cat->rank}}</td>
     <td> {{$cat->name}}</td>
     <td> {{$cat->description}}</td>
-    @if ($odbtrait->type == \App\ODBTrait::ORDINAL)
-        <td>{{$cat->rank}}</td>
-    @endif
 </tr>
 @endforeach
 </tbody>
