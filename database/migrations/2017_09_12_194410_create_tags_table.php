@@ -21,6 +21,7 @@ class CreateTagsTable extends Migration
             $table->timestamps();
         });
 
+        /*
         DB::table('tags')->insert([
             'id' => 1,
         ]);
@@ -29,14 +30,14 @@ class CreateTagsTable extends Migration
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
-            'translation' => 'Census',
+            'translation' => 'Forest Plots',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '1',
             'translatable_type' => 'App\\Tag',
             'language_id' => '2',
             'translation_type' => '0',
-            'translation' => 'Censo',
+            'translation' => 'Parcelas Florestais',
         ]);
 
         DB::table('tags')->insert([
@@ -83,7 +84,7 @@ class CreateTagsTable extends Migration
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
-            'translation' => 'Mollecular data',
+            'translation' => 'Molecular data',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '4',
@@ -119,15 +120,17 @@ class CreateTagsTable extends Migration
             'translatable_type' => 'App\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
-            'translation' => 'Taxonomic and morphologic characters',
+            'translation' => 'Plant morphology',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '6',
             'translatable_type' => 'App\\Tag',
             'language_id' => '2',
             'translation_type' => '0',
-            'translation' => 'Caracteres taxonômicos e morfológicos',
+            'translation' => 'Morfologia de plantas',
         ]);
+
+        */
     }
 
     /**

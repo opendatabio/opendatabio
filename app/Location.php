@@ -210,8 +210,13 @@ class Location extends Node
 
     public function getParentNameAttribute()
     {
-      $parent = $this->getAncestors()->last();
-      return $parent->name;
+      $ancestors = $this->getAncestors();
+      if ($ancestors->count()) {
+        $parent = $this->getAncestors()->last();
+        return $parent->name;
+      } else {
+        return null;
+      }
     }
 
     public function setGeomAttribute($value)

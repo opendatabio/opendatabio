@@ -25,7 +25,7 @@ class BiocollectionsDataTable extends DataTable
         return (new EloquentDataTable($query))
         ->addColumn('details', function ($biocollection) {
             if($biocollection->irn >0) {
-              return '<a href="http://sweetgum.nybg.org/science/ih/herbarium_details?irn={{$biocollection->irn}}">'.Lang::get('messages.details').'</a>';
+              return '<a href="http://sweetgum.nybg.org/science/ih/herbarium_details.php?irn='.($biocollection->irn).'">'.Lang::get('messages.details').'</a>';
             } else {
               return Lang::get('messages.noih');
             }

@@ -347,7 +347,7 @@ class LocationController extends Controller
         $location = Location::noWorld()->select('*')->with('children')->withGeom()->findOrFail($id);
         $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
         //$plot_children = null;
-        if (null !== $location->parent->geom and $location->adm_level>0) {
+        if (null !== $location->parent and $location->adm_level>0) {
           $parent = Location::noWorld()->select('*')->withGeom()->findOrFail($location->parent->id);
         } else {
           $parent = null;
@@ -583,7 +583,7 @@ class LocationController extends Controller
 
 
 
-    
+
     public function importJob(Request $request)
     {
       $this->authorize('create', Location::class);

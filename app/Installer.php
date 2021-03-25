@@ -700,6 +700,7 @@ class Installer
             exit($this->c("running 'php artisan migrate' failed!\n", 'danger'));
         }
 
+
         echo 'Do you wish to import the default taxon and locations to the database? yes/[no] ';
         $line = trim(fgets(STDIN));
         if ('y' == $line or 'yes' == $line) {
@@ -712,6 +713,7 @@ class Installer
             }
         }
 
+        /* this requires update on seeds to uncomment
         if ('local' == getenv('APP_ENV')) {
             echo 'Do you wish to seed the database with randomly generated test data? yes/[no] ';
             $line = trim(fgets(STDIN));
@@ -722,6 +724,7 @@ class Installer
                 }
             }
         }
+        */
     }
 
     public function postMigrate()
