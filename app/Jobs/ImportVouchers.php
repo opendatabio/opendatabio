@@ -133,12 +133,12 @@ class ImportVouchers extends ImportCollectable
     public function validateDate(&$voucher)
     {
       //validate date
-      $date = array_key_exists('date', $voucher) ? $voucher['date'] : (isset($this->header['date']) ? $this->header['date'] : null);
+      $date = isset($voucher['date']) ? $voucher['date'] : (isset($this->header['date']) ? $this->header['date'] : null);
       if (null == $date) {
-        $year = array_key_exists('date_year', $voucher) ? $voucher['date_year'] : (isset( $voucher['year']) ? $voucher['year'] : null);
-        $month = array_key_exists('date_month', $voucher) ? $voucher['date_month'] : (isset( $voucher['month']) ? $voucher['month'] : null);
-        $day = array_key_exists('date_day', $voucher) ? $voucher['date_day'] : (isset( $voucher['day']) ? $voucher['day'] : null);
-        $date = array($month,$day,$year);
+        $year = isset($voucher['date_year']) ? $voucher['date_year'] : (isset( $voucher['year']) ? $voucher['year'] : null);
+        $month = isset($voucher['date_month']) ? $voucher['date_month'] : (isset( $voucher['month']) ? $voucher['month'] : null);
+        $day = isset($voucher['date_day']) ? $voucher['date_day'] : (isset( $voucher['day']) ? $voucher['day'] : null);
+        $date = [$month,$day,$year];
       }
       if (is_string($date)) {
         if (preg_match("/\//",$date)) {

@@ -324,13 +324,17 @@ class ImportTaxons extends AppJob
 
     protected function validateBibKey(&$bibkey)
     {
-      $valid = BibReference::whereRaw('odb_bibkey(bibtex) = ?', [$bibkey])->get();
-      if (null === $valid) {
-        $this->appendLog('FAILED: Provided bibkey '.$bibkey.' not found in database.');
-        return false;
+      if (is_numeric($bibkey)) {
+        $valid = BibReference::where('id',$bibkey)->get();
+      } else {
+        $valid = BibReference::whereRaw('odb_bibkey(bibtex) = ?', [$bibkey])->get();
       }
-      $bibkey = $valid->id;
-      return true;
+      if ($valid->count()) {
+        $bibkey = $valid->get()->first()->id;
+        return true;
+      }
+      $this->appendLog('FAILED: Provided bibkey '.$bibkey.' not found in database.');
+      return false;
     }
 
     protected function validateValid(&$taxon)

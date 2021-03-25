@@ -163,19 +163,19 @@ class ImportTraits extends AppJob
     {
 
       $categories = $odbtrait['categories'];
-      $result = array();
+      $result = [];
       //each category may have 'lang', 'name', 'description' and 'rank'
       //name.rank.lang must be unique;
       $mustbeunique = array();
-      $counter = 1;
+      //$counter = 1;
       $usedranks = [];
       $traittype = $odbtrait['type'];
       foreach($categories as $category) {
          if (!$this->hasRequiredKeys(['lang','name','rank'], $category)) {
             return false;
          }
-         //rank is mandatory because it links different translations and must be number
-         $rank = ($traittype == ODBTrait::ORDINAL) ? (int) $category['rank'] : $counter;
+         //rank is mandatory because it groups different translations to the same category and must be a number greater than zero
+         $rank = (int) $category['rank'];
          $uniquerank = $rank.$category['lang'];
          if ($rank == 0 or in_array($uniquerank,$usedranks)) {
            $this->appendLog('FAILED: Variable '.$odbtrait['export_name'].' has invalid rank for category '.$category['name'].': value '.$rank.' is either duplicate or not numeric.');
@@ -183,6 +183,7 @@ class ImportTraits extends AppJob
          }
          $lang = ODBFunctions::validRegistry(Language::select('id'),$category['lang'], ['id', 'code','name']);
          if ($lang) {
+            $rank = (string) $rank;
             //if language is found
             $result[$rank][] = ['translation_type' => UserTranslation::NAME, 'translation' => $category['name'], 'lang' => $lang->id];
             //description is not mandatory for categories
@@ -194,7 +195,7 @@ class ImportTraits extends AppJob
             $this->appendLog('FAILED: Variable '.$odbtrait['export_name'].' has category '.$category['name'].' with invalid language '.$category['lang'].' value');
             return false;
           }
-          $counter = $counter+1;
+          //$counter = $counter+1;
           $usedranks[] =  $uniquerank;
       }
       //if there are duplicated values dont import
@@ -272,7 +273,7 @@ class ImportTraits extends AppJob
           if ($odbtrait['type'] == ODBTrait::SPECTRAL) {
             $wavemin = isset($odbtrait['wavenumber_min']) ? $odbtrait['wavenumber_min'] : (isset($odbtrait['range_min']) ? $odbtrait['range_min'] : null );
             $wavemax = isset($odbtrait['wavenumber_max']) ? $odbtrait['wavenumber_max'] : (isset($odbtrait['range_max']) ? $odbtrait['range_max'] : null );
-            if (null != $wavemin or null !=$wavemax)  {
+            if (null == $wavemin or null ==$wavemax)  {
               $this->appendLog("FAILED: Missing or invalid 'range_max' and/or 'range_min' or 'wavenumber_max' and/or 'wavenumber_min' must be informed for spectral variable ".$odbtrait['export_name']);
               return false;
             }
@@ -359,15 +360,6 @@ class ImportTraits extends AppJob
       $names = $record['name'];
       $descriptions = $record['description'];
 
-      /*
-      $txt = " WARNING: ";
-      foreach ($names as $lang => $translation) {
-        $txt .= "LANG IS ".$lang." =>  VALUE IS: ".json_encode($translation)."\n";
-      }
-      $this->appendLog($txt);
-      return false;
-      */
-
       //check if already exists
       if (ODBTrait::whereRaw('export_name like ?', [$record['export_name']])->count() > 0) {
           $this->appendLog('WARNING: Variable '.$record['export_name'].' already exists in the database. Skipped.');
@@ -445,11 +437,10 @@ class ImportTraits extends AppJob
           $categories = $record['categories'];
           $ranksdone = [];
           foreach($categories as $rank => $translations) {
-              $cat = $odbtrait->hasMany(TraitCategory::class, 'trait_id')->create(['rank' => $rank]);
+              $cat = $odbtrait->categories()->create(['rank' => $rank]);
               foreach ($translations as $translation) {
                 $cat->setTranslation($translation['translation_type'],$translation['lang'],$translation['translation']);
               }
-              $cat->save();
           }
       }
       $this->affectedId($odbtrait->id);

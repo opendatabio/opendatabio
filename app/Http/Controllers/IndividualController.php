@@ -625,30 +625,21 @@ class IndividualController extends Controller
       if (!$request->hasFile('data_file')) {
           $message = Lang::get('messages.invalid_file_missing');
       } else {
-        /*
-            Validate attribute file
-            Validate file extension and maintain original if valid or else
-            Store may save a csv as a txt, and then the Reader will fail
-        */
         $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
         $ext = $request->file('data_file')->getClientOriginalExtension();
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {
-          try {
-            $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
-          } catch (\Exception $e) {
-            $data = [];
-            $message = json_encode($e);
-          }
-          if (count($data)>0) {
-            UserJob::dispatch(ImportIndividuals::class,[
-              'data' => ['data' => $data],
-            ]);
-            $message = Lang::get('messages.dispatched');
-          } else {
-            $message = 'Something wrong with file';
-          }
+          $filename = uniqid().".".$ext;
+          $request->file('data_file')->storeAs("public/tmp",$filename);
+          UserJob::dispatch(ImportIndividuals::class,[
+            'data' => [
+                'data' => null,
+                'filename' => $filename,
+                'filetype' => $ext,
+              ],
+          ]);
+          $message = Lang::get('messages.dispatched');
         }
       }
       return redirect('import/individuals')->withStatus($message);

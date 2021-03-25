@@ -9,6 +9,9 @@ namespace App\Jobs;
 
 use App\Location;
 use App\ODBFunctions;
+use Spatie\SimpleExcel\SimpleExcelReader;
+use Storage;
+
 
 class ImportLocations extends AppJob
 {
@@ -18,44 +21,26 @@ class ImportLocations extends AppJob
     public function inner_handle()
     {
 
-        $data = $this->userjob->data['data'];
+        $data = $this->extractEntrys();
 
+        $hasfile = $this->userjob->data['data'];
         /* if a file has been uploaded */
-        if (isset($data['filename'])) {
-          $filename = $data['filename'];
-          $path = 'downloads_temp/'.$filename;
-          $stdin = fopen(public_path($path),'r');
-          $idx = 1;
-          $olddata = $data;
-          $data = [];
-          while (false !== ($line = fgetcsv($stdin))) {
-            if ($idx==1) {
-              $head = $line;
-            }  else {
-              $line = array_combine($head,$line);
-              $data[] = $line;
-            }
-            $idx =  $idx+1;
-          }
-          fclose($stdin);
-
-          //rename the file do be able to delete when deleting the job
-          $newfilename = "job-".$this->userjob->id."_".$filename;
-          $newpath = 'downloads_temp/'.$newfilename;
-          $renamed = rename(public_path($path),public_path($newpath));
-          $olddata['filename'] = $newfilename;
-          $this->userjob->rawdata = serialize($olddata);
-          $this->userjob->save();
+        if (isset($hasfile['filename'])) {
+          $filename = $hasfile['filename'];
+          $filetype = $hasfile['filetype'];
+          $path = storage_path('app/public/tmp/'.$filename);
+          /* this will be a lazy collection to minimize memory issues*/
+          $howmany = SimpleExcelReader::create($path,$filetype)->getRows()->count();
+          $this->userjob->setProgressMax($howmany);
+          /* I have to do twice, not understanding why loose the collection if I just count on it */
+          $data = SimpleExcelReader::create($path,$filetype)->getRows();
         } else {
           /* this has recieved a json */
-          $data = $this->extractEntrys();
+          if (!$this->setProgressMax($data)) {
+              return;
+          }
         }
         //return false;
-
-
-        if (!$this->setProgressMax($data)) {
-            return;
-        }
         foreach ($data as $location) {
             if ($this->isCancelled()) {
                 break;
@@ -72,6 +57,7 @@ class ImportLocations extends AppJob
                 }
             }
         }
+
 
     }
 

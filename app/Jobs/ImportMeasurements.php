@@ -16,8 +16,10 @@ use App\Voucher;
 use App\ODBFunctions;
 use App\ODBTrait;
 use App\BibReference;
+use App\Summary;
 use Auth;
 use Lang;
+use Spatie\SimpleExcel\SimpleExcelReader;
 
 class ImportMeasurements extends AppJob
 {
@@ -29,9 +31,24 @@ class ImportMeasurements extends AppJob
     public function inner_handle()
     {
         $data = $this->extractEntrys();
-        if (!$this->setProgressMax($data)) {
-            return;
+
+        $hasfile = $this->userjob->data['data'];
+        /* if a file has been uploaded */
+        if (isset($hasfile['filename'])) {
+          $filename = $hasfile['filename'];
+          $filetype = $hasfile['filetype'];
+          $path = storage_path('app/public/tmp/'.$filename);
+          /* this will be a lazy collection to minimize memory issues*/
+          $howmany = SimpleExcelReader::create($path)->getRows()->count();
+          $this->userjob->setProgressMax($howmany);
+          /* I have to do twice, not understanding why loose the collection if I just count on it */
+          $data = SimpleExcelReader::create($path)->getRows();
+        } else {
+          if (!$this->setProgressMax($data)) {
+              return;
+          }
         }
+
         $this->requiredKeys = $this->removeHeaderSuppliedKeys(['person', 'object_type','dataset','date']);
         if (!$this->validateHeader()) {
             return;
@@ -89,13 +106,21 @@ class ImportMeasurements extends AppJob
     }
     protected function validateBibReference(&$bibreference)
     {
-      $valid = BibReference::whereRaw('odb_bibkey(bibtex) = ?', [$bibreference])->get();
-      if (null === $valid) {
-        $this->appendLog('Bibreference '.$bibreference.' not found in database');
-        return false;
+      if (null == $bibreference) {
+        $bibreference = null;
+        return true;
       }
-      $bibreference = $valid->id;
-      return true;
+      if (is_numeric($bibreference)) {
+        $valid = BibReference::where('id',$bibreference);
+      } else {
+        $valid = BibReference::whereRaw('odb_bibkey(bibtex) = ?', [$bibreference]);
+      }
+      if ($valid->count()) {
+        $bibreference = $valid->get()->first()->id;
+        return true;
+      }
+      $this->appendLog('Bibreference '.$bibreference.' not found in database');
+      return false;
     }
     protected function validateDataset($dataset)
     {
@@ -119,43 +144,48 @@ class ImportMeasurements extends AppJob
 
     protected function validateData(&$measurement)
     {
+        if (!isset($measurement['trait_id']) & isset($measurement['trait'])) {
+          $measurement['trait_id'] = $measurement['trait'];
+        }
         $requiredKeys = array_merge($this->requiredKeys,['object_id','trait_id']);
         if (!$this->hasRequiredKeys($requiredKeys, $measurement)) {
             return false;
-        } elseif (array_key_exists('person',$measurement) and !$this->validatePerson($measurement['person'])) {
-              return false;
-        } elseif (array_key_exists('dataset',$measurement) and !$this->validateDataset($measurement['dataset'])) {
-              return false;
-        } elseif (array_key_exists('object_type',$measurement) and !$this->validateObjetType($measurement['object_type'])) {
-              return false;
-        } elseif (!$this->validateObject($measurement)) {
-            return false;
-        } elseif (!$this->validateMeasurements($measurement)) {
-            return false;
-        } elseif (array_key_exists('bibreference',$measurement) and !$this->validateBibReference($measurement['bibreference'])) {
-            return false;
-        } else {
-            return true;
         }
+        if (array_key_exists('person',$measurement) and !$this->validatePerson($measurement['person'])) {
+              return false;
+        }
+
+        if (array_key_exists('dataset',$measurement) and !$this->validateDataset($measurement['dataset'])) {
+              return false;
+        }
+
+        if (array_key_exists('object_type',$measurement) and !$this->validateObjetType($measurement['object_type'])) {
+              return false;
+        }
+
+        if (!$this->validateObject($measurement)) {
+            return false;
+        }
+
+        if (!$this->validateMeasurements($measurement)) {
+            return false;
+        }
+
+        if (array_key_exists('bibreference',$measurement) and !$this->validateBibReference($measurement['bibreference'])) {
+            return false;
+        }
+
+        return true;
     }
 
     protected function validateObject($measurement)
     {
         $object_type = array_key_exists('object_type', $this->header) ? $this->header['object_type'] : $measurement['object_type'];
-        if ('Location' === $object_type) {
-            $query = Location::select('id')->where('id', $measurement['object_id'])->get();
-        } elseif ('Taxon' === $object_type) {
-            // TODO: perhaps add restriction to bibreference when type is taxon
-            $query = Taxon::select('id')->where('id', $measurement['object_id'])->get();
-        } elseif ('Individual' === $object_type) {
-            $query = Individual::select('individuals.id')->where('id', $measurement['object_id'])->get();
-        } elseif ('Voucher' === $object_type) {
-            $query = Voucher::select('id')->where('id', $measurement['object_id'])->get();
-        }
-        if (count($query)) {
+        $valid = app('App\\'.$object_type)::where('id', $measurement['object_id']);
+        if ($valid->count()) {
             return true;
         } else {
-            $this->appendLog('WARNING: Object '.$object_type.' - '.$measurement['object_id'].' not found, all of their measurements will be ignored.');
+            $this->appendLog('WARNING: Object '.$object_type.' - '.$measurement['object_id'].' not found. Measurement ignored.');
             return false;
         }
     }
@@ -169,105 +199,136 @@ class ImportMeasurements extends AppJob
     }
 
 
-    protected function validateValue($trait,$value)
+    protected function validateValue($odbtrait,&$measurement)
     {
 
-        if (!$trait->link_type==ODBTrait::LINK && (empty($value['value']) || (is_array($value['value']) && count($value['value'])==0))) {
+        if (!$odbtrait->link_type == ODBTrait::LINK && (empty($measurement['value']) || (is_array($measurement['value']) && count($measurement['value'])==0))) {
+          $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' is missing'.$measurement['value']);
           return false;
         }
-        switch ($trait->type) {
-          case 0:
-          case 1:
-              if (!is_numeric($value['value'])) {
+        switch ($odbtrait->type) {
+          case ODBTrait::QUANT_INTEGER:
+          case ODBTrait::QUANT_REAL:
+              if (!is_numeric($measurement['value'])) {
+                $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' must be numeric');
                 return false;
               }
               break;
-          case 2:
-          case 4:
-              if (is_array($value['value']) && count($value['value'])>1) {
+          case ODBTrait::CATEGORICAL:
+          case ODBTrait::ORDINAL:
+              if (is_array($measurement['value']) && count($measurement['value'])>1) {
+                 $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' must have ONE category only');
                  return false;
               }
-          case 3:
-              $category_ids = array();
-              foreach($trait->categories as $cats) {
-                $category_ids[] = $cats->id;
-              }
-              if (is_array($value['value']) && count(array_diff($value['value'],$category_ids))>0) {
-                  return false;
-              } else {
-                //test if concatenated $string
-                if (!is_array($value['value']))  {
-                    $possval = explode(";",$value['value']);
-                    if (is_array($possval) && count(array_diff($possval,$category_ids))>0) {
-                        return false;
-                      } else {
-                        if (!in_array($value['value'],$category_ids)) {
-                          return false;
-                        }
-                    }
-                }
-              }
-              break;
-          case 6:
-              if (!$this->validateColor($value['value'])) {
+          case ODBTrait::CATEGORICAL_MULTIPLE:
+              if (!$this->validateCategories($odbtrait,$measurement['value'])) {
                 return false;
               }
               break;
-          case 7:
-              switch ($trait->link_type) {
+          case ODBTrait::COLOR:
+              if (!$this->validateColor($measurement['value'])) {
+                $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' color is invalid');
+                return false;
+              }
+              break;
+          case ODBTrait::LINK:
+              switch ($odbtrait->link_type) {
                 case (Taxon::class):
-                  $taxon = Taxon::where('id','=',$value['link_id'])->get();
-                  if (count($taxon)==0) {
+                  $taxon = Taxon::where('id','=',$measurement['link_id']);
+                  if ($taxon->count()==0) {
+                    $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' has and invalid Taxon link');
                     return false;
                   }
                   break;
                 case (Person::class):
-                  $person = Person::where('id','=',$value['link_id'])->get();
-                  if (count($person)==0) {
+                  $person = Person::where('id','=',$measurement['link_id']);
+                  if ($person->count()==0) {
+                    $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' has and invalid Person link');
                     return false;
                   }
                   break;
                 case (Individual::class):
-                  $individual = Individual::where('id','=',$value['link_id'])->get();
-                  if (count($individual)==0) {
+                  $individual = Individual::where('id','=',$measurement['link_id']);
+                  if ($individual->count()==0) {
+                    $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' has and invalid Individual link');
                     return false;
                   }
                   break;
              }
-             if (array_key_exists('value',$value) && !is_numeric($value['value'])) {
+             if (isset($measurement['value']) && !is_numeric($measurement['value']) && !empty($measurement['value'])) {
+               $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' must be a number');
                return false;
              }
              break;
-          case 8:
-             $values = explode(";",$value['value']);
-             if (count($values)!= $trait->value_length) {
-               $this->appendLog('WARNING: length '.$trait->value_length.' different than'.count($values));
+          case ODBTrait::SPECTRAL:
+             $measurements = explode(";",$measurement['value']);
+             if (count($measurements) != $odbtrait->value_length) {
+               $this->appendLog('ERROR: Value for '.$odbtrait->export_name.' must have '.$odbtrait->value_length." but it has ".count($measurements));
                return false;
              }
         }
         return true;
     }
 
+
+    public function validateCategories($odbtrait,&$value)
+    {
+        $cats = [];
+        if (!is_array($value)) {
+          if (strpos($value, '|') !== false) {
+              $value = explode('|', $value);
+          } elseif (strpos($value, ';') !== false) {
+              $value = explode(';', $value);
+          } elseif (strpos($value, ',') !== false) {
+              $value = explode(',', $value);
+          }
+        }
+        $msg = [];
+        foreach ($value as $key => $cat) {
+          if (null != $cat) {
+            $thetrait = clone $odbtrait;
+            if (is_string($cat)) {
+              $valid = $thetrait->categories()->whereHas('translations',function($tr) use($cat){ $tr->where('translation','like',$cat);});
+            } else {
+              $valid = $thetrait->categories()->where('id',$cat);
+            }
+            if ($valid->count() == 1) {
+              $cats[] = $valid->first()->id;
+            } else {
+              $msg[] = $cat.' is an invalid category for trait '.$thetrait->export_name;
+            }
+          }
+        }
+        if (count($msg)>0) {
+          $this->appendLog('ERROR:'.implode(" | ",$msg));
+          return false;
+        }
+        /* save ids and return valid */
+        $value = $cats;
+        return true;
+    }
+
+
     protected function validateMeasurements(&$measurement)
     {
         $valids = array();
         //check that trait exists;
-        $trait = ODBFunctions::validRegistry(ODBTrait::with('categories')->select('*'), $measurement['trait_id'], ['id', 'export_name']);
-        if (!$trait->id) {
-          $this->appendLog('WARNING: Trait_id for trait '.$trait->id.' not found, this measurement will be ignored.');
+        $odbtrait = ODBFunctions::validRegistry(ODBTrait::with('categories')->select('*'), $measurement['trait_id'], ['id', 'export_name']);
+        if (!$odbtrait->id) {
+          $this->appendLog('WARNING: Trait_id for trait '.$odbtrait->id.' not found, this measurement will be ignored.');
           return false;
         }
-        $measurement['trait_id'] = $trait->id;
-        if ($trait->type==ODBTrait::LINK && !array_key_exists('link_id',$measurement)) {
-          $this->appendLog('WARNING: Link_id required for trait '.$trait->id.' key not found, this measurement will be ignored.');
+        $measurement['trait_id'] = $odbtrait->id;
+        if ($odbtrait->type==ODBTrait::LINK && !array_key_exists('link_id',$measurement)) {
+          $this->appendLog('WARNING: Link_id required for trait '.$odbtrait->id.' key not found, this measurement will be ignored.');
           return false;
         }
-        if ($trait->type != ODBTrait::LINK and !array_key_exists('value',$measurement)) {
+        if ($odbtrait->type != ODBTrait::LINK and !array_key_exists('value',$measurement)) {
           $this->appendLog('WARNING: There is no value field to import'.serialize($measurement));
           return false;
         }
-        if (!$this->validateValue($trait,$measurement)) {
-          $this->appendLog('WARNING: Value for trait '.$trait->id.' is invalid, this measurement will be ignored.'.serialize($measurement));
+        if (!$this->validateValue($odbtrait,$measurement)) {
+          $this->appendLog('WARNING: Value for trait '.$odbtrait->id.' is invalid, this measurement will be ignored.'.serialize($measurement));
           return false;
         }
         return true;
@@ -312,6 +373,8 @@ class ImportMeasurements extends AppJob
       }
       return true;
     }
+
+
     private function getObjectTypeClass($object_type) {
       switch ($object_type) {
         case "Individual":
@@ -324,6 +387,36 @@ class ImportMeasurements extends AppJob
             return Taxon::class;
         }
     }
+
+    public function extractDate($measurement)
+    {
+      //validate date
+      $date = isset($measurement['date']) ? $measurement['date'] : (isset($this->header['date']) ? $this->header['date'] : null);
+      if (null == $date) {
+        $year = isset($measurement['date_year']) ? $measurement['date_year'] : (isset( $measurement['year']) ? $measurement['year'] : null);
+        $month = isset($measurement['date_month']) ? $measurement['date_month'] : (isset( $measurement['month']) ? $measurement['month'] : null);
+        $day = isset($measurement['date_day'])  ? $measurement['date_day'] : (isset( $measurement['day']) ? $measurement['day'] : null);
+        return ['month' => $month,'day' => $day,'year' =>$year];
+      }
+      if (is_string($date)) {
+        if (preg_match("/\//",$date)) {
+            $date = explode("/",$date);
+            return ['month' => $date[1],'day' => $date[2],'year' =>$date[0]];
+        } elseif (preg_match("/-/",$date)) {
+            $date = explode("-",$date);
+            return ['month' => $date[1],'day' => $date[2],'year' =>$date[0]];
+        }
+      }
+      if (get_class($date)==="DateTime") {
+           $year = $date->format('Y');
+           $day = $date->format('d');
+           $month = $date->format('m');
+           return ['month' => $month,'day' => $day,'year' =>$year];
+      }
+      return $date;
+    }
+
+
 
     public function import($measurements)
     {
@@ -340,17 +433,16 @@ class ImportMeasurements extends AppJob
                 'bibreference_id' => array_key_exists('bibreference', $measurements) ? $measurements['bibreference'] : null,
                 'notes' => array_key_exists('notes', $measurements) ? $measurements['notes'] : null,
         ]);
-        $date = array_key_exists('date', $this->header) ? $this->header['date'] : $measurements['date'];
-        $datearr = explode('-',$date);
-        if (!Measurement::checkDate([$datearr[1],$datearr[2],$datearr[0]])) {
-            $this->skipEntry($measurements, Lang::get('messages.invalid_date_error'));
+        $date = $this->extractDate($measurements);
+        if (!Measurement::checkDate($date)) {
+            $this->skipEntry($date, Lang::get('messages.invalid_date_error'));
         } else {
             $measurement->setDate($date);
         }
         //prevent duplications unless specified
         $allowDuplication = array_key_exists('duplicated', $measurements) ? $measurements['duplicated'] : 0;
         if (!$this->checkDuplicateMeasurement($measurement,$measurements) && $allowDuplication==0) {
-          $this->skipEntry($measurements, "Duplicated measurement. To allow duplicated values for the same date and object include a 'duplicated' with 1 value in your data table");
+          $this->skipEntry($measurements, "Duplicated measurement. To allow duplicated values for the same date and object include a 'duplicated' with 1 value in your record");
         } else {
           /*if categorical must save beforehand to be able to save Categories */
           if (in_array($measurement->type, [ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
@@ -358,7 +450,7 @@ class ImportMeasurements extends AppJob
                 $measurement->setValueActualAttribute($measurements['value']);
           } else {
               if (ODBTrait::LINK == $measurement->type) {
-                $measurement->value = array_key_exists('value', $measurements) ? $measurements['value'] : null;
+                $measurement->value = ($measurement['value'] != null) ? $measurements['value'] : null;
                 $measurement->value_i = $measurements['link_id'];
                 $measurement->save();
               } else {
@@ -382,13 +474,8 @@ class ImportMeasurements extends AppJob
         if ($measurement->measured_type == Voucher::class) {
             $voucher = Voucher::findOrFail($measurement->measured_id);
             $project_id = $voucher->project_id;
-            if ($voucher->parent_type == Location::class) {
-              $taxon_id =  $voucher->identification->taxon_id;
-              $location_id = $voucher->parent_id;
-            } else {
-              $taxon_id =  $voucher->parent->identification->taxon_id;
-              $location_id = $voucher->parent->location_id;
-            }
+            $taxon_id =  $voucher->identification->taxon_id;
+            $location_id = $voucher->locations->last()->location_id;
         }
         if ($measurement->measured_type == Taxon::class) {
             $taxon_id = $measurement->measured_id;
@@ -402,7 +489,7 @@ class ImportMeasurements extends AppJob
           'project_id' => $project_id,
           'dataset_id' => $measurement->dataset_id
         ];
-        $target = 'measurements'
+        $target = 'measurements';
         Summary::updateSummaryMeasurementsCounts($newvalues,$value="value + 1");
         /* END SUMMARY COUNT UPDATE */
 

@@ -88,5 +88,14 @@ class UserJob extends Model
         return $userjob->id;
     }
 
+    public function getSubmittedFileAttribute()
+    {
+      if (!isset($this->data['data'])) {
+        return null;
+      }
+      $data = $this->data['data'];
+      return isset($data['filename']) ? $data['filename'] : null;
+    }
+
 
 }

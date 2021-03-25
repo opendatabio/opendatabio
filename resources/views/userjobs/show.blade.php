@@ -33,12 +33,25 @@
     <i class="glyphicon glyphicon-remove"></i> @lang ('messages.cancel')
 </button>
 </form>
-					@endif
+@else
+<br>
+<form action="{{ url('userjobs/'.$job->id) }}" method="POST">
+{{ csrf_field() }}
+{{ method_field('DELETE') }}
+<button type="submit" class="btn btn-warning">
+  <i class="glyphicon glyphicon-trash unstyle"></i> @lang ('messages.remove')
+</button>
+</form>
+@endif
                     </p>
 
 			<p><strong>
 @lang('messages.status')
 : </strong> {{ $job->status }} ({{ $job->percentage }})</p>
+
+
+
+
 			<p><strong>
 @lang('messages.log')
 : </strong><br>
@@ -51,6 +64,8 @@
   <li> {{ serialize($item) }} </li>
 @else
   @php
+    //truncate item because otherwise becomes difficult to see large import recurds such as locations
+    $item = (strlen($item) > 1000) ? substr($item, 0, 1000) . '... too long, truncated' : $item;
     $pattern = "/warning|file/i";
     if (preg_match($pattern, $item)) {
       $lineclass = 'alert alert-success';

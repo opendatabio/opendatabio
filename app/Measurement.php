@@ -20,7 +20,7 @@ class Measurement extends Model
         'date', 'dataset_id', 'person_id', 'bibreference_id',
         'value', 'value_i', 'value_a', 'notes', ];
 
-    protected $appends = ['taxon_id','location_id'];
+    protected $appends = ['taxon_id','location_id','linked_type','linked_id'];
 
     //activity log trait (parent, uc and geometry are logged in controller)
     protected static $logName = 'measurement';
@@ -110,10 +110,21 @@ class Measurement extends Model
         return $this->value_i;
     }
 
+    /* for some reason this stopped working as used to - AV detected 24-03-2021
     public function linked()
     {
         return $this->morphTo();
     }
+    and so, was replaced by the following:
+    the polymorphic model could be used by adding columns linked_type + linked_id to the measurements table
+    which would be perhaps a better solution than saving the linked_id in  value_i
+    */
+
+    public function linked()
+    {
+      return $this->belongsTo($this->linked_type,'value_i');
+    }
+
 
     public function odbtrait()
     {
@@ -196,7 +207,6 @@ class Measurement extends Model
             if (!empty($this->value)) {
                 $val = $this->value;
             }
-
             return $val.' '.(empty($this->linked) ? 'ERROR' : $this->linked->fullname);
             break;
        case ODBTrait::SPECTRAL:

@@ -13,6 +13,10 @@ use App\Project;
 use App\ODBFunctions;
 use Illuminate\Http\Request;
 
+use Spatie\SimpleExcel\SimpleExcelReader;
+use Storage;
+
+
 class ImportIndividuals extends ImportCollectable
 {
     private $requiredKeys;
@@ -22,24 +26,39 @@ class ImportIndividuals extends ImportCollectable
      */
     public function inner_handle()
     {
-        $data = $this->extractEntrys();
+
+      $data = $this->extractEntrys();
+
+      $hasfile = $this->userjob->data['data'];
+      /* if a file has been uploaded */
+      if (isset($hasfile['filename'])) {
+        $filename = $hasfile['filename'];
+        $filetype = $hasfile['filetype'];
+        $path = storage_path('app/public/tmp/'.$filename);
+        /* this will be a lazy collection to minimize memory issues*/
+        $howmany = SimpleExcelReader::create($path)->getRows()->count();
+        $this->userjob->setProgressMax($howmany);
+        /* I have to do twice, not understanding why loose the collection if I just count on it */
+        $data = SimpleExcelReader::create($path)->getRows();
+      } else {
+        /* this has recieved a json */
         if (!$this->setProgressMax($data)) {
             return;
         }
-        //if these fields are provided in header, remove from there
-        //$this->requiredKeys = $this->removeHeaderSuppliedKeys(['date', 'location']);
-        $this->requiredKeys = $this->removeHeaderSuppliedKeys(['tag','collector','date']);
+      }
 
-        //if collector and/or project  are supplied in header, they will be validated here
-        $this->validateHeader('collector');
-        foreach ($data as $individual) {
+      //if these fields are provided in header, remove from there
+      $this->requiredKeys = $this->removeHeaderSuppliedKeys(['tag','collector','date']);
+      //if collector and/or project  are supplied in header, they will be validated here
+      $this->validateHeader('collector');
+
+      foreach ($data as $individual) {
             if ($this->isCancelled()) {
                 break;
             }
             $this->userjob->tickProgress();
 
             if ($this->validateData($individual)) {
-                // Arrived here: let's import it!!
                 try {
                     $this->import($individual);
                 } catch (\Exception $e) {
@@ -68,12 +87,12 @@ class ImportIndividuals extends ImportCollectable
         $individual['collector'] = $collectors;
 
         //validate date
-        $date = array_key_exists('date', $individual) ? $individual['date'] : (isset($this->header['date']) ? $this->header['date'] : null);
+        $date = isset($individual['date']) ? $individual['date'] : (isset($this->header['date']) ? $this->header['date'] : null);
         if (null == $date) {
-          $year = array_key_exists('date_year', $individual) ? $individual['date_year'] : (isset( $individual['year']) ? $individual['year'] : null);
-          $month = array_key_exists('date_month', $individual) ? $individual['date_month'] : (isset( $individual['month']) ? $individual['month'] : null);
-          $day = array_key_exists('date_day', $individual) ? $individual['date_day'] : (isset( $individual['day']) ? $individual['day'] : null);
-          $date = array($month,$day,$year);
+          $year = isset($individual['date_year']) ? $individual['date_year'] : (isset( $individual['year']) ? $individual['year'] : null);
+          $month = isset($individual['date_month']) ? $individual['date_month'] : (isset( $individual['month']) ? $individual['month'] : null);
+          $day = isset($individual['date_day']) ? $individual['date_day'] : (isset( $individual['day']) ? $individual['day'] : null);
+          $date = [$month,$day,$year];
         }
         if (is_string($date)) {
           if (preg_match("/\//",$date)) {

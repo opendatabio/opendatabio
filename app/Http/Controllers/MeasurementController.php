@@ -22,11 +22,13 @@ use App\BibReference;
 use App\UserJob;
 use App\Summary;
 use App\Jobs\ImportMeasurements;
-use Spatie\SimpleExcel\SimpleExcelReader;
+use Storage;
 use Auth;
 use Validator;
 use Lang;
 use App\DataTables\ActivityDataTable;
+
+
 
 class MeasurementController extends Controller
 {
@@ -523,20 +525,19 @@ class MeasurementController extends Controller
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {
-          try {
-            $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
-          } catch (\Exception $e) {
-            $data = [];
-            $message = json_encode($e);
-          }
-          if (count($data)>0) {            
-            UserJob::dispatch(ImportMeasurements::class,[
-              'data' => $data,
-            ]);
-            $message = Lang::get('messages.dispatched');
-          } else {
-            $message = 'Something wrong with file';
-          }
+          $filename = uniqid().".".$ext;
+          //$path = 'downloads_temp/'.$filename;
+          $request->file('data_file')->storeAs("public/tmp",$filename);
+
+          UserJob::dispatch(ImportMeasurements::class,[
+            'data' => [
+                'data' => null,
+                'filename' => $filename,
+                'filetype' => $ext,
+              ],
+          ]);
+          $message = Lang::get('messages.dispatched');
+
         }
       }
       return redirect('import/measurements')->withStatus($message);

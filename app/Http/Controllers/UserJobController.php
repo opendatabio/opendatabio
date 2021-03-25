@@ -69,6 +69,13 @@ class UserJobController extends Controller
                 ->withErrors([Lang::get('messages.fk_error')])->withInput();
         }
         $file_deleted = self::deleteJobFiles($id);
+
+        /* if job is a web interface import it has a file */
+        if ($userjob->submitted_file) {
+          $path = storage_path('app/public/tmp/'.$userjob->submitted_file);
+          File::delete($path);
+        }
+
         return redirect('userjobs')->withStatus(Lang::get('messages.removed'));
     }
 

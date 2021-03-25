@@ -583,6 +583,7 @@ class LocationController extends Controller
 
 
 
+    
     public function importJob(Request $request)
     {
       $this->authorize('create', Location::class);
@@ -600,13 +601,15 @@ class LocationController extends Controller
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {
-          $filename = null;
+          /* generate a unique id for the file and store it in the public tmp folder */
+          $filename = uniqid().".".$ext;
+          $request->file('data_file')->storeAs("public/tmp",$filename);
+          /*
           try {
             $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
           } catch (\Exception $e) {
-             //read differently if it failed above and a csv has been submitted (memory problems over large geometries)
-             $data = null;
-              if (in_array($ext,['CSV','csv'])) {
+            //read differently if it failed above and a csv has been submitted (memory problems over large geometries)
+             if (in_array($ext,['CSV','csv'])) {
                 //$data =file($request->file('data_file'));
                 //$data = $request->file('data_file');
                 $filename = uniqid().".txt";
@@ -621,17 +624,19 @@ class LocationController extends Controller
               }
 
           }
-          if (!is_null($data) or !is_null($filename)) {
+          */
+          //if (!is_null($data) or !is_null($filename)) {
             UserJob::dispatch(ImportLocations::class,[
               'data' => [
-                  'data' => $data,
+                  'data' => null,
                   'filename' => $filename,
+                  'filetype' => $ext,
                 ],
             ]);
             $message = Lang::get('messages.dispatched');
-          } else {
-            $message = 'Something wrong with file';
-          }
+          //} else {
+            //$message = 'Something wrong with file';
+          //}
 
         }
       }

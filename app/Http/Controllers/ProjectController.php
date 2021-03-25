@@ -141,16 +141,17 @@ class ProjectController extends Controller
         }
 
         //authors
-        $first = true;
-        foreach ($request->authors as $author) {
-            $theauthor = new Collector(['person_id' => $author]);
-            if ($first) {
-                $theauthor->main = 1;
-            }
-            $dataset->authors()->save($theauthor);
-            $first = false;
-        }
-
+        if ($request->authors) {
+          $first = true;
+          foreach ($request->authors as $author) {
+              $theauthor = new Collector(['person_id' => $author]);
+              if ($first) {
+                  $theauthor->main = 1;
+              }
+              $dataset->authors()->save($theauthor);
+              $first = false;
+          }
+          }
         return redirect('projects/'.$project->id)->withStatus(Lang::get('messages.stored')." ".$message);
     }
 
@@ -268,30 +269,31 @@ class ProjectController extends Controller
         }
 
         //did authors changed?
-        $current = $project->authors->pluck('person_id');
-        $detach = $current->diff($request->authors)->all();
-        $attach = collect($request->authors)->diff($current)->all();
-        if (count($detach) or count($attach)) {
-            //delete old authors
-            $project->authors()->delete();
-            //save authors and identify first author
-            $newauthors = [];
-            if ($request->authors) {
-              $newauthors = $request->authors;
-              $first = true;
-              foreach ($request->authors as $author) {
-                  $theauthor = new Collector(['person_id' => $author]);
-                  if ($first) {
-                    $theauthor->main = 1;
+        if ($request->authors) {
+          $current = $project->authors->pluck('person_id');
+          $detach = $current->diff($request->authors)->all();
+          $attach = collect($request->authors)->diff($current)->all();
+          if (count($detach) or count($attach)) {
+              //delete old authors
+              $project->authors()->delete();
+              //save authors and identify first author
+              $newauthors = [];
+              if ($request->authors) {
+                $newauthors = $request->authors;
+                $first = true;
+                foreach ($request->authors as $author) {
+                    $theauthor = new Collector(['person_id' => $author]);
+                    if ($first) {
+                      $theauthor->main = 1;
+                    }
+                    $project->authors()->save($theauthor);
+                    $first = false;
                   }
-                  $project->authors()->save($theauthor);
-                  $first = false;
-                }
-            }
-            //log authors changed if any
-            ActivityFunctions::logCustomPivotChanges($project,$current->all(),$newauthors,'project','authors updated',$pivotkey='person');
+              }
+              //log authors changed if any
+              ActivityFunctions::logCustomPivotChanges($project,$current->all(),$newauthors,'project','authors updated',$pivotkey='person');
+          }
         }
-
         return redirect('projects/'.$id)->withStatus(Lang::get('messages.saved')." ".$message);
     }
 
