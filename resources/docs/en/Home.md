@@ -20,7 +20,6 @@ The main features of this database include:
 1. **Autiting** - the [Activity Model](Auditing) audits changes in any record and downloads of full datasets, which are logged for history tracking.
 1. It is an **opensource** software that can be customized for any special needs.
 
-
 <a name="data_model"></a>
 ***
 ## Data Model
@@ -32,6 +31,14 @@ The facilitate data model understanding, as it includes many tables and complex 
 * [Auxiliary Objects](Auxiliary-Objects) - libraries of common use like Persons and Bibliographic references, and classes related to multilingual translations.
 * [Data Access Objects](Data-Access-Objects) - objects that facilitate data management and data access permissions definitions
 * [Auditing](Auditing) - audits for changes in data values and change history tracking.
+
+
+## Where to get it?
+
+<a href="https://github.com/opendatabio/opendatabio/tree/version.0.9.0-rc1" target="__blank" >
+  <i class="fab fa-github"></i>
+  GitHub - IN DEVELOPMENT - UNSTABLE
+</a>
 
 <br><br>
 ***

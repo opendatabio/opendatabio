@@ -70,6 +70,10 @@
                 text-transform: uppercase;
             }
 
+            .drawing {
+              padding: 10px;
+            }
+
             .footer {
               color: #636b6f;
               padding: 0 25px;
@@ -119,10 +123,37 @@
                   Open Data Bio
               </div>
 
-
-              <div >
-                  Development installation
+              <div class="row flex-center">
+               <div class='drawing'>
+                 <i class="fab fa-pagelines fa-2x"></i>&nbsp;
+                 <i class="fas fa-leaf fa-2x"></i><br>
+                 <i class="fas fa-frog fa-2x"></i>&nbsp;
+                 <i class="fas fa-spider fa-2x"></i><br>
+                 <i class="fas fa-fish fa-2x"></i>
+               </div>
+               <div class='flex-center drawing'>
+                 <i class="fas fa-chevron-right"></i>
+                 <i class="fas fa-chevron-right"></i>
+               </div>
+               <div class='flex-center drawing'>
+                <i class="fas fa-database fa-4x"></i>
               </div>
+              <div class='flex-center drawing'>
+                <i class="fas fa-chevron-right"></i>
+                <i class="fas fa-chevron-right"></i>
+              </div>
+               <div class='flex-center drawing'>
+                <i class="fas fa-users fa-4x"></i>
+               </div>
+             </div>
+
+
+              @if (env('APP_DEBUG'))
+                <div >
+                    Development installation
+                </div>
+              @endif
+
               <div class="subtitle m-b-md">
                 @lang ('messages.version') {{ config('app.version') }}
               </div>
@@ -132,7 +163,9 @@
                 <br>
 
                 @lang('messages.biodiversity_and_ecology')
-              </div>
+             </div>
+
+
 
               <div class="links">
                   <a href="{{ route('home') }}">
@@ -155,26 +188,35 @@
             <br>
             <br>
 
-            <div class='col-sm-6 col-sm-offset-3 alert alert-warning'>
-              <i class="fa fa-exclamation-triangle fa-lg"></i>
-              <strong>Development installation</strong>
-              <p>
-                This installation is for development and testing purposes only. Data are not valid or are fake. You may register by yourself. However, to be able to create and edit records, you will need to be a full user, and someone needs to grant you that access. If you arrived here without an invitation and you whish to test the software, register and send a message to opendatabio.inpa@gmail.com requesting full user status.
-              </p>
+            @if (env('APP_DEBUG'))
+              <div class='col-sm-6 col-sm-offset-3 alert alert-warning'>
+                <i class="fa fa-exclamation-triangle fa-lg"></i>
+                <strong>Development installation</strong>
+                <p>
+                  @php
+                    $siteemail = env('MAIL_FROM_ADDRESS');
+                    $installationname = env('APP_NAME');
+                  @endphp
+                  @lang('messages.welcome_dev_installation',compact('siteemail','installationname'))
+                </p>
 
-            </div>
+              </div>
+            @endif
 
           </div>
 </div>
 
 <footer class='content m-b-md footer'>
-<img src="{{ asset("images/INPA.png")}}" alt="" height=60  data-toggle="tooltip" rel="tooltip" data-placement="right" title="Instituto Nacional de Pesquisas da Amazônia" >
+<img src="{{ asset("images/INPA.png")}}" alt="" height=70  data-toggle="tooltip" rel="tooltip" data-placement="right" title="Instituto Nacional de Pesquisas da Amazônia" >
 &nbsp;&nbsp;&nbsp;
 <img src="{{ asset("images/usp-logo-3-1.png")}}" alt="" height=30  data-toggle="tooltip" rel="tooltip" data-placement="right" title="Universidade de São Paulo" >
 &nbsp;&nbsp;&nbsp;
 <img src="{{ asset("images/natura-logo-3-1.png")}}" alt="" height=50  data-toggle="tooltip" rel="tooltip" data-placement="right" title="Natural Campus" >
 <br>
-<p><small>Opendatabio is licensed with <a class='links' href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a></small></p>
+<p>
+<small>@ OpenDataBio Development Team 2021</small>
+<br>
+<small>Licensed under <a class='links' href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a></small></p>
 <br>
 </footer>
 

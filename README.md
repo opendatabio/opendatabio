@@ -16,8 +16,11 @@ The main features of this database include:
 See our [Wiki page](../../wiki) for a full documentation. Is is also included with translations within the App.
 
 ## Credits
-- Alberto Vicentini (vicentini.beto@gmail.com) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil
+
+(c) OpenDataBio Development team:
+
 - Andre Chalom (andrechalom@gmail.com)
+- Alberto Vicentini (vicentini.beto@gmail.com) - Instituto Nacional de Pesquisas da Amazônia ([INPA](http://portal.inpa.gov.br/)), Manaus, Brazil
 - Rafael Arantes (birutaibm@gmail.com)
 - Alexandre Adalardo de Oliveira (adalardo@usp.br) - Universidade de São Paulo (USP), Instituto de Biociências ([IB-USP](http://www.ib.usp.br/en/))
 
@@ -95,6 +98,7 @@ Change in them:
 	memory_limit should be at least 512M
 	post_max_size should be at least 30M
 	upload_max_filesize should be at least 30M
+	max_execution_time
 
 ```
 
@@ -203,6 +207,19 @@ stored in the filesystem, and plan your backup accordingly.
 
 ## License
 Opendatabio is licensed for use under a GPLv3 license.
+
+Opendatabio is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+any later version.
+
+Foobar is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Foobar.  If not, see <https://www.gnu.org/licenses/>.
 
 PHP is licensed under the PHP license. Composer and Laravel framework are licensed under the MIT license.
 

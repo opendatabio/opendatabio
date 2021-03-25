@@ -7,6 +7,12 @@
             <div class="panel panel-default">
                 <div class="panel-heading">
 @lang('messages.register')
+&nbsp;
+<a data-toggle="collapse" href="#registration_hint" class="btn btn-default">?</a>
+<div id="registration_hint" class="panel-collapse collapse">
+      <hr>
+     @lang('messages.registration_hint')
+</div>
 </div>
                 <div class="panel-body">
                     <form class="form-horizontal" role="form" method="POST" action="{{ route('register') }}">
