@@ -19,7 +19,7 @@
 : </strong> {{ $biocollection->name }} </p>
 		    <p>
           @if($biocollection->irn >0)
-          <a href="http://sweetgum.nybg.org/science/ih/biocollection_details.php?irn={{$biocollection->irn}}">
+          <a href="http://sweetgum.nybg.org/science/ih/herbarium-details/?irn={{$biocollection->irn}}">
 @lang('messages.details')
 </a>
           @else

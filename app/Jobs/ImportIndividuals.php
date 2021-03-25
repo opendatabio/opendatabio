@@ -202,8 +202,7 @@ class ImportIndividuals extends ImportCollectable
         }
 
         //create voucher if informed with array created during validation
-        if (isset($individual['biocollections'])) {
-            $this->appendLog('WARNING: GOT HEREEEEE ');
+        if (isset($individual['biocollections'])) {            
             foreach ($individual['biocollections'] as $voucher) {
               $voucher['individual_id'] = $savedindividual->id;
               $voucher['project_id'] = $savedindividual->project_id;

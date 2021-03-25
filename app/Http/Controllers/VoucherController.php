@@ -62,6 +62,13 @@ class VoucherController extends Controller
         return $dataTable->render('vouchers.index', []);
     }
 
+
+    public function indexBioCollections($id, VouchersDataTable $dataTable)
+    {
+        $object = Biocollection::findOrFail($id);
+        return $dataTable->with('biocollection_id', $id)->render('vouchers.index', compact('object'));
+    }
+
     public function indexTaxons($id, VouchersDataTable $dataTable)
     {
         $object = Taxon::findOrFail($id);
@@ -262,7 +269,6 @@ class VoucherController extends Controller
             if ($voucherid) {
               $isunique = $isunique->where('id',"<>",$voucherid);
             }
-
             if ($request->biocollection_number) {
               $isunique = $isunique->where('biocollection_number',$request->biocollection_number);
             } else {

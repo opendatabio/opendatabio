@@ -120,7 +120,7 @@ Route::get('individuals/{id}/project', 'IndividualController@indexProjects');
 //Route::get('persons/{id}/individuals', 'IndividualController@indexPersons');
 Route::resource('individuals', 'IndividualController');
 
-
+Route::get('vouchers/{id}/biocollection', 'VoucherController@indexBioCollections');
 Route::get('vouchers/{id}/dataset', 'VoucherController@indexDatasets');
 Route::get('vouchers/{id}/activity', 'VoucherController@activity');
 Route::get('individuals/{id}/vouchers/create', 'VoucherController@createIndividuals');

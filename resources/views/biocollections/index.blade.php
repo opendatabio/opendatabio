@@ -7,23 +7,26 @@
     <div class="panel-heading">
       <h4 class="panel-title">
         <a data-toggle="collapse" href="#help" class="btn btn-default">
-@lang('messages.help')
-</a>
+          @lang('messages.help')
+        </a>
       </h4>
     </div>
     <div id="help" class="panel-collapse collapse">
       <div class="panel-body">
-@lang('messages.hint_biocollections_page')
+        @lang('messages.hint_biocollections_page')
       </div>
     </div>
   </div>
+
+
 @can ('create',App\Biocollection::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
-		@lang('messages.new_biocollection')
+		                @lang('messages.new_biocollection')
+                    <a data-toggle="collapse" href="#createbiocol" class="btn btn-default">?</a>
                 </div>
 
-                <div class="panel-body">
+                <div class="panel-body collapse" id='createbiocol'>
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
 
@@ -61,50 +64,25 @@
                 </div>
             </div>
 @endcan
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        @lang('messages.registered_biocollections')
-                    </div>
 
-                    <div class="panel-body">
-                        <table class="table table-striped person-table">
-                            <thead>
-                                <th>
-@lang('messages.acronym')
-</th>
-                                <th>
-@lang('messages.institution')
-</th>
-                                <th>
-@lang('messages.details')
-</th>
-                            </thead>
-                            <tbody>
-                                @foreach ($biocollections as $biocollection)
-                                    <tr>
-					<td class="table-text"><div>
-                    {!! $biocollection->rawLink() !!}
-					</div></td>
-                                        <td class="table-text">{{ $biocollection->name }}</td>
-					<td class="table-text">
-          @if($biocollection->irn >0)
-					<a href="http://sweetgum.nybg.org/science/ih/biocollection_details.php?irn={{$biocollection->irn}}">Details</a>
-          @else
-          @lang('messages.noih')
-          @endif
-					</td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-			 {{ $biocollections->links() }}
-                    </div>
-                </div>
+      <!-- Registered References -->
+          <div class="panel panel-default">
+              <div class="panel-heading">
+                  @lang('messages.registered_biocollections')
+              </div>
+              <div class="panel-body">
+                {!! $dataTable->table() !!}
+          </div>
+          </div>
         </div>
     </div>
 @endsection
 
 @push ('scripts')
+  {!! $dataTable->scripts() !!}
+
+
+
 <script>
 $("#noih").click(
   function() {

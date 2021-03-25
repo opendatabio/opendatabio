@@ -165,7 +165,7 @@ class TaxonsDataTable extends DataTable
                         $measurement->withoutGlobalScopes()->where('dataset_id',$this->dataset);
                       });
                     })->orWhereHas('individuals', function($individual) {
-                        $object->withoutGlobalScopes()->whereHas('measurements',
+                        $individual->withoutGlobalScopes()->whereHas('measurements',
                             function($measurement) {
                               $measurement->withoutGlobalScopes()->where('dataset_id',$this->dataset);
                             });

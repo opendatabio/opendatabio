@@ -12,6 +12,7 @@ use DB;
 use Lang;
 use App\Taxon;
 use App\Identification;
+use App\IndividualLocation;
 use Illuminate\Support\Arr;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -491,6 +492,10 @@ class Location extends Node
 
     public function getCount($scope="all",$scope_id=null,$target='individuals')
     {
+      if (IndividualLocation::count()==0) {
+        return 0;
+      }
+
       $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
       if (null !== $scope_id) {
         $query = $query->where('scope_id',"=",$scope_id);

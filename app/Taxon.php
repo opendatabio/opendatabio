@@ -556,6 +556,11 @@ class Taxon extends Node
 
     public function getCount($scope="all",$scope_id=null,$target='individuals')
     {
+
+      if (Identification::count()==0) {
+        return 0;
+      }
+
       $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
       if (null !== $scope_id) {
         $query = $query->where('scope_id',"=",$scope_id);

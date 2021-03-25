@@ -38,7 +38,7 @@
 <form action="{{ url('userjobs/'.$job->id) }}" method="POST">
 {{ csrf_field() }}
 {{ method_field('DELETE') }}
-<button type="submit" class="btn btn-warning">
+<button type="submit" class="btn btn-danger">
   <i class="glyphicon glyphicon-trash unstyle"></i> @lang ('messages.remove')
 </button>
 </form>

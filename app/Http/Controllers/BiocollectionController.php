@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Lang;
 use App\Jobs\ImportBiocollections;
 use Spatie\SimpleExcel\SimpleExcelReader;
 use App\UserJob;
+use App\DataTables\BiocollectionsDataTable;
+
 
 class BiocollectionController extends Controller
 {
@@ -31,11 +33,9 @@ class BiocollectionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(BiocollectionsDataTable $dataTable)
     {
-        $biocollections = Biocollection::orderBy('acronym')->paginate(10);
-
-        return view('biocollections.index', compact('biocollections'));
+      return $dataTable->render('biocollections.index', []);
     }
 
     public function checkih(Request $request)

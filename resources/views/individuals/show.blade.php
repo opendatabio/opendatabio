@@ -43,10 +43,15 @@
 
 <hr>
 
-        <p><strong>
-        @lang('messages.individual_tag')
-        :</strong>
-        {{ $individual->tag }}
+        <p>
+          <strong>
+            @lang('messages.individual_tag')
+          </strong>
+          <i class="fa fa-hashtag" aria-hidden="true"></i>
+          &nbsp;
+          <span style='font-size: 1.5em;'>
+            {{ $individual->tag }}
+          </span>
         </p>
 
         <p><strong>@lang('messages.collectors'):</strong>
