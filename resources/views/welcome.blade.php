@@ -7,8 +7,12 @@
 
         <title>Open Data Bio</title>
 
-        <!-- Fonts -->
+        <!-- Fonts
         <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
+      -->
+        <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+
+
         <link rel="shortcut icon" href="{{ asset('favicon_io/favicon.ico') }}" >
 
         <!-- Styles -->
@@ -73,6 +77,17 @@
               font-weight: 500;
               text-decoration: none;
             }
+
+            .myalert {
+              border: 1px solid #ccc;
+              background-color: red;
+              opacity: 0.3;
+              font-size: 24px;
+              font-weight: 600;
+              padding: 20px;
+              margin-bottom: 10px;
+             }
+
             .m-b-md {
                 margin-bottom: 30px;
             }
@@ -104,6 +119,10 @@
                   Open Data Bio
               </div>
 
+
+              <div >
+                  Development installation
+              </div>
               <div class="subtitle m-b-md">
                 @lang ('messages.version') {{ config('app.version') }}
               </div>
@@ -132,13 +151,30 @@
               @endforeach
               </div>
             </div>
+
+            <br>
+            <br>
+
+            <div class='col-sm-6 col-sm-offset-3 alert alert-warning'>
+              <i class="fa fa-exclamation-triangle fa-lg"></i>
+              <strong>Development installation</strong>
+              <p>
+                This installation is for development and testing purposes only. Data are not valid or are fake. You may register by yourself. However, to be able to create and edit records, you will need to be a full user, and someone needs to grant you that access. If you arrived here without an invitation and you whish to test the software, register and send a message to opendatabio.inpa@gmail.com requesting full user status.
+              </p>
+
+            </div>
+
           </div>
 </div>
-<footer class='content m-b-md footer'>
-<p>Opendatabio is licensed for use under a <a class='links' href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPLv3 license</a>.
-PHP is licensed under the PHP license. Composer and Laravel framework are licensed under the MIT license.</p>
 
+<footer class='content m-b-md footer'>
+<img src="{{ asset("images/INPA.png")}}" alt="" height=60  data-toggle="tooltip" rel="tooltip" data-placement="right" title="Instituto Nacional de Pesquisas da Amazônia" >
+&nbsp;&nbsp;&nbsp;
+<img src="{{ asset("images/usp-logo-3-1.png")}}" alt="" height=30  data-toggle="tooltip" rel="tooltip" data-placement="right" title="Universidade de São Paulo" >
+&nbsp;&nbsp;&nbsp;
+<img src="{{ asset("images/natura-logo-3-1.png")}}" alt="" height=50  data-toggle="tooltip" rel="tooltip" data-placement="right" title="Natural Campus" >
 <br>
+<p><small>Opendatabio is licensed with <a class='links' href="https://www.gnu.org/licenses/gpl-3.0.en.html">GPLv3</a></small></p>
 <br>
 </footer>
 
