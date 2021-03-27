@@ -450,7 +450,7 @@ return array (
   'range' => 'Range',
   'rank' => 'Rank',
   'reference' => 'Reference',
-  'references_hint' => 'This table contains the bibliographic references used when incorporating published data to the database. All references should be in BibTeX format - all major citation softwares are able to export to BibTeX format. Check the "standardize" box if you want to generate standard BibTeX keys for the imported entries. These will be used instead of the keys that are present in the files.',
+  'references_hint' => 'This table contains Bibliographic references registered and used to link external data or inform datasets publications. References should be in BibTeX format - all major citation softwares are able to export to BibTeX format. Check the "standardize" box if you want to generate standard BibTeX keys for the imported entries. These will be used instead of the keys that are present in the files.',
   'references' => 'References',
   'register' => 'Register',
   'registration_hint' => 'You need to register if you want to download data, even for OpenAccess data, because you will need a token that authorizes you to use the API. If you want to be able to create records and edit records, you need to become a full user and someone needs to grant you that access level.',

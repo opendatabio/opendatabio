@@ -12,7 +12,6 @@ try {
   require('datatables.net-buttons/js/buttons.colVis.js');
 	require('jquery-datatables-checkboxes/js/dataTables.checkboxes.min.js');
   require('devbridge-autocomplete');
-	require('@fortawesome/fontawesome-free/js/all.js');
 	window.FilePond = require('filepond/dist/filepond.min.js');
   window.FilePondPluginImagePreview = require('filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.js');
 
