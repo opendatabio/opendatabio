@@ -7,13 +7,13 @@
 
 namespace App\Jobs;
 
-use App\ODBTrait;
-use App\Translatable;
-use App\TraitObject;
-use App\TraitCategory;
-use App\UserTranslation;
-use App\ODBFunctions;
-use App\Language;
+use App\Models\ODBTrait;
+use App\Models\Translatable;
+use App\Models\TraitObject;
+use App\Models\TraitCategory;
+use App\Models\UserTranslation;
+use App\Models\ODBFunctions;
+use App\Models\Language;
 use Lang;
 use DB;
 
@@ -328,7 +328,7 @@ class ImportTraits extends AppJob
       $objects_informed = $odbtrait['objects'];
       //values are valid?
       $validobjectsClass = ODBTrait::OBJECT_TYPES;
-      $validobjectsName = collect(ODBTrait::OBJECT_TYPES)->map(function($obj) { return mb_strtolower(str_replace("App\\","",$obj)) ;})->toArray();
+      $validobjectsName = collect(ODBTrait::OBJECT_TYPES)->map(function($obj) { return mb_strtolower(str_replace("App\Models\\","",$obj)) ;})->toArray();
       $objects = [];
       $notfound = [];
       foreach($objects_informed as $object) {
@@ -337,7 +337,7 @@ class ImportTraits extends AppJob
         } else {
           $object = mb_strtolower($object);
           if (in_array($object,$validobjectsName)) {
-            $objects[] = "App\\".ucfirst($object);
+            $objects[] = "App\Models\\".ucfirst($object);
           } else {
             $nofound[] = $object;
           }

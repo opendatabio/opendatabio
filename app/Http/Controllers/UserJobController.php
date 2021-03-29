@@ -7,7 +7,7 @@
 
 namespace App\Http\Controllers;
 
-use App\UserJob;
+use App\Models\UserJob;
 use Illuminate\Support\Arr;
 use Auth;
 use Lang;

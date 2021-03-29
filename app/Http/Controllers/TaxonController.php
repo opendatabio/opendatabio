@@ -8,23 +8,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Taxon;
-use App\Person;
-use App\Project;
-use App\Location;
-use App\Dataset;
-use App\BibReference;
-use App\ExternalAPIs;
+use App\Models\Taxon;
+use App\Models\Person;
+use App\Models\Project;
+use App\Models\Location;
+use App\Models\Dataset;
+use App\Models\BibReference;
+use App\Models\ExternalAPIs;
 use Response;
 use Lang;
 use Validator;
 use Illuminate\Support\MessageBag;
 use App\DataTables\TaxonsDataTable;
 use Activity;
-use App\ActivityFunctions;
+use App\Models\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
 
-use App\UserJob;
+use App\Models\UserJob;
 
 use App\Jobs\ImportTaxons;
 use Spatie\SimpleExcel\SimpleExcelReader;

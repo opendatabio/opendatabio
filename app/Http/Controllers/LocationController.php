@@ -9,22 +9,22 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use App\Location;
-use App\Project;
-use App\Dataset;
+use App\Models\Location;
+use App\Models\Project;
+use App\Models\Dataset;
 use App\DataTables\LocationsDataTable;
 use Validator;
 use DB;
 use Lang;
 use Response;
 use Storage;
-use App\UserJob;
+use App\Models\UserJob;
 use App\Jobs\ImportLocations;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
 use Illuminate\Support\Facades\Input;
 use Activity;
-use App\ActivityFunctions;
+use App\Models\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
 
 

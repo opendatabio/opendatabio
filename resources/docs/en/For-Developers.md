@@ -208,8 +208,8 @@ $time1 = ($end - $start);
 
 $start = microtime(true);
 $taxon_list = Taxon::find($taxon_id)->getDescendantsAndSelf()->pluck('id')->toArray();
-$query = Measurement::whereHasMorph('measured',['App\Individual','App\Voucher'],function($mm) use($taxon_list) { $mm->withoutGlobalScopes()->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
-$query = $query->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$taxon_id);
+$query = Measurement::whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($mm) use($taxon_list) { $mm->withoutGlobalScopes()->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
+$query = $query->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.$taxon_id);
 $query->count();
 $end = microtime(true);
 $time2 = ($end - $start);

@@ -7,8 +7,8 @@
 
 namespace App\Http\Api\v0;
 
-use App\Language;
-use App\ODBFunctions;
+use App\Models\Language;
+use App\Models\ODBFunctions;
 use Illuminate\Http\Request;
 use Response;
 

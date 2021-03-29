@@ -7,8 +7,8 @@
 
 namespace App\Jobs;
 
-use App\Person;
-use App\Biocollection;
+use App\Models\Person;
+use App\Models\Biocollection;
 
 class ImportPersons extends AppJob
 {

@@ -18,7 +18,7 @@
     </div>
   </div>
 
-@can ('create', App\Form::class)
+@can ('create', App\Models\Form::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
 
@@ -45,7 +45,7 @@
                 </div>
         </div>
     </div>
-    
+
 @endsection
 @push ('scripts')
 {!! $dataTable->scripts() !!}

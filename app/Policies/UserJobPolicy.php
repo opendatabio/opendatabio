@@ -7,8 +7,8 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\UserJob;
+use App\Models\User;
+use App\Models\UserJob;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class UserJobPolicy
@@ -18,8 +18,8 @@ class UserJobPolicy
     /**
      * Determine whether the user can view the userJob.
      *
-     * @param \App\User    $user
-     * @param \App\UserJob $userJob
+     * @param \App\Models\User    $user
+     * @param \App\Models\UserJob $userJob
      *
      * @return mixed
      */
@@ -36,7 +36,7 @@ class UserJobPolicy
     /**
      * Determine whether the user can create userJobs.
      *
-     * @param \App\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */
@@ -48,8 +48,8 @@ class UserJobPolicy
     /**
      * Determine whether the user can update the userJob.
      *
-     * @param \App\User    $user
-     * @param \App\UserJob $userJob
+     * @param \App\Models\User    $user
+     * @param \App\Models\UserJob $userJob
      *
      * @return mixed
      */
@@ -61,8 +61,8 @@ class UserJobPolicy
     /**
      * Determine whether the user can delete the userJob.
      *
-     * @param \App\User    $user
-     * @param \App\UserJob $userJob
+     * @param \App\Models\User    $user
+     * @param \App\Models\UserJob $userJob
      *
      * @return mixed
      */

@@ -7,16 +7,16 @@
 
 namespace App\Jobs;
 
-use App\Measurement;
-use App\Location;
-use App\Taxon;
-use App\Person;
-use App\Individual;
-use App\Voucher;
-use App\ODBFunctions;
-use App\ODBTrait;
-use App\BibReference;
-use App\Summary;
+use App\Models\Measurement;
+use App\Models\Location;
+use App\Models\Taxon;
+use App\Models\Person;
+use App\Models\Individual;
+use App\Models\Voucher;
+use App\Models\ODBFunctions;
+use App\Models\ODBTrait;
+use App\Models\BibReference;
+use App\Models\Summary;
 use Auth;
 use Lang;
 use Spatie\SimpleExcel\SimpleExcelReader;
@@ -181,7 +181,7 @@ class ImportMeasurements extends AppJob
     protected function validateObject($measurement)
     {
         $object_type = array_key_exists('object_type', $this->header) ? $this->header['object_type'] : $measurement['object_type'];
-        $valid = app('App\\'.$object_type)::where('id', $measurement['object_id']);
+        $valid = app('App\Models\\'.$object_type)::where('id', $measurement['object_id']);
         if ($valid->count()) {
             return true;
         } else {

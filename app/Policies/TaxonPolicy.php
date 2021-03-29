@@ -7,8 +7,8 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\Taxon;
+use App\Models\User;
+use App\Models\Taxon;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class TaxonPolicy

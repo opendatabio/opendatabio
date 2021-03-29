@@ -7,7 +7,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 
-use App\Location;
+use App\Models\Location;
 
 // See issue #190 on GitHub
 

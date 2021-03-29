@@ -6,8 +6,8 @@
  */
 
 use Illuminate\Database\Seeder;
-use App\ODBTrait;
-use App\UserTranslation;
+use App\Models\ODBTrait;
+use App\Models\UserTranslation;
 
 class TraitsTableSeeder extends Seeder
 {
@@ -44,7 +44,7 @@ class TraitsTableSeeder extends Seeder
     ]);
             }
             UserTranslation::create(['translatable_id' => $t->id,
-                'translatable_type' => 'App\\ODBTrait',
+                'translatable_type' => 'App\\Models\\ODBTrait',
                 'language_id' => '1',
                 'translation_type' => '0',
                 'translation' => $trait.' by '.$person.'\'s method',
@@ -61,7 +61,7 @@ class TraitsTableSeeder extends Seeder
                 for ($j = 1; $j <= $ncat; ++$j) {
                     $cat = $t->categories()->create(['rank' => $j]);
                     UserTranslation::create(['translatable_id' => $cat->id,
-                    'translatable_type' => 'App\\TraitCategory',
+                    'translatable_type' => 'App\\Models\\TraitCategory',
                     'language_id' => '1',
                     'translation_type' => '0',
                     'translation' => $trait.' category '.$j,

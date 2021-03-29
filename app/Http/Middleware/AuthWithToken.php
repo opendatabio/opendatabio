@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Response;
 use Closure;
 use Auth;
-use App\User;
+use App\Models\User;
 
 class AuthWithToken
 {

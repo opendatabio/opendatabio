@@ -7,12 +7,12 @@
 
 namespace App\DataTables;
 
-use App\Location;
+use App\Models\Location;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use DB;
-use App\Voucher;
+use App\Models\Voucher;
 use Lang;
 use Log;
 use Auth;
@@ -38,11 +38,11 @@ class LocationsDataTable extends DataTable
         ->addColumn('full_name', function ($location) {return $location->full_name; })
         ->addColumn('individuals', function ($location) {
           if ($this->project) {
-            $individuals_count = $location->getCount('App\Project',$this->project,'individuals');
+            $individuals_count = $location->getCount('App\Models\Project',$this->project,'individuals');
             return '<a href="'.url('individuals/'.$location->id.'|'.$this->project.'/location_project').'">'.$individuals_count.'</a>';
           } else {
             if ($this->dataset) {
-              $individuals_count = $location->getCount('App\Dataset',$this->dataset,'individuals');
+              $individuals_count = $location->getCount('App\Models\Dataset',$this->dataset,'individuals');
               return '<a href="'.url('individuals/'.$location->id.'|'.$this->dataset.'/location_dataset').'">'.$individuals_count.'</a>';
             } else {
               $individuals_count = $location->getCount('all',null,"individuals");
@@ -52,11 +52,11 @@ class LocationsDataTable extends DataTable
         })
         ->addColumn('vouchers', function ($location) {
           if ($this->project) {
-            $voucher_count = $location->getCount('App\Project',$this->project,'vouchers');
+            $voucher_count = $location->getCount('App\Models\Project',$this->project,'vouchers');
             return '<a href="'.url('vouchers/'.$location->id.'|'.$this->project.'/location_project').'">'.$voucher_count.'</a>';
           } else {
             if ($this->dataset) {
-              $voucher_count = $location->getCount('App\Dataset',$this->dataset,'vouchers');
+              $voucher_count = $location->getCount('App\Models\Dataset',$this->dataset,'vouchers');
               return '<a href="'.url('vouchers/'.$location->id.'|'.$this->dataset.'/location_dataset').'">'.$voucher_count.'</a>';
             } else {
               $voucher_count = $location->getCount('all',null,"vouchers");
@@ -66,11 +66,11 @@ class LocationsDataTable extends DataTable
         })
         ->addColumn('measurements', function ($location) {
           if ($this->project) {
-            $measurements_count = $location->getCount('App\Project',$this->project,"measurements");
+            $measurements_count = $location->getCount('App\Models\Project',$this->project,"measurements");
             return '<a href="'.url('measurements/'.$location->id.'|'.$this->project.'/location_project').'">'.$measurements_count.'</a>';
           } else {
             if ($this->dataset) {
-              $measurements_count = $location->getCount('App\Dataset',$this->dataset,'measurements');
+              $measurements_count = $location->getCount('App\Models\Dataset',$this->dataset,'measurements');
               return '<a href="'.url('measurements/'.$location->id.'|'.$this->dataset.'/location_dataset').'">'.$measurements_count.'</a>';
             } else {
               $measurements_count = $location->getCount('all',null,"measurements");
@@ -80,11 +80,11 @@ class LocationsDataTable extends DataTable
         })
         ->addColumn('taxons', function ($location) {
           if ($this->project) {
-            $taxons_count = $location->taxonsCount('App\Project',$this->project);
+            $taxons_count = $location->taxonsCount('App\Models\Project',$this->project);
             return '<a href="'.url('taxons/'.$location->id.'|'.$this->project.'/location_project').'">'.$taxons_count.'</a>';
           } else {
             if ($this->dataset) {
-              $taxons_count = $location->taxonsCount('App\Dataset',$this->dataset);
+              $taxons_count = $location->taxonsCount('App\Models\Dataset',$this->dataset);
               return '<a href="'.url('taxons/'.$location->id.'|'.$this->dataset.'/location_dataset').'">'.$taxons_count.'</a>';
             } else {
               $taxons_count = $location->taxonsCount('all',null);
@@ -142,12 +142,12 @@ class LocationsDataTable extends DataTable
 
         if ($this->project) {
           $query->whereHas('summary_counts',function($count) {
-            $count->where('scope_id',"=",$this->project)->where('scope_type',"=","App\Project")->where('value',">",0);
+            $count->where('scope_id',"=",$this->project)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
           });
         }
         if ($this->dataset) {
           $query->whereHas('summary_counts',function($count) {
-            $count->where('scope_id',"=",$this->dataset)->where('scope_type',"=","App\Dataset");
+            $count->where('scope_id',"=",$this->dataset)->where('scope_type',"=","App\Models\Dataset");
           });
         }
 

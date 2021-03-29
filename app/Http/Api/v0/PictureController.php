@@ -6,7 +6,7 @@
 
 namespace App\Http\Api\v0;
 
-use App\Picture;
+use App\Models\Picture;
 use Illuminate\Http\Request;
 use Response;
 

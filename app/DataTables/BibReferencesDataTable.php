@@ -7,7 +7,7 @@
 
 namespace App\DataTables;
 
-use App\BibReference;
+use App\Models\BibReference;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;

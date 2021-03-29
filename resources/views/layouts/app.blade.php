@@ -119,7 +119,7 @@
                 </a>
               </li>
             -->
-            @can ('show', App\User::class)
+            @can ('show', App\Models\User::class)
             <li>
               <a href="{{ route('users.index') }}">
                 @lang('messages.users')
@@ -211,7 +211,7 @@
                 </a>
               </li>
 
-              @can ('index', App\UserJob::class)
+              @can ('index', App\Models\UserJob::class)
               <li>
                 <a href="{{ route('userjobs.index') }}">
                   @lang('messages.userjobs')

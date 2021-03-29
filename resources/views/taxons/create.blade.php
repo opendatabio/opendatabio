@@ -84,7 +84,7 @@
                   	     <?php $selected = old('level', isset($taxon) ? $taxon->level : null); ?>
                   	      <select name="level" id="level" class="form-control" required>
                             <option value="">&nbsp;</option>
-                  	         @foreach (App\Taxon::TaxLevels() as $level)
+                  	         @foreach (App\Models\Taxon::TaxLevels() as $level)
                   		           <option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
                   			              @lang ('levels.tax.' . $level )
                   		           </option>

@@ -7,9 +7,9 @@
 
 namespace App\Jobs;
 
-use App\Taxon;
-use App\ExternalAPIs;
-use App\Person;
+use App\Models\Taxon;
+use App\Models\ExternalAPIs;
+use App\Models\Person;
 use Lang;
 use Illuminate\Http\Request as therequest;
 

@@ -6,8 +6,8 @@
  */
 
 use Illuminate\Database\Seeder;
-use App\Taxon;
-use App\Person;
+use App\Models\Taxon;
+use App\Models\Person;
 
 class TaxonsTableSeeder extends Seeder
 {
@@ -16,7 +16,7 @@ class TaxonsTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\Taxon::count()) {
+        if (\App\Models\Taxon::count()) {
             return;
         }
 
@@ -66,7 +66,7 @@ class TaxonsTableSeeder extends Seeder
 
             $sp = Taxon::create([
                 'name' => $name,
-                'parent_id' => App\Taxon::where('level', 180)->get()->random()->id,
+                'parent_id' => App\Models\Taxon::where('level', 180)->get()->random()->id,
                 'level' => $level,
                 'valid' => 1,
                 'author' => $faker->lastName,
@@ -82,7 +82,7 @@ class TaxonsTableSeeder extends Seeder
         }
         // subsp
         for ($i = 0; $i < 10; ++$i) {
-            $parent = App\Taxon::where('level', 210)->get()->random()->id;
+            $parent = App\Models\Taxon::where('level', 210)->get()->random()->id;
             for ($j = 0; $j < $faker->numberBetween(1, 5); ++$j) {
                 $name = $faker->word;
                 if (strlen($name) < 4) {
@@ -112,10 +112,10 @@ class TaxonsTableSeeder extends Seeder
             if (strlen($name) < 4) {
                 $name .= $faker->word;
             }
-            $senior = App\Taxon::where('level', 210)->get()->random()->id;
+            $senior = App\Models\Taxon::where('level', 210)->get()->random()->id;
             $sp = Taxon::create([
                 'name' => $name,
-                'parent_id' => App\Taxon::where('level', 180)->get()->random()->id,
+                'parent_id' => App\Models\Taxon::where('level', 180)->get()->random()->id,
                 'level' => $level,
                 'valid' => 0,
                 'senior_id' => $senior,

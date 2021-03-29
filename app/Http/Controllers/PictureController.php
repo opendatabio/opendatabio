@@ -8,23 +8,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Taxon;
-use App\Person;
-use App\Picture;
+use App\Models\Taxon;
+use App\Models\Person;
+use App\Models\Picture;
 use Lang;
-use App\UserTranslation;
-use App\Language;
-use App\Tag;
-use App\Location;
-use App\Voucher;
-use App\Individual;
-use App\UserJob;
+use App\Models\UserTranslation;
+use App\Models\Language;
+use App\Models\Tag;
+use App\Models\Location;
+use App\Models\Voucher;
+use App\Models\Individual;
+use App\Models\UserJob;
 use Log;
 use Filepond;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Facades\Image;
 
-//use App\Jobs\ImportPictures;
+//use App\Models\Jobs\ImportPictures;
 
 
 class PictureController extends Controller

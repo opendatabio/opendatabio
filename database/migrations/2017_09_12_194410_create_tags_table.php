@@ -27,14 +27,14 @@ class CreateTagsTable extends Migration
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '1',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
             'translation' => 'Forest Plots',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '1',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '2',
             'translation_type' => '0',
             'translation' => 'Parcelas Florestais',
@@ -45,14 +45,14 @@ class CreateTagsTable extends Migration
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '2',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
             'translation' => 'Floristics',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '2',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '2',
             'translation_type' => '0',
             'translation' => 'Florística',
@@ -63,14 +63,14 @@ class CreateTagsTable extends Migration
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '3',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
             'translation' => 'Functional characters',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '3',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '2',
             'translation_type' => '0',
             'translation' => 'Caracteres funcionais',
@@ -81,14 +81,14 @@ class CreateTagsTable extends Migration
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '4',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
             'translation' => 'Molecular data',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '4',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '2',
             'translation_type' => '0',
             'translation' => 'Dados moleculares',
@@ -99,14 +99,14 @@ class CreateTagsTable extends Migration
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '5',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
             'translation' => 'Soil chemistry',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '5',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '2',
             'translation_type' => '0',
             'translation' => 'Química do solo',
@@ -117,14 +117,14 @@ class CreateTagsTable extends Migration
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '6',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '1',
             'translation_type' => '0',
             'translation' => 'Plant morphology',
         ]);
         DB::table('user_translations')->insert([
             'translatable_id' => '6',
-            'translatable_type' => 'App\\Tag',
+            'translatable_type' => 'App\\Models\\Tag',
             'language_id' => '2',
             'translation_type' => '0',
             'translation' => 'Morfologia de plantas',

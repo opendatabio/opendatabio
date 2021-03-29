@@ -8,16 +8,16 @@
 namespace App\DataTables;
 
 use Baum\Node;
-use App\Individual;
-use App\Location;
-use App\Taxon;
-use App\HasAuthLevels;
+use App\Models\Individual;
+use App\Models\Location;
+use App\Models\Taxon;
+use App\Models\HasAuthLevels;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
 use DB;
-use App\User;
+use App\Models\User;
 use Auth;
 
 

@@ -358,7 +358,7 @@ Can only exists if individual has no vouchers, otherwise must have own id
     <a data-toggle="collapse" href="#hint9" class="btn btn-default">?</a>
 	  <div class="col-sm-6">
 	     <?php $selected = old('modifier', (isset($individual) and $individual->identification) ? $individual->identification->modifier : null); ?>
-       @foreach (App\Identification::MODIFIERS as $modifier)
+       @foreach (App\Models\Identification::MODIFIERS as $modifier)
          <span>
     		     <input type = "radio" name="modifier" value="{{$modifier}}" {{ $modifier == $selected ? 'checked' : '' }}>
             @lang('levels.modifier.' . $modifier)
@@ -654,7 +654,7 @@ $("#autodetect").click(function(e) {
           $("input[name=location_parent_id]").val(data.detectdata[1]);
           $("input[name=location_geom]").val(data.detectdata[4]);
           $("input[name=location_uc_id]").val(data.detectdata[3]);
-          $("input[name=location_adm_level]").val("{{ App\Location::LEVEL_POINT }}");
+          $("input[name=location_adm_level]").val("{{ App\Models\Location::LEVEL_POINT }}");
 
         }
         $( "#ajax-error" ).collapse("hide");

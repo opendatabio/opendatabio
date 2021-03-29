@@ -10,19 +10,19 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\DataTables\ProjectsDataTable;
-use App\Project;
-use App\Dataset;
-use App\User;
-use App\Collector;
+use App\Models\Project;
+use App\Models\Dataset;
+use App\Models\User;
+use App\Models\Collector;
 use Auth;
 use Lang;
-use App\Tag;
-use App\Person;
+use App\Models\Tag;
+use App\Models\Person;
 use Mail;
-use App\UserJob;
+use App\Models\UserJob;
 
 use Activity;
-use App\ActivityFunctions;
+use App\Models\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
 
 

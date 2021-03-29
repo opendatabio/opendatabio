@@ -19,7 +19,7 @@
   </div>
 
 
-@can ('create', App\Tag::class)
+@can ('create', App\Models\Tag::class)
   <div class="panel panel-default">
       <div class="panel-heading">
         @lang('messages.create_tag')

@@ -7,7 +7,7 @@
 
 namespace App\Http\Api\v0;
 
-use App\Project;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Response;
 

@@ -29,7 +29,7 @@
 @lang('messages.measurement_for')
 :</strong>
 @php
-  echo str_replace("App\\","",get_class($object))." ";
+  echo str_replace("App\Models\\","",get_class($object))." ";
   echo $object->rawLink();
 @endphp
 @if ($object->identification)
@@ -144,7 +144,7 @@ echo View::make('traits.elements.' . $measurement->type,
     'measurement' => $measurement,
 ]);
     } elseif (!empty(old())) {
-        $odbtrait = \App\ODBTrait::find(old('trait_id'));
+        $odbtrait = \App\Models\ODBTrait::find(old('trait_id'));
         echo View::make('traits.elements.' . $odbtrait->type,
             [
                 'odbtrait' => $odbtrait,
@@ -179,13 +179,13 @@ disabled
 $(document).ready(function() {
     $("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");
     @if (isset($measurement) and $measurement->type==7)
-     @if ($measurement->odbtrait->link_type == "App\Taxon")
+     @if ($measurement->odbtrait->link_type == "App\Models\Taxon")
           $("#link_autocomplete").odbAutocomplete("{{url('taxons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
      @endif
-     @if ($measurement->odbtrait->link_type == "App\Person")
+     @if ($measurement->odbtrait->link_type == "App\Models\Person")
           $("#link_autocomplete").odbAutocomplete("{{url('persons/autocomplete')}}","#link_id", "@lang('messages.noresults')");
      @endif
-     @if ($measurement->odbtrait->link_type == "App\Individuals")
+     @if ($measurement->odbtrait->link_type == "App\Models\Individuals")
           $("#link_autocomplete").odbAutocomplete("{{url('individuals/autocomplete')}}","#link_id", "@lang('messages.noresults')");
      @endif
     @endif

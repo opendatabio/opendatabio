@@ -17,7 +17,7 @@
       </div>
     </div>
   </div>
-@can ('create', App\Person::class)
+@can ('create', App\Models\Person::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
       <a data-toggle="collapse" href="#createform" class="btn btn-success"><i class="fa fa-btn fa-plus"></i>

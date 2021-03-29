@@ -7,7 +7,7 @@
 
 namespace App\DataTables;
 
-use App\Form;
+use App\Models\Form;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;

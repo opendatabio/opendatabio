@@ -132,7 +132,7 @@
     </a>
     &nbsp;&nbsp;
 @else
-    @can ('create', App\Measurement::class)
+    @can ('create', App\Models\Measurement::class)
     <a href="{{ url('vouchers/'. $voucher->id. '/measurements/create')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_measurements')
@@ -149,7 +149,7 @@
         </a>
         &nbsp;&nbsp;
 @endcan
-    @can ('create', App\Picture::class)
+    @can ('create', App\Models\Picture::class)
     <a href="{{ url('vouchers/'. $voucher->id. '/pictures/create')  }}" class="btn btn-success">
         <i class="fa fa-btn fa-plus"></i>
 @lang('messages.create_picture')

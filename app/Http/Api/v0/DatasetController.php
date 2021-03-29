@@ -7,7 +7,7 @@
 
 namespace App\Http\Api\v0;
 
-use App\Dataset;
+use App\Models\Dataset;
 use Illuminate\Http\Request;
 use Response;
 

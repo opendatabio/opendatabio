@@ -14,16 +14,16 @@ class DatasetsTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\Dataset::count() > 5) {
+        if (\App\Models\Dataset::count() > 5) {
             return;
         }
         $faker = Faker\Factory::create();
-        $users = App\User::all();
-        $tags = App\Tag::all();
-        $references = App\BibReference::all();
+        $users = App\Models\User::all();
+        $tags = App\Models\Tag::all();
+        $references = App\Models\BibReference::all();
 
         for ($i = 0; $i < 40; ++$i) {
-            $dataset = App\Dataset::create([
+            $dataset = App\Models\Dataset::create([
                 'name' => $faker->sentence(3),
                 'privacy' => $faker->numberBetween(0, 2),
                 'bibreference_id' => (0 == $faker->numberBetween(0, 3) ? $references->random()->id : null),

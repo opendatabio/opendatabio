@@ -11,24 +11,24 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\DataTables\DatasetsDataTable;
 use App\Jobs\DownloadDataset;
-use App\Tag;
-use App\BibReference;
-use App\Dataset;
-use App\Measurement;
-use App\User;
-use App\Collector;
-use App\Project;
-use App\Person;
+use App\Models\Tag;
+use App\Models\BibReference;
+use App\Models\Dataset;
+use App\Models\Measurement;
+use App\Models\User;
+use App\Models\Collector;
+use App\Models\Project;
+use App\Models\Person;
 use DB;
 use Auth;
 use Lang;
 use Gate;
 use Mail;
-use App\UserJob;
+use App\Models\UserJob;
 use Log;
 
 use Activity;
-use App\ActivityFunctions;
+use App\Models\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
 
 

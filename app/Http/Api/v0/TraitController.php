@@ -9,10 +9,10 @@ namespace App\Http\Api\v0;
 
 use App\Jobs\ImportTraits;
 use Illuminate\Http\Request;
-use App\ODBTrait;
-use App\UserJob;
-use App\ODBFunctions;
-use App\Language;
+use App\Models\ODBTrait;
+use App\Models\UserJob;
+use App\Models\ODBFunctions;
+use App\Models\Language;
 use DB;
 use Lang;
 use Response;
@@ -92,7 +92,7 @@ class TraitController extends Controller
               $simple[] = 'bibreference';
             } else {
               $fields .= ",bibreference";
-            }            
+            }
         }
         if ($fields=="id") {
           $traits = $traits->pluck('id')->toArray();

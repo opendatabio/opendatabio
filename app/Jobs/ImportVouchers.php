@@ -7,12 +7,12 @@
 
 namespace App\Jobs;
 
-use App\Voucher;
-use App\Location;
-use App\Individual;
-use App\Project;
-use App\ODBFunctions;
-use App\Biocollection;
+use App\Models\Voucher;
+use App\Models\Location;
+use App\Models\Individual;
+use App\Models\Project;
+use App\Models\ODBFunctions;
+use App\Models\Biocollection;
 use Illuminate\Http\Request;
 
 use Lang;

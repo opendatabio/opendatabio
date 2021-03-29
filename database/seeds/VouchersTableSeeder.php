@@ -16,9 +16,9 @@ class VouchersTableSeeder extends Seeder
     {
         for ($i = 0; $i < $faker->numberBetween(0, 4); ++$i) {
             try {
-                App\Collector::create([
+                App\Models\Collector::create([
                 'person_id' => $persons->random()->id,
-                'object_type' => 'App\Voucher',
+                'object_type' => 'App\Models\Voucher',
                 'object_id' => $voucher->id,
             ]);
             } catch (Exception $e) {
@@ -41,11 +41,11 @@ class VouchersTableSeeder extends Seeder
     {
         $modifier = 0 == $faker->numberBetween(0, 20) ?
                 $faker->numberBetween(1, 5) : 0;
-        App\Identification::create([
+        App\Models\Identification::create([
                 'person_id' => $persons->random()->id,
                 'taxon_id' => $taxons->random()->id,
                 'object_id' => $voucher->id,
-                'object_type' => 'App\Voucher',
+                'object_type' => 'App\Models\Voucher',
                 'date' => Carbon\Carbon::now(),
                 'modifier' => $modifier,
             ]);
@@ -55,21 +55,21 @@ class VouchersTableSeeder extends Seeder
     {
         // to make sure that we are seeing the whole database
         Auth::loginUsingId(1);
-        if (\App\Voucher::count()) {
+        if (\App\Models\Voucher::count()) {
             return;
         }
         $faker = Faker\Factory::create();
-        $projects = \App\Project::all();
-        $persons = \App\Person::all();
-        $taxons = \App\Taxon::valid()->leaf()->get();
-        $locations = \App\Location::whereIn('adm_level', [\App\Location::LEVEL_PLOT, \App\Location::LEVEL_POINT])->get();
-        $plants = \App\Plant::all();
-        $herbaria = \App\Herbarium::all();
+        $projects = \App\Models\Project::all();
+        $persons = \App\Models\Person::all();
+        $taxons = \App\Models\Taxon::valid()->leaf()->get();
+        $locations = \App\Models\Location::whereIn('adm_level', [\App\Models\Location::LEVEL_PLOT, \App\Models\Location::LEVEL_POINT])->get();
+        $plants = \App\Models\Plant::all();
+        $herbaria = \App\Models\Herbarium::all();
         // on locations
         for ($i = 0; $i < 100; ++$i) {
-            $voucher = new \App\Voucher([
+            $voucher = new \App\Models\Voucher([
                 'parent_id' => $locations->random()->id,
-                'parent_type' => 'App\Location',
+                'parent_type' => 'App\Models\Location',
                 'person_id' => $persons->random()->id,
                 'number' => $faker->randomNumber(4),
                 'date' => Carbon\Carbon::now(),
@@ -86,9 +86,9 @@ class VouchersTableSeeder extends Seeder
         // on plants
         for ($i = 0; $i < 100; ++$i) {
             $plant = $plants->random();
-            $voucher = new \App\Voucher([
+            $voucher = new \App\Models\Voucher([
                 'parent_id' => $plant->id,
-                'parent_type' => 'App\Plant',
+                'parent_type' => 'App\Models\Plant',
                 'person_id' => $persons->random()->id,
                 'number' => $faker->randomNumber(4),
                 'date' => Carbon\Carbon::now(),

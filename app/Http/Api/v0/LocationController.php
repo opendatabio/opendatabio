@@ -9,9 +9,9 @@ namespace App\Http\Api\v0;
 
 use Illuminate\Http\Request;
 use Response;
-use App\Location;
-use App\UserJob;
-use App\ODBFunctions;
+use App\Models\Location;
+use App\Models\UserJob;
+use App\Models\ODBFunctions;
 use App\Jobs\ImportLocations;
 use Log;
 
@@ -67,13 +67,13 @@ class LocationController extends Controller
         if ($request->project) {
             $project_id = $request->project;
             $locations = $locations->whereHas('summary_counts',function($count) use($project_id) {
-                          $count->where('scope_id',"=",$project_id)->where('scope_type',"=","App\Project")->where('value',">",0);
+                          $count->where('scope_id',"=",$project_id)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
                         });
         }
         if ($request->dataset) {
             $dataset_id = $request->dataset;
             $locations = $locations->whereHas('summary_counts',function($count) use($dataset_id) {
-              $count->where('scope_id',"=",$dataset_id)->where('scope_type',"=","App\Dataset")->where('value',">",0);
+              $count->where('scope_id',"=",$dataset_id)->where('scope_type',"=","App\Models\Dataset")->where('value',">",0);
             });
         }
 

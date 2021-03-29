@@ -1,4 +1,4 @@
-@if ($odbtrait->link_type == "App\Taxon" || $odbtrait->link_type == "App\Person" || $odbtrait->link_type=="App\Plant") <!-- other link types need separate elements!! -->
+@if ($odbtrait->link_type == "App\Models\Taxon" || $odbtrait->link_type == "App\Models\Person" || $odbtrait->link_type=="App\Models\Individual") <!-- other link types need separate elements!! -->
     @if (!isset ($index))
         <div class="form-group">
         <label for="link" class="col-sm-3 control-label mandatory">
@@ -50,7 +50,7 @@ old('link_id', isset($measurement) ? $measurement->value_i : null)
     disabled
 @endif
 >
-@if (!isset($index) && $odbtrait->link_type == "App\Taxon")
+@if (!isset($index) && $odbtrait->link_type == "App\Models\Taxon")
 </div>
 </div>
 <script>
@@ -63,7 +63,7 @@ if (typeof jQuery !== 'undefined') {
 </script>
     @endif
 
-@if (!isset($index) && $odbtrait->link_type == "App\Person")
+@if (!isset($index) && $odbtrait->link_type == "App\Models\Person")
 </div>
 </div>
 <script>
@@ -76,7 +76,7 @@ if (typeof jQuery !== 'undefined') {
 </script>
     @endif
 
-    @if (!isset($index) && $odbtrait->link_type == "App\Individual")
+    @if (!isset($index) && $odbtrait->link_type == "App\Models\Individual")
   </div>
   </div>
   <script>

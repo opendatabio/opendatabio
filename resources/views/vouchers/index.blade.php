@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="col-sm-offset-2 col-sm-8">
 
-@can ('create', App\Voucher::class)
+@can ('create', App\Models\Voucher::class)
       <div class="panel panel-default">
         <div class="panel-heading">
           @lang('messages.create_voucher')

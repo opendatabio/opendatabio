@@ -7,11 +7,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Individual;
-use App\Voucher;
-use App\Project;
-use App\Dataset;
-use App\Measurement;
+use App\Models\Individual;
+use App\Models\Voucher;
+use App\Models\Project;
+use App\Models\Dataset;
+use App\Models\Measurement;
 use Config;
 use Session;
 

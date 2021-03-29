@@ -7,10 +7,10 @@
 
 namespace App\Jobs;
 
-use App\Individual;
-use App\Location;
-use App\Project;
-use App\ODBFunctions;
+use App\Models\Individual;
+use App\Models\Location;
+use App\Models\Project;
+use App\Models\ODBFunctions;
 use Illuminate\Http\Request;
 
 use Spatie\SimpleExcel\SimpleExcelReader;
@@ -202,7 +202,7 @@ class ImportIndividuals extends ImportCollectable
         }
 
         //create voucher if informed with array created during validation
-        if (isset($individual['biocollections'])) {            
+        if (isset($individual['biocollections'])) {
             foreach ($individual['biocollections'] as $voucher) {
               $voucher['individual_id'] = $savedindividual->id;
               $voucher['project_id'] = $savedindividual->project_id;

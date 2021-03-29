@@ -46,7 +46,7 @@ function genInputTranslationTable($odbtrait, $type, $language, $order) {
           if (isset($odbtrait)) {
               $cat = $odbtrait->categories->where('rank', $order)->first();
               if($cat) {
-                 $get_old = $cat->translate(\App\UserTranslation::NAME, $language);
+                 $get_old = $cat->translate(\App\Models\UserTranslation::NAME, $language);
               }
         }
         $text .= old('cat_' . $type .'.' . $order . '.' . $language, isset($get_old) ? $get_old : null);
@@ -60,7 +60,7 @@ function genInputTranslationTable($odbtrait, $type, $language, $order) {
           if (isset($odbtrait)) {
               $cat = $odbtrait->categories->where('rank', $order)->first();
               if($cat) {
-                $get_old = $cat->translate(\App\UserTranslation::DESCRIPTION, $language);
+                $get_old = $cat->translate(\App\Models\UserTranslation::DESCRIPTION, $language);
               }
           }
           $text .= old('cat_' . $type .'.' . $order . '.' . $language, isset($get_old) ? $get_old : null);
@@ -81,7 +81,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
         "<th>" . Lang::get('messages.description') . " </th>" .
         "</thead> <tbody>";
     $TB = '';
-    $languages = \App\Language::all();
+    $languages = \App\Models\Language::all();
     $first = true;
     foreach ($languages as $language) {
         $TB .="<tr>";
@@ -115,8 +115,8 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 @foreach ($languages as $language)
     <tr>
         <td>{{$language->name}}</td>
-        <td><input name="name[{{$language->id}}]" value="{{ old('name.' . $language->id, isset($odbtrait) ? $odbtrait->translate(\App\UserTranslation::NAME, $language->id) : null) }}"></td>
-        <td><textarea name="description[{{$language->id}}]" rows='2'>{{ old('description.' . $language->id, isset($odbtrait) ? $odbtrait->translate(\App\UserTranslation::DESCRIPTION, $language->id) : null) }}</textarea></td>
+        <td><input name="name[{{$language->id}}]" value="{{ old('name.' . $language->id, isset($odbtrait) ? $odbtrait->translate(\App\Models\UserTranslation::NAME, $language->id) : null) }}"></td>
+        <td><textarea name="description[{{$language->id}}]" rows='2'>{{ old('description.' . $language->id, isset($odbtrait) ? $odbtrait->translate(\App\Models\UserTranslation::DESCRIPTION, $language->id) : null) }}</textarea></td>
 
     </tr>
 @endforeach
@@ -152,8 +152,8 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 	@php
       $selected = old('type', isset($odbtrait) ? $odbtrait->type : null);
       $canchange = isset($odbtrait) ? $odbtrait->measurements()->count()==0 : true;
-      $trait_types  = \App\ODBTrait::TRAIT_TYPES;
-      $trait_categorical_types = [\App\ODBTrait::CATEGORICAL, \App\ODBTrait::CATEGORICAL_MULTIPLE, \App\ODBTrait::ORDINAL];
+      $trait_types  = \App\Models\ODBTrait::TRAIT_TYPES;
+      $trait_categorical_types = [\App\Models\ODBTrait::CATEGORICAL, \App\Models\ODBTrait::CATEGORICAL_MULTIPLE, \App\Models\ODBTrait::ORDINAL];
       if (isset($odbtrait) and false == $canchange and in_array($odbtrait->type,$trait_categorical_types)) {
             $trait_types = $trait_categorical_types;
             $canchange = true;
@@ -188,7 +188,7 @@ function genTraitCategoryTranslationTable($order, $odbtrait) {
 	    <div class="col-sm-6">
 {!! Multiselect::select(
     'objects',
-    \App\ODBTrait::getObjectTypeNames(),
+    \App\Models\ODBTrait::getObjectTypeNames(),
     isset($odbtrait) ? $odbtrait->getObjectKeys() : [],
     ['class' => 'multiselect form-control']
 ) !!}
@@ -386,7 +386,7 @@ if (isset($odbtrait)) {
     'disabled'
   @endif
   >
-	@foreach (\App\ODBTrait::LINK_TYPES as $ttype)
+	@foreach (\App\Models\ODBTrait::LINK_TYPES as $ttype)
 		<option value="{{ $ttype }}" {{ $ttype == $selected ? 'selected' : '' }}>
 @lang('classes.' . $ttype)
 		</option>

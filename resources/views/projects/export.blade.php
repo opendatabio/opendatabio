@@ -12,13 +12,13 @@
             </div>
             @php
               $lockimage= '<i class="fas fa-lock"></i>';
-              if ($project->privacy != App\Project::PRIVACY_AUTH) {
+              if ($project->privacy != App\Models\Project::PRIVACY_AUTH) {
                 $license = explode(" ",$project->license);
                 $license_logo = 'images/'.mb_strtolower($license[0]).".png";
               } else {
                 $license_logo = 'images/cc_srr_primary.png';
               }
-              if ($project->privacy == App\Project::PRIVACY_PUBLIC) {
+              if ($project->privacy == App\Models\Project::PRIVACY_PUBLIC) {
                 $lockimage= '<i class="fas fa-lock-open"></i>';
               }
             @endphp
@@ -67,7 +67,7 @@
                 <strong>
                   @lang('messages.admins')</strong>:
                   <ul>
-                    @foreach ($project->users()->wherePivot('access_level', '=', App\Project::ADMIN)->get() as $admin)
+                    @foreach ($project->users()->wherePivot('access_level', '=', App\Models\Project::ADMIN)->get() as $admin)
                       @php
                       if ($admin->person->fullname) {
                         $adm = $admin->person->fullname." ".$admin->email;

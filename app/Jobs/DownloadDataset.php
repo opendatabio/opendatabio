@@ -6,15 +6,15 @@
 
 namespace App\Jobs;
 
-use App\Dataset;
-use App\Project;
-use App\Measurement;
-use App\Individual;
-use App\Voucher;
-use App\Taxon;
-use App\Location;
-use App\ODBFunctions;
-use App\ODBTrait;
+use App\Models\Dataset;
+use App\Models\Project;
+use App\Models\Measurement;
+use App\Models\Individual;
+use App\Models\Voucher;
+use App\Models\Taxon;
+use App\Models\Location;
+use App\Models\ODBFunctions;
+use App\Models\ODBTrait;
 use Spatie\SimpleExcel\SimpleExcelWriter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -87,16 +87,16 @@ class DownloadDataset extends AppJob
             $locations[] = $measurement->location_id;
             $measured_traits[] = $measurement->trait_id;
             $taxons[] = $measurement->taxon_id;
-            if ($measurement->measured_type == 'App\Individual') {
+            if ($measurement->measured_type == 'App\Models\Individual') {
               $measured_individuals[] = $measurement->measured_id;
             }
-            if ($measurement->measured_type == 'App\Voucher') {
+            if ($measurement->measured_type == 'App\Models\Voucher') {
               $measured_vouchers[] = $measurement->measured_id;
             }
-            if ($measurement->measured_type == 'App\Taxon') {
+            if ($measurement->measured_type == 'App\Models\Taxon') {
               $measured_taxons[] = $measurement->measured_id;
             }
-            if ($measurement->measured_type == 'App\Location') {
+            if ($measurement->measured_type == 'App\Models\Location') {
               $measured_locations[] = $measurement->measured_id;
             }
 

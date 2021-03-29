@@ -7,8 +7,8 @@
 
 namespace App\Jobs;
 
-use App\Biocollection;
-use App\ExternalAPIs;
+use App\Models\Biocollection;
+use App\Models\ExternalAPIs;
 
 class ImportBiocollections extends AppJob
 {

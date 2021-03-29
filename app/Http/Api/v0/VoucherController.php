@@ -8,16 +8,16 @@
 namespace App\Http\Api\v0;
 
 use Illuminate\Http\Request;
-use App\Voucher;
-use App\Individual;
-use App\Location;
-use App\Taxon;
-use App\Identification;
-use App\Project;
-use App\Person;
-use App\UserJob;
-use App\ODBFunctions;
-use App\Dataset;
+use App\Models\Voucher;
+use App\Models\Individual;
+use App\Models\Location;
+use App\Models\Taxon;
+use App\Models\Identification;
+use App\Models\Project;
+use App\Models\Person;
+use App\Models\UserJob;
+use App\Models\ODBFunctions;
+use App\Models\Dataset;
 use Response;
 use App\Jobs\ImportVouchers;
 use Illuminate\Support\Arr;

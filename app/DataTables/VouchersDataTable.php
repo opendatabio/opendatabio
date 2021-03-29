@@ -8,9 +8,9 @@
 namespace App\DataTables;
 
 use Baum\Node;
-use App\Voucher;
-use App\Location;
-use App\Taxon;
+use App\Models\Voucher;
+use App\Models\Location;
+use App\Models\Taxon;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;

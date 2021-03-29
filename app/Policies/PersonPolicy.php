@@ -7,8 +7,8 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\Person;
+use App\Models\User;
+use App\Models\Person;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PersonPolicy
@@ -18,8 +18,8 @@ class PersonPolicy
     /**
      * Determine whether the user can view the person.
      *
-     * @param \App\User   $user
-     * @param \App\Person $person
+     * @param \App\Models\User   $user
+     * @param \App\Models\Person $person
      *
      * @return mixed
      */
@@ -32,7 +32,7 @@ class PersonPolicy
     /**
      * Determine whether the user can create people.
      *
-     * @param \App\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */
@@ -45,8 +45,8 @@ class PersonPolicy
     /**
      * Determine whether the user can update the person.
      *
-     * @param \App\User   $user
-     * @param \App\Person $person
+     * @param \App\Models\User   $user
+     * @param \App\Models\Person $person
      *
      * @return mixed
      */
@@ -62,8 +62,8 @@ class PersonPolicy
     /**
      * Determine whether the user can delete the person.
      *
-     * @param \App\User   $user
-     * @param \App\Person $person
+     * @param \App\Models\User   $user
+     * @param \App\Models\Person $person
      *
      * @return mixed
      */

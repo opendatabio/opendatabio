@@ -32,158 +32,158 @@ return [
     */
     'whitelist' => [
         /* dataset_bibreference.png */
-          //App\Dataset::class,
-          //App\BibReference::class,
+          //App\Models\Dataset::class,
+          //App\Models\BibReference::class,
 
         /* dataset_model.png */
-          //App\Dataset::class,
-          //App\Measurement::class,
-          //App\User::class,
+          //App\Models\Dataset::class,
+          //App\Models\Measurement::class,
+          //App\Models\User::class,
 
         /* project_model.png */
-          //App\Project::class,
-          //App\Voucher::class,
-          //App\Individual::class,
-          //App\User::class,
+          //App\Models\Project::class,
+          //App\Models\Voucher::class,
+          //App\Models\Individual::class,
+          //App\Models\User::class,
 
         /* user_model.png */
-          //App\Person::class,
-          //App\User::class,
-          //App\Dataset::class,
-          //App\Project::class,
+          //App\Models\Person::class,
+          //App\Models\User::class,
+          //App\Models\Dataset::class,
+          //App\Models\Project::class,
 
         /* user_userjob.png */
-          //App\User::class,
-          //App\UserJob::class,
+          //App\Models\User::class,
+          //App\Models\UserJob::class,
 
         /* biocollection_model.png */
-          //App\Biocollection::class,
-          //App\Voucher::class,
-          //App\Person::class,
+          //App\Models\Biocollection::class,
+          //App\Models\Voucher::class,
+          //App\Models\Person::class,
 
         /* model_coreobjects.png
-          App\Voucher::class,
-          App\Location::class,
-          App\Taxon::class,
-          App\Individual::class,
-          App\Measurement::class,
-          App\Identification::class,
+          App\Models\Voucher::class,
+          App\Models\Location::class,
+          App\Models\Taxon::class,
+          App\Models\Individual::class,
+          App\Models\Measurement::class,
+          App\Models\Identification::class,
           */
         /* location_model.png
-          App\Location::class,
-          App\Individual::class,
-          App\Measurement::class,
+          App\Models\Location::class,
+          App\Models\Individual::class,
+          App\Models\Measurement::class,
           */
         /* Individual_model.png
-        App\Individual::class,
-        App\Voucher::class,
-        //App\Location::class,
-        App\Project::class,
-        App\Identification::class,
-        App\Taxon::class,
-        App\Collector::class,
-        App\Person::class,
+        App\Models\Individual::class,
+        App\Models\Voucher::class,
+        //App\Models\Location::class,
+        App\Models\Project::class,
+        App\Models\Identification::class,
+        App\Models\Taxon::class,
+        App\Models\Collector::class,
+        App\Models\Person::class,
         */
 
         /* taxon_model.png
-        App\Taxon::class,
-        App\TaxonExternal::class,
-        App\Person::class,
-        App\Identification::class,
-        App\BibReference::class
+        App\Models\Taxon::class,
+        App\Models\TaxonExternal::class,
+        App\Models\Person::class,
+        App\Models\Identification::class,
+        App\Models\BibReference::class
         */
 
         /* voucher_model.png
-        App\Individual::class,
-        App\Collector::class,
-        App\Person::class,
-        App\Biocollection::class,
-        App\Project::class,
+        App\Models\Individual::class,
+        App\Models\Collector::class,
+        App\Models\Person::class,
+        App\Models\Biocollection::class,
+        App\Models\Project::class,
         */
 
         /* persons_model.png */
-        //App\Person::class,
-        //App\Collector::class,
-        //App\Voucher::class,
-        //App\Measurement::class,
-        //App\Identification::class,
-        //App\Taxon::class,
-        //App\User::class,
+        //App\Models\Person::class,
+        //App\Models\Collector::class,
+        //App\Models\Voucher::class,
+        //App\Models\Measurement::class,
+        //App\Models\Identification::class,
+        //App\Models\Taxon::class,
+        //App\Models\User::class,
 
         /* persons_table.png */
-        App\Person::class,
-        App\Collector::class,
-        App\Biocollection::class,
-        App\Identification::class,
-        App\Measurement::class,
-        App\Taxon::class,
-        App\User::class,
+        App\Models\Person::class,
+        App\Models\Collector::class,
+        App\Models\Biocollection::class,
+        App\Models\Identification::class,
+        App\Models\Measurement::class,
+        App\Models\Taxon::class,
+        App\Models\User::class,
 
         /* bibreferences_model.png
-        App\Dataset::class,
-        App\BibReference::class,
-        App\Taxon::class,
-        App\Measurement::class,
-        App\ODBTrait::class,
+        App\Models\Dataset::class,
+        App\Models\BibReference::class,
+        App\Models\Taxon::class,
+        App\Models\Measurement::class,
+        App\Models\ODBTrait::class,
         */
 
         /* identification_model
-        //App\Voucher::class,
-        App\Individual::class,
-        App\Identification::class,
-        App\Person::class,
-        App\Taxon::class,
-        App\Biocollection::class,
+        //App\Models\Voucher::class,
+        App\Models\Individual::class,
+        App\Models\Identification::class,
+        App\Models\Person::class,
+        App\Models\Taxon::class,
+        App\Models\Biocollection::class,
         */
 
         /* persons_table.png */
-        //App\TraitCategory::class,
-        //App\Identification::class,
-        //App\ODBTrait::class,
+        //App\Models\TraitCategory::class,
+        //App\Models\Identification::class,
+        //App\Models\ODBTrait::class,
 
         /* picture_model.png */
-        //App\Voucher::class,
-        //App\Location::class,
-        //App\Collector::class,
-        //App\Taxon::class,
-        //App\Individual::class,
-        //App\Picture::class,
-        //App\Tag::class,
-        //App\UserTranslation::class,
+        //App\Models\Voucher::class,
+        //App\Models\Location::class,
+        //App\Models\Collector::class,
+        //App\Models\Taxon::class,
+        //App\Models\Individual::class,
+        //App\Models\Picture::class,
+        //App\Models\Tag::class,
+        //App\Models\UserTranslation::class,
 
         /* tag_model.png */
-        //App\Tag::class,
-        //App\Project::class,
-        //App\Dataset::class,
-        //App\Picture::class,
-        //App\UserTranslation::class,
+        //App\Models\Tag::class,
+        //App\Models\Project::class,
+        //App\Models\Dataset::class,
+        //App\Models\Picture::class,
+        //App\Models\UserTranslation::class,
 
         /* measurement_model.png */
-        //App\ODBTrait::class,
-        //App\TraitCategory::class,
-        //App\Measurement::class,
-        //App\MeasurementCategory::class,
-        //App\Person::class,
-        //App\Dataset::class,
-        //App\UserTranslation::class,
+        //App\Models\ODBTrait::class,
+        //App\Models\TraitCategory::class,
+        //App\Models\Measurement::class,
+        //App\Models\MeasurementCategory::class,
+        //App\Models\Person::class,
+        //App\Models\Dataset::class,
+        //App\Models\UserTranslation::class,
 
         /* trait_model.png
-        App\ODBTrait::class,
-        App\TraitCategory::class,
-        App\TraitObject::class,
-        App\UserTranslation::class,
-        App\Language::class,
-        App\BibReference::class,
+        App\Models\ODBTrait::class,
+        App\Models\TraitCategory::class,
+        App\Models\TraitObject::class,
+        App\Models\UserTranslation::class,
+        App\Models\Language::class,
+        App\Models\BibReference::class,
         */
 
 
         /* user translations */
-        //App\UserTranslation::class,
-        //App\Language::class,
-        //App\Picture::class,
-        //App\ODBTrait::class,
-        //App\TraitCategory::class,
-        //App\Tag::class,
+        //App\Models\UserTranslation::class,
+        //App\Models\Language::class,
+        //App\Models\Picture::class,
+        //App\Models\ODBTrait::class,
+        //App\Models\TraitCategory::class,
+        //App\Models\Tag::class,
     ],
 
     /*

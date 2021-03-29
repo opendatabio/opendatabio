@@ -7,9 +7,9 @@
 
 namespace App\Http\Api\v0;
 
-use App\Person;
-use App\UserJob;
-use App\ODBFunctions;
+use App\Models\Person;
+use App\Models\UserJob;
+use App\Models\ODBFunctions;
 use App\Jobs\ImportPersons;
 use Illuminate\Http\Request;
 use Response;

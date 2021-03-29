@@ -7,14 +7,14 @@
 
 namespace App\Jobs;
 
-use App\Taxon;
-use App\Location;
-use App\Identification;
-use App\Person;
-use App\Collector;
-use App\Biocollection;
-use App\Project;
-use App\ODBFunctions;
+use App\Models\Taxon;
+use App\Models\Location;
+use App\Models\Identification;
+use App\Models\Person;
+use App\Models\Collector;
+use App\Models\Biocollection;
+use App\Models\Project;
+use App\Models\ODBFunctions;
 use Auth;
 use Lang;
 use Illuminate\Http\Request;

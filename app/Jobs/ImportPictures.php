@@ -2,15 +2,15 @@ Individual<?php
 
 namespace App\Jobs;
 
-use App\Picture;
-use App\Language;
-use App\UserTranslation;
-use App\Location;
-use App\Voucher;
-use App\Taxon;
-use App\Individual;
-use App\ODBFunctions;
-use App\Tag;
+use App\Models\Picture;
+use App\Models\Language;
+use App\Models\UserTranslation;
+use App\Models\Location;
+use App\Models\Voucher;
+use App\Models\Taxon;
+use App\Models\Individual;
+use App\Models\ODBFunctions;
+use App\Models\Tag;
 use Spatie\SimpleExcel\SimpleExcelReader;
 use Lang;
 use Filepond;

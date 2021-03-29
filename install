@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
-require "./app/Installer.php";
-$installer = new App\Installer;
+require "./app/Models/Installer.php";
+$installer = new App\Models\Installer;
 
 // Performs some checks to see if the system can be installed
 $installer->checkCurrentUser();

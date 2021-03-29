@@ -7,13 +7,15 @@
 
 namespace App\DataTables;
 
-use App\Measurement;
+use App\Models\Measurement;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use Lang;
-use App\Taxon;
-use App\Location;
+use App\Models\Taxon;
+use App\Models\Location;
+use App\Models\ODBTrait;
+
 
 class MeasurementsDataTable extends DataTable
 {
@@ -27,7 +29,7 @@ class MeasurementsDataTable extends DataTable
         return (new EloquentDataTable($query))
         ->editColumn('value', function ($measurement) {
             $text = $measurement->rawLink();
-            if ($measurement->type == \App\ODBTrait::COLOR) {
+            if ($measurement->type == ODBTrait::COLOR) {
               $text .= '&nbsp;<span class="measurement-thumb" style="background-color:'.$measurement->valueActual.'">';
             }
             return $text;
@@ -89,7 +91,7 @@ class MeasurementsDataTable extends DataTable
             $query = $query->where('dataset_id', $this->dataset);
         }
         if ($this->project) {
-            $query = $query->whereHasMorph('measured',['App\Voucher',"App\Individual"],function($measured) {
+            $query = $query->whereHasMorph('measured',['App\Models\Voucher',"App\Models\Individual"],function($measured) {
                 $measured->where('project_id','=',$this->project);
             });
         }
@@ -100,21 +102,21 @@ class MeasurementsDataTable extends DataTable
         if ($this->taxon and !isset($this->location)) {
           $taxon_list = Taxon::findOrFail($this->taxon)->getDescendantsAndSelf()->pluck('id')->toArray();
           $query = $query->where(function($subquery) use($taxon_list) {
-            $subquery->whereHasMorph('measured',['App\Individual','App\Voucher'],function($measured) use($taxon_list) {
+            $subquery->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list) {
               $measured->whereHas('identification',function($idd) use($taxon_list)  {
                 $idd->whereIn('taxon_id',$taxon_list);});})->orWhere(function($qq) use($taxon_list) {
-                    $qq->where('measured_type',"=",'App\Taxon')->whereIn('measured_id',$taxon_list);
+                    $qq->where('measured_type',"=",'App\Models\Taxon')->whereIn('measured_id',$taxon_list);
           });});
         }
         if ($this->location and !isset($this->taxon)) {
           $locations_ids = Location::findOrFail($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
-          $query = $query->whereIn('measured_id', $locations_ids)->where('measured_type', "App\Location");
+          $query = $query->whereIn('measured_id', $locations_ids)->where('measured_type', "App\Models\Location");
         }
 
         if ($this->location and $this->taxon) {
             $taxon_list = Taxon::findOrFail($this->taxon)->getDescendantsAndSelf()->pluck('id')->toArray();
             $locations_ids = Location::findOrFail($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
-            $query = $query->whereHasMorph('measured',['App\Individual','App\Voucher'],function($measured) use($taxon_list,$locations_ids) {
+            $query = $query->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$locations_ids) {
                   $measured->whereHas('identification',function($idd) use($taxon_list)  {
                     $idd->whereIn('taxon_id',$taxon_list);})
                     ->whereHas('locations',function($loc) use ($locations_ids) {

@@ -14,11 +14,11 @@ class UsersTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\User::count() > 5) {
+        if (\App\Models\User::count() > 5) {
             return;
         }
         $faker = Faker\Factory::create();
-        $persons = App\Person::all();
+        $persons = App\Models\Person::all();
 
         try {
             DB::table('users')->insert([

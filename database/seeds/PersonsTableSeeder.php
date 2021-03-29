@@ -6,7 +6,7 @@
  */
 
 use Illuminate\Database\Seeder;
-use App\Herbarium;
+use App\Models\Herbarium;
 
 class PersonsTableSeeder extends Seeder
 {
@@ -15,7 +15,7 @@ class PersonsTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\Person::count()) {
+        if (\App\Models\Person::count()) {
             return;
         }
 

@@ -106,7 +106,7 @@
       @php
          $ovtype = old('biocollection_type', isset($voucher) ? $voucher->biocollection_type : 0);
       @endphp
-      @foreach (\App\Biocollection::NOMENCLATURE_TYPE as $vtype)
+      @foreach (\App\Models\Biocollection::NOMENCLATURE_TYPE as $vtype)
       <option value="{{ $vtype }}" {{ $vtype == $ovtype ? 'selected' : '' }}>
         @lang('levels.vouchertype.' . $vtype)
       </option>

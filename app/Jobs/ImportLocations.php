@@ -7,8 +7,8 @@
 
 namespace App\Jobs;
 
-use App\Location;
-use App\ODBFunctions;
+use App\Models\Location;
+use App\Models\ODBFunctions;
 use Spatie\SimpleExcel\SimpleExcelReader;
 use Storage;
 

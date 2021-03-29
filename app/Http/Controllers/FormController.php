@@ -7,11 +7,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Form;
-use App\Dataset;
-use App\Measurement;
-use App\Individual;
-use App\Project;
+use App\Models\Form;
+use App\Models\Dataset;
+use App\Models\Measurement;
+use App\Models\Individual;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use App\DataTables\FormsDataTable;
 use Auth;

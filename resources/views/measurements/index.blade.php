@@ -21,7 +21,7 @@
 
 
 @if (isset($object->typename))
-@can ('create', App\Measurement::class)
+@can ('create', App\Models\Measurement::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
       @lang('messages.create_measurement')

@@ -17,19 +17,19 @@ class MeasurementsTableSeeder extends Seeder
     public function run()
     {
         Auth::loginUsingId(1);
-        if (\App\Measurement::count()) {
+        if (\App\Models\Measurement::count()) {
             return;
         }
         $faker = Faker\Factory::create();
 
-        $datasets = \App\Dataset::all();
-        $persons = \App\Person::all();
-        $taxons = \App\Taxon::valid()->get();
-        $plants = \App\Plant::all();
-        $vouchers = \App\Voucher::all();
-        $references = \App\BibReference::all();
-        $locations = \App\Location::where('adm_level', \App\Location::LEVEL_PLOT)->orWhere('adm_level', \App\Location::LEVEL_POINT)->get();
-        $odbtraits = \App\ODBTrait::with('object_types')->get();
+        $datasets = \App\Models\Dataset::all();
+        $persons = \App\Models\Person::all();
+        $taxons = \App\Models\Taxon::valid()->get();
+        $plants = \App\Models\Plant::all();
+        $vouchers = \App\Models\Voucher::all();
+        $references = \App\Models\BibReference::all();
+        $locations = \App\Models\Location::where('adm_level', \App\Models\Location::LEVEL_PLOT)->orWhere('adm_level', \App\Models\Location::LEVEL_POINT)->get();
+        $odbtraits = \App\Models\ODBTrait::with('object_types')->get();
 
         foreach ($odbtraits as $odbtrait) {
             unset($val);
@@ -57,20 +57,20 @@ class MeasurementsTableSeeder extends Seeder
                 }
                 $otype = collect($odbtrait->object_types)->random()->object_type;
                 switch ($otype) {
-                case "App\Plant":
+                case "App\Models\Plant":
                     $object = $plants->random();
                     break;
-                case "App\Location":
+                case "App\Models\Location":
                     $object = $locations->random();
                     break;
-                case "App\Voucher":
+                case "App\Models\Voucher":
                     $object = $vouchers->random();
                     break;
-                case "App\Taxon":
+                case "App\Models\Taxon":
                     $object = $taxons->random();
                     break;
                 }
-                $measurement = new App\Measurement([
+                $measurement = new App\Models\Measurement([
                     'trait_id' => $odbtrait->id,
                     'measured_type' => $otype,
                     'measured_id' => $object->id,
@@ -83,7 +83,7 @@ class MeasurementsTableSeeder extends Seeder
                 if (7 == $odbtrait->type) {
                     $measurement->value = $faker->randomNumber(2);
                     switch ($odbtrait->link_type) {
-                    case "App\Taxon":
+                    case "App\Models\Taxon":
                         $measurement->value_i = $taxons->random()->id;
                         break;
                     }

@@ -19,7 +19,7 @@
   </div>
 
 
-@can ('create',App\Biocollection::class)
+@can ('create',App\Models\Biocollection::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
 		                @lang('messages.new_biocollection')

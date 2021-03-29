@@ -10,30 +10,30 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Validator;
-use App\Individual;
-use App\Person;
-use App\Collector;
-use App\Project;
-use App\Taxon;
-use App\Location;
-use App\Biocollection;
-use App\Identification;
+use App\Models\Individual;
+use App\Models\Person;
+use App\Models\Collector;
+use App\Models\Project;
+use App\Models\Taxon;
+use App\Models\Location;
+use App\Models\Biocollection;
+use App\Models\Identification;
 use DB;
-use App\IndividualLocation;
+use App\Models\IndividualLocation;
 use App\DataTables\IndividualsDataTable;
 
-use App\Dataset;
-use App\Summary;
+use App\Models\Dataset;
+use App\Models\Summary;
 use Auth;
 use Response;
 use Lang;
-use App\UserJob;
+use App\Models\UserJob;
 use App\Jobs\BatchUpdateIndividuals;
 use App\Jobs\ImportIndividuals;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
 use Activity;
-use App\ActivityFunctions;
+use App\Models\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
 use App\DataTables\IndividualLocationsDataTable;
 
@@ -387,7 +387,7 @@ class IndividualController extends Controller
             $newtaxon_id = $request->taxon_id;
             $individual->identificationSet = new Identification([
               'object_id' => $individual->id,
-              'object_type' => 'App\Individual',
+              'object_type' => 'App\Models\Individual',
               'person_id' => $request->identifier_id,
               'taxon_id' => $request->taxon_id,
               'modifier' => $request->modifier,
@@ -559,7 +559,7 @@ class IndividualController extends Controller
               //update
               $individual->identificationSet()->update($identifiers);
           } else {
-              $individual->identificationSet = new Identification(array_merge($identifiers, ['object_id' => $individual->id, 'object_type' => 'App\Individual']));
+              $individual->identificationSet = new Identification(array_merge($identifiers, ['object_id' => $individual->id, 'object_type' => 'App\Models\Individual']));
           }
           $individual->identificationSet->setDate($request->identification_date_month,$request->identification_date_day,$request->identification_date_year);
           $individual->identificationSet->save();

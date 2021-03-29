@@ -24,7 +24,7 @@
                         @lang('messages.help')
                       </a>
 
-                      @can ('create', App\Location::class)
+                      @can ('create', App\Models\Location::class)
                   				<a href="{{url ('locations/create')}}" class="btn btn-success">
                               @lang('messages.create')
                   				</a>

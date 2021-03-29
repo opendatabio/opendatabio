@@ -4,10 +4,10 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\LazyCollection;
-use App\Taxon;
-use App\Dataset;
-use App\Summary;
-use App\Project;
+use App\Models\Taxon;
+use App\Models\Dataset;
+use App\Models\Summary;
+use App\Models\Project;
 
 class CreateSummariesTable extends Migration
 {
@@ -32,7 +32,7 @@ class CreateSummariesTable extends Migration
           $table->index(['target'],'summaries_target');
       });
 
-      
+
       Summary::updateSummaryTable($what="all");
 
 

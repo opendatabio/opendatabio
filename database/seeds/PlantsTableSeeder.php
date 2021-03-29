@@ -16,9 +16,9 @@ class PlantsTableSeeder extends Seeder
     {
         for ($i = 0; $i < $faker->numberBetween(0, 4); ++$i) {
             try {
-                App\Collector::create([
+                App\Models\Collector::create([
                 'person_id' => $persons->random()->id,
-                'object_type' => 'App\Plant',
+                'object_type' => 'App\Models\Plant',
                 'object_id' => $plant->id,
             ]);
             } catch (Exception $e) {
@@ -30,11 +30,11 @@ class PlantsTableSeeder extends Seeder
     {
         $modifier = 0 == $faker->numberBetween(0, 20) ?
                 $faker->numberBetween(1, 5) : 0;
-        App\Identification::create([
+        App\Models\Identification::create([
                 'person_id' => $persons->random()->id,
                 'taxon_id' => $taxons->random()->id,
                 'object_id' => $plant->id,
-                'object_type' => 'App\Plant',
+                'object_type' => 'App\Models\Plant',
                 'date' => Carbon\Carbon::now(),
                 'modifier' => $modifier,
             ]);
@@ -44,18 +44,18 @@ class PlantsTableSeeder extends Seeder
     {
         // To make sure that we are seeing all registered plants
         Auth::loginUsingId(1);
-        if (\App\Plant::count()) {
+        if (\App\Models\Plant::count()) {
             return;
         }
         $faker = Faker\Factory::create();
-        $projects = \App\Project::all();
-        $persons = \App\Person::all();
-        $taxons = \App\Taxon::valid()->leaf()->get();
-        $plots = \App\Location::where('adm_level', \App\Location::LEVEL_PLOT)->get();
-        $points = \App\Location::where('adm_level', \App\Location::LEVEL_POINT)->get();
+        $projects = \App\Models\Project::all();
+        $persons = \App\Models\Person::all();
+        $taxons = \App\Models\Taxon::valid()->leaf()->get();
+        $plots = \App\Models\Location::where('adm_level', \App\Models\Location::LEVEL_PLOT)->get();
+        $points = \App\Models\Location::where('adm_level', \App\Models\Location::LEVEL_POINT)->get();
         // on points
         foreach ($points as $point) {
-            $plant = new \App\Plant([
+            $plant = new \App\Models\Plant([
                 'location_id' => $point->id,
                 'tag' => '1',
                 'date' => Carbon\Carbon::now(),
@@ -68,7 +68,7 @@ class PlantsTableSeeder extends Seeder
         // on plots
         for ($i = 0; $i < 1000; ++$i) {
             $plot = $plots->random();
-            $plant = new \App\Plant([
+            $plant = new \App\Models\Plant([
                 'location_id' => $plot->id,
                 'tag' => $i,
                 'date' => Carbon\Carbon::now(),

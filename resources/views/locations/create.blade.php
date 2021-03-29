@@ -41,7 +41,7 @@
 	<?php $selected = old('adm_level', isset($location) ? $location->adm_level : null); ?>
 
 	<select name="adm_level" id="adm_level" class="form-control" >
-	@foreach (App\Location::AdmLevels() as $level)
+	@foreach (App\Models\Location::AdmLevels() as $level)
 		<option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
 			@lang ('levels.adm_level.' . $level )
 		</option>

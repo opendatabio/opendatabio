@@ -10,9 +10,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\DataTables\UsersDataTable;
 use Illuminate\Support\Facades\Lang;
-use App\User;
-use App\Project;
-use App\Dataset;
+use App\Models\User;
+use App\Models\Project;
+use App\Models\Dataset;
 use Response;
 
 class UserController extends Controller

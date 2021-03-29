@@ -7,9 +7,9 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\Voucher;
-use App\Project;
+use App\Models\User;
+use App\Models\Voucher;
+use App\Models\Project;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class VoucherPolicy
@@ -21,7 +21,7 @@ class VoucherPolicy
      */
     public function view(User $user, Voucher $voucher)
     {
-        // is handled by App\Voucher::boot globalscope
+        // is handled by App\Models\Voucher::boot globalscope
         return true;
     }
 

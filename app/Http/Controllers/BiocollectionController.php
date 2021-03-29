@@ -10,12 +10,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use App\DataTables\VouchersDataTable;
-use App\Biocollection;
-use App\ExternalAPIs;
+use App\Models\Biocollection;
+use App\Models\ExternalAPIs;
 use Illuminate\Support\Facades\Lang;
 use App\Jobs\ImportBiocollections;
 use Spatie\SimpleExcel\SimpleExcelReader;
-use App\UserJob;
+use App\Models\UserJob;
 use App\DataTables\BiocollectionsDataTable;
 
 

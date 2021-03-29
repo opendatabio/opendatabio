@@ -7,8 +7,8 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\Location;
+use App\Models\User;
+use App\Models\Location;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class LocationPolicy
@@ -18,8 +18,8 @@ class LocationPolicy
     /**
      * Determine whether the user can view the location.
      *
-     * @param \App\User     $user
-     * @param \App\Location $location
+     * @param \App\Models\User     $user
+     * @param \App\Models\Location $location
      *
      * @return mixed
      */
@@ -30,7 +30,7 @@ class LocationPolicy
     /**
      * Determine whether the user can create locations.
      *
-     * @param \App\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */
@@ -42,8 +42,8 @@ class LocationPolicy
     /**
      * Determine whether the user can update the location.
      *
-     * @param \App\User     $user
-     * @param \App\Location $location
+     * @param \App\Models\User     $user
+     * @param \App\Models\Location $location
      *
      * @return mixed
      */
@@ -66,8 +66,8 @@ class LocationPolicy
     /**
      * Determine whether the user can delete the location.
      *
-     * @param \App\User     $user
-     * @param \App\Location $location
+     * @param \App\Models\User     $user
+     * @param \App\Models\Location $location
      *
      * @return mixed
      */

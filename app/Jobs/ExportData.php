@@ -11,11 +11,11 @@ use GuzzleHttp\Exception\ClientException;
 use Spatie\SimpleExcel\SimpleExcelWriter;
 use Illuminate\Support\Facades\Storage;
 use Auth;
-use App\Measurement;
-use App\Taxon;
-use App\Individual;
-use App\Location;
-use App\Voucher;
+use App\Models\Measurement;
+use App\Models\Taxon;
+use App\Models\Individual;
+use App\Models\Location;
+use App\Models\Voucher;
 use Log;
 
 class ExportData extends AppJob

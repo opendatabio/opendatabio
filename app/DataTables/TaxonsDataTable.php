@@ -7,11 +7,11 @@
 
 namespace App\DataTables;
 
-use App\Taxon;
-use App\Location;
-use App\Measurement;
+use App\Models\Taxon;
+use App\Models\Location;
+use App\Models\Measurement;
 use Baum\Node;
-use App\Project;
+use App\Models\Project;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
@@ -42,15 +42,15 @@ class TaxonsDataTable extends DataTable
         //})
         ->addColumn('individuals', function ($taxon) {
           if ($this->project) {
-            $individual_count = $taxon->getCount('App\Project',$this->project,'individuals');
+            $individual_count = $taxon->getCount('App\Models\Project',$this->project,'individuals');
             return '<a href="'.url('individuals/'.$taxon->id.'|'.$this->project.'/taxon_project').'">'.$individual_count.'</a>';
           }
           if ($this->dataset) {
-              $individual_count = $taxon->getCount('App\Dataset',$this->dataset,'individuals');
+              $individual_count = $taxon->getCount('App\Models\Dataset',$this->dataset,'individuals');
               return '<a href="'.url('individuals/'.$taxon->id.'|'.$this->dataset.'/taxon_dataset').'">'.$individual_count.'</a>';
           }
           if ($this->location) {
-              $individual_count = $taxon->getCount('App\Location',$this->location,'individuals');
+              $individual_count = $taxon->getCount('App\Models\Location',$this->location,'individuals');
               return '<a href="'.url('individuals/'.$taxon->id.'|'.$this->location.'/taxon_location').'">'.$individual_count.'</a>';
           }
           $individual_count = $taxon->getCount('all',null,"individuals");
@@ -59,15 +59,15 @@ class TaxonsDataTable extends DataTable
         ->addColumn('vouchers', function ($taxon) {
           //$voucher_count =0;
           if ($this->project) {
-            $voucher_count = $taxon->getCount('App\Project',$this->project,'vouchers');
+            $voucher_count = $taxon->getCount('App\Models\Project',$this->project,'vouchers');
             return '<a href="'.url('vouchers/'.$taxon->id.'|'.$this->project.'/taxon_project').'">'.$voucher_count.'</a>';
           }
           if ($this->dataset) {
-              $voucher_count = $taxon->getCount('App\Dataset',$this->dataset,'vouchers');
+              $voucher_count = $taxon->getCount('App\Models\Dataset',$this->dataset,'vouchers');
               return '<a href="'.url('vouchers/'.$taxon->id.'|'.$this->dataset.'/taxon_dataset').'">'.$voucher_count.'</a>';
           }
           if ($this->location) {
-              $voucher_count = $taxon->getCount('App\Location',$this->location,'vouchers');
+              $voucher_count = $taxon->getCount('App\Models\Location',$this->location,'vouchers');
               return '<a href="'.url('vouchers/'.$taxon->id.'|'.$this->location.'/taxon_location').'">'.$voucher_count.'</a>';
           }
           $voucher_count = $taxon->getCount('all',null,"vouchers");
@@ -75,15 +75,15 @@ class TaxonsDataTable extends DataTable
         })
         ->addColumn('measurements', function ($taxon) {
           if ($this->project) {
-            $measurements_count = $taxon->getCount('App\Project',$this->project,"measurements");
+            $measurements_count = $taxon->getCount('App\Models\Project',$this->project,"measurements");
             return '<a href="'.url('measurements/'.$taxon->id.'|'.$this->project.'/taxon_project').'">'.$measurements_count.'</a>';
           }
           if ($this->dataset) {
-              $measurements_count = $taxon->getCount('App\Dataset',$this->dataset,'measurements');
+              $measurements_count = $taxon->getCount('App\Models\Dataset',$this->dataset,'measurements');
               return '<a href="'.url('measurements/'.$taxon->id.'|'.$this->dataset.'/taxon_dataset').'">'.$measurements_count.'</a>';
           }
           if ($this->location) {
-                $measurements_count = $taxon->getCount('App\Location',$this->location,'measurements');
+                $measurements_count = $taxon->getCount('App\Models\Location',$this->location,'measurements');
                 return '<a href="'.url('measurements/'.$taxon->id.'|'.$this->location.'/taxon_location').'">'.$measurements_count.'</a>';
           }
           $measurements_count = $taxon->getCount('all',null,"measurements");
@@ -156,7 +156,7 @@ class TaxonsDataTable extends DataTable
             ->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'))->noRoot();
 
         if ($this->project) {
-            $query->whereHas('identifications',function($object) { $object->whereHasMorph('object',["App\Individual"],function($query) { $query->withoutGlobalScopes()->where('project_id',$this->project);});});
+            $query->whereHas('identifications',function($object) { $object->whereHasMorph('object',["App\Models\Individual"],function($query) { $query->withoutGlobalScopes()->where('project_id',$this->project);});});
         }
         if ($this->dataset) {
               $query->whereHas('vouchers',function($voucher) {
@@ -189,7 +189,7 @@ class TaxonsDataTable extends DataTable
             $locations_ids = Location::noWorld()->where('id',$this->location)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
             if (count($locations_ids)>1) {
               $query->whereHas('summary_counts',function($count) use($locations_ids) {
-                $count->whereIn('scope_id',$locations_ids)->where('scope_type',"App\Location");
+                $count->whereIn('scope_id',$locations_ids)->where('scope_type',"App\Models\Location");
               });
             } else {
               //this will be used for leave locations

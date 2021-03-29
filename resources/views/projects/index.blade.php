@@ -15,7 +15,7 @@
                           &nbsp;&nbsp;
                           <a data-toggle="collapse" href="#myprojects" class="btn btn-default">@lang('messages.my_projects')</a>
                         @endif
-                        @can ('create', App\Project::class)
+                        @can ('create', App\Models\Project::class)
                           &nbsp;&nbsp;
                           <a href="{{url('projects/create')}}" class="btn btn-success">
                             @lang ('messages.create')

@@ -7,8 +7,8 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\Form;
+use App\Models\User;
+use App\Models\Form;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class FormPolicy

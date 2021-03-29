@@ -14,7 +14,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use Illuminate\Database\Eloquent\Model;
-use App\UserJob;
+use App\Models\UserJob;
 use DB;
 use Log;
 use Auth;

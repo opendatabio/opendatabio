@@ -1,8 +1,8 @@
 <?php
 return [
-    'App\Location' => 'Localidade',
-    'App\Individual' => 'Indivíduo',
-    'App\Voucher' => 'Voucher',
-    'App\Taxon' => 'Taxon',
-    'App\Person' => 'Pessoa',
+    'App\Models\Location' => 'Localidade',
+    'App\Models\Individual' => 'Indivíduo',
+    'App\Models\Voucher' => 'Voucher',
+    'App\Models\Taxon' => 'Taxon',
+    'App\Models\Person' => 'Pessoa',
 ];

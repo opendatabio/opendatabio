@@ -7,8 +7,8 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\Biocollection;
+use App\Models\User;
+use App\Models\Biocollection;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class BiocollectionPolicy
@@ -18,8 +18,8 @@ class BiocollectionPolicy
     /**
      * Determine whether the user can view the biocollection.
      *
-     * @param \App\User      $user
-     * @param \App\Biocollection $biocollection
+     * @param \App\Models\User      $user
+     * @param \App\Models\Biocollection $biocollection
      *
      * @return mixed
      */
@@ -32,7 +32,7 @@ class BiocollectionPolicy
     /**
      * Determine whether the user can create biocollections.
      *
-     * @param \App\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */
@@ -44,8 +44,8 @@ class BiocollectionPolicy
     /**
      * Determine whether the user can update the biocollection.
      *
-     * @param \App\User      $user
-     * @param \App\Biocollection $biocollection
+     * @param \App\Models\User      $user
+     * @param \App\Models\Biocollection $biocollection
      *
      * @return mixed
      */
@@ -58,8 +58,8 @@ class BiocollectionPolicy
     /**
      * Determine whether the user can delete the biocollection.
      *
-     * @param \App\User      $user
-     * @param \App\Biocollection $biocollection
+     * @param \App\Models\User      $user
+     * @param \App\Models\Biocollection $biocollection
      *
      * @return mixed
      */

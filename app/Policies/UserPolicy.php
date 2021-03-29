@@ -7,7 +7,7 @@
 
 namespace App\Policies;
 
-use App\User;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class UserPolicy
@@ -18,8 +18,8 @@ class UserPolicy
      * Determine whether the user can show user details
      * NOTE non-standard policy name.
      *
-     * @param \App\User $user
-     * @param \App\User $user
+     * @param \App\Models\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */
@@ -31,7 +31,7 @@ class UserPolicy
     /**
      * Determine whether the user can create users.
      *
-     * @param \App\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */
@@ -43,8 +43,8 @@ class UserPolicy
     /**
      * Determine whether the user can update the user.
      *
-     * @param \App\User $user
-     * @param \App\User $user
+     * @param \App\Models\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */
@@ -56,8 +56,8 @@ class UserPolicy
     /**
      * Determine whether the user can delete the user.
      *
-     * @param \App\User $user
-     * @param \App\User $user
+     * @param \App\Models\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */

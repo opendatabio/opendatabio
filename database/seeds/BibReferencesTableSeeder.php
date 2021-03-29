@@ -7,6 +7,8 @@
 
 use Illuminate\Database\Seeder;
 
+use App\Models\BibReference;
+
 class BibReferencesTableSeeder extends Seeder
 {
     /**
@@ -14,7 +16,7 @@ class BibReferencesTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\BibReference::count()) {
+        if (BibReference::count()) {
             return;
         }
         $faker = Faker\Factory::create();

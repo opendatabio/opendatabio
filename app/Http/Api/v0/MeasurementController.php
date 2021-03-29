@@ -10,12 +10,12 @@ namespace App\Http\Api\v0;
 use Illuminate\Support\Arr;
 use App\Jobs\ImportMeasurements;
 use Illuminate\Http\Request;
-use App\Measurement;
-use App\UserJob;
-use App\ODBTrait;
-use App\ODBFunctions;
-use App\Location;
-use App\Taxon;
+use App\Models\Measurement;
+use App\Models\UserJob;
+use App\Models\ODBTrait;
+use App\Models\ODBFunctions;
+use App\Models\Location;
+use App\Models\Taxon;
 use Response;
 
 class MeasurementController extends Controller
@@ -60,22 +60,22 @@ class MeasurementController extends Controller
               $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
             }
             $measurements = $measurements->where(function($subquery) use($taxons_ids) {
-              $subquery->whereHasMorph('measured',['App\Individual','App\Voucher'],function($mm) use($taxons_ids) { $mm->whereHas('identification',function($idd) use($taxons_ids)  { $idd->whereIn('taxon_id',$taxons_ids);});})->orWhereRaw('measured_type = "App\Taxon" AND measured_id='.$this->taxon);
+              $subquery->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($mm) use($taxons_ids) { $mm->whereHas('identification',function($idd) use($taxons_ids)  { $idd->whereIn('taxon_id',$taxons_ids);});})->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.$this->taxon);
             });
 
         }
         if ($request->location) {
-            $measurements = $measurements->where('measured_type', 'App\\Location')->whereIn('measured_id', explode(',', $request->location));
+            $measurements = $measurements->where('measured_type', 'App\Models\Location')->whereIn('measured_id', explode(',', $request->location));
         }
         if ($request->location_root) {
             $locations_ids = Location::where('id','=',$request->location_root)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-            $measurements = $measurements->where('measured_type', 'App\\Location')->whereIn('measured_id', $locations_ids);
+            $measurements = $measurements->where('measured_type', 'App\ModelsLocation')->whereIn('measured_id', $locations_ids);
         }
         if ($request->individual) {
-            $measurements = $measurements->where('measured_type', 'App\\Individual')->whereIn('measured_id', explode(',', $request->individual));
+            $measurements = $measurements->where('measured_type', 'App\Models\Individual')->whereIn('measured_id', explode(',', $request->individual));
         }
         if ($request->voucher) {
-            $measurements = $measurements->where('measured_type', 'App\\Voucher')->whereIn('measured_id', explode(',', $request->voucher));
+            $measurements = $measurements->where('measured_type', 'App\Models\Voucher')->whereIn('measured_id', explode(',', $request->voucher));
         }
 
         if ($request->limit && $request->offset) {

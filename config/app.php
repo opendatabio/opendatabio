@@ -102,8 +102,7 @@ return [
      * are always displayed. You can control the name for each adm level in the
      * resources/lang/[language]/levels.php file
      */
-
-    'adm_levels' => [0,1,2,3,4],
+    'adm_levels' => [0,1,2,3],
 
     /*
      * This string represents a regular expression describing what is a valid

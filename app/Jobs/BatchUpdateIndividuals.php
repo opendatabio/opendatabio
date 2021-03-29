@@ -6,12 +6,12 @@
 
 namespace App\Jobs;
 
-use App\Individual;
-use App\Identification;
-use App\ODBFunctions;
+use App\Models\Individual;
+use App\Models\Identification;
+use App\Models\ODBFunctions;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Activity;
-use App\ActivityFunctions;
+use App\Models\ActivityFunctions;
 //use Spatie\Activitylog\Traits\LogsActivity;
 
 
@@ -85,7 +85,7 @@ class BatchUpdateIndividuals extends ImportCollectable
                     } else {
                       if ($update_nonself_identification>0 or $individual->identification_individual_id == null) {
                         $makechange = true;
-                        $individual->identificationSet = new Identification(array_merge($identifiers_nodate, ['object_id' => $individual->id, 'object_type' => 'App\Individual']));
+                        $individual->identificationSet = new Identification(array_merge($identifiers_nodate, ['object_id' => $individual->id, 'object_type' => 'App\Models\Individual']));
                         //the individual
                       }
                     }

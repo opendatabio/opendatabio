@@ -8,10 +8,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Tag;
+use App\Models\Tag;
 use App\DataTables\TagsDataTable;
-use App\Language;
-use App\UserTranslation;
+use App\Models\Language;
+use App\Models\UserTranslation;
 use Lang;
 
 class TagController extends Controller
@@ -76,7 +76,7 @@ class TagController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    {      
+    {
         $tag = Tag::with('datasets')->findOrFail($id);
         return view('tags.show', compact('tag'));
     }

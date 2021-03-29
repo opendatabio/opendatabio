@@ -119,7 +119,7 @@
 	<?php $selected = old('privacy', isset($project) ? $project->privacy : 0); ?>
 
 	<select name="privacy" id="privacy" class="form-control" >
-	@foreach (App\Project::PRIVACY_LEVELS as $level)
+	@foreach (App\Models\Project::PRIVACY_LEVELS as $level)
         <option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
 @lang('levels.privacy.' . $level)
 </option>
@@ -139,7 +139,7 @@
   $cc_mandatory = '';
   $show_project_viewers = '';
   $privacy = old('privacy', isset($project) ? $project->privacy : 0);
-  if ($privacy!=App\Dataset::PRIVACY_AUTH) {
+  if ($privacy!=App\Models\Dataset::PRIVACY_AUTH) {
     $cc_mandatory = 'mandatory';
     $show_project_viewers = 'hidden';
   }
@@ -328,7 +328,7 @@ $(document).ready(function() {
 /* show or hide elements depending on type of privacy */
 $('#privacy').on('change',function() {
     var privacy = $('#privacy option:selected').val();
-    if (privacy == {{ App\Dataset::PRIVACY_AUTH}}) {
+    if (privacy == {{ App\Models\Dataset::PRIVACY_AUTH}}) {
         $('#project_viewers').show();
         $('#licenselabel').removeClass('mandatory');
 

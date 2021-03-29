@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="col-sm-offset-2 col-sm-8">
 
-@can ('create', App\Individual::class)
+@can ('create', App\Models\Individual::class)
         <div class="panel panel-default">
             <div class="panel-heading">
               @lang('messages.create_individual')
@@ -72,7 +72,7 @@
         <a data-toggle="collapse" href="#hint9" class="btn btn-default">?</a>
 	    <div class="col-sm-6">
 	<?php $selected = null; ?>
-    @foreach (App\Identification::MODIFIERS as $modifier)
+    @foreach (App\Models\Identification::MODIFIERS as $modifier)
         <span>
     		<input type = "radio" name="modifier" value="{{$modifier}}" >
             @lang('levels.modifier.' . $modifier)

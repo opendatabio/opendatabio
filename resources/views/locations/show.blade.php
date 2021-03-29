@@ -102,7 +102,7 @@
               </a>
               &nbsp;&nbsp;
           @else
-            @can ('create', App\Measurement::class)
+            @can ('create', App\Models\Measurement::class)
                 <a href="{{ url('locations/'. $location->id. '/measurements/create')  }}" class="btn btn-default">
                   <i class="fa fa-btn fa-plus"></i>
                   @lang('messages.create_measurements')
@@ -119,7 +119,7 @@
              </a>
              &nbsp;&nbsp;
          @else
-           @can ('create', App\Voucher::class)
+           @can ('create', App\Models\Voucher::class)
                <a href="{{url ('locations/' . $location->id . '/vouchers/create')}}" class="btn btn-default">
                  <i class="fa fa-btn fa-plus"></i>
                  @lang('messages.create_voucher')
@@ -136,7 +136,7 @@
              </a>
              &nbsp;&nbsp;
          @else
-           @can ('create', App\Individual::class)
+           @can ('create', App\Models\Individual::class)
                 <a href="{{url ('locations/' . $location->id . '/individuals/create')}}" class="btn btn-default">
                  <i class="fa fa-btn fa-plus"></i>
                  @lang('messages.create_individual')
@@ -165,7 +165,7 @@
 				        </a>
                 &nbsp;&nbsp;
         @endcan
-        @can ('create', App\Picture::class)
+        @can ('create', App\Models\Picture::class)
             <a href="{{ url('locations/'. $location->id. '/pictures/create')  }}" class="btn btn-success">
               <i class="fa fa-btn fa-plus"></i>
               @lang('messages.create_picture')

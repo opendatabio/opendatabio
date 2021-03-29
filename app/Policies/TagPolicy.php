@@ -7,8 +7,8 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\Tag;
+use App\Models\User;
+use App\Models\Tag;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class TagPolicy

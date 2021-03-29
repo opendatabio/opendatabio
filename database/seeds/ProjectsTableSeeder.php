@@ -14,14 +14,14 @@ class ProjectsTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\Project::count() > 5) {
+        if (\App\Models\Project::count() > 5) {
             return;
         }
         $faker = Faker\Factory::create();
-        $users = App\User::all();
+        $users = App\Models\User::all();
 
         for ($i = 0; $i < 40; ++$i) {
-            $project = App\Project::create([
+            $project = App\Models\Project::create([
                 'name' => $faker->sentence(5),
                 'privacy' => $faker->numberBetween(0, 2),
             ]);

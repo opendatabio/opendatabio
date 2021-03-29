@@ -9,17 +9,17 @@ namespace App\Http\Api\v0;
 
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
-use App\Individual;
-use App\Location;
-use App\Taxon;
-use App\Identification;
-use App\Project;
-use App\Dataset;
-use App\UserJob;
-use App\ODBFunctions;
+use App\Models\Individual;
+use App\Models\Location;
+use App\Models\Taxon;
+use App\Models\Identification;
+use App\Models\Project;
+use App\Models\Dataset;
+use App\Models\UserJob;
+use App\Models\ODBFunctions;
 use Response;
 use DB;
-//use App\Jobs\ImportIndividuals;
+//use App\Models\Jobs\ImportIndividuals;
 
 class IndividualController extends Controller
 {

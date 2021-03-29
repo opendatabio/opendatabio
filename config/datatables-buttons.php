@@ -15,7 +15,7 @@ return [
          * This is appended on default Laravel namespace.
          * Usage: php artisan datatables:make User
          * Output: App\DataTables\UserDataTable
-         * With Model: App\User (default model)
+         * With Model: App\Models\User (default model)
          * Export filename: users_timestamp
          */
         'base' => 'DataTables',
@@ -25,10 +25,10 @@ return [
          * This is appended on default Laravel namespace.
          * Usage: php artisan datatables:make Post --model
          * Output: App\DataTables\PostDataTable
-         * With Model: App\Post
+         * With Model: App\Models\Post
          * Export filename: posts_timestamp
          */
-        'model' => '',
+        'model' => 'Models',
     ],
 
     /*

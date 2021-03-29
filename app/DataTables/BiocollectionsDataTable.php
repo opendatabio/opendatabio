@@ -7,7 +7,7 @@
 
 namespace App\DataTables;
 
-use App\Biocollection;
+use App\Models\Biocollection;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;

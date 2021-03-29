@@ -6,7 +6,7 @@
  */
 
 use Illuminate\Database\Seeder;
-use App\Location;
+use App\Models\Location;
 
 class LocationsTableSeeder extends Seeder
 {
@@ -15,7 +15,7 @@ class LocationsTableSeeder extends Seeder
      */
     public function run()
     {
-        if (\App\Location::noWorld()->where('adm_level', 100)->count()) {
+        if (\App\Models\Location::noWorld()->where('adm_level', 100)->count()) {
             return;
         }
 

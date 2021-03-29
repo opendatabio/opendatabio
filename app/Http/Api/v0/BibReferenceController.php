@@ -8,10 +8,10 @@
 namespace App\Http\Api\v0;
 
 use Illuminate\Support\Arr;
-use App\BibReference;
+use App\Models\BibReference;
 use Illuminate\Http\Request;
-use App\UserJob;
-use App\ODBFunctions;
+use App\Models\UserJob;
+use App\Models\ODBFunctions;
 use Response;
 use DB;
 use Taxon;

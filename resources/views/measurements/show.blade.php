@@ -28,7 +28,7 @@
 @lang('messages.value')
 : </strong>
 {{$measurement->valueDisplay}} {{ $measurement->odbtrait->unit }}
-@if ($measurement->type == \App\ODBTrait::COLOR)
+@if ($measurement->type == \App\Models\ODBTrait::COLOR)
 &nbsp;<span class="measurement-thumb" style="background-color: {{$measurement->valueActual}}">
 @endif
 </p>

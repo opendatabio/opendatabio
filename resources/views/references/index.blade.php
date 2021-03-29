@@ -5,7 +5,7 @@
         <div class="col-sm-offset-2 col-sm-8">
 
 
-@can ('create', App\BibReference::class)
+@can ('create', App\Models\BibReference::class)
             <div class="panel panel-default">
                 <div class="panel-heading">
                     @lang('messages.import_references')

@@ -30,7 +30,7 @@
                     @lang('messages.help')
                   </a>
              @endif
-             @can ('create', App\Taxon::class)
+             @can ('create', App\Models\Taxon::class)
                &nbsp;&nbsp;
                <a href="{{url ('taxons/create')}}" class="btn btn-success">
                  @lang('messages.create')

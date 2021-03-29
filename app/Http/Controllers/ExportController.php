@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Auth;
 use Response;
 use Lang;
-use App\UserJob;
+use App\Models\UserJob;
 use App\Jobs\ExportData;
 
 class ExportController extends Controller

@@ -7,8 +7,8 @@
 
 namespace App\Http\Api\v0;
 
-use App\Biocollection;
-use App\ODBFunctions;
+use App\Models\Biocollection;
+use App\Models\ODBFunctions;
 use App\Jobs\ImportBiocollections;
 use Illuminate\Http\Request;
 use Response;

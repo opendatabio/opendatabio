@@ -8,9 +8,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\BibReference;
-use App\ExternalAPIs;
-use App\UserJob;
+use App\Models\BibReference;
+use App\Models\ExternalAPIs;
+use App\Models\UserJob;
 use Validator;
 use Illuminate\Support\Facades\Lang;
 use App\Jobs\ImportBibReferences;

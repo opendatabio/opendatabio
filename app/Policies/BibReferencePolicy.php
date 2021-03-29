@@ -7,8 +7,8 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\BibReference;
+use App\Models\User;
+use App\Models\BibReference;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class BibReferencePolicy
@@ -18,8 +18,8 @@ class BibReferencePolicy
     /**
      * Determine whether the user can view the bibReference.
      *
-     * @param \App\User         $user
-     * @param \App\BibReference $bibReference
+     * @param \App\Models\User         $user
+     * @param \App\Models\BibReference $bibReference
      *
      * @return mixed
      */
@@ -30,7 +30,7 @@ class BibReferencePolicy
     /**
      * Determine whether the user can create bibReferences.
      *
-     * @param \App\User $user
+     * @param \App\Models\User $user
      *
      * @return mixed
      */
@@ -42,8 +42,8 @@ class BibReferencePolicy
     /**
      * Determine whether the user can update the bibReference.
      *
-     * @param \App\User         $user
-     * @param \App\BibReference $bibReference
+     * @param \App\Models\User         $user
+     * @param \App\Models\BibReference $bibReference
      *
      * @return mixed
      */
@@ -65,8 +65,8 @@ class BibReferencePolicy
     /**
      * Determine whether the user can delete the bibReference.
      *
-     * @param \App\User         $user
-     * @param \App\BibReference $bibReference
+     * @param \App\Models\User         $user
+     * @param \App\Models\BibReference $bibReference
      *
      * @return mixed
      */

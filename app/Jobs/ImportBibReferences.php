@@ -11,8 +11,8 @@ use RenanBr\BibTexParser\Listener;
 use RenanBr\BibTexParser\Parser;
 use RenanBr\BibTexParser\Processor;
 //\NamesProcessor as AuthorProcessor;
-use App\BibReference;
-use App\ExternalAPIs;
+use App\Models\BibReference;
+use App\Models\ExternalAPIs;
 
 class ImportBibReferences extends AppJob
 {

@@ -584,7 +584,7 @@ The following fields are allowed in a post API:
   * `categories=json` - **required for categorical and ordinal traits**; see translations below
   * `wavenumber_min` and `wavenumber_max` - **required for spectral traits** = minimum and maximum WaveNumber within which the 'value_length' absorbance or reflectance values are equally distributed. May be informed in `range_min` and `range_max`, priority for prefix wavenumber over range if both informed.
   * `value_length` - **required for spectral traits** = number of values in spectrum
-  * `link_type`- **required for Link traits** - the class of link type, fullname or basename:  eg. 'Taxon' or 'App\Taxon'.
+  * `link_type`- **required for Link traits** - the class of link type, fullname or basename:  eg. 'Taxon' or 'App\Models\Taxon'.
 * `bibreference=number` - the id of a [BibReference](Auxiliary-Objects#bibreferences) object from which the trait definition and or trait categories are based upon.
 
 #### translations

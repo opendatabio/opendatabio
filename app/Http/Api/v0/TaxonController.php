@@ -9,10 +9,10 @@ namespace App\Http\Api\v0;
 
 use App\Jobs\ImportTaxons;
 use Illuminate\Http\Request;
-use App\Taxon;
-use App\UserJob;
-use App\Location;
-use App\ODBFunctions;
+use App\Models\Taxon;
+use App\Models\UserJob;
+use App\Models\Location;
+use App\Models\ODBFunctions;
 use Response;
 
 class TaxonController extends Controller
@@ -51,13 +51,13 @@ class TaxonController extends Controller
         if ($request->project) {
             $project_id = $request->project;
             $taxons = $taxons->whereHas('summary_counts',function($count) use($project_id) {
-                          $count->where('scope_id',"=",$project_id)->where('scope_type',"=","App\Project")->where('value',">",0);
+                          $count->where('scope_id',"=",$project_id)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
                         });
         }
         if ($request->dataset) {
             $dataset_id = $request->dataset;
             $taxons = $taxons->whereHas('summary_counts',function($count) use($dataset_id) {
-              $count->where('scope_id',"=",$dataset_id)->where('scope_type',"=","App\Dataset")->where('value',">",0);
+              $count->where('scope_id',"=",$dataset_id)->where('scope_type',"=","App\Models\Dataset")->where('value',">",0);
             });
         }
 

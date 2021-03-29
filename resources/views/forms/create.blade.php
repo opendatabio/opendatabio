@@ -42,7 +42,7 @@
 <div class="col-sm-6">
 	<?php $selected = old('measured_type', isset($form) ? $form->measured_type : null); ?>
 	<select name="measured_type" id="measured_type" class="form-control" {{ isset($form) ? 'disabled' : '' }}>
-	@foreach ( App\ODBTrait::OBJECT_TYPES as $type )
+	@foreach ( App\Models\ODBTrait::OBJECT_TYPES as $type )
 		<option value="{{$type}}" {{ $type == $selected ? 'selected' : '' }}>
             @lang ('classes.'.$type)
 		</option>
@@ -56,7 +56,7 @@
   </div>
 </div>
 <div id="trait_container">
-<?php 
+<?php
 // Loop and create boxes for all traits
 // how many traits do we have? 3 for default
 $length = isset($form) ? count($form->traits) : 3;
@@ -65,7 +65,7 @@ for ($i = 1; $i <= $length; $i++) {
 <div class="form-group">
     <label for="trait.{{$i}}" class="col-sm-3 control-label mandatory">
     @if ($i == 1)
-    @lang('messages.select_traits') 
+    @lang('messages.select_traits')
     @endif
 </label>
     <div class="col-sm-6 trait_div" id="trait.{{$i}}">
@@ -147,12 +147,12 @@ $(document).ready(function() {
     function chevron_swap_down() {
         var element_id = $(this).attr('id');
         var ix = parseInt(element_id.substring(13,element_id.length - 1));
-        chevron_swap(ix); 
+        chevron_swap(ix);
     }
     function chevron_swap_up() {
         var element_id = $(this).attr('id');
         var ix = parseInt(element_id.substring(11,element_id.length - 1)) - 1;
-        chevron_swap(ix); 
+        chevron_swap(ix);
     }
     function swap_val(obj1, obj2) {
         var tmp = obj1.val();

@@ -8,9 +8,9 @@
 namespace App\Policies;
 
 use Illuminate\Auth\Access\HandlesAuthorization;
-use App\User;
-use App\ODBTrait;
-use App\Dataset;
+use App\Models\User;
+use App\Models\ODBTrait;
+use App\Models\Dataset;
 
 
 class TraitPolicy

@@ -7,9 +7,9 @@
 
 namespace App\Policies;
 
-use App\User;
-use App\Individual;
-use App\Project;
+use App\Models\User;
+use App\Models\Individual;
+use App\Models\Project;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class IndividualPolicy
@@ -21,7 +21,7 @@ class IndividualPolicy
      */
     public function view(User $user, Individual $individual)
     {
-        // is handled by App\Individual::boot globalscope
+        // is handled by App\Models\Individual::boot globalscope
         return true;
     }
 

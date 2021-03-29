@@ -9,18 +9,18 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\DataTables\MeasurementsDataTable;
-use App\Measurement;
-use App\Project;
-use App\Individual;
-use App\Voucher;
-use App\Taxon;
-use App\Location;
-use App\ODBTrait;
-use App\Person;
-use App\Dataset;
-use App\BibReference;
-use App\UserJob;
-use App\Summary;
+use App\Models\Measurement;
+use App\Models\Project;
+use App\Models\Individual;
+use App\Models\Voucher;
+use App\Models\Taxon;
+use App\Models\Location;
+use App\Models\ODBTrait;
+use App\Models\Person;
+use App\Models\Dataset;
+use App\Models\BibReference;
+use App\Models\UserJob;
+use App\Models\Summary;
 use App\Jobs\ImportMeasurements;
 use Storage;
 use Auth;
@@ -39,7 +39,7 @@ class MeasurementController extends Controller
         $object = Individual::findOrFail($id);
 
         return $dataTable->with([
-            'measured_type' => 'App\Individual',
+            'measured_type' => 'App\Models\Individual',
             'measured' => $id,
         ])->render('measurements.index', compact('object'));
     }
@@ -49,7 +49,7 @@ class MeasurementController extends Controller
       $ids = explode('|',$id);
       $object = Individual::findOrFail($ids[0]);
       $object_second = Dataset::findOrFail($ids[1]);
-      return $dataTable->with(['measured' => $ids[0],'measured_type'=> 'App\Individual','dataset' => $ids[1]])->render('measurements.index', compact('object','object_second'));
+      return $dataTable->with(['measured' => $ids[0],'measured_type'=> 'App\Models\Individual','dataset' => $ids[1]])->render('measurements.index', compact('object','object_second'));
     }
 
     public function indexLocations($id, MeasurementsDataTable $dataTable)
@@ -92,7 +92,7 @@ class MeasurementController extends Controller
         $object = Voucher::findOrFail($id);
 
         return $dataTable->with([
-            'measured_type' => 'App\Voucher',
+            'measured_type' => 'App\Models\Voucher',
             'measured' => $id,
         ])->render('measurements.index', compact('object'));
     }

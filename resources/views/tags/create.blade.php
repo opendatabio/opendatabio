@@ -50,11 +50,11 @@
     </th>
 </thead>
 <tbody>
-@foreach ($languages as $language) 
+@foreach ($languages as $language)
     <tr>
         <td>{{$language->name}}</td>
-        <td><input name="name[{{$language->id}}]" value="{{ old('name.' . $language->id, isset($tag) ? $tag->translate(\App\UserTranslation::NAME, $language->id) : null) }}"></td>
-        <td><input name="description[{{$language->id}}]" value="{{ old('description.' . $language->id, isset($tag) ? $tag->translate(\App\UserTranslation::DESCRIPTION, $language->id) : null) }}"></td>
+        <td><input name="name[{{$language->id}}]" value="{{ old('name.' . $language->id, isset($tag) ? $tag->translate(\App\Models\UserTranslation::NAME, $language->id) : null) }}"></td>
+        <td><input name="description[{{$language->id}}]" value="{{ old('description.' . $language->id, isset($tag) ? $tag->translate(\App\Models\UserTranslation::DESCRIPTION, $language->id) : null) }}"></td>
     </tr>
 @endforeach
     <tr>

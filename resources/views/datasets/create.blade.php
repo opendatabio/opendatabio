@@ -47,7 +47,7 @@
          	<?php $selected = old('privacy', isset($dataset) ? $dataset->privacy : 0); ?>
 
          	<select name="privacy" id="privacy" class="form-control" >
-         	@foreach (App\Dataset::PRIVACY_LEVELS as $level)
+         	@foreach (App\Models\Dataset::PRIVACY_LEVELS as $level)
                  <option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
          @lang('levels.privacy.' . $level)
          </option>
@@ -66,7 +66,7 @@
            $show_dataset_viewers = '';
            $license_mandatory = "";
            $privacy = old('privacy', isset($dataset) ? $dataset->privacy : 0);
-           if ($privacy != App\Dataset::PRIVACY_AUTH) {
+           if ($privacy != App\Models\Dataset::PRIVACY_AUTH) {
              $show_dataset_viewers = 'hidden';
              $license_mandatory = 'mandatory';
            }
@@ -367,7 +367,7 @@ $(document).ready(function() {
     /* show or hide elements depending on type of privacy */
     $('#privacy').on('change',function() {
         var privacy = $('#privacy option:selected').val();
-        if (privacy == {{ App\Dataset::PRIVACY_PUBLIC}}) {
+        if (privacy == {{ App\Models\Dataset::PRIVACY_PUBLIC}}) {
             $('#creativecommons').show();
             $('#authorslabel').addClass('mandatory');
             $('#titlelabel').addClass('mandatory');
@@ -376,7 +376,7 @@ $(document).ready(function() {
             $('#authorslabel').removeClass('mandatory');
             $('#titlelabel').removeClass('mandatory');
         }
-        if (privacy == {{ App\Dataset::PRIVACY_PUBLIC}} | privacy == {{ App\Dataset::PRIVACY_REGISTERED}}) {
+        if (privacy == {{ App\Models\Dataset::PRIVACY_PUBLIC}} | privacy == {{ App\Models\Dataset::PRIVACY_REGISTERED}}) {
             $('#dataset_viewers').hide();
         } else {
             $('#dataset_viewers').show();

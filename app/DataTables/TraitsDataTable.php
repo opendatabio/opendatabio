@@ -7,8 +7,8 @@
 
 namespace App\DataTables;
 
-use App\ODBTrait;
-use App\UserTranslation;
+use App\Models\ODBTrait;
+use App\Models\UserTranslation;
 use Lang;
 
 use Yajra\DataTables\Services\DataTable;

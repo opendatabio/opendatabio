@@ -10,8 +10,8 @@ namespace App\Http\Controllers\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-use App\Person;
-use App\User;
+use App\Models\Person;
+use App\Models\User;
 use Auth;
 use Validator;
 use Hash;

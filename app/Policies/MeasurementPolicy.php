@@ -8,9 +8,9 @@
 namespace App\Policies;
 
 use Illuminate\Auth\Access\HandlesAuthorization;
-use App\User;
-use App\Measurement;
-use App\Dataset;
+use App\Models\User;
+use App\Models\Measurement;
+use App\Models\Dataset;
 
 class MeasurementPolicy
 {
@@ -21,7 +21,7 @@ class MeasurementPolicy
      */
     public function view(User $user, Measurement $measurement)
     {
-        // is handled by App\Measurement::boot globalscope
+        // is handled by App\Models\Measurement::boot globalscope
         return true;
     }
 

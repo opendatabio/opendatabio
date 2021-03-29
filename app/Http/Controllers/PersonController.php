@@ -9,8 +9,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
-use App\Person;
-use App\Biocollection;
+use App\Models\Person;
+use App\Models\Biocollection;
 use Illuminate\Support\Facades\Lang;
 //use Illuminate\Support\Facades\Request;
 use App\DataTables\PersonsDataTable;
@@ -20,7 +20,7 @@ use App\Jobs\ImportPersons;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
 use Response;
-use App\UserJob;
+use App\Models\UserJob;
 
 
 class PersonController extends Controller

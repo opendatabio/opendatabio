@@ -59,7 +59,7 @@
 @endif
 
 
-@if ( in_array( $odbtrait->type, [\App\ODBTrait::QUANT_INTEGER, \App\ODBTrait::QUANT_REAL]))
+@if ( in_array( $odbtrait->type, [\App\Models\ODBTrait::QUANT_INTEGER, \App\Models\ODBTrait::QUANT_REAL]))
     @if ($odbtrait->unit)
     <p><strong>
     @lang('messages.unit')
@@ -76,7 +76,7 @@
     @endif
 @endif
 
-@if ( in_array( $odbtrait->type, [\App\ODBTrait::SPECTRAL]))
+@if ( in_array( $odbtrait->type, [\App\Models\ODBTrait::SPECTRAL]))
     @if ($odbtrait->range_min or $odbtrait->range_max or $odbtrait->value_length)
     <p><strong>
     @lang('messages.wavenumber_start') cm<sup>-1</sup>
@@ -96,10 +96,10 @@
     @endif
 @endif
 
-@if ( in_array( $odbtrait->type, [\App\ODBTrait::CATEGORICAL, \App\ODBTrait::CATEGORICAL_MULTIPLE, \App\ODBTrait::ORDINAL]) and $odbtrait->categories)
+@if ( in_array( $odbtrait->type, [\App\Models\ODBTrait::CATEGORICAL, \App\Models\ODBTrait::CATEGORICAL_MULTIPLE, \App\Models\ODBTrait::ORDINAL]) and $odbtrait->categories)
 <p><strong>@lang('messages.categories'):</strong></p>
 <table class="table table-striped"> <thead>
-  @if ($odbtrait->type == \App\ODBTrait::ORDINAL)
+  @if ($odbtrait->type == \App\Models\ODBTrait::ORDINAL)
       <th>@lang('messages.rank')</th>
   @else
       <th></th>
@@ -123,7 +123,7 @@
 </table>
 @endif
 
-@if ($odbtrait->type == \App\ODBTrait::LINK)
+@if ($odbtrait->type == \App\Models\ODBTrait::LINK)
 <p><strong>
 @lang('messages.link_type')
 :</strong>

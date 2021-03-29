@@ -67,7 +67,7 @@
 @foreach ($languages as $language)
     <tr>
         <td>{{$language->name}}</td>
-        <td><input name="description[{{$language->id}}]" value="{{ old('description.' . $language->id, isset($picture) ? $picture->translate(\App\UserTranslation::DESCRIPTION, $language->id) : null) }}"></td>
+        <td><input name="description[{{$language->id}}]" value="{{ old('description.' . $language->id, isset($picture) ? $picture->translate(\App\Models\UserTranslation::DESCRIPTION, $language->id) : null) }}"></td>
     </tr>
 @endforeach
     <tr>

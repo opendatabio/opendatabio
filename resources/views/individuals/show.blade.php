@@ -123,7 +123,7 @@
           </a>
         </div>
       @else
-        @can ('create', App\Measurement::class)
+        @can ('create', App\Models\Measurement::class)
           <div class="col-sm-4">
             <a href="{{ url('individuals/'. $individual->id. '/measurements/create')  }}" class="btn btn-default">
               <i class="fa fa-btn fa-search"></i>
@@ -143,7 +143,7 @@
           </a>
         </div>
       @else
-        @can ('create', App\Voucher::class)
+        @can ('create', App\Models\Voucher::class)
           <div class="col-sm-4">
             <a href="{{url ('individuals/' . $individual->id . '/vouchers/create')}}" class="btn btn-default">
               <i class="fa fa-btn fa-plus"></i>
@@ -153,7 +153,7 @@
         @endcan
       @endif
 
-      @can ('create', App\Picture::class)
+      @can ('create', App\Models\Picture::class)
         <div class="col-sm-3">
           <a href="{{ url('individuals/'. $individual->id. '/pictures/create')  }}" class="btn btn-default">
             <i class="fa fa-btn fa-plus"></i>

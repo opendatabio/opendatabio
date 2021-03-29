@@ -28,7 +28,7 @@
                           <a data-toggle="collapse" href="#mydatasets" class="btn btn-default">@lang('messages.my_datasets')</a>
                         @endif
 
-                        @can ('create', App\Dataset::class)
+                        @can ('create', App\Models\Dataset::class)
                         &nbsp;&nbsp;
                         <a href="{{url('datasets/create')}}" class="btn btn-success">
                           @lang ('messages.create')

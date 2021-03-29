@@ -9,15 +9,15 @@ namespace App\Http\Controllers;
 
 use App\DataTables\TraitsDataTable;
 use App\DataTables\ActivityDataTable;
-use App\ODBTrait;
+use App\Models\ODBTrait;
 use Illuminate\Http\Request;
-use App\Language;
+use App\Models\Language;
 use Lang;
 use Response;
 
 use App\Jobs\ImportTraits;
 use Spatie\SimpleExcel\SimpleExcelReader;
-use App\UserJob;
+use App\Models\UserJob;
 
 
 class TraitController extends Controller
