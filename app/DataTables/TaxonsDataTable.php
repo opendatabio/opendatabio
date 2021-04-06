@@ -89,9 +89,10 @@ class TaxonsDataTable extends DataTable
           $measurements_count = $taxon->getCount('all',null,"measurements");
           return '<a href="'.url('measurements/'.$taxon->id.'/taxon').'">'.$measurements_count.'</a>';
         })
-        ->addColumn('pictures', function ($taxon) {
-          $pictures_count = $taxon->getCount('all',null,"pictures");
-          return '<a href="'.url('taxons/'.$taxon->id).'">'.$pictures_count.'</a>';
+        ->addColumn('media', function ($taxon) {
+          $mediaCount = $taxon->getCount('all',null,"media");
+          $urlShowAllMedia = "media/".$taxon->id."/taxons";
+          return '<a href="'.url($urlShowAllMedia).'">'.$mediaCount.'</a>';
         })
         ->addColumn('parent', function ($taxon) {
           if (isset($taxon->parent)) {
@@ -131,7 +132,7 @@ class TaxonsDataTable extends DataTable
         ->addColumn('select_taxons',  function ($taxon) {
             return $taxon->id;
         })
-        ->rawColumns(['fullname', 'individuals', 'vouchers', 'measurements', 'pictures', 'external','family','parent']);
+        ->rawColumns(['fullname', 'individuals', 'vouchers', 'measurements', 'media', 'external','family','parent']);
     }
 
     /**
@@ -220,25 +221,27 @@ class TaxonsDataTable extends DataTable
         }
 
         if (Auth::user()) {
-          $hidcol = [1,4,6,11];
+          $hidcol = [1,5,6];
         } else {
-          $hidcol = [0,1,4,6,11];
+          $hidcol = [0,1,5,6];
         }
-
+        if ($this->related_taxa) {
+          $hidcol = [0,1,4,5,6,11];
+        }
 
         return $this->builder()
             ->columns([
                 'select_taxons' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'fullname' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
+                'level' => ['title' => $title_level,'searchable' => false, 'orderable' => false],
                 'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
                 'family' => ['title' => Lang::get('messages.family'), 'searchable' => false, 'orderable' => false],
-                'level' => ['title' => $title_level,'searchable' => false, 'orderable' => false],
                 'authorSimple' => ['title' => Lang::get('messages.author'), 'searchable' => false, 'orderable' => false],
                 'individuals' => ['title' => Lang::get('messages.individuals'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
-                'pictures' => ['title' => Lang::get('messages.pictures'), 'searchable' => false, 'orderable' => false],
+                'media' => ['title' => Lang::get('messages.media_files'), 'searchable' => false, 'orderable' => false],
                 'external' => ['title' => Lang::get('messages.external'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([

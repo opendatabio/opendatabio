@@ -35,10 +35,10 @@
               </a>
               &nbsp;&nbsp;
             @endif
-            @if ($tag->pictures->count())
-              <a href="#pictures_block" class="btn btn-default">
-                {{ $tag->pictures->count() }}
-                @lang('messages.pictures')
+            @if ($media->count())
+              <a href="#image_block" class="btn btn-default">
+                {{ $media->count() }}
+                @lang('messages.media_files')
               </a>
               &nbsp;&nbsp;
             @endif
@@ -56,8 +56,9 @@
     </div>
 </div>
 
-@if ($tag->pictures->count())
-  {!! View::make('pictures.index', ['pictures' => $tag->pictures]) !!}
+
+@if (null != $media)
+  {!! View::make('media.index-model', ['model' => $tag, 'media' => $media ]) !!}
 @endif
 
     </div>

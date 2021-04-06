@@ -7,6 +7,8 @@
 /storage/*.key
 /storage/*Seed*
 /storage/debugbar
+/storage/app/public/media/*
+/storage/app/public/downloads/*
 /vendor
 /.idea
 /.vagrant
@@ -17,4 +19,3 @@ composer.phar
 .env
 *.swp
 .php_cs.cache
-public/upload_pictures/*

@@ -149,12 +149,19 @@
 </a>
 &nbsp;&nbsp;
 @endcan
-@can ('create', App\Models\Picture::class)
-<a href="{{ url('taxons/'. $taxon->id. '/pictures/create')  }}" class="btn btn-success">
-        <i class="fa fa-btn fa-plus"></i>
-@lang('messages.create_picture')
+
+<!-- this will show only if no media as media are shown below -->
+@can ('create', App\Models\Media::class)
+  @if (null == $media)
+<a href="{{ url('taxons/'. $taxon->id. '/media-create')  }}" class="btn btn-success">
+      <i class="fa fa-btn fa-plus"></i>
+      <i class="fas fa-photo-video"></i>
+      <i class="fas fa-headphones-alt"></i>
+      @lang('messages.create_media')
     </a>
- @endcan
+  @endif
+@endcan
+
 </div>
                 </div>
             </div>
@@ -196,18 +203,8 @@
   @endif
 </div>
 </div>
+
 <!-- end REFERENCES BLOCK -->
-
-
-
-@if ( $taxon->getCount("all",null,'pictures'))
-
-{!! View::make('pictures.index', ['pictures' => $taxon->allpictures()]) !!}
-
-@endif
-
-
-
 <!-- Other details (specialist, biocollection, collects, etc?) -->
 @if ($taxon->senior or $taxon->juniors->count())
 <div class="panel panel-default">
@@ -262,6 +259,9 @@
   </div>
 </div>
 
+@if (null != $media)
+  {!! View::make('media.index-model', ['model' => $taxon, 'media' => $media ]) !!}
+@endif
 
 </div>
 

@@ -4,5 +4,6 @@ return [
     'App\Models\Individual' => 'Individual',
     'App\Models\Voucher' => 'Voucher',
     'App\Models\Taxon' => 'Taxon',
-    'App\Models\Person' => 'Person'
+    'App\Models\Person' => 'Person',
+    'App\Models\Media' => 'Media',
 ];

@@ -72,9 +72,9 @@
     <input type="file" name="logo" id="logo"  >
   </div>
   <div class="col-sm-2">
-    @if(isset($logo))
+    @if(isset($logoUrl))
       <div class="float-right">
-        <img src='{{ url($logo) }}' width='100'>
+        <img src='{{ $logoUrl }}' width='100'>
       </div>
     @endif
   </div>

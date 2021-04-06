@@ -352,6 +352,13 @@ class LocationController extends Controller
         } else {
           $parent = null;
         }
+        $media = $location->mediaDescendantsAndSelf();
+        if ($media->count()) {
+          $media = $media->paginate(3);
+        } else {
+          $media = null;
+        }
+
         if ($location->x) {
             if ($location->x > $location->y) {
                 $width = 400;
@@ -385,11 +392,11 @@ class LocationController extends Controller
 
              return $dataTable->with([
                     'location' => $id
-                ])->render('locations.show', compact('chartjs', 'location', 'plot_children','parent'));
+                ])->render('locations.show', compact('chartjs', 'location', 'plot_children','parent','media'));
         } // else
         return $dataTable->with([
                'location' => $id
-           ])->render('locations.show', compact('location', 'plot_children','parent'));
+           ])->render('locations.show', compact('location', 'plot_children','parent','media'));
     }
 
     /**
@@ -604,40 +611,14 @@ class LocationController extends Controller
           /* generate a unique id for the file and store it in the public tmp folder */
           $filename = uniqid().".".$ext;
           $request->file('data_file')->storeAs("public/tmp",$filename);
-          /*
-          try {
-            $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
-          } catch (\Exception $e) {
-            //read differently if it failed above and a csv has been submitted (memory problems over large geometries)
-             if (in_array($ext,['CSV','csv'])) {
-                //$data =file($request->file('data_file'));
-                //$data = $request->file('data_file');
-                $filename = uniqid().".txt";
-                $path = 'downloads_temp/'.$filename;
-                $file = fopen(public_path($path),'w');
-                $stdin = fopen($request->file('data_file'), 'r');
-                while (false !== ($line = fgets($stdin))) {
-                  fwrite($file,$line);
-                }
-                fclose($file);
-                fclose($stdin);
-              }
-
-          }
-          */
-          //if (!is_null($data) or !is_null($filename)) {
-            UserJob::dispatch(ImportLocations::class,[
-              'data' => [
-                  'data' => null,
-                  'filename' => $filename,
-                  'filetype' => $ext,
-                ],
-            ]);
-            $message = Lang::get('messages.dispatched');
-          //} else {
-            //$message = 'Something wrong with file';
-          //}
-
+          UserJob::dispatch(ImportLocations::class,[
+            'data' => [
+                'data' => null,
+                'filename' => $filename,
+                'filetype' => $ext,
+              ],
+          ]);
+          $message = Lang::get('messages.dispatched');
         }
       }
       return redirect('import/locations')->withStatus($message);

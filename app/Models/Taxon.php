@@ -14,13 +14,18 @@ use App\Models\Measurement;
 use App\Models\Identification;
 use Activity;
 use Illuminate\Support\Arr;
+
 use Spatie\Activitylog\Traits\LogsActivity;
 
+use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Taxon extends Node
+
+class Taxon extends Node implements HasMedia
 {
 
-    use LogsActivity;
+    use InteractsWithMedia, LogsActivity;
 
     public $table = "taxons";
     protected $leftColumnName = 'lft';
@@ -81,42 +86,38 @@ class Taxon extends Node
             );
     }
 
-    public function pictures()
-    {
-        return $this->morphMany(Picture::class, 'object');
-    }
-
-    public function allpictures()
+    public function mediaDescendantsAndSelf()
     {
         $ids = $this->getDescendantsAndSelf()->pluck('id')->toArray();
-        return Picture::whereIn('object_id',$ids)->where('object_type','=','App\Models\Taxon')->cursor();
+        return Media::whereIn('model_id',$ids)->where('model_type','=','App\Models\Taxon');
     }
 
-    public function individual_pictures()
+    public function individualsMedia()
     {
         return $this->hasManyThrough(
-                      'App\Models\Picture',
+                      'App\Models\Media',
                       'App\Models\Identification',
                       'taxon_id', // Foreign key on identification table...
-                      'object_id', // Foreign key on picture table...
+                      'model_id', // Foreign key on media table...
                       'id', // Local key on taxon table...
                       'object_id' // Local key on identification table...
-                      )->where('identifications.object_type', 'App\Models\Individual')->where('pictures.object_type', 'App\Models\Individual');
+                      )->where('identifications.object_type', 'App\Models\Individual')->where('media.model_type', 'App\Models\Individual');
     }
 
 
-    public function voucher_pictures()
+    /* THIS MAY BE ELIMIATED AND MEDIA VOUCHER SHOULD BE LINKED TO INDIVIDUAL WITH voucher_id as custom property
+    public function voucherMedia()
     {
         return $this->hasManyThrough(
-                          'App\Models\Picture',
+                          'App\Models\Media',
                           'App\Models\Identification',
                           'taxon_id', // Foreign key on identification table...
-                          'object_id', // Foreign key on picture table...
+                          'model_id', // Foreign key on media table...
                           'id', // Local key on taxon table...
                           'object_id' // Local key on identification table...
-                          )->where('identifications.object_type', 'App\Models\Voucher')->where('pictures.object_type', 'App\Models\Voucher');
+                          )->where('identifications.object_type', 'App\Models\Voucher')->where('media.model_type', 'App\Models\Voucher');
     }
-
+    */
 
     public function getLevelNameAttribute()
     {
@@ -548,22 +549,22 @@ class Taxon extends Node
 
 
     /* FUNCTIONS TO INTERACT WITH THE COUNT MODEL */
-    public function summary_counts()
+    public function summaryCounts()
     {
         return $this->morphMany("App\Models\Summary", 'object');
     }
 
 
-    public function getCount($scope="all",$scope_id=null,$target='individuals')
+    public function getCount($scope="all",$scopeId=null,$target='individuals')
     {
 
       if (Identification::count()==0) {
         return 0;
       }
 
-      $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
-      if (null !== $scope_id) {
-        $query = $query->where('scope_id',"=",$scope_id);
+      $query = $this->summaryCounts()->where('scope_type',"=",$scope)->where('target',"=",$target);
+      if (null !== $scopeId) {
+        $query = $query->where('scope_id',"=",$scopeId);
       } else {
         $query = $query->whereNull('scope_id');
       }
@@ -572,21 +573,21 @@ class Taxon extends Node
       }
       //get a fresh count
       if ($target=="individuals") {
-        return $this->individualsCount($scope,$scope_id);
+        return $this->individualsCount($scope,$scopeId);
       }
       //get a fresh count
       if ($target=="measurements") {
-        return $this->measurementsCount($scope,$scope_id);
+        return $this->measurementsCount($scope,$scopeId);
       }
       //get a fresh count
       if ($target=="vouchers") {
-        return $this->vouchersCount($scope,$scope_id);
+        return $this->vouchersCount($scope,$scopeId);
       }
       if ($target=="taxons") {
-        return $this->taxonsCount($scope,$scope_id);
+        return $this->taxonsCount($scope,$scopeId);
       }
-      if ($target=="pictures") {
-        return $this->picturesCount($scope,$scope_id);
+      if ($target=="media") {
+        return $this->all_media_count();
       }
       return 0;
     }
@@ -594,22 +595,22 @@ class Taxon extends Node
 
     /* functions to generate counts */
 
-    public function individualsCount($scope='all',$scope_id=null)
+    public function individualsCount($scope='all',$scopeId=null)
     {
-      if (('projects' == $scope or 'App\Models\Project' == $scope) and $scope_id>0) {
-          return array_sum($this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual) use($scope_id ) {
-              $individual->withoutGlobalScopes()->where('project_id',$scope_id);
+      if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
+          return array_sum($this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual) use($scopeId ) {
+              $individual->withoutGlobalScopes()->where('project_id',$scopeId);
             }])->pluck('individual_count')->toArray());
       }
-      if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scope_id>0) {
-          $query = $this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual)  use($scope_id) {
-            $individual->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scope_id) {
-              $measurement->withoutGlobalScopes()->where('dataset_id','=',$scope_id);
+      if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
+          $query = $this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual)  use($scopeId) {
+            $individual->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scopeId) {
+              $measurement->withoutGlobalScopes()->where('dataset_id','=',$scopeId);
             });}]);
           return array_sum($query->pluck('individuals_count')->toArray());
       }
-      if (('locations' == $scope or 'App\Models\Location' == $scope) and $scope_id>0) {
-          $locations_ids = Location::findOrFail($scope_id)->getDescendantsAndSelf()->pluck('id')->toArray();
+      if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
+          $locations_ids = Location::findOrFail($scopeId)->getDescendantsAndSelf()->pluck('id')->toArray();
           $query = $this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual)  use($locations_ids) {
             $individual->withoutGlobalScopes()->whereHas('locations',function($location) use($locations_ids) {
               $location->whereIn('location_id',$locations_ids);});
@@ -622,29 +623,29 @@ class Taxon extends Node
     }
 
 
-    public function vouchersCount($scope='all',$scope_id=null)
+    public function vouchersCount($scope='all',$scopeId=null)
     {
-      if (('projects' == $scope or 'App\Models\Project' == $scope) and $scope_id>0) {
+      if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
         $query = $this->getDescendantsAndSelf()->loadCount(
-            ['vouchers' => function ($voucher)  use($scope_id) {
-                $voucher->withoutGlobalScopes()->where('project_id','=',$scope_id); } ]);
+            ['vouchers' => function ($voucher)  use($scopeId) {
+                $voucher->withoutGlobalScopes()->where('project_id','=',$scopeId); } ]);
       }
-      if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scope_id>0) {
+      if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
         $query = $this->getDescendantsAndSelf()->loadCount(
-            ['vouchers' => function ($voucher)  use($scope_id) {
-                $voucher->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scope_id) {
-                  $measurement->withoutGlobalScopes()->where('dataset_id','=',$scope_id);
+            ['vouchers' => function ($voucher)  use($scopeId) {
+                $voucher->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scopeId) {
+                  $measurement->withoutGlobalScopes()->where('dataset_id','=',$scopeId);
                 }); }]);
       }
-      if (('locations' == $scope or 'App\Models\Location' == $scope) and $scope_id>0) {
-          $locations_ids = Location::findOrFail($scope_id)->getDescendantsAndSelf()->pluck('id')->toArray();
+      if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
+          $locations_ids = Location::findOrFail($scopeId)->getDescendantsAndSelf()->pluck('id')->toArray();
           $query = $this->getDescendantsAndSelf()->loadCount(
               ['vouchers' => function ($voucher)  use($locations_ids) {
                   $voucher->withoutGlobalScopes()->where('parent_type','=','App\Models\Location')->whereIn('parent_id',$locations_ids);
                }]);
       }
 
-      if (!isset($query) or null == $scope_id) {
+      if (!isset($query) or null == $scopeId) {
       $query = $this->getDescendantsAndSelf()->loadCount(
           ['vouchers' => function ($voucher) { $voucher->withoutGlobalScopes(); } ]);
       }
@@ -652,21 +653,21 @@ class Taxon extends Node
       return $count1;
     }
 
-    public function measurementsCount($scope='all',$scope_id=null)
+    public function measurementsCount($scope='all',$scopeId=null)
     {
       $taxon_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
-      if (('projects' == $scope or 'App\Models\Project' == $scope) and $scope_id>0) {
-        $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$scope_id) { $measured->withoutGlobalScopes()->where('project_id',"=",$scope_id)->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
+      if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
+        $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$scopeId) { $measured->withoutGlobalScopes()->where('project_id',"=",$scopeId)->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
         //$query = $query->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.$this->id);
         return $query->count();
       }
-      if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scope_id>0) {
-        $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$scope_id) { $measured->withoutGlobalScopes()->where('dataset_id',"=",$scope_id)->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
-        $query = $query->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.($this->id).' AND dataset_id='.$scope_id);
+      if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
+        $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$scopeId) { $measured->withoutGlobalScopes()->where('dataset_id',"=",$scopeId)->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
+        $query = $query->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.($this->id).' AND dataset_id='.$scopeId);
         return $query->count();
       }
-      if (('locations' == $scope or 'App\Models\Location' == $scope) and $scope_id>0) {
-        $locations_ids = Location::findOrFail($scope_id)->getDescendantsAndSelf()->pluck('id')->toArray();
+      if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
+        $locations_ids = Location::findOrFail($scopeId)->getDescendantsAndSelf()->pluck('id')->toArray();
         $taxon_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
         $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$locations_ids) {
               $measured->withoutGlobalScopes()
@@ -681,35 +682,33 @@ class Taxon extends Node
     }
 
 
-    /* all pictures count*/
-    public function picturesCount($scope='all',$scope_id=null)
+    /* all media count*/
+    public function all_media_count()
     {
       $query = $this->getDescendantsAndSelf()->loadCount(
-          ['individual_pictures' => function ($individual_pictures)  use($scope_id) {
-              $individual_pictures->withoutGlobalScopes(); } ])->loadCount(['voucher_pictures' => function ($voucher_picture) use($scope_id) {
-                  $voucher_picture->withoutGlobalScopes(); } ])->loadCount(['pictures' => function ($picture) use($scope_id) {
-                      $picture->withoutGlobalScopes(); } ]);
-      $count1 = array_sum($query->pluck('pictures_count')->toArray());
-      $count2 = array_sum($query->pluck('voucher_pictures_count')->toArray());
-      $count3 = array_sum($query->pluck('individual_pictures_count')->toArray());
-      return $count1+$count2+$count3;
+          ['individualsMedia' => function ($individualsMedia)  {
+              $individualsMedia->withoutGlobalScopes(); } ])->loadCount(['media' => function ($media)  {
+                      $media->withoutGlobalScopes(); } ]);
+      $count1 = array_sum($query->pluck('media_count')->toArray());
+      $count2 = array_sum($query->pluck('individualsMedia_count')->toArray());
+      return $count1+$count2;
     }
 
 
     /* count species or below species identifications for taxon and its descendant taxons */
-    public function taxonsCount($scope=null,$scope_id=null)
+    public function taxonsCount($scope=null,$scopeId=null)
     {
-      if ('projects' == $scope and $scope_id>0) {
+      if ('projects' == $scope and $scopeId>0) {
           $taxons_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
-          $taxonsp = Identification::with('taxon')->whereHasMorph('object',['App\Models\Individual'],function($individual) use($scope_id){
-            $individual->withoutGlobalScopes()->where('project_id','=',$scope_id);
+          $taxonsp = Identification::with('taxon')->whereHasMorph('object',['App\Models\Individual'],function($individual) use($scopeId){
+            $individual->withoutGlobalScopes()->where('project_id','=',$scopeId);
           })->whereIn('taxon_id',$taxons_list)->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
           $taxons = array_unique($taxonsp);
       }
-      if ('datasets' == $scope and $scope_id>0) {
+      if ('datasets' == $scope and $scopeId>0) {
         $taxons_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
         $taxons_list = Taxon::whereIn('id',$taxons_list)->where('level',">=",Taxon::getRank('species'))->pluck('id')->toArray();
-        $taxonsp = Measurement::withoutGlobalScopes()->where('dataset_id',$scope_id)->cursor()->map(function($object) use($taxons_list) {
+        $taxonsp = Measurement::withoutGlobalScopes()->where('dataset_id',$scopeId)->cursor()->map(function($object) use($taxons_list) {
             if ($object->measured_type=="App\Models\Taxon") {
               $taxon_id = $object->measured_id;
             } elseif ($object->measured_type!="App\Models\Location") {
@@ -721,11 +720,11 @@ class Taxon extends Node
         });
         $taxons = array_unique($taxonsp);
       }
-      if ('locations' == $scope and $scope_id>0) {
-          $locations_ids = Location::findOrFail($scope_id)->getDescendantsAndSelf()->pluck('id')->toArray();
+      if ('locations' == $scope and $scopeId>0) {
+          $locations_ids = Location::findOrFail($scopeId)->getDescendantsAndSelf()->pluck('id')->toArray();
           $taxons_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
           $taxons_list = Taxon::whereIn('id',$taxons_list)->where('level',">=",Taxon::getRank('species'))->pluck('id')->toArray();
-          $taxonsp = Identification::with('taxon')->whereHasMorph('object',['App\Models\Individual'],function($individual) use($scope_id){
+          $taxonsp = Identification::with('taxon')->whereHasMorph('object',['App\Models\Individual'],function($individual) use($scopeId){
             $individual->withoutGlobalScopes()->whereHas('locations',function($location) use($locations_ids) {
               $location->whereIn('location_id',$locations_ids);
             }
@@ -733,7 +732,7 @@ class Taxon extends Node
           $taxons = array_unique($taxonsp);
       }
 
-      if (!isset($taxons) or null == $scope_id) {
+      if (!isset($taxons) or null == $scopeId) {
         $taxons  = $this->getDescendantsAndSelf()->map(function($taxon) {
                   $query = $taxon->identifications()->with('taxon')->withoutGlobalScopes()->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
                   return array_unique($query);
@@ -744,6 +743,28 @@ class Taxon extends Node
     }
 
 
+
+
+
+    /* register media modifications */
+    public function registerMediaConversions(BaseMedia $media = null): void
+    {
+
+        $this->addMediaConversion('thumb')
+            ->fit('crop', 200, 200)
+            ->performOnCollections('images');
+
+        $this->addMediaConversion('thumb')
+            ->width(200)
+            ->height(200)
+            ->extractVideoFrameAtSecond(5)
+            ->performOnCollections('videos');
+    }
+
+    public static function getTableName()
+    {
+        return (new self())->getTable();
+    }
 
 
 }

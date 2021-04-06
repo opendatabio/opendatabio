@@ -23,6 +23,7 @@ use App\Models\Measurement;
 use App\Models\Dataset;
 use App\Models\BibReference;
 use App\Models\Project;
+use App\Models\Media;
 use Lang;
 
 
@@ -49,8 +50,8 @@ class ActivityDataTable extends DataTable
             return $activity->created_at->format('Y-m-d'); // human readable format
         })
         ->editColumn('subject_type', function ($activity) {
-            if (null !== $activity->subject_type) {
-              return $activity->subject_type::find($activity->subject_id)->rawLink();
+            if (null !== $activity->subject) {
+              return $activity->subject->rawLink();
             }
             return '';
         })
@@ -107,6 +108,9 @@ class ActivityDataTable extends DataTable
         }
         if ($this->project) {
             $query = $query->where('subject_type' , Project::class)->where('subject_id',$this->project);
+        }
+        if ($this->media) {
+            $query = $query->where('subject_type' , Media::class)->where('subject_id',$this->media);
         }
 
         $query = $query->orderby('created_at','DESC');

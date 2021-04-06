@@ -16,10 +16,13 @@ use App\Models\IndividualLocation;
 use Illuminate\Support\Arr;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Location extends Node
+class Location extends Node implements HasMedia
 {
-    use LogsActivity;
+    use InteractsWithMedia, LogsActivity;
 
     public $table = "locations";
 
@@ -366,6 +369,9 @@ class Location extends Node
     }
 
 
+
+
+
     //individuals through individual_location pivot
     public function individuals()
     {
@@ -378,6 +384,23 @@ class Location extends Node
                     'individual_id' // Local key on individual_location table...
                     );
     }
+
+
+    public function getAllIndividuals()
+    {
+      return  Individual::whereHas('locations',function($location) {
+        $location->where('lft',">",$this->lft)->where('rgt',"<",$this->rgt);
+      });
+    }
+
+    public function getAllProjects()
+    {
+      return  Project::whereHas('individuals',function($individual) {
+        $individual->whereHas('locations',function($location) {
+          $location->where('lft',">",$this->lft)->where('rgt',"<",$this->rgt);
+        }); });
+    }
+
 
     public function childrenByLevel($level)
     {
@@ -468,20 +491,29 @@ class Location extends Node
         return $this->long > 0;
     }
 
+    public function scopeWithoutGeom($query)
+    {
+        return $query->addSelect(
+            DB::raw('id,name,parent_id,lft,rgt,depth,altitude,adm_level,datum,uc_id,notes,x,y,startx,starty,created_at,updated_at')
+        );
+    }
+
     public function scopeWithGeom($query)
     {
         return $query->addSelect(
+            DB::raw('name'),
             DB::raw('AsText(geom) as geom'),
             DB::raw('Area(geom) as area'),
             DB::raw('IF(adm_level=999,AsText(geom),AsText(Centroid(geom))) as centroid_raw')
         );
     }
 
-    public function pictures()
-    {
-        return $this->morphMany(Picture::class, 'object');
-    }
 
+    public function mediaDescendantsAndSelf()
+    {
+        $ids = $this->getDescendantsAndSelf()->pluck('id')->toArray();
+        return Media::whereIn('model_id',$ids)->where('model_type','=','App\Models\Location');
+    }
 
     /* FUNCTIONS TO INTERACT WITH THE COUNT MODEL */
     public function summary_counts()
@@ -525,8 +557,8 @@ class Location extends Node
       if ($target=="taxons") {
         return $this->taxonsCount($scope,$scope_id);
       }
-      if ($target=="pictures") {
-        return $this->picturesCount($scope,$scope_id);
+      if ($target=="media") {
+        return $this->all_media_count();
       }
       return 0;
     }
@@ -590,12 +622,7 @@ class Location extends Node
       return array_sum($query->pluck('measurements_count')->toArray());
     }
 
-    /* for pictures only location related pictures including pictures of descendants*/
-    public function picturesCount($scope='all',$scope_id=null)
-    {
-      $query = $this->getDescendantsAndSelf()->loadCount('pictures');
-      return array_sum($query->pluck('pictures_count')->toArray());
-    }
+
 
 
     public function taxonsCount($scope=null,$scope_id=null)
@@ -618,6 +645,44 @@ class Location extends Node
                 })->toArray();
       return array_unique(Arr::flatten($taxons));
     }
+
+
+
+    /*  MEDIA RELATED FUNCTIONS */
+
+    /*  all media count
+    * for location linked media only, including descendants
+    */
+    public function all_media_count()
+    {
+      $query = $this->getDescendantsAndSelf()->loadCount('media');
+      return array_sum($query->pluck('media_count')->toArray());
+    }
+
+
+
+    /* register media modifications used by Spatie media-library trait */
+    public function registerMediaConversions(BaseMedia $media = null): void
+    {
+
+        $this->addMediaConversion('thumb')
+            ->fit('crop', 200, 200)
+            ->performOnCollections('images');
+
+        // TODO: this is not working for some reason
+        $this->addMediaConversion('thumb')
+            ->width(200)
+            ->height(200)
+            ->extractVideoFrameAtSecond(5)
+            ->performOnCollections('videos');
+    }
+
+    /* helper  to get table name from model instance */
+    public static function getTableName()
+    {
+        return (new self())->getTable();
+    }
+
 
 
 }

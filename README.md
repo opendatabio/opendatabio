@@ -198,11 +198,17 @@ by the installer, and include database configuration and proxy settings, but man
 User-agent: *
 Disallow: /
 ```
+### Storage & Backups
 
-* Folders `public/downloads_temp`, `public/upload_pictures`, `storage` and `bootstrap/cache` must be writable by the Server user (usually www-data). See [this link](https://linuxhint.com/how-to-set-up-file-permissions-for-laravel/) for an example of how to do that.
+You may change storage configurations in `config/filesystem.php`, where you may define cloud based storage, which may be needed if have many users submitting media files, requiring lots of drive space.
 
-* When considering database backups for an OpenDataBio installation, please remember that the user uploaded images are
-stored in the filesystem, and plan your backup accordingly.
+1. **Data downloads** are queue as jobs and a file is written in a temporary folder, and the file is deleted when the job is deleted by the user. This folder is defined as the `download disk` in filesystem.php config file, which point to `storage/app/public/downloads`. UserJobs web interface difficult navegation will force users to delete old jobs, but a cron cleaning job may be advisable to implement in your installation;
+2. **Media files** are by default stored in the `media disk`, which place files in folder `storage/app/public/media`;
+3. Remember to include media folder in a backup plan;
+
+### Folder permissions
+
+* Folders `storage` and `bootstrap/cache` must be writable by the Server user (usually www-data). See [this link](https://linuxhint.com/how-to-set-up-file-permissions-for-laravel/) for an example of how to do that. Set `0775` permission to these directories.
 
 
 ## License

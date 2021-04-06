@@ -149,22 +149,29 @@
         </a>
         &nbsp;&nbsp;
 @endcan
-    @can ('create', App\Models\Picture::class)
-    <a href="{{ url('vouchers/'. $voucher->id. '/pictures/create')  }}" class="btn btn-success">
-        <i class="fa fa-btn fa-plus"></i>
-@lang('messages.create_picture')
-    </a>
+
+
+@can ('create', App\Models\Media::class)
     &nbsp;&nbsp;
- @endcan
+      <a href="{{ url('vouchers/'. $voucher->id. '/media-create')  }}" class="btn btn-default">
+      <i class="fa fa-btn fa-plus"></i>
+      <i class="fas fa-photo-video"></i>
+      <i class="fas fa-headphones-alt"></i>
+      @lang('messages.create_media')
+    </a>
+@endcan
+
+
 </div>
 
 </div>
 </div>
 
-<!-- Other details (specialist, biocollection, collects, etc?) -->
-@if ($voucher->pictures->count())
-{!! View::make('pictures.index', ['pictures' => $voucher->pictures]) !!}
+@if (isset($media))
+  {!! View::make('media.index-model', ['model' => $voucher, 'media' => $media ]) !!}
 @endif
+
+
 
 </div>
 </div>

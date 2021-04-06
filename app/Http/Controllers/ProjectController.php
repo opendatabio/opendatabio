@@ -90,6 +90,7 @@ class ProjectController extends Controller
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
         $licenses = implode(',',config('app.creativecommons_licenses'));
+        $mimes = 'mimes:gif,jpeg,png';
         $this->validate($request, [
             'name' => 'required|string|max:191',
             'privacy' => 'required|integer',
@@ -100,6 +101,7 @@ class ProjectController extends Controller
             'url' => 'nullable|regex:/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/',
             'title' => 'nullable|string|max:191',
             'license' => 'nullable|string|max:191|in:'.$licenses,
+            'logo' => 'file|nullable|'.$mimes,
         ]);
         //add version to license field
         $license = null;
@@ -126,18 +128,14 @@ class ProjectController extends Controller
         $project->tags()->attach($request->tags);
 
         /* store logo if exists */
-        $valid_ext = array("PNG","png","GIF","gif","jpg",'jpeg',"JPG","JPEG");
         if ($request->hasFile('logo')) {
-          $logopath = $request->file('logo')->getRealPath();
-          $ext = $request->file('logo')->getClientOriginalExtension();
-          if (!in_array($ext,$valid_ext)) {
-            $message .= Lang::get('messages.invalid_image_extension');
-          }
-          try {
-              $project->saveLogo($logopath);
-            } catch (\Intervention\Image\Exception\NotReadableException $e) {
-              $message .= " ". Lang::get('messages.invalid_image');
-            }
+          $mediaExtension = mb_strtolower($request->file('logo')->getClientOriginalExtension());
+          $newMediaName = 'project_'.$project->id.'_logo';
+          $newFileName = $newMediaName.".".$mediaExtension;
+          $project->addMedia($request->file('logo')->getRealPath())
+          ->usingFileName($newFileName)
+          ->usingName($newMediaName)
+          ->toMediaCollection('logos');
         }
 
         //authors
@@ -165,13 +163,17 @@ class ProjectController extends Controller
     public function show($id)
     {
         $project = Project::findOrFail($id);
-
-        $logo_file = 'upload_pictures/project_'.$project->id."_logo.jpg";
-        $logo = null;
-        if (file_exists(public_path($logo_file))) {
-          $logo = $logo_file;
-       }
-       return view('projects.show', compact('project','logo'));
+        if ($project->media->count())
+        {
+          $logo = $project->media()->first();
+          $fileUrl = $logo->getUrl();
+          if (file_exists($logo->getPath('thumb'))) {
+            $logoUrl = $logo->getUrl('thumb');
+          } else {
+            $logoUrl = $fileUrl;
+          }
+        }
+       return view('projects.show', compact('project','logoUrl'));
     }
 
     /**
@@ -187,13 +189,18 @@ class ProjectController extends Controller
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
         $tags = Tag::all();
-        $logo_file = 'upload_pictures/project_'.$project->id."_logo.jpg";
-        $logo = null;
-        if (file_exists(public_path($logo_file))) {
-          $logo = $logo_file;
+        if ($project->media->count())
+        {
+          $logo = $project->media()->first();
+          $fileUrl = $logo->getUrl();
+          if (file_exists($logo->getPath('thumb'))) {
+            $logoUrl = $logo->getUrl('thumb');
+          } else {
+            $logoUrl = $fileUrl;
+          }
         }
         $persons=Person::all();
-        return view('projects.create', compact('project', 'fullusers', 'allusers','tags','logo','persons'));
+        return view('projects.create', compact('project', 'fullusers', 'allusers','tags','logoUrl','persons'));
     }
 
     /**
@@ -216,6 +223,7 @@ class ProjectController extends Controller
         $fullusers = implode(',', $fullusers->all());
         $message = "";
         $licenses = implode(',',config('app.creativecommons_licenses'));
+        $mimes = 'mimes:gif,jpeg,png';
         $this->validate($request, [
             'name' => 'required|string|max:191',
             'privacy' => 'required|integer',
@@ -225,6 +233,7 @@ class ProjectController extends Controller
             'collabs.*' => 'numeric|in:'.$fullusers,
             'title' => 'nullable|string|max:191',
             'license' => 'nullable|string|max:191|in:'.$licenses,
+            'logo' => 'file|nullable|'.$mimes,
         ]);
         /*
         if (filter_var($request->url, FILTER_VALIDATE_URL) !== false) {
@@ -252,20 +261,26 @@ class ProjectController extends Controller
         $project->tags()->sync($request->tags);
 
         /* store logo if exists */
-        $valid_ext = array("PNG","png","GIF","gif","jpg",'jpeg',"JPG","JPEG");
-
         if ($request->hasFile('logo')) {
-          $logopath = $request->file('logo')->getRealPath();
-          $ext = $request->file('logo')->getClientOriginalExtension();
-          if (!in_array($ext,$valid_ext)) {
-            $message .= Lang::get('messages.invalid_image_extension');
-          } else {
-          try {
-              $project->saveLogo($logopath);
-            } catch (\Intervention\Image\Exception\NotReadableException $e) {
-              $message .= " ". Lang::get('messages.invalid_image');
+          $mediaExtension = mb_strtolower($request->file('logo')->getClientOriginalExtension());
+          $newMediaName = 'project_'.$project->id.'_logo';
+          $newFileName = $newMediaName.".".$mediaExtension;
+          //delete old if exists
+          if ($project->media->count())
+          {
+            $logo = $project->media()->first();
+            try {
+                /* this will remove model and media files */
+                $logo->delete();
+            } catch (\Illuminate\Database\QueryException $e) {
+                $message .= Lang::get('messages.fk_error');
             }
           }
+          //add new logo
+          $project->addMedia($request->file('logo')->getRealPath())
+          ->usingFileName($newFileName)
+          ->usingName($newMediaName)
+          ->toMediaCollection('logos');
         }
 
         //did authors changed?

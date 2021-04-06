@@ -16,9 +16,14 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use CodeInc\StripAccents\StripAccents;
 
 
-class Project extends Model
+use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+
+
+class Project extends Model implements HasMedia
 {
-    use HasAuthLevels, LogsActivity;
+    use HasAuthLevels, InteractsWithMedia, LogsActivity;
 
     const PRIVACY_AUTH = 0;
     const PRIVACY_REGISTERED = 1;
@@ -29,7 +34,10 @@ class Project extends Model
     const COLLABORATOR = 1;
     const ADMIN = 2;
 
-    protected $fillable = ['name', 'description', 'privacy','policy','details','license','title'];
+    protected $fillable =
+    [
+      'name', 'description', 'privacy',
+      'policy','details','license','title'];
 
 
     //activity log trait
@@ -59,7 +67,7 @@ class Project extends Model
         return $this->hasMany(Voucher::class);
     }
 
-    public function individual_locations( )
+    public function individualLocations( )
     {
       return $this->hasManyThrough(
                     'App\Models\IndividualLocation',
@@ -72,7 +80,7 @@ class Project extends Model
     }
 
 
-    public function individual_measurements( )
+    public function individualsMeasurements( )
     {
       return $this->hasManyThrough(
                     'App\Models\Measurement',
@@ -85,7 +93,7 @@ class Project extends Model
     }
 
 
-    public function individual_identifications( )
+    public function individualsIdentifications( )
     {
       return $this->hasManyThrough(
                     'App\Models\Identification',
@@ -97,16 +105,16 @@ class Project extends Model
                     )->where('identifications.object_type', 'App\Models\Individual');
     }
 
-    public function individuals_pictures( )
+    public function individualsMedia( )
     {
       return $this->hasManyThrough(
-                    'App\Models\Picture',
+                    'App\Models\Media',
                     'App\Models\Individual',
                     'project_id', // Foreign key on individuals table...
-                    'object_id', // Foreign key on Measurements table...
+                    'model_id', // Foreign key on Media table...
                     'id', // Local key on Project table...
                     'id' // Local key on individuals table...
-                    )->where('pictures.object_type', 'App\Models\Individual');
+                    )->where('media.model_type', 'App\Models\Individual');
     }
 
     public function voucher_identifications( )
@@ -121,20 +129,7 @@ class Project extends Model
                     )->where('identifications.object_type', 'App\Models\Individual');
     }
 
-    public function vouchers_pictures( )
-    {
-      return $this->hasManyThrough(
-                    'App\Models\Picture',
-                    'App\Models\Voucher',
-                    'project_id', // Foreign key on individuals table...
-                    'object_id', // Foreign key on Measurements table...
-                    'id', // Local key on Project table...
-                    'id' // Local key on individuals table...
-                    )->where('pictures.object_type', 'App\Models\Voucher');
-    }
-
-
-    public function voucher_measurements( )
+    public function voucherMeasurements( )
     {
       return $this->hasManyThrough(
                     'App\Models\Measurement',
@@ -215,27 +210,6 @@ class Project extends Model
         return $ret;
     }
 
-    /* PROJECT LOGO */
-    public function saveLogo($filepath)
-    {
-      $filename = 'project_'.$this->id."_logo.jpg";
-      $contents = file_get_contents($filepath);
-      $path = public_path('upload_pictures/'.$filename);
-
-      $img = Image::make($contents);
-      if ($img) {
-        /* resize logo to maximum 150 width or height */
-        if ($img->width() > $img->height()) {
-            $img->widen(150)->save($path);
-        } else {
-            $img->heighten(150)->save($path);
-        }
-        //$img->save($path);
-      } else {
-        throw new Exception('Project logo image is invalid');
-      }
-    }
-
 
     /* GET THE UNIQUE TAXONS MODELS FOR THE IDENTIFICATIONS USED IN PROJECT OBJETS */
     public function taxons()
@@ -246,7 +220,7 @@ class Project extends Model
 
     public function taxons_ids()
     {
-      $ids = $this->individual_identifications()->withoutGlobalScopes()->distinct('taxon_id')->pluck('taxon_id')->toArray();
+      $ids = $this->individualsIdentifications()->withoutGlobalScopes()->distinct('taxon_id')->pluck('taxon_id')->toArray();
       return array_unique($ids);
     }
 
@@ -254,7 +228,7 @@ class Project extends Model
 
     public function locations_ids()
     {
-      $ids = $this->individual_locations()->distinct('location_id')->pluck('location_id')->toArray();
+      $ids = $this->individualLocations()->distinct('location_id')->pluck('location_id')->toArray();
       return array_unique($ids);
     }
 
@@ -287,7 +261,7 @@ class Project extends Model
 
     public function locationsCount()
     {
-      return $this->individual_locations()->distinct('location_id')->count();
+      return $this->individualLocations()->distinct('location_id')->count();
     }
 
     public function individualsCount()
@@ -301,13 +275,13 @@ class Project extends Model
     }
     public function measurementsCount()
     {
-      return ($this->vouchersMeasurementsCount())+($this->individualsMeasurementsCount());
+      return ($this->vouchers_measurements_count())+($this->individuals_measurements_count());
     }
 
     /*count distinct individual and voucher identification taxon at or below the species level*/
     public function speciesCount()
     {
-      $taxonsp = $this->individual_identifications()->withoutGlobalScopes()->with('taxon')->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
+      $taxonsp = $this->individualsIdentifications()->withoutGlobalScopes()->with('taxon')->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
       $taxons = array_unique($taxonsp);
       return count($taxons);
     }
@@ -319,33 +293,21 @@ class Project extends Model
       return $this->summary_scopes()->whereHasMorph('object',['App\Models\Taxon'],function($object) use($count_level) { $object->where('level','>=',$count_level);})->where('object_type','App\Models\Taxon')->selectRaw("DISTINCT object_id")->cursor()->count();
     }
 
-    /* pictures of individuals and vouchers only */
-    public function picturesCount()
+    /* media count for individuals */
+    public function mediaCount()
     {
-      $picturesp = $this->individuals_pictures()->withoutGlobalScopes()->count();
-      $picturesv = $this->vouchers_pictures()->withoutGlobalScopes()->count();
-      return ($picturesp+$picturesv);
+      return $this->individualsMedia()->withoutGlobalScopes()->count();
     }
 
 
-    public function vouchersTaxonsCount()
+    public function vouchers_measurements_count()
     {
-      return $this->voucher_identifications()->withoutGlobalScopes()->distinct('taxon_id')->count();
-    }
-    public function individualsTaxonsCount()
-    {
-      return $this->individual_identifications()->withoutGlobalScopes()->distinct('taxon_id')->count();
+      return $this->voucherMeasurements()->withoutGlobalScopes()->count();
     }
 
-
-    public function vouchersMeasurementsCount()
+    public function individuals_measurements_count()
     {
-      return $this->voucher_measurements()->withoutGlobalScopes()->count();
-    }
-
-    public function individualsMeasurementsCount()
-    {
-      return $this->individual_measurements()->withoutGlobalScopes()->count();
+      return $this->individualsMeasurements()->withoutGlobalScopes()->count();
 
     }
 
@@ -447,16 +409,41 @@ class Project extends Model
       if (preg_match("/CC0/i",$license)) {
         $license = "Public domain - CC0";
       }
-      if ($author != null) {
-        $citation = $author." (".$year.").  <strong>".$title."</strong>. Occurrence data. Version: ".$version.". License: ".$license;
+      $dataType = $this->isOnlyPlotData();
+      if($dataType) {
+        $dataType ='Plot occurrence data';
       } else {
-        $citation = "<strong>".$title."</strong>. Occurrence data. Version: ".$version.". License: ".$license;
+        $dataType = 'Occurrence data';
       }
+      if ($author != null) {
+        $citation = $author." (".$year.").  <strong>".$title."</strong>. ".$dataType.". Version: ".$version.".";
+      } else {
+        $citation = "<strong>".$title."</strong>. ".$dataType.". Version: ".$version.".";
+      }
+      /* ONLY ADDED WHEN NOT RESTRICTED */
+      if ($this->privacy != self::PRIVACY_AUTH) {
+        $citation .= " License: ".$license;
+      } else {
+        $citation .= " License: has restrictions";
+      }
+
+
       if (!$for_dt) {
         $url =  url('project/'.$this->id);
         $citation .= '. From '.$url.', accessed '.$when.".";
       }
       return $citation;
+    }
+
+    public function isOnlyPlotData()
+    {
+      $admLevel = $this->individualLocations()->cursor()->map(function($ind) { return $ind->location->adm_level;})->toArray();
+      $admLevel = array_unique($admLevel);
+      if (count($admLevel)==1 and $admLevel[0]==100) {
+        return true;
+      }
+      return false;
+
     }
 
     public function getBibtexAttribute()
@@ -466,9 +453,15 @@ class Project extends Model
       }
       $bibkey = preg_replace('[,| |\\.|-|_]','',StripAccents::strip( (string) $this->name ))."_".$this->last_edition_date->format("Y");
       $version = $this->last_edition_date->format("Y-m-d");
-      $license = (null != $this->license) ? $this->license : 'Not defined, restrictions may apply.';
+      $license = (null != $this->license and $this->privacy != self::PRIVACY_AUTH) ? $this->license : 'Not public - some restrictions may apply.';
       if (preg_match("/CC0/i",$license)) {
         $license = "Public domain - CC0";
+      }
+      $dataType = $this->isOnlyPlotData();
+      if($dataType) {
+        $dataType ='Plot occurrence data';
+      } else {
+        $dataType = 'Occurrence data';
       }
       $bib =  [
          'title' => $this->title,
@@ -477,7 +470,7 @@ class Project extends Model
          'howpublished' => "url\{".url('project/'.$this->id)."}",
          'version' => $version,
          'license' => $license,
-         'note' => 'Species Occurrence data. Version: '.$version.'. License: '.$license.". Accessed: ".today()->format("Y-m-d"),
+         'note' => $dataType.' Version: '.$version.'. License: '.$license.". Accessed: ".today()->format("Y-m-d"),
          'url' => "{".url('project/'.$this->id)."}",
       ];
       return "@misc{".$bibkey.",\n".json_encode($bib,JSON_PRETTY_PRINT);
@@ -493,5 +486,17 @@ class Project extends Model
       return $lastdate;
     }
 
+    /* register media modifications */
+    public function registerMediaConversions(BaseMedia $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->fit('crop', 200, 200)
+            ->performOnCollections('logos');
+    }
+
+    public static function getTableName()
+    {
+        return (new self())->getTable();
+    }
 
 }

@@ -14,9 +14,13 @@ use Auth;
 use Lang;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-class Individual extends Model
+use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+
+class Individual extends Model implements HasMedia
 {
-    use IncompleteDate, LogsActivity;
+    use IncompleteDate, InteractsWithMedia, LogsActivity;
 
 
     // NOTICE regarding attributes!! relative_position is the name of the database column, so this should be called when writing to database
@@ -349,13 +353,6 @@ class Individual extends Model
     }
 
 
-
-    public function pictures()
-    {
-        return $this->morphMany(Picture::class, 'object');
-    }
-
-
     /* INDIVIDUAL TAXONOMY ONLY TO SET THE IDENTIFICATION*/
     public function identificationSet()
     {
@@ -432,5 +429,31 @@ class Individual extends Model
       }
       return $modifier;
     }
+
+
+  
+
+    /* register media modifications */
+    public function registerMediaConversions(BaseMedia $media = null): void
+    {
+
+        $this->addMediaConversion('thumb')
+            ->fit('crop', 200, 200)
+            ->performOnCollections('images');
+
+        $this->addMediaConversion('thumb')
+            ->width(200)
+            ->height(200)
+            ->extractVideoFrameAtSecond(5)
+            ->performOnCollections('videos');
+    }
+
+    public static function getTableName()
+    {
+        return (new self())->getTable();
+    }
+
+
+
 
 }

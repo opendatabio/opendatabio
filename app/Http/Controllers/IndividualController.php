@@ -207,9 +207,9 @@ class IndividualController extends Controller
           $rules = ['location_id' => 'required|integer'];
         }
         $location = Location::find($locationid);
-        $rules = array_merge($rules,[
+        $rules = array_merge((array) $rules, (array) [
             'project_id' => 'required|integer',
-            'collector' => 'required|array',
+            'collector' => "required|array",
             'tag' => [ // tag / location must be unique
                 'required',
                 'string',
@@ -218,7 +218,7 @@ class IndividualController extends Controller
         ]);
         //identification is not mandatory, but if informed must have some fields
         if ($request->taxon_id) {
-           $rules = array_merge($rules,
+           $rules = array_merge((array) $rules, (array)
             [
               'identifier_id' => 'required',
               'taxon_id' => 'required',
@@ -227,6 +227,10 @@ class IndividualController extends Controller
         }
 
         $validator = Validator::make($request->all(), $rules);
+        if ($validator->fails()) {
+          return $validator;
+        }
+
         $validator->after(function ($validator) use ($request, $location, $individual) {
 
             //valide unique identifiers
@@ -345,7 +349,7 @@ class IndividualController extends Controller
           $individual->setDate($request->date);
         }
         $individual->save();
-
+        $routeId = $individual->id;
         //save collectors and identify main collector
         $first = true;
         foreach ($request->collector as $collector) {
@@ -422,12 +426,12 @@ class IndividualController extends Controller
 
         $target = 'individuals';
         $datasets = null;
-        Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,$measurements_count=0);
+        /*Summary::updateSummaryCounts($newvalues,$oldvalues,$target,$datasets,$measurements_count=0);
         /* END SUMMARY UPDATE */
 
         /*if this is called in a job do not redirect and return object instead */
         if ($request->from_the_api) {
-          return $individual;
+           return $individual;
         }
         return redirect('individuals/'.$individual->id)->withStatus(Lang::get('messages.stored'));
     }
@@ -445,9 +449,15 @@ class IndividualController extends Controller
         $individual = Individual::findOrFail($id);
         $identification = $individual->identification;
         $collectors = $individual->collectors;
+        $media = $individual->media();
+        if ($media->count()) {
+          $media = $media->paginate(3);
+        } else {
+          $media = null;
+        }
         return $dataTable->with([
               'individual' => $id,
-              'noaction' => 1])->render('individuals.show', compact('individual', 'identification', 'collectors'));
+              'noaction' => 1])->render('individuals.show', compact('individual', 'identification', 'collectors','media'));
     }
 
     /**

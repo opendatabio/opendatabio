@@ -156,8 +156,8 @@
               <li><a href="{{ url('import/persons') }}">
                 @lang('messages.persons')
               </a></li>
-              <li><a href="{{ route('uploadPictures') }}">
-                @lang('messages.pictures')
+              <li><a href="{{ url('media/import-form') }}">
+                @lang('messages.media_files')
               </a></li>
               <li><a href="{{ url('import/traits') }}">
                 @lang('messages.traits')

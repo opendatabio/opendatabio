@@ -3,7 +3,7 @@
   * [Identification](#identifications)
   * [Incomplete Dates](#incompletedate)
   * [Person](#persons)
-  * [Picture](#pictures)
+  * [Picture](#mediafiles)
   * [Tag](#tags)
   * [User Translation](#user_translations)
 * [**Core Objects**](Core-Objects)
@@ -60,7 +60,7 @@ The **Identification** table represents the taxonomic identification of [Individ
 ***
 ## Person Model
 The **Person** object stores persons names, which may or may not be a [User](Data-Access-Objects#users) directly involved with the database. It is used to store information about people that are:
-    * **collectors** of [vouchers](Core-Objects#vouchers), [individuals](Core-Objects#individuals) and [pictures](Auxiliary-Objects#pictures)
+    * **collectors** of [vouchers](Core-Objects#vouchers), [individuals](Core-Objects#individuals) and [MediaFiles](Auxiliary-Objects#mediafiles)
     * **taxonomic determinators** or identifiers of [individuals](Core-Objects#individuals);
     * **measurer** of [measurements](Trait-Objects#measurements);
     * **authors** for *unpublished* [Taxon](Core-Objects#taxons) names;
@@ -79,33 +79,33 @@ The **Person** object stores persons names, which may or may not be a [User](Dat
 <br>
 **Data access** [full users](Data-Access-Objects#users) may register new persons and edit the persons they have inserted and remove persons that have no associated data. Admins may edit any Person. Persons list have public access.
 
-<a name="pictures"></a>
+<a name="mediafiles"></a>
 ***
-## Picture Model
-**Pictures** are similar to [measurements](Trait-Objects@measurements) in that they might be associated with all [core objects](Core-Objects). Pictures may be **tagged**, i.e. you may define keywords to pictures, allowing to query them by [Tags](#tags). For example, a individual image may be tagged with 'flowers' or 'fruits' to indicate what is in the image, or a tag that informs about image quality.
+## Media Model
 
+**Media** are similar to [measurements](Trait-Objects@measurements) in that they might be associated with all [core objects](Core-Objects). Media files may be **tagged**, i.e. you may define keywords to them, allowing to query them by [Tags](#tags). For example, an individual image may be tagged with 'flowers' or 'fruits' to indicate what is in the image, or a tag that informs about image quality.
 
-![](https://github.com/opendatabio/datamodel/blob/master/picture_model.png)
-<img src="{{ asset('images/docs/picture_model.png') }}" alt="Picture model" with=350>
+![](https://github.com/opendatabio/datamodel/blob/master/media_model.png)
+<img src="{{ asset('images/docs/media_model.png') }}" alt="Media model" with=350>
 
-The Picture table and its direct links:
+The Media table and its direct links:
 
 ![](https://github.com/opendatabio/datamodel/blob/master/picture_model_phpadm.png)
 <img src="{{ asset('images/docs/picture_model_phpadm.png') }}" alt="Picture model" with=350>
 
-* Pictures are linked to the [Core-Objects](Core-Objects) through a [polymorphic relationship](#polymorphicrelationships) defined by columns `object_id` and `object_type` just like in the [Measurements](Trait-Objects#measurements) model.
-* Pictures are not stored in the database, but in the `public/upload_pictures` server storage folder. The naming convention for images have the following logic: `object_type+object_id`. An image from the voucher with id=1 will be named by the system as `voucher_1.jpg` and a thumbnail is generated for each image with `t_` prefix. All images are stored as `jpg`, regardless of the type that has been uploaded.
+* Media files (image, video, audio) are linked to the [Core-Objects](Core-Objects) through a [polymorphic relationship](#polymorphicrelationships) defined by columns `model_id` and `model_type`.
 * Multiple [Persons](#persons) may be associated with the Picture for credits, these are linked with the **Collectors** table and its [polymorphic relationship](#polymorphicrelationships) structure.
 * A Picture may have a `description` in each language configured in the Language table, which will be stored in the `user_translations` table, which relates to the Tag model through a [polymorphic relationship](#polymorphicrelationships). Inputs for each language are shown in the web-interface Picture create/edit forms.
-* It is possible to **batch upload images** through the web interface, requiring also a file informing the objects to link the image with, the image tags ids, description translations and collectors ids.
+* Media files are not stored in the database, but in the server storage folder. The naming convention for images have the following logic: `mode_type+model+id`.
 
-**Data access** [full users](Data-Access-Objects#users) may register images and delete the images they have inserted. Admins may delete any image.
-   Images have public access, except when linked to Individual or Vouchers, in which case depends on Project policies.
+* It is possible to **batch upload media files** through the web interface, requiring also a file informing the objects to link the media with.
+
+**Data access** [full users](Data-Access-Objects#users) may register media fies and delete the ones they have inserted. If image is in a Project, project admins may delete the media in addition to the user. Media files have public access, except when linked to a Project with access restrictions.
 
 <a name="tags"></a>
 ***
 ## Tag Model
-The **Tag** model allows users to define **translatable** keywords that may be used to flag [Datasets](Data-Access-Objects#datasets), [Projects](Data-Access-Objects#projects) or [Pictures](#pictures). The Tag model is linked with these objects through a pivot table for each, named `dataset_tag`, `project_tag` and `picture_tag`, respectively.
+The **Tag** model allows users to define **translatable** keywords that may be used to flag [Datasets](Data-Access-Objects#datasets), [Projects](Data-Access-Objects#projects) or [MediaFiles](#mediafiles). The Tag model is linked with these objects through a pivot table for each, named `dataset_tag`, `project_tag` and `picture_tag`, respectively.
 
 A Tag may have `name` and `description` in each language configured in the Language table, which will be stored in the `user_translations` table, which relates to the Tag model through a [polymorphic relationship](#polymorphicrelationships). Inputs for each language are shown in the web-interface Tag creation form.
 
@@ -123,7 +123,7 @@ The tables structures and direct links:
 <a name="user_translations"></a>
 ***
 ## User Translation Model
-The **UserTranslation** model translates user data: [Trait](Trait-Objects#traits) and Trait Categories names and descriptions, [Picture](#pictures) descriptions and [Tags](#tags). The relations between these models are established by  [polymorphic relations](Core-Objects#polymorphicrelationships) using fields `translatable_type` and `translatable_id`. This model permits translations to any language listed in the **Language** table, which is currently only accessible for insertion and edition directly in the SQL database. Input forms in the web interface will be listed for registered Languages.
+The **UserTranslation** model translates user data: [Trait](Trait-Objects#traits) and Trait Categories names and descriptions, [MediaFiles](#mediafiles) descriptions and [Tags](#tags). The relations between these models are established by  [polymorphic relations](Core-Objects#polymorphicrelationships) using fields `translatable_type` and `translatable_id`. This model permits translations to any language listed in the **Language** table, which is currently only accessible for insertion and edition directly in the SQL database. Input forms in the web interface will be listed for registered Languages.
 
 ![](https://github.com/opendatabio/datamodel/blob/master/usertranslation_model.png)
 <img src="{{ asset('images/docs/usertranslation_model.png') }}" alt="Tag model" with=350>

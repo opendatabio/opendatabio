@@ -402,12 +402,12 @@ class Summary extends Model
         }
         foreach($objects->cursor() as $object) {
             if ($target==null) {
-              $targets = ['individuals','vouchers','measurements','pictures'];
+              $targets = ['individuals','vouchers','measurements','media'];
               if (get_class($object) == "App\Models\Location") {
-                $targets = ['individuals','vouchers','measurements','pictures'];
+                $targets = ['individuals','vouchers','measurements','media'];
               }
               if (get_class($object) == "App\Models\Project") {
-                $targets = ['individuals','vouchers','measurements','pictures','locations','datasets'];
+                $targets = ['individuals','vouchers','measurements','media','locations','datasets'];
               }
               if (get_class($object) == "App\Models\Dataset") {
                 $targets = ['individuals','vouchers','measurements','locations','projects'];
@@ -428,8 +428,8 @@ class Summary extends Model
                 if ($target=='taxons') {
                   $value = $object->taxonsCount($scope,$scope_id);
                 }
-                if ($target=='pictures') {
-                  $value = $object->picturesCount($scope,$scope_id);
+                if ($target=='media') {
+                  $value = $object->mediaCount($scope,$scope_id);
                 }
                 if ($target=='locations') {
                   $value = $object->locationsCount($scope,$scope_id);
@@ -494,7 +494,7 @@ class Summary extends Model
             $selfanddescendants = $taxon->getDescendantsAndSelf()->pluck('id')->toArray();
             if ($scope=="all" or $scope=='projects') {
               //get the project the taxon was used for
-              $projects = Project::whereHas('individual_identifications',function($identification) use($selfanddescendants) {
+              $projects = Project::whereHas('individualsIdentifications',function($identification) use($selfanddescendants) {
                 $identification->withoutGlobalScopes()->whereIn('taxon_id',$selfanddescendants);
               })->cursor();
               if ($projects->count()) {

@@ -92,9 +92,10 @@ class LocationsDataTable extends DataTable
             }
           }
         })
-        ->addColumn('pictures', function ($location) {
-          $pictures_count = $location->getCount('all',null,"pictures");
-          return '<a href="'.url('locations/'.$location->id).'">'.$pictures_count.'</a>';
+        ->addColumn('media', function ($location) {
+          $mediaCount = $location->getCount('all',null,"media");
+          $urlShowAllMedia = "media/".$location->id."/locations";
+          return '<a href="'.url($urlShowAllMedia).'">'.$mediaCount.'</a>';
         })
         ->addColumn('latitude', function ($location) {return $location->latitudeSimple; })
         ->addColumn('longitude', function ($location) {return $location->longitudeSimple; })
@@ -115,7 +116,7 @@ class LocationsDataTable extends DataTable
         ->addColumn('select_locations',  function ($location) {
             return $location->id;
         })
-        ->rawColumns(['name', 'pictures', 'individuals','vouchers', 'measurements','latitude','longitude','taxons','parent']);
+        ->rawColumns(['name', 'media', 'individuals','vouchers', 'measurements','latitude','longitude','taxons','parent']);
     }
 
     /**
@@ -138,22 +139,35 @@ class LocationsDataTable extends DataTable
             'locations.y',
             'locations.startx',
             'locations.starty',
-        ])->withCount(['measurements', 'pictures'])->noWorld();
+        ])->withCount(['measurements'])->noWorld();
 
         if ($this->project) {
+          /*
           $query->whereHas('summary_counts',function($count) {
             $count->where('scope_id',"=",$this->project)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
           });
+          */
+          $query->whereHas('individuals',function($ind) {
+            $ind->where('project_id',$this->project);
+          });
         }
         if ($this->dataset) {
-          $query->whereHas('summary_counts',function($count) {
-            $count->where('scope_id',"=",$this->dataset)->where('scope_type',"=","App\Models\Dataset");
+          $query->whereHas('individuals',function($ind) {
+            $ind->whereHas('measurements', function($mea) {
+              $mea->where('dataset_id',$this->dataset);});
+          });
+          $query->orWhereHas('vouchers',function($ind) {
+            $ind->whereHas('measurements', function($mea) {
+              $mea->where('dataset_id',$this->dataset);});
+          });
+          $query->orWhereHas('measurements',function($mea) {
+            $mea->where('dataset_id',$this->dataset);
           });
         }
 
         if ($this->location) {
-            $location = Location::noWorld()->where('id',$this->location)->cursor();
-            $query = $query->where('lft','>',$location->first()->lft)->where('rgt','<',$location->first()->rgt);
+            $location = Location::withoutGeom()->findOrFail($this->location);
+            $query = $query->where('lft','>',$location->lft)->where('rgt','<',$location->rgt);
         }
 
         if ($this->request()->has('adm_level')) {
@@ -202,7 +216,7 @@ class LocationsDataTable extends DataTable
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
                 'taxons' => ['title' => Lang::get('messages.taxons'), 'searchable' => false, 'orderable' => false],
-                'pictures' => ['title' => Lang::get('messages.pictures'), 'searchable' => false, 'orderable' => false],
+                'media' => ['title' => Lang::get('messages.media_files'), 'searchable' => false, 'orderable' => false],
                 'latitude' => ['title' => Lang::get('messages.latitude'), 'searchable' => false, 'orderable' => false],
                 'longitude' => ['title' => Lang::get('messages.longitude'), 'searchable' => false, 'orderable' => false],
                 'altitude' => ['title' => Lang::get('messages.altitude'), 'searchable' => false, 'orderable' => false],

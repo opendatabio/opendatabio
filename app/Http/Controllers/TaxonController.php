@@ -15,6 +15,8 @@ use App\Models\Location;
 use App\Models\Dataset;
 use App\Models\BibReference;
 use App\Models\ExternalAPIs;
+use App\Models\Language;
+use App\Models\Tag;
 use Response;
 use Lang;
 use Validator;
@@ -29,6 +31,7 @@ use App\Models\UserJob;
 use App\Jobs\ImportTaxons;
 use Spatie\SimpleExcel\SimpleExcelReader;
 use DB;
+use Auth;
 
 
 class TaxonController extends Controller
@@ -350,10 +353,18 @@ class TaxonController extends Controller
         } else {
             $bibref = null;
         }
+        $media = $taxon->mediaDescendantsAndSelf();
+        if ($media->count()) {
+          $media = $media->paginate(3);
+        } else {
+          $media = null;
+        }
+
 
         return $dataTable->with([
-            'taxon' => $id
-        ])->render('taxons.show', compact('taxon', 'author', 'bibref'));
+            'taxon' => $id,
+            'related_taxa' => 1,
+        ])->render('taxons.show', compact('taxon', 'author', 'bibref','media'));
     }
 
     /**
@@ -461,7 +472,10 @@ class TaxonController extends Controller
         }
         $apis = new ExternalAPIs();
         $mobotdata = $apis->getMobot($request->name);
-        $ipnidata = $apis->getIpni($request->name);
+
+        // // TODO: IPNI has changed and will implement an API
+        //$ipnidata = $apis->getIpni($request->name);
+        $ipnidata= null;
 
         // WARNING: MYCOBANK API OUT OF SERVICE 18-11-2020
         //THEY PROVIDE A STATIC ZIP FILE THAT COULD USED LOCALLY TO SEARCH names
@@ -633,7 +647,9 @@ class TaxonController extends Controller
 
         $senior = null;
         if (!is_null($mobotdata) && array_key_exists('senior', $mobotdata) and !is_null($mobotdata['senior'])) {
-            $tosenior = Taxon::valid()->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) = ?', [$mobotdata['senior']])->first();
+            $tosenior = Taxon::valid()
+            ->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) = ?', [$mobotdata['senior']])
+            ->first();
             if ($tosenior) {
                 $senior = [$tosenior->id, $tosenior->fullname];
             } else {
@@ -641,7 +657,9 @@ class TaxonController extends Controller
             }
         }
         if (!is_null($mycobankdata) && array_key_exists('senior', $mycobankdata) and !is_null($mycobankdata['senior'])) {
-            $tosenior = Taxon::valid()->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) = ?', [$mycobankdata['senior']])->first();
+            $tosenior = Taxon::valid()
+            ->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) = ?', [$mycobankdata['senior']])
+            ->first();
             if ($tosenior) {
                 $senior = [$tosenior->id, $tosenior->fullname];
             } else {
@@ -712,7 +730,8 @@ class TaxonController extends Controller
           $message = Lang::get('messages.invalid_file_extension');
         } else {
           try {
-            $data = SimpleExcelReader::create($request->file('data_file'),$ext)->getRows()->toArray();
+            $data = SimpleExcelReader::create($request->file('data_file'),$ext)
+            ->getRows()->toArray();
           } catch (\Exception $e) {
             $data = [];
             $message = json_encode($e);
@@ -729,6 +748,7 @@ class TaxonController extends Controller
       }
       return redirect('import/taxons')->withStatus($message);
     }
+
 
 
 }

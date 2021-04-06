@@ -19,7 +19,7 @@
       * [BibReference](Auxiliary-Objects#bibreferences)
       * [Identification](Auxiliary-Objects#identifications)
       * [Person](Auxiliary-Objects#persons)
-      * [Picture](Auxiliary-Objects#pictures)
+      * [Media files](Auxiliary-Objects#mediafiles)
       * [Tag](Auxiliary-Objects#tags)
       * [User Translation](Auxiliary-Objects#user_translations)
 

@@ -713,6 +713,7 @@ class Installer
             }
         }
 
+        // TODO: CREATE DIFFERENT SEED DATA
         /* this requires update on seeds to uncomment
         if ('local' == getenv('APP_ENV')) {
             echo 'Do you wish to seed the database with randomly generated test data? yes/[no] ';
@@ -736,9 +737,8 @@ class Installer
         }
 
         echo "Changing storage area permissions...\n";
-        exec('chmod -fR 777 storage 2>&1');
-        exec('chmod -fR 777 public/upload_pictures 2>&1');
-        exec('chmod -fR 777 bootstrap/cache 2>&1');
+        exec('chmod -fR 755 storage 2>&1');
+        exec('chmod -fR 755 bootstrap/cache 2>&1');
 
         echo $this->c("********************************************\n", 'success');
         echo $this->c("OpenDataBio has been successfully installed!\n", 'success');

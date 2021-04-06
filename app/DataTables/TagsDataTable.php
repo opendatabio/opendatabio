@@ -32,7 +32,7 @@ class TagsDataTable extends DataTable
         ->addColumn('projects', function ($tag) {
                 return '<a href="'.url('projects/'. $tag->id. '/tags').'" >'.$tag->projects()->count().'</a>';
         })
-        ->addColumn('pictures', function ($tag) { return $tag->pictures()->count(); })
+        ->addColumn('media', function ($tag) { return $tag->media()->count(); })
         ->filterColumn('name', function ($query, $keyword) {
             $query->whereHas('translations',function($translation) use($keyword) { $translation->where('translation','like','%'.$keyword.'%');});
         })
@@ -65,7 +65,7 @@ class TagsDataTable extends DataTable
                 'description' => ['title' => Lang::get('messages.description'), 'searchable' => false, 'orderable' => false],
                 'datasets' => ['title' => Lang::get('messages.datasets'), 'searchable' => false, 'orderable' => false],
                 'projects' => ['title' => Lang::get('messages.projects'), 'searchable' => false, 'orderable' => false],
-                'pictures' => ['title' => Lang::get('messages.pictures'), 'searchable' => false, 'orderable' => false],
+                'media' => ['title' => Lang::get('messages.media'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',

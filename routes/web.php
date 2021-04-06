@@ -55,6 +55,7 @@ Route::resource('locations', 'LocationController');
 Route::get('taxons/{id}/project', 'TaxonController@indexProjects');
 Route::get('taxons/{id}/dataset', 'TaxonController@indexDatasets');
 Route::get('taxons/{id}/activity', 'TaxonController@activity');
+
 Route::get('taxons/{id}/taxon', 'TaxonController@indexTaxons');
 Route::get('taxons/{id}/taxon_project', 'TaxonController@indexTaxonsProjects');
 Route::get('taxons/{id}/taxon_dataset', 'TaxonController@indexTaxonsDatasets');
@@ -62,17 +63,16 @@ Route::get('taxons/{id}/taxon_location', 'TaxonController@indexTaxonsLocations')
 Route::get('taxons/{id}/location', 'TaxonController@indexLocations');
 Route::get('taxons/{id}/location_project', 'TaxonController@indexLocationsProjects');
 Route::get('taxons/{id}/location_dataset', 'TaxonController@indexLocationsDatasets');
-
-
 Route::post('taxons/checkapis', 'TaxonController@checkapis')->name('checkapis');
 Route::get('taxons/autocomplete', 'TaxonController@autocomplete');
-
 Route::resource('taxons', 'TaxonController');
 
 
+
+
 Route::get('projects/{id}/activity', 'ProjectController@activity');
-Route::post('projects/{id}/summarize_project', 'ProjectController@summarize_project')->name('projectsummary');
-Route::post('projects/{id}/identifications_summary', 'ProjectController@summarize_identifications')->name('project_identification_summary');
+Route::post('projects/{id}/summary', 'ProjectController@summarize_project')->name('project_summary');
+Route::post('projects/{id}/identifications-summary', 'ProjectController@summarize_identifications')->name('project_identification_summary');
 Route::get('projects/{id}/tags','ProjectController@indexTags');
 Route::get('projects/{id}/dataset','ProjectController@indexDatasets');
 Route::post('projects/{id}/emailrequest', 'ProjectController@sendEmail');
@@ -93,10 +93,10 @@ Route::resource('datasets', 'DatasetController');
 
 Route::post('references/findbibtexfromdoi', 'BibReferenceController@findBibtexFromDoi')->name('findbibtexfromdoi');
 
-Route::post('individuals/saveIndividualLocation', 'IndividualController@saveIndividualLocation')->name('saveIndividualLocation');
-Route::get('individuals/getIndividualLocation', 'IndividualController@getIndividualLocation')->name('getIndividualLocation');
-Route::get('individuals/deleteIndividualLocation', 'IndividualController@deleteIndividualLocation')->name('deleteIndividualLocation');
-Route::get('individuals/getIndividualForVoucher', 'IndividualController@getIndividualForVoucher')->name('getIndividualForVoucher');
+Route::post('individuals/location-save', 'IndividualController@saveIndividualLocation')->name('saveIndividualLocation');
+Route::get('individuals/location-show', 'IndividualController@getIndividualLocation')->name('getIndividualLocation');
+Route::get('individuals/location-delete', 'IndividualController@deleteIndividualLocation')->name('deleteIndividualLocation');
+Route::get('individuals/for-voucher', 'IndividualController@getIndividualForVoucher')->name('getIndividualForVoucher');
 Route::get('individuals/autocomplete', 'IndividualController@autocomplete');
 Route::get('individuals/{id}/datasets', 'IndividualController@indexDatasets');
 Route::get('individuals/{id}/activity', 'IndividualController@activity');
@@ -117,8 +117,6 @@ Route::get('individuals/{id}/taxon_dataset', 'IndividualController@indexTaxonsDa
 Route::get('individuals/{id}/taxon_location', 'IndividualController@indexTaxonsLocations');
 Route::get('individuals/{id}/project', 'IndividualController@indexProjects');
 
-//Route::get('persons/{id}/individuals', 'IndividualController@indexPersons');
-Route::resource('individuals', 'IndividualController');
 
 Route::get('vouchers/{id}/biocollection', 'VoucherController@indexBioCollections');
 Route::get('vouchers/{id}/dataset', 'VoucherController@indexDatasets');
@@ -195,8 +193,30 @@ Route::get('import/{model}',function($model) {
 
 //PICTURES
 //Batch upload pictures_files
-Route::get('pictures/uploadForm', 'PictureController@uploadForm')->name('uploadPictures');
-Route::post('importPictures', 'PictureController@uploadSubmit');
+Route::get('media/import-form', 'MediaController@uploadForm');
+Route::post('import/media', 'MediaController@uploadSubmit');
+
+
+//Media objects
+Route::get('media/{id}/activity', 'MediaController@activity');
+Route::get('media/{id}/taxons', 'MediaController@indexTaxons');
+Route::get('media/{id}/locations', 'MediaController@indexLocations');
+Route::get('media/{id}/individuals', 'MediaController@indexIndividuals');
+Route::get('media/{id}/vouchers', 'MediaController@indexVouchers');
+Route::get('taxons/{id}/media-create', 'MediaController@createTaxons');
+Route::get('locations/{id}/media-create', 'MediaController@createLocations');
+Route::get('individuals/{id}/media-create', 'MediaController@createIndividuals');
+Route::get('vouchers/{id}/media-create', 'MediaController@createVouchers');
+
+Route::get('traits/{id}/media-create', 'MediaController@createMedia');
+Route::get('traits-categories/{id}/media-create', 'MediaController@createCategoryMedia');
+Route::get('persons/{id}/media-create', 'MediaController@createMedia');
+//Route::post('media/store', 'MediaController@store');
+//Route::post('media/update', 'MediaController@update');
+Route::resource('media', 'MediaController',['only' => ['show', 'edit', 'update', 'destroy','store']]);
+
+
+
 
 //Picture object
 Route::get('taxons/{id}/pictures/create', 'PictureController@createTaxons');
@@ -204,6 +224,11 @@ Route::get('locations/{id}/pictures/create', 'PictureController@createLocations'
 Route::get('individuals/{id}/pictures/create', 'PictureController@createIndividuals');
 Route::get('vouchers/{id}/pictures/create', 'PictureController@createVouchers');
 Route::resource('pictures', 'PictureController', ['only' => ['show', 'store', 'edit', 'update']]);
+
+
+
+//Route::get('persons/{id}/individuals', 'IndividualController@indexPersons');
+Route::resource('individuals', 'IndividualController');
 
 
 Route::get('forms/{id}/prepare', 'FormController@prepare');

@@ -91,7 +91,7 @@ Most Endpoints accept all the common parameters described below. They may also a
 
 ### Imports or POST verbs
 The [OpenDataBio R package]()
-  A **Import Data Tutorial** is available as vignette of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r). Below each endpoint there is an explanation of the specific `POST` variables and their requirements for importing data. Batch imports of  [Bibliographic References](Auxiliary-Objects#bibreferences) and [Pictures](Auxiliary-Objects#pictures) are possible but only through the web interface. The available `POST` APIs are listed below. If not using the R Client that does it for you, the data to be imported must be in the `request body`, formated as a JSON array. Each item in the array must be named and may contain several fields.
+  A **Import Data Tutorial** is available as vignette of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r). Below each endpoint there is an explanation of the specific `POST` variables and their requirements for importing data. Batch imports of  [Bibliographic References](Auxiliary-Objects#bibreferences) and [MediaFiles](Auxiliary-Objects#mediafiles) are possible but only through the web interface. The available `POST` APIs are listed below. If not using the R Client that does it for you, the data to be imported must be in the `request body`, formated as a JSON array. Each item in the array must be named and may contain several fields.
 
 **The Import Data tools of the Web Interface use the POST API methods**
 

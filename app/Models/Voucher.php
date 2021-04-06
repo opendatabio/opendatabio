@@ -18,12 +18,16 @@ use App\Models\Location;
 use App\Models\Project;
 
 use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
+
 
 class Voucher extends Model
 {
     use IncompleteDate, LogsActivity;
 
-    protected $fillable = ['individual_id', 'biocollection_id', 'biocollection_type', 'number', 'date', 'notes', 'project_id','biocollection_number'];
+    protected $fillable = [
+      'individual_id', 'biocollection_id', 'biocollection_type',
+      'number', 'date', 'notes', 'project_id','biocollection_number'];
 
     //add attributes for automatic use in datatabe
     //protected $appends = ['location_id'];
@@ -270,7 +274,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
             'vouchers.biocollection_id',
             'vouchers.biocollection_type',
             'vouchers.biocollection_number',
-            DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id) as fullname')
+            DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number) as fullname')
         );
     }
 
@@ -401,11 +405,24 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         return $this->individual->fullname;
       }
 
-    /* PICTURES */
-    public function pictures()
+    /*
+      * MEDIA FILES
+      * image vouchers are linked to individuals with voucher_id added to
+      * custom_properties
+    */
+    public function media()
     {
-        return $this->morphMany(Picture::class, 'object');
+        $searchStr = 'voucher_id":'.$this->id;
+        return $this->individual
+        ->media()
+        ->where('custom_properties','like','%'.$searchStr.'%');
     }
+
+    public static function getTableName()
+    {
+        return (new self())->getTable();
+    }
+
 
 
     /* NAME Used in ActivityDataTable change display */

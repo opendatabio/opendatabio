@@ -32,9 +32,9 @@
           }
         @endphp
 
-        @if(isset($logo))
+        @if(isset($logoUrl))
           <div class="float-right">
-            <img src='{{ url($logo) }}' width='150'>
+            <img src='{{ url($logoUrl) }}' width='150'>
           </div>
         @endif
 
@@ -144,33 +144,26 @@
   <p>
     <a href="{{ url('datasets/'. $project->id. '/project')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
-      {{ $project->getCount('all',null,'datasets') }}
       @lang('messages.datasets')
     </a>
     &nbsp;&nbsp;
     <a href="{{ url('individuals/'. $project->id. '/project')  }}" class="btn btn-default">
     <i class="fa fa-btn fa-search"></i>
-    {{ $project->getCount('all',null,'individuals') }}
       @lang('messages.individuals')
     </a>
-    @if ($project->getCount('all',null,'vouchers'))
       &nbsp;&nbsp;
       <a href="{{ url('vouchers/'. $project->id. '/project')  }}" class="btn btn-default">
         <i class="fa fa-btn fa-search"></i>
-        {{ $project->getCount('all',null,'vouchers') }}
         @lang('messages.vouchers')
       </a>
-    @endif
     &nbsp;&nbsp;
     <a href="{{ url('taxons/'. $project->id. '/project')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
-      {{ $project->taxonsCount() }}
       @lang('messages.taxons')
     </a>
     &nbsp;&nbsp;
     <a href="{{ url('locations/'. $project->id. '/project')  }}" class="btn btn-default">
       <i class="fa fa-btn fa-search"></i>
-      {{ $project->getCount('all',null,'locations') }}
       @lang('messages.locations')
     </a>
   </p>
@@ -245,7 +238,7 @@ $(document).ready(function() {
         e.preventDefault();
         $.ajax({
           type: 'POST',
-          url: "{{ route('projectsummary',$project->id) }}",
+          url: "{{ route('project_summary',$project->id) }}",
           data: {
             "id" : "{{ $project->id }}",
             "_token" : "{{ csrf_token() }}"

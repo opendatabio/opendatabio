@@ -10,7 +10,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Dataset;
-use App\Models\Picture;
+use App\Models\Media;
 use App\Models\Project;
 
 class Tag extends Model
@@ -28,9 +28,9 @@ class Tag extends Model
         return $this->belongsToMany(Dataset::class);
     }
 
-    public function pictures()
+    public function media()
     {
-        return $this->belongsToMany(Picture::class);
+        return $this->belongsToMany(Media::class);
     }
     public function projects()
     {

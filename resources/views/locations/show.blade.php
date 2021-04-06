@@ -165,12 +165,16 @@
 				        </a>
                 &nbsp;&nbsp;
         @endcan
-        @can ('create', App\Models\Picture::class)
-            <a href="{{ url('locations/'. $location->id. '/pictures/create')  }}" class="btn btn-success">
+        <!-- this will show only if no media as media are shown below -->
+        @can ('create', App\Models\Media::class)
+          @if (null == $media)
+        <a href="{{ url('locations/'. $location->id. '/media-create')  }}" class="btn btn-success">
               <i class="fa fa-btn fa-plus"></i>
-              @lang('messages.create_picture')
+              <i class="fas fa-photo-video"></i>
+              <i class="fas fa-headphones-alt"></i>
+              @lang('messages.create_media')
             </a>
-            &nbsp;&nbsp;
+          @endif
         @endcan
       </div>
     </div>
@@ -226,25 +230,24 @@
 </div>
 @endif
 
-<!--- PICTURES BLOCK -->
-@if ($location->pictures()->count())
-{!! View::make('pictures.index', ['pictures' => $location->pictures]) !!}
+<!--- MEDIA BLOCK -->
+@if (null != $media)
+  {!! View::make('media.index-model', ['model' => $location, 'media' => $media ]) !!}
 @endif
+
 
 
 <!-- MAP LOCATION -->
 <div class="panel panel-default">
   <div class="panel-heading">
-    <a data-toggle="collapse" href="#map_box" class="btn btn-default">
     @lang ('messages.location_map')
 		   @if ($location->simplified)
 		    -
 		    @lang ('messages.simplified_map')
 		    @endif
-    </a>
   </div>
-  <div class="panel-collapse" id='map_box'>
-  <div class="panel-body" id="map" style="
+  <div class="panel-body" id='map_box'>
+  <div id="map" style="
         height: 400px;
         width: 100%;">
 	  @if (empty ($location->geomArray))
@@ -316,7 +319,7 @@ function initMap() {
         $localcontent .= Lang::get('messages.vouchers').":  <strong>".$location->getCount("all",null,"vouchers")."</strong><br>";
         $localcontent .= Lang::get('messages.taxons').":  <strong>".$location->getCount("all",null,"taxons")."</strong><br>";
         $localcontent .= Lang::get('messages.measurements').":  <strong>".$location->getCount("all",null,"measurements")."</strong><br>";
-        $localcontent .= Lang::get('messages.pictures').":  <strong>".$location->getCount("all",null,"pictures")."</strong><br>";
+        $localcontent .= Lang::get('messages.media_files').":  <strong>".$location->getCount("all",null,"media")."</strong><br>";
       @endphp
       @endif
       @if(!isset($hasparent) and null !== $parent)
@@ -330,7 +333,7 @@ function initMap() {
             $parentcontent .= Lang::get('messages.vouchers').":  <strong>".$parent->getCount("all",null,"vouchers")."</strong><br>";
             $parentcontent .= Lang::get('messages.taxons').":  <strong>".$parent->getCount("all",null,"taxons")."</strong><br>";
             $parentcontent .= Lang::get('messages.measurements').":  <strong>".$parent->getCount("all",null,"measurements")."</strong><br>";
-            $parentcontent .= Lang::get('messages.pictures').":  <strong>".$parent->getCount("all",null,"pictures")."</strong><br>";
+            $parentcontent .= Lang::get('messages.media').":  <strong>".$parent->getCount("all",null,"media")."</strong><br>";
         @endphp
         @foreach($parent->geomArray as $parent_polygon)
           @if (count($parent_polygon) == $largest)

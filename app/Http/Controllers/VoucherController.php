@@ -295,7 +295,13 @@ class VoucherController extends Controller
         $voucher = Voucher::findOrFail($id);
         $identification = $voucher->identification;
         $collectors = $voucher->collectors;
-        return view('vouchers.show', compact('voucher', 'identification', 'collectors'));
+        $media = $voucher->media();
+        if ($media->count()) {
+          $media = $media->paginate(3);
+        } else {
+          $media = null;
+        }
+        return view('vouchers.show', compact('voucher', 'identification', 'collectors','media'));
     }
 
     /**
@@ -334,7 +340,7 @@ class VoucherController extends Controller
         $project = Project::findOrFail($request->project_id);
         $this->authorize('create', [Voucher::class, $project]);
         $validator = $this->customValidate($request);
-        if ($validator->fails()) {
+        if ($validator->errors()->count()) {
             if ($request->from_the_api) {
               return implode(" | ",$validator->errors()->all());
             }

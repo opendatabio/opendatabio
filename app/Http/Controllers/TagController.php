@@ -65,7 +65,7 @@ class TagController extends Controller
             $tag->setTranslation(UserTranslation::DESCRIPTION, $key, $translation);
         }
 
-        return redirect('tags/'.$tag->id)->withStatus(Lang::get('messages.stored'));
+        return redirect('tags')->withStatus(Lang::get('messages.stored'));
     }
 
     /**
@@ -78,7 +78,13 @@ class TagController extends Controller
     public function show($id)
     {
         $tag = Tag::with('datasets')->findOrFail($id);
-        return view('tags.show', compact('tag'));
+        $media = $tag->media();
+        if ($media->count()) {
+          $media = $media->paginate(3);
+        } else {
+          $media = null;
+        }
+        return view('tags.show', compact('tag','media'));
     }
 
 
