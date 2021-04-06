@@ -163,6 +163,7 @@ class ProjectController extends Controller
     public function show($id)
     {
         $project = Project::findOrFail($id);
+        $logoUrl = null;
         if ($project->media->count())
         {
           $logo = $project->media()->first();
@@ -189,6 +190,7 @@ class ProjectController extends Controller
         $fullusers = User::where('access_level', '=', User::USER)->orWhere('access_level', '=', User::ADMIN)->get();
         $allusers = User::all();
         $tags = Tag::all();
+        $logoUrl = null;
         if ($project->media->count())
         {
           $logo = $project->media()->first();
