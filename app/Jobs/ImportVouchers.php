@@ -217,7 +217,7 @@ class ImportVouchers extends ImportCollectable
         $savedvoucher = app('App\Http\Controllers\VoucherController')->store($saverequest);
         if (is_string($savedvoucher)) {
           $this->skipEntry($voucher,'This voucher could not be imported. Possible errors may be: '.$savedvoucher);
-          return false;
+          return ;
         }
 
 

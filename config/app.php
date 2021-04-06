@@ -108,9 +108,11 @@ return [
      * This string represents a regular expression describing what is a valid
      * value for the Abbreviation field in the Person entity. It may be overriden
      * in the .env file.
+     *'/^[A-z,\. -]+$/',
      */
 
-    'valid_abbreviation' => '/^[A-z,\. -]+$/',
+
+    'valid_abbreviation' => '/^[A-Za-zÀ-ÖØ-öø-ÿ,\. -]+$/',
 
     /*
      * This string represents the base name for Point locations included as Individual coordinates
@@ -127,8 +129,8 @@ return [
     | The version is informed separately
     | Name for popus are defined in lang/levels
     */
-    'creativecommons_licenses' => env('creativecommons_licenses', ['CC0','CC-BY','CC-BY-SA','CC-BY-ND','CC-BY-NC','CC-BY-NC-SA','CC-BY-NC-ND']),
-    'creativecommons_version' => env('creativecommons_version',['4.0']),
+    'creativecommons_licenses' => env('CREATIVECOMMONS_LICENSES', ['CC0','CC-BY','CC-BY-SA','CC-BY-ND','CC-BY-NC','CC-BY-NC-SA','CC-BY-NC-ND']),
+    'creativecommons_version' => env('CREATIVECOMMONS_VERSIONS',['4.0']),
 
 
     /* API KEYS

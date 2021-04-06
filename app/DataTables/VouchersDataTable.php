@@ -39,7 +39,7 @@ class VouchersDataTable extends DataTable
                 $q->whereIn('taxon_id',$taxon_list);
               });
             }
-            $query->whereRaw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id) like ?', ["%".$keyword."%"]);
+            $query->whereRaw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number) like ?', ["%".$keyword."%"]);
         })
         ->editColumn('biocollection_id', function ($voucher) {
             return $voucher->biocollection->rawLink();
@@ -94,7 +94,7 @@ class VouchersDataTable extends DataTable
           'vouchers.number',
           'vouchers.project_id',
           'vouchers.date',
-          DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id) as fullname')
+          DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number) as fullname')
         ]);
         // customizes the datatable query
         if ($this->location) {

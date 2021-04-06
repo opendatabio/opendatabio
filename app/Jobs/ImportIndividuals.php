@@ -195,10 +195,10 @@ class ImportIndividuals extends ImportCollectable
         //store the record, which will result in the individual
         $savedindividual = app('App\Http\Controllers\IndividualController')->store($saverequest);
 
-        //if this is true, errors where find
+        //if this is true, errors where found
         if (is_string($savedindividual)) {
-          $this->appendLog("FAILED:  individual with tag #".$store_request['tag']." could not be imported: ".$savedindividual);
-          return false;
+          $this->appendLog("ERROR:  individual with tag #".$store_request['tag']." could not be imported: ".$savedindividual);
+          return ;
         }
 
         //create voucher if informed with array created during validation

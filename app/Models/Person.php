@@ -12,9 +12,9 @@ use FuzzyWuzzy\Fuzz;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\Traits\LogsActivity;
 
-
 class Person extends Model
 {
+
     use LogsActivity;
     //protected $revisionCreationsEnabled = true;
 
@@ -62,6 +62,7 @@ class Person extends Model
     }
 
     // Looks for possible duplication of persons. Returns a collection of possible dupes
+    // perhaps instead of such complicated test, just compare the first letters of each word
     public static function duplicates($fullname, $abbreviation)
     {
         $fuzz = new Fuzz();
@@ -71,10 +72,12 @@ class Person extends Model
             $fn = self::normalize($element->full_name);
             $abb = self::normalize($element->abbreviation);
             $score = 0;
+            $fchar = mb_strtolower(substr($element->full_name,0,1));
+            $fchar2 = mb_strtolower(substr($fullname,0,1));
 
-            return $fuzz->weightedRatio($abb, $abbreviation) > 70 or
-                   $fuzz->weightedRatio($fn, $fullname) > 70;
-        });
+            return ($fuzz->weightedRatio($abb, $abbreviation) > 70 or
+                   $fuzz->weightedRatio($fn, $fullname) > 70) and $fchar==$fchar2;
+        })->sortBy('full_name');
 
         return $persons;
     }

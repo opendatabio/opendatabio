@@ -113,72 +113,68 @@
       @endif
 
       <hr>
-
+      <p>
       @if ($individual->measurements()->withoutGlobalScopes()->count())
-        <div class="col-sm-4">
           <a href="{{ url('measurements/'. $individual->id. '/individual')  }}" class="btn btn-default">
             <i class="fa fa-btn fa-search"></i>
             {{ $individual->measurements()->withoutGlobalScopes()->count() }}
             @lang('messages.measurements')
           </a>
-        </div>
       @else
         @can ('create', App\Models\Measurement::class)
-          <div class="col-sm-4">
             <a href="{{ url('individuals/'. $individual->id. '/measurements/create')  }}" class="btn btn-default">
               <i class="fa fa-btn fa-search"></i>
               @lang('messages.create_measurements')
             </a>
-          </div>
         @endcan
       @endif
 
-
       @if ($individual->vouchers()->count())
-        <div class="col-sm-4">
+          &nbsp;&nbsp;
           <a href="{{ url('individuals/'. $individual->id. '/vouchers')  }}" class="btn btn-default">
             <i class="fa fa-btn fa-search"></i>
             {{ $individual->vouchers()->count() }}
             @lang('messages.vouchers')
           </a>
-        </div>
       @else
         @can ('create', App\Models\Voucher::class)
-          <div class="col-sm-4">
+            &nbsp;&nbsp;
             <a href="{{url ('individuals/' . $individual->id . '/vouchers/create')}}" class="btn btn-default">
               <i class="fa fa-btn fa-plus"></i>
               @lang('messages.create_voucher')
             </a>
-          </div>
         @endcan
       @endif
 
-      @can ('create', App\Models\Picture::class)
-        <div class="col-sm-3">
-          <a href="{{ url('individuals/'. $individual->id. '/pictures/create')  }}" class="btn btn-default">
+      <!-- this will show only if no media as media are shown below -->
+      @can ('create', App\Models\Media::class)
+        @if (!isset($media))
+          &nbsp;&nbsp;
+            <a href="{{ url('individuals/'. $individual->id. '/media-create')  }}" class="btn btn-default">
             <i class="fa fa-btn fa-plus"></i>
-            @lang('messages.create_picture')
+            <i class="fas fa-photo-video"></i>
+            <i class="fas fa-headphones-alt"></i>
+            @lang('messages.create_media')
           </a>
-        </div>
+        @endif
       @endcan
 
-
-      <br><br>
       @can ('update', $individual)
-			    <div class="col-sm-3">
-            <a href="{{ url('individuals/'. $individual->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
+            &nbsp;&nbsp;
+			      <a href="{{ url('individuals/'. $individual->id. '/edit')  }}" class="btn btn-success" name="submit" value="submit">
               @lang('messages.edit')
             </a>
-          </div>
       @endcan
 
 
 
       </div>
     </div>
-    @if ($individual->pictures->count())
-      {!! View::make('pictures.index', ['pictures' => $individual->pictures]) !!}
+    <!--- MEDIA BLOCK -->
+    @if (isset($media))
+      {!! View::make('media.index-model', ['model' => $individual, 'media' => $media ]) !!}
     @endif
+
 </div>
 </div>
 @endsection

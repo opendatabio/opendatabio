@@ -363,7 +363,7 @@ class ImportTraits extends AppJob
       //check if already exists
       if (ODBTrait::whereRaw('export_name like ?', [$record['export_name']])->count() > 0) {
           $this->appendLog('WARNING: Variable '.$record['export_name'].' already exists in the database. Skipped.');
-          return false;
+          return ;
       }
       $bibreference = null;
       if (isset($record['bibreference_id'])) {

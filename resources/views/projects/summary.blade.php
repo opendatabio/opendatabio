@@ -22,7 +22,7 @@
               {{ $project->individualsCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->individualsMeasurementsCount() }}
+              {{ $project->individuals_measurements_count() }}
           </td>
           <td class='table-text'>
               {{ $project->taxonsCount() }}
@@ -36,10 +36,10 @@
               {{ $project->vouchersCount() }}
           </td>
           <td class='table-text'>
-              {{ $project->vouchersMeasurementsCount() }}
+              {{ $project->vouchers_measurements_count() }}
           </td>
           <td class='table-text'>
-              
+
           </td>
       </tr>
     </tbody>

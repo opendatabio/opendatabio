@@ -62,12 +62,12 @@ class ProjectsDataTable extends DataTable
         ->editColumn('license', function ($project) {
             $license_logo = 'images/cc_srr_primary.png';
             // and null == $project->policy
-            if (null != $project->license) {
+            if (null != $project->license and $project->privacy>0) {
               $license = explode(" ",$project->license);
               $license_logo = 'images/'.mb_strtolower($license[0]).".png";
             }
             $txt = '<img src="'.asset($license_logo).'" width="80px">';
-            if (null != $project->license) {
+            if (null != $project->license and $project->privacy>0) {
               $txt = $project->license."<br>".$txt;
             }
             return $txt;
@@ -77,7 +77,7 @@ class ProjectsDataTable extends DataTable
         ->addColumn('individuals', function ($project) {
           //$individuals_count = $project->getCount('all',null,"individuals");
           $individuals_count = $project->individualsCount();
-          return '<a href="'.url('projects/'. $project->id. '/individuals').'" >'.$individuals_count.'</a>';
+          return '<a href="'.url('individuals/'. $project->id. '/project').'" >'.$individuals_count.'</a>';
         })
         ->addColumn('vouchers', function ($project) {
           //$vouchers_count = $project->getCount('all',null,"vouchers");
@@ -142,7 +142,7 @@ class ProjectsDataTable extends DataTable
 
         if ($this->dataset) {
             $dataset = $this->dataset;
-            $query = $query->whereHas('individual_measurements',function($measurement) use($dataset) { $measurement->withoutGlobalScopes()->where('dataset_id','=',$dataset);})->orWhereHas('voucher_measurements',function($measurement) use($dataset) {  $measurement->withoutGlobalScopes()->where('dataset_id','=',$dataset);});
+            $query = $query->whereHas('individualsMeasurements',function($measurement) use($dataset) { $measurement->withoutGlobalScopes()->where('dataset_id','=',$dataset);})->orWhereHas('voucher_measurements',function($measurement) use($dataset) {  $measurement->withoutGlobalScopes()->where('dataset_id','=',$dataset);});
         }
         if ($this->tag) {
             $tagid = $this->tag;

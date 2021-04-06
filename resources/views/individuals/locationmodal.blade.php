@@ -69,10 +69,9 @@
 
 </div>
 
-<div id="ajax-error" class="collapse alert alert-danger">
+<div id="ajax-error" class="col-sm-offset-3 col-sm-6 alert alert-danger" hidden>
   @lang('messages.whoops')
 </div>
-
 
 <!-- if location is new show and fill this after parent detection -->
 <div class="form-group savedetect" hidden>
@@ -88,7 +87,7 @@
       >>
       @lang('messages.next')
     </button>
-    <div class="spinner" id="spinner_save"> </div>
+    <div class="spinner" id="spinner-save"> </div>
   </div>
 </div>
 

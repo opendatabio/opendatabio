@@ -648,8 +648,11 @@ $("#autodetect").click(function(e) {
           $(".savedetect").show();
 
           //create point name to be saved as a new location if confirmed by user
-          var name = data.detectdata[4];
-          name = "{{config('app.unnamedPoint_basename')}}" + "_" + name.replace(/[A-Z\(\)-\.\s]/g,"");
+          //var name = data.detectdata[4].replace(/[A-Z\(\)-\.\s]/g,"");
+          //if (name.length >12) {
+            //name = name.substring(0,11);
+          //}
+          name = "{{config('app.unnamedPoint_basename')}}" + "_" + "{{ uniqid() }}";
           $("input[name=location_name]").val(name);
           $("input[name=location_parent_id]").val(data.detectdata[1]);
           $("input[name=location_geom]").val(data.detectdata[4]);
@@ -731,9 +734,12 @@ function setLocationDate() {
       success: function (data) {
         $( "#spinner-save" ).hide();
         if ("error" in data) {
-          $( "#ajax-error" ).collapse("show");
           $( "#ajax-error" ).text(data.error);
+          $( "#ajax-error" ).show();
         } else {
+            if (!$( "#ajax-error" ).is(':hidden')) {
+              $( "#ajax-error" ).hide();
+            }
             $(".savedetect").hide();
             $('#locationfield').show();
             $("#location_id").val(data.savedLocation[0]);

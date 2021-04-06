@@ -379,8 +379,8 @@ class ImportTaxons extends AppJob
         $hadtaxon = Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count();
         if ($hadtaxon>0) {
             $parentname = Taxon::findOrFail($parent)->fullname;
-            $this->appendLog("FAILED: taxon '$name' under parent '$parentname' is already imported into the database");
-            return false;
+            $this->appendLog("ERROR: taxon '$name' under parent '$parentname' is already imported into the database");
+            return;
         }
 
         $values = [

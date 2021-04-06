@@ -65,8 +65,8 @@
 @else
   @php
     //truncate item because otherwise becomes difficult to see large import recurds such as locations
-    $item = (strlen($item) > 1000) ? substr($item, 0, 1000) . '... too long, truncated' : $item;
-    $pattern = "/warning|file/i";
+    //$item = (strlen($item) > 1000) ? substr($item, 0, 1000) . '... too long, truncated' : $item;
+    $pattern = "/warning|downloads/i";
     if (preg_match($pattern, $item)) {
       $lineclass = 'alert alert-success';
     } else {

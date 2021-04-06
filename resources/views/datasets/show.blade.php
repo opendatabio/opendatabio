@@ -131,40 +131,28 @@
   </button>
 
 
-  @if ($dataset->individualsCount())
     &nbsp;&nbsp;
     <a href="{{ url('individuals/'. $dataset->id. '/datasets')  }}" class="btn btn-default" name="submit" value="submit">
           <i class="fa fa-btn fa-search"></i>
-          {{ $dataset->individualsCount() }}
           @lang('messages.individuals')
     </a>
-  @endif
-
-  @if ($dataset->vouchersCount())
+  
     &nbsp;&nbsp;
     <a href="{{ url('vouchers/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
           <i class="fa fa-btn fa-search"></i>
-          {{ $dataset->vouchersCount() }}
           @lang('messages.vouchers')
     </a>
-  @endif
 
-  @if ($dataset->locationsCount())
     &nbsp;&nbsp;
     <a href="{{ url('locations/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
           <i class="fa fa-btn fa-search"></i>
-          {{ $dataset->locationsCount() }}
           @lang('messages.locations')
     </a>
-  @endif
-  @if ($dataset->taxonsCount())
     &nbsp;&nbsp;
     <a href="{{ url('taxons/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
           <i class="fa fa-btn fa-search"></i>
-          {{ $dataset->taxonsCount() }}
           @lang('messages.taxons')
     </a>
-  @endif
   &nbsp;&nbsp;
   <button type="button" class="btn btn-default btntoogle" data='dataset_people' >@lang('messages.persons')</button>
 </p>

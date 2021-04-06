@@ -78,13 +78,18 @@ class ImportCollectable extends AppJob
             if (strpos($registry[$field], ';') !== false) {
               $persons = explode(';', $registry[$field]);
             } else {
-              //assume this is not separating names within abbreviations
+              /*
+              commented: commas are used in abbreviations so, not valid for persons
               if (strpos($registry[$field], ',') !== false) {
                 $persons = explode(',', $registry[$field]);
               }
+              */
             }
         }
-        $ids = array();
+        if (!is_array($persons)) {
+          $persons = [$persons];
+        }
+        $ids = [];
         $counter = 0;
         foreach ($persons as $person) {
             $valid = ODBFunctions::validRegistry(Person::select('id'), $person, ['id', 'abbreviation', 'full_name', 'email']);

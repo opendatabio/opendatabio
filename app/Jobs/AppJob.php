@@ -166,10 +166,14 @@ class AppJob implements ShouldQueue
     public function skipEntry($entry, $cause)
     {
         if (is_array($entry)) {
-            $entry = json_encode($entry);
+            $entry = json_encode($entry,JSON_PRETTY_PRINT);
         } elseif ('object' == gettype($entry)) {
-            $entry = serialize($entry);
+            //$entry = serialize($entry);
+            $entry = json_encode($entry,JSON_PRETTY_PRINT);
         }
-        $this->appendLog('ERROR: '.$cause.'. Skipping import of '.$entry);
+        $uid = uniqid();
+        $entryShow = '<a data-toggle="collapse" href="#'.$uid.'" class="btn btn-warning btn-sm">this record</a>&nbsp;
+           <div id="'.$uid.'" class="collapse" >'.$entry.'</div>';
+        $this->appendLog('ERROR: <strong>'.$cause.'</strong>. Skipping import of '.$entryShow);
     }
 }

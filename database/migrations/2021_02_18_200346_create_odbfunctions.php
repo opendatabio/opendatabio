@@ -37,7 +37,7 @@ class CreateOdbfunctions extends Migration
 
 
           DB::unprepared('DROP FUNCTION IF EXISTS odb_voucher_fullname');
-          DB::unprepared("CREATE FUNCTION odb_voucher_fullname(id INT,number  VARCHAR(191),individual_id INT, biocollection_id INT)
+          DB::unprepared("CREATE FUNCTION odb_voucher_fullname(id INT,number  VARCHAR(191),individual_id INT, biocollection_id INT,biocollection_number VARCHAR(191))
           RETURNS VARCHAR(191) DETERMINISTIC
           BEGIN
             DECLARE checkcollector BOOLEAN DEFAULT false;
@@ -51,7 +51,8 @@ class CreateOdbfunctions extends Migration
               SELECT tag into tagnum FROM individuals WHERE individuals.id=individual_id;
             END IF;
             SELECT `acronym` into biocol FROM biocollections WHERE biocollections.id=biocollection_id;
-            RETURN CONCAT(tagnum,' - ',person,' - ',biocol,'');
+            RETURN CONCAT(tagnum,' - ',person,' -',biocol,'.',biocollection_number);
+
         END;");
     }
 

@@ -10,12 +10,12 @@
 
                 <div class="panel-body">
 		@lang ('messages.confirm_person_message')
-		<br>
+    <hr>
 		<strong>@lang('messages.full_name')</strong> {{old('full_name')}}
 		<strong>@lang('messages.abbreviation')</strong> {{old('abbreviation')}}
-		<br>
-		@lang ('messages.possible_dupes')
-		<br>
+    <hr>
+		<strong>@lang ('messages.possible_dupes')</strong>
+		<br><br>
 			<ul>
 		@foreach ( $dupes as $dupe)
 			<li>{{$dupe->full_name}} ({{$dupe->abbreviation}})</li>

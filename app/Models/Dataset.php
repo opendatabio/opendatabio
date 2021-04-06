@@ -13,8 +13,9 @@ use App\Models\User;
 use App\Models\Taxon;
 use DB;
 use CodeInc\StripAccents\StripAccents;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Activity;
+
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Dataset extends Model
 {
@@ -334,10 +335,18 @@ class Dataset extends Model
        $title = "<a href='".url('datasets/'.$this->id)."'>".htmlspecialchars($title).'</a>';
      }
      if (null != $author) {
-       $citation = $author." (".$year.").  <strong>".$title."</strong>. Version: ".$version.". License: ".$this->license;
+       $citation = $author." (".$year.").  <strong>".$title."</strong>. Version: ".$version.".";
      } else {
-       $citation = "<strong>".$title."</strong>. Version: ".$version.". License: ".$this->license;
+       $citation = "<strong>".$title."</strong>. Version: ".$version.".";
      }
+     /* ONLY ADDED WHEN NOT RESTRICTED */
+     if ($this->privacy != self::PRIVACY_AUTH) {
+       $citation .= " License: ".$license;
+     } else {
+       $citation .= " License: has restrictions";
+     }
+
+
      if (!$for_dt) {
        $url =  url('dataset/'.$this->id);
        $citation .= '. From '.$url.', accessed '.$when.".";
@@ -368,7 +377,12 @@ class Dataset extends Model
      }
      $url =  $this->name;
      $bibkey = preg_replace('[,| |\\.|-|_]','',StripAccents::strip( (string) $this->name ))."_".$this->last_edition_date->format("Y");
-     $license = (null != $this->license) ? "License: ".$this->license.". " : "";
+     $license = (null != $this->license and $this->privacy != self::PRIVACY_AUTH) ? $this->license : ' Not public, some restrictions may apply.';
+
+     if (preg_match("/CC0/i",$license)) {
+       $license = "Public domain - CC0";
+     }
+
      $version = "Version: ".$this->last_edition_date->format("Y-m-d")." ";
      $bib =  [
         'title' => isset($this->title) ? $this->title : $this->name,
@@ -376,7 +390,7 @@ class Dataset extends Model
         'author' => $this->all_authors,
         'howpublished' => "url\{".url('dataset/'.$this->id)."}",
         'version' => $version,
-        'license' => (null != $this->license) ? $this->license : 'License not defined, use restrictions may apply.',
+        'license' => $license,
         'note' => $version.$license." Accessed: ".today()->format("Y-m-d"),
         'url' => "{".url('dataset/'.$this->id)."}",
      ];
@@ -414,39 +428,6 @@ class Dataset extends Model
      return $this->morphMany("Activity", 'subject')->where('description','like','%downloads%')->count();
    }
 
-
-   /*this will check whether a zipped filed with free access dataset exists */
-   /*saving would allow unlogged users to download */
-   public function hasPublicfile()
-    {
-      /* a file with this name will saved if the dataset is of public_access */
-      $filename = 'dataset-'.$this->id.'_'.$this->last_edition_date->format('Y-m-d').'_.zip';
-      $path = 'downloads_temp/'.$filename;
-      if (file_exists(public_path($path))) {
-          return [
-            'file' => $filename,
-            'version' => $this->last_edition_date->format('Y-m-d'),
-            'last' => true
-          ];
-      }
-      /* check if an older version exists */
-      $files = scandir(public_path('downloads_temp'));
-      $fn ='dataset-'.$this->id;
-      $hasother = Arr::where($files, function ($value, $key) use($fn) {
-          if ($start[0] == $fn) {
-            return $value;
-          }
-      });
-      if (count($hasother)>0) {
-         $dt = explode("_",$hasother)[1];
-         return [
-           'file' => $hasother,
-           'version' => $dt,
-           'last' => false
-         ];
-      }
-      return null;
-    }
 
 
 }

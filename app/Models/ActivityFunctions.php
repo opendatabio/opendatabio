@@ -26,23 +26,23 @@ class ActivityFunctions
        * Helpers for non-trait custom history
        *
       **/
-      public static function logCustomChanges($model, $oldArray,$newArray,$logName,$description,$allowedkeys) {
+      public static function logCustomChanges($model, $oldArray,$newArray,$logName,$description,$allowedKeys) {
          if (isset($oldArray)) {
-              if (!isset($allowedkeys)) {
-                $allowedkeys  = array_keys($newArray);
+              if (!isset($allowedKeys)) {
+                $allowedKeys  = array_keys($newArray);
               } else {
                 $newArray = array_filter(
                     $newArray,
-                    function ($key) use ($allowedkeys) {
-                      return in_array($key, $allowedkeys);
+                    function ($key) use ($allowedKeys) {
+                      return in_array($key, $allowedKeys);
                     },
                     ARRAY_FILTER_USE_KEY
                 );
               }
               $oldArray = array_filter(
                   $oldArray,
-                  function ($key) use ($allowedkeys) {
-                    return in_array($key, $allowedkeys);
+                  function ($key) use ($allowedKeys) {
+                    return in_array($key, $allowedKeys);
                   },
                   ARRAY_FILTER_USE_KEY
               );
@@ -50,10 +50,10 @@ class ActivityFunctions
               $result = array_diff_assoc($oldArray,$newArray);
               if (count($result)>0) {
                 $new= array_diff_assoc($newArray,$oldArray);
-                $tolog = array('attributes' => $new, 'old' => $result);
+                $toLog = array('attributes' => $new, 'old' => $result);
                 activity($logName)
                   ->performedOn($model)
-                  ->withProperties($tolog)
+                  ->withProperties($toLog)
                   ->log($description);
               }
         }
@@ -63,44 +63,43 @@ class ActivityFunctions
            $new = array_diff($newArray,$oldArray);
            $old = array_diff($oldArray,$newArray);
            if ($new || $old) {
-             $tolog = array('attributes' => array($pivotkey => $newArray), 'old' => array($pivotkey => $oldArray));
+             $toLog = array('attributes' => array($pivotkey => $newArray), 'old' => array($pivotkey => $oldArray));
              activity($logName)
                ->performedOn($model)
-               ->withProperties($tolog)
+               ->withProperties($toLog)
                ->log($description);
            }
      }
 
-     /* compare translations arrays, and log if changed */
-     public static function logTranslationsChanges($model,$old_translations,$new_translations,$logName,$logDescription,$logDescriptionDeleted)
+     /*
+     * Compare translations arrays, and log if changed
+     */
+     public static function logTranslationsChanges($model,$oldTranslations,$newTranslations,$logName,$logDescription,$logDescriptionDeleted)
      {
        //compare
-       $changes_att = array();
-       $changes_old = array();
-
-       $oldkeys = array_keys($old_translations);
-       $newkeys = array_keys($new_translations);
-       $olddeleted = array_diff($oldkeys,$newkeys);
-       foreach($new_translations as $key => $new_translation) {
-         $old_translation= isset($old_translations[$key]) ? $old_translations[$key] : null;
-         if (null !== $old_translation) {
-           $newisdifferent = array_diff_assoc($new_translation,$old_translation);
-           $oldisdifferent = array_diff_assoc($old_translation,$new_translation);
-           if (count($newisdifferent) or count($oldisdifferent)) {
-             $tolog = array('attributes' => array('translations' => $newisdifferent), 'old' => array('translations' => $oldisdifferent));
+       $oldkeys = array_keys($oldTranslations);
+       $newkeys = array_keys($newTranslations);
+       $oldDeleted = array_diff($oldkeys,$newkeys);
+       foreach($newTranslations as $key => $newTranslation) {
+         $oldTranslation= isset($oldTranslations[$key]) ? $oldTranslations[$key] : null;
+         if (null !== $oldTranslation) {
+           $newIsDifferent = array_diff_assoc($newTranslation,$oldTranslation);
+           $oldIsDifferent = array_diff_assoc($oldTranslation,$newTranslation);
+           if (count($newIsDifferent) or count($oldIsDifferent)) {
+             $toLog = array('attributes' => array('translations' => $newIsDifferent), 'old' => array('translations' => $oldIsDifferent));
              activity($logName)
              ->performedOn($model)
-             ->withProperties($tolog)
+             ->withProperties($toLog)
              ->log($logDescription);
            }
           }
        }
-       if (count($olddeleted)) {
-         foreach($olddeleted as $oldkey) {
-           $tolog = array('attributes' => array('translations' => ""), 'old' => array('translations' => $old_translations[$oldkey]));
+       if (count($oldDeleted)) {
+         foreach($oldDeleted as $oldKey) {
+           $toLog = array('attributes' => array('translations' => ""), 'old' => array('translations' => $oldTranslations[$oldKey]));
            activity($logName)
            ->performedOn($model)
-           ->withProperties($tolog)
+           ->withProperties($toLog)
            ->log($logDescriptionDeleted);
          }
        }
@@ -112,39 +111,38 @@ class ActivityFunctions
 
 
      public static function getIdentifiableName($key,$value) {
-        //key is a table name and must exists as a class
-        $relatedmodel = ucfirst($key);
+        $relatedModel = ucfirst($key);
         $text = $value;
-        if (class_exists("App\Models\\" .$relatedmodel)) {
+        if (class_exists("App\Models\\" .$relatedModel)) {
             //get identifiable name if exists
            if (!is_array($value)) {
-             $value = array($value);
+             $value = [$value];
            }
-           $values = array();
+           $values = [];
            foreach($value as $id) {
                 if ($id) {
-                  //$item = "App\\".$relatedmodel::find($id);
-                  $item = app("App\Models\\" . $relatedmodel)->find($id);
-                  $itemvalue = $id;
+                  //$item = "App\\".$relatedModel::find($id);
+                  $item = app("App\Models\\" . $relatedModel)->find($id);
+                  $itemValue = $id;
                   if (is_null($item)) {
-                      $itemvalue  = "id: ".$id." ".Lang::get('messages.revisionable_unknown');
+                      $itemValue  = "id: ".$id." ".Lang::get('messages.revisionable_unknown');
                     } else {
                       if (method_exists($item, 'identifiableName')) {
-                        $itemvalue = $item->identifiableName();
+                        $itemValue = $item->identifiableName();
                       } else {
                         if (isset($item->fullname)) {
-                          $itemvalue  = $item->fullname;
+                          $itemValue  = $item->fullname;
                         } else {
                           if (isset($item->name)) {
-                            $itemvalue  = $item->name;
+                            $itemValue  = $item->name;
                           }
                         }
                       }
                     }
                 } else {
-                  $itemvalue = Lang::get('messages.revisionable_nothing');
+                  $itemValue = Lang::get('messages.revisionable_nothing');
                 }
-                $values[] = $itemvalue;
+                $values[] = $itemValue;
 
            }
            $text = implode(" | ",$values);
@@ -162,43 +160,43 @@ class ActivityFunctions
        $text = "";
        if (is_array($new)) {
        foreach ($new as $key => $value) {
-              $keyvals = explode('_',$key);
-              $language = Language::where('id',$keyvals[0])->first()->name;
-              if (0 == $keyvals[1]) {
+              $langAndType = explode('_',$key);
+              $language = Language::where('id',$langAndType[0])->first()->name;
+              if (0 == $langAndType[1]) {
                 $type = Lang::get('messages.name');
               } else {
                 $type = Lang::get('messages.description');
               }
               if (isset($old[$key]) and $old !== "") {
-                $oldvalue = $old[$key];
+                $oldValue = $old[$key];
               } else {
-                $oldvalue = "";
+                $oldValue = "";
               }
-              $text .= "<tr><td >".$type."<br>[".$language."]</td><td class='text-danger'>".$oldvalue."</td><td class='text-success'>".$value."</td></tr>";
+              $text .= "<tr><td >".$type."<br>[".$language."]</td><td class='text-danger'>".$oldValue."</td><td class='text-success'>".$value."</td></tr>";
        }
 
      } elseif (is_array($old)) {
        foreach ($old as $key => $value) {
-              $keyvals = explode('_',$key);
-              $language = Language::where('id',$keyvals[0])->first()->name;
-              if (0 == $keyvals[1]) {
+              $langAndType = explode('_',$key);
+              $language = Language::where('id',$langAndType[0])->first()->name;
+              if (0 == $langAndType[1]) {
                 $type = Lang::get('messages.name');
               } else {
                 $type = Lang::get('messages.description');
               }
               if (isset($new[$key]) and $new !== "") {
-                $newvalue = $new[$key];
+                $newValue = $new[$key];
               } else {
-                $newvalue = "";
+                $newValue = "";
               }
-              $text .= "<tr><td >".$type."<br>[".$language."]</td><td class='text-danger'>".$value."</td><td class='text-success'>".$newvalue."</td></tr>";
+              $text .= "<tr><td >".$type."<br>[".$language."]</td><td class='text-danger'>".$value."</td><td class='text-success'>".$newValue."</td></tr>";
         }
       }
 
        return $text;
      }
 
-
+     /* Translation of field names */
      public static function keyname($key) {
        $text = $key;
        $key = str_replace('_id', '', $key);
@@ -220,100 +218,100 @@ class ActivityFunctions
             $text .= "<th class='text-danger'>".Lang::get('messages.old_value')."</th>";
           }
           $text .= "<th class='text-success'>".Lang::get('messages.new_value')."</th></tr></thead><tbody>";
-          foreach($attributes as $key => $newvalue) {
-                $oldvalue = "";
+          foreach($attributes as $key => $newValue) {
+                $oldValue = "";
                 if (null !== $old) {
-                  $oldvalue = $old[$key];
+                  $oldValue = $old[$key];
                 }
-                $identifiablenew   = $newvalue;
-                $identifiableold   = $oldvalue;
+                $identifiableNameNew   = $newValue;
+                $identifiableNameOld   = $oldValue;
                 if ('translations' !== $key) {
                 //if foreign key or array get identifiable name for values
-                if ((strpos($key, '_id') && 'parent_id' !== $key) || is_array($newvalue)) {
-                    $relatedmodel = str_replace('_id', '', $key);
-                    if ($relatedmodel == 'uc') {
-                      $relatedmodel='location';
+                if ((strpos($key, '_id') && 'parent_id' !== $key) || is_array($newValue)) {
+                    $relatedModel = str_replace('_id', '', $key);
+                    if ($relatedModel == 'uc') {
+                      $relatedModel='Location';
                     }
-                    if ($relatedmodel=='author') {
-                      $relatedmodel = 'person';
+                    if ($relatedModel=='author') {
+                      $relatedModel = 'Person';
                     }
-                    if ($relatedmodel=='bibreference') {
-                      $relatedmodel = 'BibReference';
+                    if ($relatedModel=='bibreference') {
+                      $relatedModel = 'BibReference';
                     }
-                      $identifiablenew = self::getIdentifiableName($relatedmodel,$newvalue);
+                      $identifiableNameNew = self::getIdentifiableName($relatedModel,$newValue);
                       if (null !== $old) {
-                        $identifiableold = self::getIdentifiableName($relatedmodel,$oldvalue);
+                        $identifiableNameOld = self::getIdentifiableName($relatedModel,$oldValue);
                       }
                 } else {
                     //for cases like modifier in identification
-                    if ('levels.'.$key.".".$newvalue !== Lang::get('levels.'.$key.".".$newvalue)) {
-                      $identifiablenew = Lang::get('levels.'.$key.".".$newvalue);
+                    if ('levels.'.$key.".".$newValue !== Lang::get('levels.'.$key.".".$newValue)) {
+                      $identifiableNameNew = Lang::get('levels.'.$key.".".$newValue);
                       if (null !== $old) {
-                        $identifiableold = Lang::get('levels.'.$key.".".$oldvalue);
+                        $identifiableNameOld = Lang::get('levels.'.$key.".".$oldValue);
                       }
                     } else {
 
                       if ('parent_id' == $key) {
-                          $class = $activity->subject_type;
-                          $subject = app($class)::findOrFail($newvalue);
+                          $modelClass = $activity->subject_type;
+                          $newSubject = app($modelClass)::findOrFail($newValue);
                           if (null !== $old) {
-                            $oldsubject = app($class)::findOrFail($oldvalue);
+                            $oldSubject = app($modelClass)::findOrFail($oldValue);
                           } else {
-                            $oldsubject = null;
+                            $oldSubject = null;
                           }
-                           if (method_exists($subject, 'identifiableName')) {
-                             $identifiablenew = $subject->identifiableName();
+                           if (method_exists($newSubject, 'identifiableName')) {
+                             $identifiableNameNew = $newSubject->identifiableName();
                              if (null !== $old) {
-                               $identifiableold = $oldsubject->identifiableName();
+                               $identifiableNameOld = $oldSubject->identifiableName();
                              }
                            } else {
-                             if ($subject->fullname) {
-                                $identifiablenew = $subject->fullname;
+                             if ($newSubject->fullname) {
+                                $identifiableNameNew = $newSubject->fullname;
                                 if (null !== $old) {
-                                  $identifiableold = $oldsubject->fullname;
+                                  $identifiableNameOld = $oldSubject->fullname;
                                 }
                              } else {
                                if ($item->name) {
-                                 $identifiablenew = $subject->name;
+                                 $identifiableNameNew = $newSubject->name;
                                  if (null !== $old) {
-                                   $identifiableold = $oldsubject->name;
+                                   $identifiableNameOld = $oldSubject->name;
                                  }
                                }
                              }
                           }
                         }
                       if ($key == 'value_a') {
-                      $class = $activity->subject_type;
-                      $subject = app($class)::findOrFail($activity->subject_id);
-                      $identifiablenew .= '&nbsp;<span class="measurement-thumb" style="background-color:'.$identifiablenew.'">';
+                      $modelClass = $activity->subject_type;
+                      $newSubject = app($modelClass)::findOrFail($activity->subject_id);
+                      $identifiableNameNew .= '&nbsp;<span class="measurement-thumb" style="background-color:'.$identifiableNameNew.'">';
                       if (null !== $old) {
-                        $identifiableold .= '&nbsp;<span class="measurement-thumb" style="background-color:'.$identifiableold.'">';
+                        $identifiableNameOld .= '&nbsp;<span class="measurement-thumb" style="background-color:'.$identifiableNameOld.'">';
                       }
                     }
                       if ($key == 'value_i') {
-                      $class = $activity->subject_type;
-                      $subject = app($class)::findOrFail($activity->subject_id);
-                      $odbtrait =  ODBTrait::findOrFail($subject->trait_id);
-                      $class = $odbtrait->link_type;
-                      $traitcl = app($class)::findOrFail($newvalue);
-                      if (null !== $old and null !== $oldvalue) {
-                        $oldtraitcl = app($class)::findOrFail($oldvalue);
+                      $modelClass = $activity->subject_type;
+                      $newSubject = app($modelClass)::findOrFail($activity->subject_id);
+                      $odbtrait =  ODBTrait::findOrFail($newSubject->trait_id);
+                      $modelClass = $odbtrait->link_type;
+                      $traitcl = app($modelClass)::findOrFail($newValue);
+                      if (null !== $old and null !== $oldValue) {
+                        $oldtraitcl = app($modelClass)::findOrFail($oldValue);
                       }
-                      $identifiablenew = $traitcl->fullname;
-                      if (null !== $old and null !== $oldvalue) {
-                        $identifiableold .= $oldtraitcl->fullname;
+                      $identifiableNameNew = $traitcl->fullname;
+                      if (null !== $old and null !== $oldValue) {
+                        $identifiableNameOld .= $oldtraitcl->fullname;
                       }
                     }
                     }
                 }
                 if (null !== $old) {
-                  $line = "<tr><td >".self::keyname($key)."</td><td class='text-danger'>".($identifiableold)."</td><td class='text-success'>".($identifiablenew)."</td><tr>";
+                  $line = "<tr><td >".self::keyname($key)."</td><td class='text-danger'>".($identifiableNameOld)."</td><td class='text-success'>".($identifiableNameNew)."</td><tr>";
                 } else {
-                  $line = "<tr><td >".self::keyname($key)."</td><td class='text-success'>".($identifiablenew)."</td><tr>";
+                  $line = "<tr><td >".self::keyname($key)."</td><td class='text-success'>".($identifiableNameNew)."</td><tr>";
                 }
                 $text .= $line;
               } else {
-                $text .= self::getTranslatableNames($newvalue, $oldvalue);
+                $text .= self::getTranslatableNames($newValue, $oldValue);
               }
 
           }
