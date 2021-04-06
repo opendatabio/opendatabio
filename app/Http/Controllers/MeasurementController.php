@@ -526,7 +526,6 @@ class MeasurementController extends Controller
           $message = Lang::get('messages.invalid_file_extension');
         } else {
           $filename = uniqid().".".$ext;
-          //$path = 'downloads_temp/'.$filename;
           $request->file('data_file')->storeAs("public/tmp",$filename);
 
           UserJob::dispatch(ImportMeasurements::class,[

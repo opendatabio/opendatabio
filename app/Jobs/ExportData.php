@@ -116,8 +116,8 @@ class ExportData extends AppJob
            //create temporary file to store the data (add the job id to the file name to be able to destroy it)
            $jobid = $this->userjob->id;
            $filename = "job-".$jobid."_".uniqid().".".$data['filetype'];
-           $path = 'downloads_temp/'.$filename;
-           $writer = SimpleExcelWriter::create(public_path($path));
+           $path = 'app/public/downloads/'.$filename;
+           $writer = SimpleExcelWriter::create(storage_path($path));
 
            //for each chunk get data from the api
            $counter = 1;
@@ -170,7 +170,7 @@ class ExportData extends AppJob
            //LOG THE FILE FOR USER DOWNLOAD
            $today = now();
            $file = "This file contains your requested export for <strong>".$object_type."</strong> prepared ".$today." ";
-           $tolog = $file."<br><a href='".url('downloads_temp/'.$filename)."' download >".$filename."</a>";
+           $tolog = $file."<br><a href='".url('storage/downloads/'.$filename)."' download >".$filename."</a>";
            $this->appendLog($tolog);
 
 

@@ -35,22 +35,16 @@ class UserJobController extends Controller
     //files MUST BE STORED WITH PREFIX 'job-'.$id."_whatever.*'
     public static function deleteJobFiles($id)
     {
-      $files = scandir(public_path('downloads_temp'));
-      $todelete = Arr::where($files, function ($value, $key) use($id) {
-          $fn = explode("_",$value);
-          if ($fn[0] == "job-".$id) {
-            return $value;
-          }
-      });
+      // list all filenames in given path
+      $allFiles = Storage::disk('downloads')->files('');
+
+      // filter the ones that match the filename.*
+      $searchStr = "job-".$id;
+      $todelete = preg_grep("/^".$searchStr."/i", $allFiles);
       //should be just one file found
       if (count($todelete)) {
-        $filename = public_path('downloads_temp/'.array_values($todelete)[0]);
-        File::delete($filename);
-        if (!file_exists($filename)) {
-          return true;
-        }
+        Storage::disk('downloads')->delete(array_values($todelete)[0]);
       }
-      return false;
     }
 
 

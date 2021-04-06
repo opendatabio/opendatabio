@@ -16,7 +16,8 @@ use App\Models\Location;
 use App\Models\ODBFunctions;
 use App\Models\ODBTrait;
 use Spatie\SimpleExcel\SimpleExcelWriter;
-use Illuminate\Support\Facades\Storage;
+use File;
+use Storage;
 use Illuminate\Http\Request;
 use DB;
 use Auth;
@@ -54,8 +55,8 @@ class DownloadDataset extends AppJob
         $basename = 'dataset_'.Auth::user()->id.'_'.$data['id'];
         $filename = $basename."_measurements.csv";
         $files = array($filename);
-        $path = 'downloads_temp/'.$filename;
-        $writer = SimpleExcelWriter::create(public_path($path));
+        $path = 'app/public/downloads/'.$filename;
+        $writer = SimpleExcelWriter::create(storage_path($path));
 
         //$this->appendLog("RAW DATA:".$path." datA".serialize($measurements));
 
@@ -142,8 +143,9 @@ class DownloadDataset extends AppJob
           //save locations to file
           $filename = $basename."_measuredIndividuals.csv";
           $files[] = $filename;
-          $path = 'downloads_temp/'.$filename;
-          $lwriter = SimpleExcelWriter::create(public_path($path));
+          $path = 'app/public/downloads/'.$filename;
+          $lwriter = SimpleExcelWriter::create(storage_path($path));
+
 
 
 
@@ -179,8 +181,8 @@ class DownloadDataset extends AppJob
 
           $filename = $basename."_measuredVouchers.csv";
           $files[] = $filename;
-          $path = 'downloads_temp/'.$filename;
-          $lwriter = SimpleExcelWriter::create(public_path($path));
+          $path = 'app/public/downloads/'.$filename;
+          $lwriter = SimpleExcelWriter::create(storage_path($path));
           //$voucher_fields = ['fullname', 'taxonName', 'id', 'parent_type', 'parent_id', 'date', 'notes', 'project_id'];
           $voucher_fields = ['id','fullname', "individual_id",'individual_fullname', 'biocollection_acronym','is_type','biocollection_number','main_collector','collector_number','all_collectors','collection_date','taxon_name','taxon_name_modifier','taxon_name_with_author','taxon_family','identification_date','identified_by','identification_notes','location_name','location_fullname','longitude','latitude','coordinates_precision','project_name','notes'];
 
@@ -201,8 +203,8 @@ class DownloadDataset extends AppJob
         if (count($measured_taxons)>0) {
           $filename = $basename."_measuredTaxons.csv";
           $files[] = $filename;
-          $path = 'downloads_temp/'.$filename;
-          $lwriter = SimpleExcelWriter::create(public_path($path));
+          $path = 'app/public/downloads/'.$filename;
+          $lwriter = SimpleExcelWriter::create(storage_path($path));
 
 
 
@@ -236,8 +238,8 @@ class DownloadDataset extends AppJob
           //save locations to file
           $filename = 'dataset_'.Auth::user()->id.'_'.$data['id']."_measuredLocations.csv";
           $files[] = $filename;
-          $path = 'downloads_temp/'.$filename;
-          $lwriter = SimpleExcelWriter::create(public_path($path));
+          $path = 'app/public/downloads/'.$filename;
+          $lwriter = SimpleExcelWriter::create(storage_path($path));
 
 
           $progress = round(100 * $this->userjob->progress / $this->userjob->progress_max);
@@ -263,12 +265,12 @@ class DownloadDataset extends AppJob
           //save locations to file
           $filename = $basename."_measuredTraits.csv";
           $files[] = $filename;
-          $path = 'downloads_temp/'.$filename;
-          $lwriter = SimpleExcelWriter::create(public_path($path));
+          $path = 'app/public/downloads/'.$filename;
+          $lwriter = SimpleExcelWriter::create(storage_path($path));
 
           $catfilename = $basename."_measuredTraits_categories.csv";
-          $catpath = 'downloads_temp/'.$catfilename;
-          $lwritercats = SimpleExcelWriter::create(public_path($catpath));
+          $catpath = 'app/public/downloads/'.$catfilename;
+          $lwritercats = SimpleExcelWriter::create(storage_path($path));
           $hascategories = false;
 
           $progress = round(100 * $this->userjob->progress / $this->userjob->progress_max);
@@ -297,11 +299,11 @@ class DownloadDataset extends AppJob
           if ($hascategories) {
             $files[] = $catfilename;
           } else {
-            unlink(public_path($catpath));
+            File::delete(storage_path($catpath));
           }
         }
 
-
+        // TODO: REPACE BY MARDOWN
         /* ADD README TO FILE PACK WITH DATASET DETAILS AND POLICIES */
         $dataset = Dataset::find($data['id']);
         $readme = "\n==========README=========\n";
@@ -313,7 +315,7 @@ class DownloadDataset extends AppJob
         /* who are the administrators */
         $readme .= Lang::get('messages.admins').":\n";
         foreach($dataset->users()->wherePivot('access_level', '=',Project::ADMIN)->get() as $admin) {
-          if ($admin->person->fullname) {
+          if ($admin->person) {
             $adm = $admin->person->fullname." - ".$admin->email;
           } else {
             $adm = $admin->email;
@@ -351,16 +353,15 @@ class DownloadDataset extends AppJob
         $readme .= "\n\n================\n";
         $filename = "README_".$basename.".txt";
         $files[] = $filename;
-        $path = 'downloads_temp/'.$filename;
-        $fn = fopen(public_path($path),'w');
+        $path = 'app/public/downloads/'.$filename;
+        $fn = fopen(storage_path($path),'w');
         fwrite($fn,$readme);
         fclose($fn);
 
 
         //ZIP THE FILES INTO A SINGLE BUNDLE
         // Define Dir Folder
-        $public_dir=public_path('downloads_temp');
-
+        $public_dir=storage_path('app/public/downloads');
         $today = now();
         $datasetname = $dataset->name;
 
@@ -386,13 +387,14 @@ class DownloadDataset extends AppJob
 
             //delete files
             foreach($files as $file) {
-                unlink($public_dir."/".$file);
+                $pathToDel = $public_dir."/".$file;
+                File::delete($pathToDel);
             }
         }
 
         //LOG THE FILE FOR USER DOWNLOAD
         $file = "Files for dataset <strong>".$datasetname."</strong> prepared ".$today." ";
-        $tolog = $file."<br><a href='".url('downloads_temp/'.$zipFileName)."' download >".$zipFileName."</a><br>".Lang::get('messages.dataset_download_file_tip');
+        $tolog = $file."<br><a href='".url('downloads/'.$zipFileName)."' download >".$zipFileName."</a><br>".Lang::get('messages.dataset_download_file_tip');
         $this->appendLog($tolog);
 
 
