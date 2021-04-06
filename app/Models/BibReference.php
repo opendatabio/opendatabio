@@ -14,17 +14,21 @@ use RenanBr\BibTexParser\ParseException;
 use RenanBr\BibTexParser\Processor;
 //use RenanBr\BibTexParser\Processor\LatexToUnicodeProcessor as LatexToUnicode;
 //use RenanBr\BibTexParser\Exception\ProcessorException;
+use Illuminate\Support\Str;
 use App\Models\BibLatexTitleToUnicode;
-use Pandoc\Pandoc;
-use Pandoc\PandocException;
+//use Pandoc\Pandoc;
+//use Pandoc\PandocException;
+
 use DB;
 use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Traits\LogsActivity;
 
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class BibReference extends Model
+class BibReference extends Model implements HasMedia
 {
-    use LogsActivity;
+    use InteractsWithMedia, LogsActivity;
 
     // "cached" entries, so we don't need to parse the bibtex for every call
     protected $entries = null;
@@ -77,29 +81,23 @@ class BibReference extends Model
 
     private function parseBibtex()
     {
+        /* define modifications to be applied to the original record */
         $listener = new Listener();
         $listener->addProcessor(new Processor\TagNameCaseProcessor(CASE_LOWER));
-        //$listener->setTagNameCase(CASE_LOWER);
-
+        //$listener->addProcessor(new Processor\NamesProcessor());
+        $listener->addProcessor(new Processor\KeywordsProcessor());
+        $listener->addProcessor(new Processor\DateProcessor());
+        $listener->addProcessor(new Processor\TrimProcessor());
+        $listener->addProcessor(new Processor\UrlFromDoiProcessor());
+        $listener->addProcessor(static function (array $entry) {
+            $title = Str::title($entry['title']);
+            $entry['title'] = $title;
+            return $entry;
+        });
+        //this must be the last processor
         $listener->addProcessor(new BibLatexTitleToUnicode());
 
-        //OLD SOLUTION
-        /*
-        try {
-            $pandoc = new Pandoc();
-            $listener->addProcessor(function (&$value, $tag) use ($pandoc) {
-            //$listener->addTagValueProcessor(function (&$value, $tag) use ($pandoc) {
-                if ('author' != $tag and 'title' != $tag) {
-                    return;
-                }
-                $value = $pandoc->runWith($value, [
-                'from' => 'latex',
-                'to' => 'plain', // or "html"
-            ]);
-            });
-        } catch (PandocException $e) {
-        } // pandoc is not installed
-        */
+        /* apply the modifications */
         $parser = new Parser();
         $parser->addListener($listener);
 
@@ -187,7 +185,11 @@ class BibReference extends Model
             $this->parseBibtex();
         }
         if (count($this->entries) > 0 and array_key_exists('author', $this->entries[0])) {
-            return $this->entries[0]['author'];
+            $author = $this->entries[0]['author'];
+            $authors =  explode(" and ",mb_strtolower($author));
+            $authors = collect($authors)->map(function($word) { return  Str::title($word);})->toArray();
+            $authors = implode(" and ",$authors);
+            return $authors;
         } else {
             return '';
         }
@@ -202,11 +204,10 @@ class BibReference extends Model
             $author = $this->entries[0]['author'];
             $authors =  explode(" and ",$author);
             if (count($authors)>2) {
-              return $authors[0]." et al.";
+              return Str::title($authors[0])." et al.";
             } else {
-              return $author;
+              return Str::title($author);
             }
-
         } else {
             return '';
         }

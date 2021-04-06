@@ -7,11 +7,14 @@
 
 namespace App\Models;
 
+use App\Models\BibReference;
+use Illuminate\Support\Str;
+
 use GuzzleHttp\Client as Guzzle;
 use GuzzleHttp\Exception\ClientException;
-use Illuminate\Support\Str;
+use CodeInc\StripAccents\StripAccents;
+
 use Log;
-use App\Models\BibReference;
 
 class ExternalAPIs
 {
@@ -124,6 +127,8 @@ class ExternalAPIs
               }
           }
           $bibkey = $family."_".$year;
+          $bibkey = StripAccents::strip( (string) $bibkey);
+          $bibkey = preg_replace('/[^A-Za-z0-9\-]/','',$bibkey);
           $result = [
           'author' => $author,
           'year' => $year,

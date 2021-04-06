@@ -29,7 +29,7 @@
           </strong>
         </div>
         <div class="col-sm-8">
-          {{ $reference->title }} &nbsp;
+          <strong>{{ $reference->title }}</strong>
         </div>
 
         <div class="col-sm-3">

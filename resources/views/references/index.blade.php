@@ -1,30 +1,34 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="container">
-        <div class="col-sm-offset-2 col-sm-8">
-
+<div class="container">
+    <div class="col-sm-offset-2 col-sm-8">
 
 @can ('create', App\Models\BibReference::class)
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    @lang('messages.import_references')
-                    <a data-toggle="collapse" href="#standardize_keys" class="btn btn-default">?</a>
-                </div>
-                <div class="panel-body panel-collapse collapse"  id="standardize_keys" >
-                  <div class="col-sm-12">
-                    <div >
-                      @lang('messages.references_hint')
-                      <br><br><br>
-                    </div>
-                  </div>
+    <div class="panel panel-default">
 
-                    <!-- Display Validation Errors -->
-		                  @include('common.errors')
+        <div class="panel-heading">
+            @lang('messages.import_references')
+            <button type='button' class="btn btn-default" id='importbutton'>?</button>
+        </div>
+        @if (count($errors) > 0)
+          <div class="panel-body"  id="importbox" >
+        @else
+          <div class="panel-body"  id="importbox" hidden>
+        @endif
+          <div  class="form-group" >
+              @lang('messages.references_hint')
+          </div>
 
-<form action="{{ url('references')}}" method="POST" class="form-horizontal" enctype="multipart/form-data">
- {{ csrf_field() }}
+          <!-- Display Validation Errors -->
+          @include('common.errors')
+
  <div class="form-group" >
+   <br><br>
+
+   <form action="{{ url('references')}}" method="POST" class="form-horizontal" enctype="multipart/form-data">
+    {{ csrf_field() }}
+
    <div class="col-sm-3" style='float: left;'>
       <input type="checkbox" name="standardize" id="standardize" class="" checked >&nbsp;@lang('messages.standardize_keys')
       <br>
@@ -51,26 +55,27 @@
            @lang ('messages.import_from_text')
        </button>
   </div>
+</form>
 </div>
 
-</form>
-                </div>
-            </div>
+    </div>
+</div>
 @endcan
 
 
 
             <!-- Registered References -->
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        @lang('messages.bibliographic_references')
-                    </div>
-                    <div class="panel-body">
-{!! $dataTable->table() !!}
-                </div>
-                </div>
-        </div>
+    <div class="panel panel-default">
+      <div class="panel-heading">
+          @lang('messages.bibliographic_references')
+      </div>
+      <div class="panel-body">
+        {!! $dataTable->table() !!}
+      </div>
     </div>
+
+    </div>
+</div>
 @endsection
 @push ('scripts')
 {!! $dataTable->scripts() !!}
@@ -78,6 +83,14 @@
 <script>
 
 $(document).ready(function() {
+
+  $("#importbutton").on('click',function(){
+    if ($("#importbox").is(":hidden")) {
+      $("#importbox").show();
+    } else {
+      $("#importbox").hide();
+    }
+  });
 
   /** USED IN THE LOCATION MODAL TO SAVE A NEW Location*/
   $("#checkdoi").click(function(e) {
