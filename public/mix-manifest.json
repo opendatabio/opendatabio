@@ -1,8 +1,6 @@
 {
     "/js/app.js": "/js/app.js",
-<<<<<<< HEAD
     "/css/app.css": "/css/app.css"
-=======
     "/css/app.css": "/css/app.css",
     "/fonts/fa-brands-400.eot": "/fonts/fa-brands-400.eot",
     "/fonts/fa-brands-400.svg": "/fonts/fa-brands-400.svg",
@@ -19,5 +17,4 @@
     "/fonts/fa-solid-900.ttf": "/fonts/fa-solid-900.ttf",
     "/fonts/fa-solid-900.woff": "/fonts/fa-solid-900.woff",
     "/fonts/fa-solid-900.woff2": "/fonts/fa-solid-900.woff2"
->>>>>>> bc12122f19300d4b8117e0f28f84a49229a96a7e
 }
