@@ -19,4 +19,11 @@ mix.js([
 	'node_modules/spectrum-colorpicker/spectrum.js',
 	], 'public/js')
    // app css
+<<<<<<< HEAD
+=======
+	 .copy(
+	 			'node_modules/@fortawesome/fontawesome-free/webfonts',
+	 			'public/fonts'
+	  )
+>>>>>>> bc12122f19300d4b8117e0f28f84a49229a96a7e
 	 .sass('resources/assets/sass/app.scss', 'public/css');
