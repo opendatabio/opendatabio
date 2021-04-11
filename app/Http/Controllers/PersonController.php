@@ -197,8 +197,8 @@ class PersonController extends Controller
             Validate file extension and maintain original if valid or else
             Store may save a csv as a txt, and then the Reader will fail
         */
-        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
-        $ext = $request->file('data_file')->getClientOriginalExtension();
+        $valid_ext = array("csv","ods",'xlsx');
+        $ext = mb_strtolower($request->file('data_file')->getClientOriginalExtension());
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {

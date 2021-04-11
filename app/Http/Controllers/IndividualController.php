@@ -635,8 +635,8 @@ class IndividualController extends Controller
       if (!$request->hasFile('data_file')) {
           $message = Lang::get('messages.invalid_file_missing');
       } else {
-        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
-        $ext = $request->file('data_file')->getClientOriginalExtension();
+        $valid_ext = array("csv","ods",'xlsx');
+        $ext = mb_strtolower($request->file('data_file')->getClientOriginalExtension());
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {
