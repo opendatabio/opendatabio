@@ -97,12 +97,12 @@ return [
     'timezone' => 'UTC',
 
     /* Administrative levels: which administrative levels should be displayed
-     * to users? Default is [0, 1, 2] which corresponds to country, state, municipality in Brazil.
-     * Note that other "administrative levels" such as plots, points and conservation units
-     * are always displayed. You can control the name for each adm level in the
+     * to users?
+     * Note that other "administrative levels" such as plots, points and conservation units are always displayed.
+     * You can control the name for each adm level in the
      * resources/lang/[language]/levels.php file
-     */
-    'adm_levels' => [0,1,2,3],
+     * following directives of OSM   https://wiki.openstreetmap.org/wiki/Key:admin_level */
+    'adm_levels' => [2,3,4,5,6,7,8,9,10],
 
     /*
      * This string represents a regular expression describing what is a valid
@@ -110,8 +110,7 @@ return [
      * in the .env file.
      *'/^[A-z,\. -]+$/',
      */
-
-
+     //esta permite acentos
     'valid_abbreviation' => '/^[A-Za-zÀ-ÖØ-öø-ÿ,\. -]+$/',
 
     /*

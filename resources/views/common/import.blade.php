@@ -68,7 +68,10 @@
           </label>
           <div class="col-sm-6">
             <input type="file" name="data_file" id="data_file">
-            <small>@lang('messages.import_file_hint')</small>
+            @php
+              $geojson = $model=='locations' ? '  GeoJson' : '';
+            @endphp
+            <small>@lang('messages.import_file_hint',['additionaltypes' => $geojson])</small>
           </div>
         </div>
 
@@ -89,6 +92,35 @@
             </div>
           </div>
         @endif
+
+        @if ($model == 'locations')
+          <div class="form-group">
+            <label for="location_parent_ignore" class="col-sm-4 control-label">
+              @lang('messages.location_parent_ignore')
+            </label>
+            <div class="col-sm-6">
+              <input type="checkbox" name="parent_options" value='ignore' >
+              &nbsp;&nbsp;
+              <a data-toggle="collapse" href="#hint_parent_ignore" class="btn btn-sm btn-default">?</a>
+              <!-- <?php // TODO: parent force locations? ?>
+              <br>
+              <input type="radio" name="parent_options" value='force' >
+              @lang('messages.parent_force')
+              <a data-toggle="collapse" href="#hint_parent_force" class="btn btn-sm btn-default">?</a>
+            -->
+            </div>
+            <div class="col-sm-12">
+              <div id="hint_parent_ignore" class="panel-collapse collapse">
+                @lang('messages.location_parent_ignore_hint')
+              </div>
+              <div id="hint_parent_force" class="panel-collapse collapse">
+                @lang('messages.location_parent_forcee_hint')
+              </div>
+            </div>
+          </div>
+        @endif
+
+
 
 
         <div class="form-group">

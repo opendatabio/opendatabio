@@ -737,8 +737,8 @@ class Installer
         }
 
         echo "Changing storage area permissions...\n";
-        exec('chmod -fR 755 storage 2>&1');
-        exec('chmod -fR 755 bootstrap/cache 2>&1');
+        exec('chmod -fR 775 storage 2>&1');
+        exec('chmod -fR 775 bootstrap/cache 2>&1');
 
         echo $this->c("********************************************\n", 'success');
         echo $this->c("OpenDataBio has been successfully installed!\n", 'success');

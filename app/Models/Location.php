@@ -31,8 +31,23 @@ class Location extends Node implements HasMedia
     const LEVEL_PLOT = 100;
     const LEVEL_TRANSECT = 101;
     const LEVEL_POINT = 999;
+    const LEVEL_SPECIAL = [
+      self::LEVEL_UC,
+      self::LEVEL_PLOT,
+      self::LEVEL_POINT,
+    ];
+    // Valid geometries
+    const GEOM_POINT = "Point";
+    const GEOM_POLYGON = "Polygon";
+    const GEOM_MULTIPOLYGON = "MultiPolygon";
+    const VALID_GEOMETRIES = [
+      self::GEOM_POINT,
+      self::GEOM_POLYGON,
+      self::GEOM_MULTIPOLYGON
+    ];
+    // "LineString","MultiLineString", "Polygon", "MultiPolygon"];
 
-    protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty', 'parent_id'];
+    protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty', 'parent_id','geojson'];
     protected $lat;
     protected $long;
     protected $geom_array = [];
@@ -100,7 +115,7 @@ class Location extends Node implements HasMedia
         // this query hangs if you attempt to run it on full geom objects, so we add
         // a "where" to make sure we're only calculating distance from small objects
         return $query->addSelect(DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
-            ->where('adm_level', '>', 99);
+            ->where('adm_level', '>', self::LEVEL_UC);
     }
 
 
@@ -328,6 +343,7 @@ class Location extends Node implements HasMedia
             $max_level += 1;
         }
         $possibles = self::whereRaw('ST_Within(GeomFromText(?), geom)', [$geom])
+            ->where('adm_level','!=',self::LEVEL_POINT)
             ->orderBy('adm_level', 'desc');
         if ($parent_uc) { // only looks for UCs
             $possibles = $possibles->where('adm_level', '=', self::LEVEL_UC);
@@ -335,11 +351,10 @@ class Location extends Node implements HasMedia
             $possibles = $possibles->where('adm_level', '!=', self::LEVEL_UC)
             ->where('adm_level', '<', $max_level);
         }
-        $possibles = $possibles->get();
+        $possibles = $possibles->cursor();
         if ($possibles->count()) {
             return $possibles->first();
         }
-
         return null;
     }
 

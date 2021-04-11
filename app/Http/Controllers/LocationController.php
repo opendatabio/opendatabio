@@ -171,7 +171,7 @@ class LocationController extends Controller
             ],
             'adm_level' => 'required|integer',
             'altitude' => 'integer|nullable',
-            'parent_id' => 'required_unless:adm_level,0',
+            'parent_id' => 'required_unless:adm_level,'.config('app.adm_levels')[0],
         ];
         if (Location::LEVEL_PLOT == $request->adm_level) { // PLOT
             if ('point' == $request->geom_type) {
@@ -282,7 +282,7 @@ class LocationController extends Controller
                 ->withInput();
         }
         // checks for duplicates, except if the request is already confirmed
-        if ($request->adm_level > 99 and !$request->confirm and 'point' == $request->geom_type) {
+        if ($request->adm_level > Location::LEVEL_UC and !$request->confirm and 'point' == $request->geom_type) {
             $dupes = Location::withDistance(Location::geomFromParts($request))->get()
                 ->filter(function ($obj) {
                     return $obj->distance < 0.001;
@@ -327,7 +327,7 @@ class LocationController extends Controller
             $world = Location::world();
             $newloc->parent_id = $world->id;
         }
-        if ($request->uc_id and $request->adm_level > 99) {
+        if ($request->uc_id and $request->adm_level > Location::LEVEL_UC) {
             $newloc->uc_id = $request->uc_id;
         }
         $newloc->save();
@@ -345,9 +345,9 @@ class LocationController extends Controller
     public function show($id,LocationsDataTable $dataTable)
     {
         $location = Location::noWorld()->select('*')->with('children')->withGeom()->findOrFail($id);
-        $plot_children = $location->children->map(function ($c) { if ($c->adm_level > 99) { return Location::withGeom()->find($c->id); } });
+        $plot_children = $location->children->map(function ($c) { if ($c->adm_level > Location::LEVEL_UC) { return Location::withGeom()->find($c->id); } });
         //$plot_children = null;
-        if (null !== $location->parent and $location->adm_level>0) {
+        if (null !== $location->parent and $location->adm_level>config('app.adm_levels')[0]) {
           $parent = Location::noWorld()->select('*')->withGeom()->findOrFail($location->parent->id);
         } else {
           $parent = null;
@@ -466,7 +466,7 @@ class LocationController extends Controller
             }
         }
 
-        if ($request->uc_id and $request->adm_level > 99) {
+        if ($request->uc_id and $request->adm_level > Location::LEVEL_UC) {
             if ($location->uc_id and $location->uc_id !== $request->uc_id) {
             $tolog = array('attributes' => ['uc_id' => $request->uc_id], 'old' => ['uc_id' => $location->uc_id]);
             activity('location')
@@ -478,7 +478,8 @@ class LocationController extends Controller
         }
 
         // sets the parent_id in the request, to be picked up by the next try-catch:
-        if (0 === $request->adm_level) {
+        //if adm is lowest defined, set world as parent
+        if ( config('app.adm_levels')[0] === $request->adm_level) {
             $world = Location::world();
             $request->parent_id = $world->id;
         }
@@ -603,8 +604,8 @@ class LocationController extends Controller
             Validate file extension and maintain original if valid or else
             Store may save a csv as a txt, and then the Reader will fail
         */
-        $valid_ext = array("CSV","csv","ODS","ods","XLSX",'xlsx');
-        $ext = $request->file('data_file')->getClientOriginalExtension();
+        $valid_ext = array("csv","ods",'xlsx','geojson');
+        $ext = mb_strtolower($request->file('data_file')->getClientOriginalExtension());
         if (!in_array($ext,$valid_ext)) {
           $message = Lang::get('messages.invalid_file_extension');
         } else {
@@ -616,6 +617,7 @@ class LocationController extends Controller
                 'data' => null,
                 'filename' => $filename,
                 'filetype' => $ext,
+                'parent_options' => $request->parent_options,
               ],
           ]);
           $message = Lang::get('messages.dispatched');
