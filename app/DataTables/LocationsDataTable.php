@@ -34,8 +34,12 @@ class LocationsDataTable extends DataTable
             $sql = " name LIKE '%".$keyword."%' ";
             $query->whereRaw($sql);
         })
-        ->editColumn('adm_level', function ($location) { return Lang::get('levels.adm_level.'.$location->adm_level); })
-        ->addColumn('full_name', function ($location) {return $location->full_name; })
+        ->editColumn('adm_level', function ($location) {
+          return Lang::get('levels.adm_level.'.$location->adm_level);
+        })
+        ->addColumn('full_name', function ($location) {
+          return $location->full_name;
+        })
         ->addColumn('individuals', function ($location) {
           if ($this->project) {
             $individuals_count = $location->getCount('App\Models\Project',$this->project,'individuals');
@@ -171,8 +175,8 @@ class LocationsDataTable extends DataTable
         }
 
         if ($this->request()->has('adm_level')) {
-          $adm_level =  $this->request()->get('adm_level');
-          if ($adm_level != "" and null !== $adm_level) {
+          $adm_level =  (int) $this->request()->get('adm_level');
+          if ($adm_level>0) {
             $query = $query->where('adm_level',$adm_level);
           }
         }
@@ -189,7 +193,7 @@ class LocationsDataTable extends DataTable
     public function html()
     {
 
-        $locations_level =  Location::AdmLevels();
+        $locations_level =  Location::used_adm_levels();
         $title_level = Lang::get('messages.level');
         if (count($locations_level)) {
           $title_level  = Lang::get('messages.level').'<select name="location_level" id="location_level" ><option value="">'.Lang::get('messages.all').'</option>';

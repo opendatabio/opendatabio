@@ -110,6 +110,11 @@ class Location extends Node implements HasMedia
         ]);
     }
 
+    public static function used_adm_levels()
+    {
+      return Location::noWorld()->select("adm_level")->distinct('adm_level')->pluck('adm_level')->toArray();
+    }
+
     public static function scopeWithDistance($query, $geom)
     {
         // this query hangs if you attempt to run it on full geom objects, so we add

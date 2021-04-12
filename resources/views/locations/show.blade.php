@@ -294,6 +294,23 @@ function getZoomLevel($area) {
 @push ('scripts')
 {!! $dataTable->scripts() !!}
 
+
+<script>
+    const table = $('#dataTableBuilder');
+    table.on('preXhr.dt',function(e,settings,data) {
+      data.adm_level = $("#location_level option").filter(':selected').val();
+      /* an any defined in the export form */
+      data.location = "{{ $location->id }}";
+      /*console.log(data.level,data.project,data.location,data.taxon); */
+    });
+    $('#location_level').on('change',function() {
+       table.DataTable().ajax.reload();
+       return false;
+    });
+</script>
+
+
+
 <script>
 
 function initMap() {
