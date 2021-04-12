@@ -1,9 +1,10 @@
 * [**Auxiliary Objects**](#)
   * [BibReference](#bibreferences)
+  * [BioCollection](#biocollections)
   * [Identification](#identifications)
   * [Incomplete Dates](#incompletedate)
   * [Person](#persons)
-  * [Picture](#mediafiles)
+  * [Media](#mediafiles)
   * [Tag](#tags)
   * [User Translation](#user_translations)
 * [**Core Objects**](Core-Objects)
@@ -32,6 +33,19 @@ The **BibReference** table contains basically [BibTex](http://www.bibtex.org/) f
 
 <br>
  **Data access** [full users](Data-Access-Objects#users) may register new references, edit references details and remove reference records that have no associated data. BibReferences have public access!
+
+<a name="biocollections"></a>
+***
+## Biocollections
+
+The **Biocollection** object currenlty only stores basic information about Biological Collections that may be used for [Vouchers](Core-Objects#voucher), to indicate in which Biological Collections the voucher is deposited. The Biocollection object may be an Biocollection registered in the Index Herbariorum (http://sweetgum.nybg.org/science/ih/) or any other Museum Collection, formal or informal.  
+
+ The Biocollection object also interacts with the [Person](Auxiliary-Objects#persons) model. When a Person is linked to an biocollection it will be listed as a taxonomic specialist.
+
+ ![](https://github.com/opendatabio/datamodel/blob/master/biocollection_model.png)
+ <img src="{{ asset('images/docs/biocollection_model.png') }}" alt="Datasets model" with=350>
+
+**Data Access** - only administrators can register new Biocollections and delete unused biocollection. Updates are not yet implemented.
 
 <a name="identifications"></a>
 ***
@@ -83,24 +97,19 @@ The **Person** object stores persons names, which may or may not be a [User](Dat
 ***
 ## Media Model
 
-**Media** are similar to [measurements](Trait-Objects@measurements) in that they might be associated with all [core objects](Core-Objects). Media files may be **tagged**, i.e. you may define keywords to them, allowing to query them by [Tags](#tags). For example, an individual image may be tagged with 'flowers' or 'fruits' to indicate what is in the image, or a tag that informs about image quality.
+**Media files** are similar to [measurements](Trait-Objects@measurements) in that they might be associated with any [core object](Core-Objects). Media files may be images (jpeg, png, gif, tif), video or audito files and can be made freely accessible or placed in a [Project](Data-Access-Objects#projects) with a defined access policy. A <a href="https://creativecommons.org/licenses/">CreativeCommons.org</a> license must be assigned to them. Media files may be **tagged**, i.e. you may define keywords to them, allowing to query them by [Tags](#tags). For example, an individual image may be tagged with 'flowers' or 'fruits' to indicate what is in the image, or a tag that informs about image quality.
 
 ![](https://github.com/opendatabio/datamodel/blob/master/media_model.png)
 <img src="{{ asset('images/docs/media_model.png') }}" alt="Media model" with=350>
 
-The Media table and its direct links:
-
-![](https://github.com/opendatabio/datamodel/blob/master/picture_model_phpadm.png)
-<img src="{{ asset('images/docs/picture_model_phpadm.png') }}" alt="Picture model" with=350>
-
 * Media files (image, video, audio) are linked to the [Core-Objects](Core-Objects) through a [polymorphic relationship](#polymorphicrelationships) defined by columns `model_id` and `model_type`.
-* Multiple [Persons](#persons) may be associated with the Picture for credits, these are linked with the **Collectors** table and its [polymorphic relationship](#polymorphicrelationships) structure.
-* A Picture may have a `description` in each language configured in the Language table, which will be stored in the `user_translations` table, which relates to the Tag model through a [polymorphic relationship](#polymorphicrelationships). Inputs for each language are shown in the web-interface Picture create/edit forms.
-* Media files are not stored in the database, but in the server storage folder. The naming convention for images have the following logic: `mode_type+model+id`.
+* Multiple [Persons](#persons) may be associated with the Media for credits, these are linked with the **Collectors** table and its [polymorphic relationship](#polymorphicrelationships) structure.
+* A Media may have a `description` in each language configured in the Language table, which will be stored in the `user_translations` table, which relates to the Tag model through a [polymorphic relationship](#polymorphicrelationships). Inputs for each language are shown in the web-interface Picture create/edit forms.
+* Media files are not stored in the database, but in the server storage folder.
 
 * It is possible to **batch upload media files** through the web interface, requiring also a file informing the objects to link the media with.
 
-**Data access** [full users](Data-Access-Objects#users) may register media fies and delete the ones they have inserted. If image is in a Project, project admins may delete the media in addition to the user. Media files have public access, except when linked to a Project with access restrictions.
+**Data access** [full users](Data-Access-Objects#users) may register media files and delete the ones they have inserted. If Media is in a Project, project admins may delete the media in addition to the user. Media files have public access, except when linked to a Project with access restrictions.
 
 <a name="tags"></a>
 ***

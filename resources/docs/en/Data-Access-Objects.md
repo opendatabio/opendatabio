@@ -1,7 +1,6 @@
 * [Data Access Objects](#)
   * [Datasets](#datasets)
   * [Projects](#projects)
-  * [Biocollections](#biocollections)
   * [User](#users)      
   * [UserJobs](#jobs)      
 * [**Core Objects**](Core-Objects)
@@ -9,29 +8,29 @@
 * [**Trait Objects**](Trait-Objects)
 * [**API**](API)
 
-# Data Access Objects (Management)
-
-[Datasets](#datasets) and [Projects](#projects) are a ways to group data in OpenDataBio and define data policy access to them. Datasets group [Measurements](Trait-Objects#measurements) and Projects group [Individuals](Core-Objects#individuals) and [Vouchers](Core-Objects#vouchers).
-
+# Data Access Objects
+[Datasets](#datasets) and [Projects](#projects) allows to group data, control data access and publish datasets. Datasets group [Measurements](Trait-Objects#measurements) and Projects group [Individuals](Core-Objects#individuals), [Vouchers](Core-Objects#vouchers) or [Media Files](Auxiliary-Objects#mediafiles).
+<br><br>
 Both must have at least one [User](#users) defined as `administrator`, who has total control over the project or dataset, including granting the following roles to other users: `administrator`, `collaborator` or `viewer`:
-    * **Collaborators** are able to insert and edit objects (Individuals and Vouchers) into the Project, or Measurements into the Dataset, but are not able to delete records nor change the project's configuration.
-    * **Viewers** have read-only access to the Project's or Dataset data, including downloads;
-    * Only **Full Users** and **SuperAdmins** may be assigned as **administrators** or **collaborators**. Thus, if a user who was administrator or collaborator of a project is demoted to "Registered User", she or he will become a viewer in the project or dataset.
-
-[Biocollections](#biocollections) are Museum Collections, including Biocollections but not limited to individual Collections, to which [Vouchers](Core-Objects#vouchers) may belong to. It is included in this page because this model will be improved to permit such collections to use OpenDataBio for their data management and curational purposes. With this improvement the Biocollections Model will be renamed and gain additional management tools for Curators and museum staff. This will required the solving of possible conflicts of permissions with Projects privacy level.
-
+* **Collaborators** are able to insert and edit objects, but are not able to delete records nor change the project's configuration.
+* **Viewers** have read-only access to the data, including downloads;
+* Only **Full Users** and **SuperAdmins** may be assigned as **administrators** or **collaborators**. Thus, if a user who was administrator or collaborator of a project is demoted to "Registered User", she or he will become a viewer in the project or dataset.
+<br><br>
+A <a href="https://creativecommons.org/licenses/">CreativeCommons.org</a> public license must be assigned to Projects or Datasets released as *public access* or *restricted to registered users*.
+<br><br>
+A **citation** will be generated for any Project or Dataset, indicating how to cite publicly accessible data.
 
 <a name="datasets"></a>
 ***
 ## Datasets
-**DataSets** are groups of [Measurements](Trait-Objects#measurements) which have the same authorization policy. Each DataSet may have one or more [Users](#users)  `administrators`, `collaborators` or `viewers`. Administrators may set the `privacy level` to *public access*, *restricted to registered users* or *restricted to authorized users*. This control access to the measurements within a dataset as exemplified in diagram below:
+**DataSets** are groups of [Measurements](Trait-Objects#measurements) and may have one or more [Users](#users)  `administrators`, `collaborators` or `viewers`. Administrators may set the `privacy level` to *public access*, *restricted to registered users* or *restricted to authorized users*. This control access to the measurements within a dataset as exemplified in diagram below:
 
 ![](https://github.com/opendatabio/datamodel/blob/master/dataset_model.png)
 <img src="{{ asset('images/docs/dataset_model.png') }}" alt="Datasets model" with=350>
 
-Datasets may also have many [Bibliographic References](Auxiliary-Objects#bibreferences), which together with fields `policy` and `metadata` permits to annotate the dataset with relevant information for appending to downloads or presenting to unauthorized users in a request form. This allows to:
+Datasets may also have many [Bibliographic References](Auxiliary-Objects#bibreferences), which together with fields `policy`, `metadata` permits to annotate the dataset with relevant information for appending to downloads. This allows to:
     * Link any publication that have used the dataset and optionally indicate that they are of mandatory citation when using the data;
-    * Define a specific data `policy` when using the data
+    * Define a specific data `policy` when using the data in addition to the A <a href="https://creativecommons.org/licenses/">CreativeCommons.org</a> public `license`;
     * Detail any relevant `metadata` in addition to those that are automatically retrieved from the database like the [Traits](Trait-Objects#traits) measured.
 
 
@@ -39,33 +38,15 @@ Datasets may also have many [Bibliographic References](Auxiliary-Objects#bibrefe
 <img src="{{ asset('images/docs/dataset_bibreference.png') }}" alt="Datasets model" with=350>
 
 
-<a name="biocollections"></a>
-***
-## Biocollections
-The **Biocollection** object currenlty only stores basic information about Biological Collections that may be used to link to [Vouchers](Core-Objects#voucher), to indicate in which Biological Collections the voucher is deposited. The Biocollection object may be an Biocollection registered in the Index Herbariorum (http://sweetgum.nybg.org/science/ih/) or any other Museum Collection, formal or informal.  *Data access:* only [SuperAdmins](#users) can register or remove this entities.
-
-The Biocollection object also interacts with the [Person](Auxiliary-Objects#persons) model. When a Person is linked to an biocollection it will be listed as a taxonomic specialist.
-
-**Biocollections will renamed to a generic name to be more clear that it also allow the registration of non-individual collections. It will also be improved to permit such collections to use the OpenDataBio system to manage their vouchers (loans, donations, etc).**
-
-
-![](https://github.com/opendatabio/datamodel/blob/master/biocollections_model.png)
-<img src="{{ asset('images/docs/biocollections_model.png') }}" alt="Datasets model" with=350>
-
-
-**Data Access** - only administrators can register new Biocollections and delete unused biocollection. Updates are not yet implemented.
-
 <a name="projects"></a>
 ***
 ## Projects
 The **Project** model groups [Individuals](Core-Objects#individuals) and [Vouchers](Core-Objects#vouchers) and interacts with [Users](#users) in the same way as Datasets, having  `administrators`, `collaborators` or `viewers` users. Administrators may set the `privacy level` to *public access*, *restricted to registered users* or *restricted to authorized users*, which controls the data for the Individuals and Vouchers objects belonging to the Project.
 
-
 ![](https://github.com/opendatabio/datamodel/blob/master/project_model.png)
 <img src="{{ asset('images/docs/project_model.png') }}" alt="Projects model" with=350>
 
-
-**Data access**: Measurements related to Individuals or Vouchers in a Project should be accessible to users having access to datasets with such measurements. The most restricted policy will be applied when they conflict. Datasets are independent from Projects and may aggregate Measurements from individuals and vouchers belonging to different projects. To avoid such conflict between Project and Dataset policies, consider defining a **public access**  policy to Projects as soon as possible as they do not control measurements.
+**Data access**: Measurements related to Individuals or Vouchers in a Project should be accessible to users having access to datasets with such measurements. The most restricted policy will be applied when they conflict. Datasets are independent from Projects and may aggregate Measurements from individuals and vouchers belonging to different projects.
 
 
 <a name="users"></a>
@@ -76,7 +57,7 @@ The **Users** table stores information about the database users and administrato
 There are three possible **access levels** for a user:
     * `Registered User` (the lowest level) - have very few permissions
     * `Full User` - may be assigned as collaborators to Projects and Datasets;
-    * `SuperAdmin` (the highest level). - superadmins have have access to all objects, regardless of project or dataset configuration.
+    * `SuperAdmin` (the highest level). - superadmins have have access to all objects, regardless of project or dataset configuration and is the system administrator.
 
 
 ![](https://github.com/opendatabio/datamodel/blob/master/user_model.png)

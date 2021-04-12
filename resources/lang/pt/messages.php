@@ -447,7 +447,7 @@ return array (
   'project' => 'Projeto',
   'project_summary' => 'Resumo do Projeto',
   'project_url_hint' => 'Endereço web externo para o Project se houver. Apenas para Link display na página do repositório',
-  'projects_hint' => 'Projetos organizam registros de Indivíduos e Vouchers, agrupando dados de ocorrência de espécies e regulando o acesso à esses registros, ou seja registros do Indivíduos, suas identificações taxonômicas e localizações. Veja os <a href="datasets">Conjuntos de dados</a> para Medições relativas a Indivíduos, Taxons, Vouchers e/ou Localidades',
+  'projects_hint' => 'Projetos agrupam registros de Indivíduos, Vouchers e/ou Arquivos de Mídia, regulando como eles são disponibilizados. Projetos com Indivíduos e Vouchers representam dados de <code>ocorrências</code> de organismos, tanto registros pontuais, como ocorrências de organismos monitorados ao longo do tempo. Projetos podem agrupar arquívos de mídia ligados à Indivíduos, Taxons, Vouchers e/ou Localidades e que estejam em qualquer outro Projeto. <strong>Medições</strong> desses objetos são organizadas em <a href="datasets">Conjuntos de dados</a>',
   'projects' => 'Projetos',
   'range_max' => 'Máximo do intervalo',
   'range_min' => 'Mínimo do intervalo',
