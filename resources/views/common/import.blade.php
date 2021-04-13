@@ -31,28 +31,28 @@
         @php
         switch ($model) {
           case 'locations':
-              $action = 'importLocations';
+              $action = 'import-locations';
               break;
           case 'measurements':
-              $action = 'importMeasurements';
+              $action = 'import-measurements';
               break;
           case 'individuals':
-              $action = 'ImportIndividuals';
+              $action = 'import-individuals';
               break;
           case 'taxons':
-              $action = 'importTaxons';
+              $action = 'import-taxons';
               break;
           case 'traits':
-              $action = 'importTraits';
+              $action = 'import-traits';
               break;
           case 'vouchers':
-              $action = 'importVouchers';
+              $action = 'import-vouchers';
               break;
           case 'persons':
-              $action = 'importPersons';
+              $action = 'import-persons';
               break;
           case 'biocollections':
-              $action = 'ImportBiocollections';
+              $action = 'import-biocollections';
               break;
           default:
             $action = null;

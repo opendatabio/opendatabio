@@ -94,10 +94,6 @@ class ImportLocations extends AppJob
              } else {
                $this->userjob->tickProgress();
              }
-            if ($location['geojson'] == 1) {
-              $this->appendLog('WARNING: HERE GEOJSON EQUAIS 1 '.$location['geojson']);
-            }
-
 
             if ( null === $location) {
               continue;

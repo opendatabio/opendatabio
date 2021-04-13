@@ -24,6 +24,20 @@ Route::put('/selfupdate', 'Auth\SelfEditController@selfupdate')->name('selfupdat
 // Home controller for logged in users
 Route::get('/home', 'HomeController@index')->name('home');
 
+/* IMPORT ROUTES */
+Route::post('import-locations', 'LocationController@importJob');
+Route::post('Import-individuals', 'IndividualController@importJob');
+Route::post('import-taxons', 'TaxonController@importJob');
+Route::post('import-vouchers', 'VoucherController@importJob');
+Route::post('import-traits', 'TraitController@importJob');
+Route::post('import-measurements', 'MeasurementController@importJob');
+Route::post('import-persons', 'PersonController@importJob');
+Route::post('import-biocollections', 'BiocollectionController@importJob');
+Route::get('import/{model}',function($model) {
+  return view('common.import',compact('model'));
+});
+
+
 // Resources (with non-default BEFORE resources):
 Route::get('persons/autocomplete', 'PersonController@autocomplete');
 Route::get('persons/{id}/history', 'PersonController@activity');
@@ -41,15 +55,12 @@ Route::post('biocollections/checkih', 'BiocollectionController@checkih')->name('
 Route::get('biocollections/autocomplete','BiocollectionController@autocomplete');
 Route::resource('biocollections', 'BiocollectionController', ['only' => ['index', 'show', 'store', 'destroy']]);
 
-Route::post('importLocations', 'LocationController@importJob');
 Route::get('locations/{id}/activity', 'LocationController@activity');
 Route::get('locations/{id}/project', 'LocationController@indexProjects');
 Route::get('locations/{id}/dataset', 'LocationController@indexDatasets');
 Route::get('locations/autocomplete', 'LocationController@autocomplete');
-
 Route::post('locations/autodetect', 'LocationController@autodetect')->name('autodetect');
 Route::post('locations/individual_location', 'LocationController@saveForIndividual')->name('saveForIndividual');
-
 Route::resource('locations', 'LocationController');
 
 Route::get('taxons/{id}/project', 'TaxonController@indexProjects');
@@ -175,18 +186,6 @@ Route::get('measurements/{id}/trait', 'MeasurementController@indexTraits');
 Route::resource('measurements', 'MeasurementController', ['only' => ['show', 'store', 'edit', 'update']]);
 
 
-
-/* IMPORT ROUTES */
-Route::post('ImportIndividuals', 'IndividualController@importJob');
-Route::post('importTaxons', 'TaxonController@importJob');
-Route::post('importVouchers', 'VoucherController@importJob');
-Route::post('importTraits', 'TraitController@importJob');
-Route::post('importMeasurements', 'MeasurementController@importJob');
-Route::post('importPersons', 'PersonController@importJob');
-Route::post('ImportBiocollections', 'BiocollectionController@importJob');
-Route::get('import/{model}',function($model) {
-  return view('common.import',compact('model'));
-});
 
 
 
