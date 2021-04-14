@@ -584,6 +584,8 @@ class Installer
             'DB_PASSWORD' => 'Database password?',
             'DB_DATABASE' => 'Database name?',
             'DB_HOST' => 'Database hostname?',
+            'DB_CHARSET' => 'Database charset? (default utf8mb4)',
+            'DB_COLLATION' => 'Database collation? (default utf8mb4_unicode_ci; should match your server)',
             'PROXY_URL' => 'Proxy host? (Leave blank for no proxy)',
             'PROXY_PORT' => 'Proxy port?',
             'PROXY_USER' => 'Proxy username? (Leave blank if not required)',
@@ -594,6 +596,7 @@ class Installer
             'MAIL_PORT' => 'E-mail port?',
             'MAIL_USERNAME' => 'E-mail username?',
             'MAIL_PASSWORD' => 'E-mail password?',
+            'MEDIA_MAX_FILE_SIZE' => 'Maximum media file size upload?'
         ];
         foreach ($envfields as $key => $message) {
             echo $message.' ['.getenv($key).'] ';

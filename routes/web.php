@@ -196,33 +196,21 @@ Route::get('media/import-form', 'MediaController@uploadForm');
 Route::post('import/media', 'MediaController@uploadSubmit');
 
 
+Route::get('taxons/{id}/media-create', 'MediaController@createTaxons');
+Route::get('locations/{id}/media-create', 'MediaController@createLocations');
+Route::get('individuals/{id}/media-create','MediaController@createIndividuals');
+Route::get('persons/{id}/media-create', 'MediaController@createMedia');
+Route::get('traits/{id}/media-create', 'MediaController@createMedia');
+Route::get('traits-categories/{id}/media-create', 'MediaController@createCategoryMedia');
+Route::get('vouchers/{id}/media-create', 'MediaController@createVouchers');
+
 //Media objects
 Route::get('media/{id}/activity', 'MediaController@activity');
 Route::get('media/{id}/taxons', 'MediaController@indexTaxons');
 Route::get('media/{id}/locations', 'MediaController@indexLocations');
 Route::get('media/{id}/individuals', 'MediaController@indexIndividuals');
 Route::get('media/{id}/vouchers', 'MediaController@indexVouchers');
-Route::get('taxons/{id}/media-create', 'MediaController@createTaxons');
-Route::get('locations/{id}/media-create', 'MediaController@createLocations');
-Route::get('individuals/{id}/media-create', 'MediaController@createIndividuals');
-Route::get('vouchers/{id}/media-create', 'MediaController@createVouchers');
-
-Route::get('traits/{id}/media-create', 'MediaController@createMedia');
-Route::get('traits-categories/{id}/media-create', 'MediaController@createCategoryMedia');
-Route::get('persons/{id}/media-create', 'MediaController@createMedia');
-//Route::post('media/store', 'MediaController@store');
-//Route::post('media/update', 'MediaController@update');
 Route::resource('media', 'MediaController',['only' => ['show', 'edit', 'update', 'destroy','store']]);
-
-
-
-
-//Picture object
-Route::get('taxons/{id}/pictures/create', 'PictureController@createTaxons');
-Route::get('locations/{id}/pictures/create', 'PictureController@createLocations');
-Route::get('individuals/{id}/pictures/create', 'PictureController@createIndividuals');
-Route::get('vouchers/{id}/pictures/create', 'PictureController@createVouchers');
-Route::resource('pictures', 'PictureController', ['only' => ['show', 'store', 'edit', 'update']]);
 
 
 
