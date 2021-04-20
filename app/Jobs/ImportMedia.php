@@ -13,6 +13,7 @@ use App\Models\ODBFunctions;
 use App\Models\Tag;
 use App\Models\Project;
 use Spatie\SimpleExcel\SimpleExcelReader;
+use Illuminate\Support\Str;
 use Lang;
 use Filepond;
 use Auth;
@@ -69,8 +70,10 @@ class ImportMedia extends ImportCollectable
           $dt = $rows[$key];
           if (!$this->validateData($dt)) {
             $info = pathinfo($filepath);
-            unlink($filepath);
-            rmdir($info['dirname']);
+            if (file_exists($path)) {
+              unlink($filepath);
+              rmdir($info['dirname']);
+            }
             //$this->skipEntry($dt,'Attribute data invalid');
           } else {
             $this->import($dt,$filepath);
@@ -115,22 +118,46 @@ class ImportMedia extends ImportCollectable
 
 public function validateDate(&$data)
 {
-  if (!isset($data['date']) or null == $data['date']) {
-    $data['date'] = today();
-    return true;
-  }
-  $date = $data['date'];
-  if (strpos($date, '/') !== false) {
-      $date = explode('/', $date);
-  } else {
-      if (strpos($date, '-') !== false) {
-        $date = explode('-', $date);
+  //validate date
+  $today = today()->toDateString();
+  $date = (isset($data['date']) and $data['date'])? $data['date'] : (isset($this->header['date']) ? $this->header['date'] : $today);
+  if (is_string($date)) {
+    if (preg_match("/\//",$date)) {
+        $date = explode("/",$date);
+        $date = [$date[1],$date[2],$date[0]];
+    } elseif (preg_match("/-/",$date)) {
+        $date = explode("-",$date);
+        $date = [$date[1],$date[2],$date[0]];
+    } else {
+      $date = (string) Str::of($date)->trim();
+      if (!$date) {
+        $date = [];
+      } else {
+        return false;
       }
+    }
+  } elseif (get_class($date)==="DateTime") {
+       $year = $date->format('Y');
+       $day = $date->format('d');
+       $month = $date->format('m');
+       $date = [$month,$day,$year];
+  } else  {
+      $year = isset($data['date_year']) ? $data['date_year'] : (isset( $data['year']) ? $data['year'] : null);
+      $month = isset($data['date_month']) ? $data['date_month'] : (isset( $data['month']) ? $data['month'] : null);
+      $day = isset($data['date_day']) ? $data['date_day'] : (isset( $data['day']) ? $data['day'] : null);
+      $date = [$month,$day,$year];
   }
-  if (count($date) != 3) {
+  if (count(array_filter($date)) ==0 ) {
+    $date = explode("-",today()->toDateString());
+    $date = [$date[1],$date[2],$date[0]];
+  }
+  // TODO:  change to incomplete date
+  if (!checkdate($date[0], $date[1], $date[2])) {
+    $data['date'] = "FR5OM HERE 2".serialize($date);
     return false;
   }
-  return checkdate($date[1], $date[2], $date[0]);
+  $data['date'] = (string) $date[2]."-".$date[0]."-".$date[1];
+  return true;
 }
 
     public function projectValidate(&$data)

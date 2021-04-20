@@ -26,7 +26,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 /* IMPORT ROUTES */
 Route::post('import-locations', 'LocationController@importJob');
-Route::post('Import-individuals', 'IndividualController@importJob');
+Route::post('import-individuals', 'IndividualController@importJob');
 Route::post('import-taxons', 'TaxonController@importJob');
 Route::post('import-vouchers', 'VoucherController@importJob');
 Route::post('import-traits', 'TraitController@importJob');
