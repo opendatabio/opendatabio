@@ -31,7 +31,7 @@ class CreateOdbfunctions extends Migration
           RETURNS VARCHAR(191) DETERMINISTIC
           BEGIN
           DECLARE position VARCHAR(191);
-          SELECT AsText(relative_position) into position FROM individual_location WHERE individual_id=id ORDER BY individual_location.id DESC LIMIT 0,1;
+          SELECT ST_AsText(relative_position) into position FROM individual_location WHERE individual_id=id ORDER BY individual_location.id DESC LIMIT 0,1;
           RETURN position;
           END;");
 

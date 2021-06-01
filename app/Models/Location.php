@@ -112,14 +112,16 @@ class Location extends Node implements HasMedia
 
     public static function used_adm_levels()
     {
-      return Location::noWorld()->select("adm_level")->distinct('adm_level')->pluck('adm_level')->toArray();
+      //something wrong here, mysql complains aboud orderby in this statement and it does not has one . perhaps a baum related issue
+      //return Location::noWorld()->select("adm_level")->distinct('adm_level')->pluck('adm_level')->toArray();
+      return DB::table('locations')->distinct('adm_level')->pluck('adm_level')->toArray();
     }
 
     public static function scopeWithDistance($query, $geom)
     {
         // this query hangs if you attempt to run it on full geom objects, so we add
         // a "where" to make sure we're only calculating distance from small objects
-        return $query->addSelect(DB::Raw("ST_Distance(geom, GeomFromText('$geom')) as distance"))
+        return $query->addSelect(DB::Raw("ST_Distance(geom, ST_GeomFromText('$geom')) as distance"))
             ->where('adm_level', '>', self::LEVEL_UC);
     }
 
@@ -250,12 +252,12 @@ class Location extends Node implements HasMedia
             return;
         }
         // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
-        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('$value')) as val");
+        $invalid = DB::select("SELECT ST_IsEmpty(ST_GeomFromText('$value')) as val");
         $invalid = count($invalid) ? $invalid[0]->val : 1;
         if ($invalid) {
             throw new \UnexpectedValueException('Invalid Geometry object: '.$value);
         }
-        $this->attributes['geom'] = DB::raw("GeomFromText('$value')");
+        $this->attributes['geom'] = DB::raw("ST_GeomFromText('$value')");
     }
 
     public function getSimplifiedAttribute()
@@ -347,7 +349,7 @@ class Location extends Node implements HasMedia
         if (self::LEVEL_PLOT == $max_level) {
             $max_level += 1;
         }
-        $possibles = self::whereRaw('ST_Within(GeomFromText(?), geom)', [$geom])
+        $possibles = self::whereRaw('ST_Within(ST_GeomFromText(?), geom)', [$geom])
             ->where('adm_level','!=',self::LEVEL_POINT)
             ->orderBy('adm_level', 'desc');
         if ($parent_uc) { // only looks for UCs
@@ -366,7 +368,7 @@ class Location extends Node implements HasMedia
     public function setGeomFromParts($values)
     {
         $geom = self::geomFromParts($values);
-        $this->attributes['geom'] = DB::raw("GeomFromText('$geom')");
+        $this->attributes['geom'] = DB::raw("ST_GeomFromText('$geom')");
     }
 
     public static function geomFromParts($values)
@@ -522,9 +524,9 @@ class Location extends Node implements HasMedia
     {
         return $query->addSelect(
             DB::raw('name'),
-            DB::raw('AsText(geom) as geom'),
-            DB::raw('Area(geom) as area'),
-            DB::raw('IF(adm_level=999,AsText(geom),AsText(Centroid(geom))) as centroid_raw')
+            DB::raw('ST_AsText(geom) as geom'),
+            DB::raw('IF(adm_level<999,ST_Area(geom),null) as area'),
+            DB::raw('IF(adm_level=999,ST_AsText(geom),ST_AsText(ST_Centroid(geom))) as centroid_raw')
         );
     }
 

@@ -312,11 +312,11 @@ class IndividualController extends Controller
         }
 
         // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
-        $invalid = DB::select("SELECT ST_IsEmpty(GeomFromText('POINT($y $x)')) as val")[0]->val;
+        $invalid = DB::select("SELECT ST_IsEmpty(ST_GeomFromText('POINT($y $x)')) as val")[0]->val;
         if ($invalid) {
             return null;
         }
-        return DB::raw("GeomFromText('POINT($y $x)')");
+        return DB::raw("ST_GeomFromText('POINT($y $x)')");
     }
 
 

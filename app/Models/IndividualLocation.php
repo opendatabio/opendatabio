@@ -70,7 +70,7 @@ class IndividualLocation extends Model
             'individual_location.notes',
             'individual_location.altitude',
             'individual_location.first',
-            DB::raw('AsText(relative_position) as relativePosition')
+            DB::raw('ST_AsText(relative_position) as relativePosition')
         );
     }
 

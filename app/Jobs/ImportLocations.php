@@ -223,12 +223,12 @@ class ImportLocations extends AppJob
             )
           {
           // we check if this exact geometry is already registered
-          $alreadyPresent= Location::whereRaw("geom=geomfromtext('$geom')")->count();
-          $validGeom = DB::select("SELECT geomfromtext('".$geom."') as valid");
+          $alreadyPresent= Location::noWorld()->whereRaw("geom LIKE ST_GeomFromText('$geom')")->count();
           if ($alreadyPresent>0) {
             $this->skipEntry($locationLog,'ERRO: '.Lang::get('messages.geom_duplicate'));
             return false;
           }
+          $validGeom = DB::select("SELECT ST_GeomFromText('".$geom."') as valid");
           if ($validGeom == null) {
             $this->skipEntry($locationLog,'ERRO: '.Lang::get('messages.geometry_invalid'));
             return false;
@@ -236,7 +236,7 @@ class ImportLocations extends AppJob
           return true;
         } else {
           /* validate polygon geometries*/
-          $valid = DB::select('SELECT Dimension(GeomFromText(?)) as valid', [$location['geom']]);
+          $valid = DB::select('SELECT ST_Dimension(ST_GeomFromText(?)) as valid', [$location['geom']]);
           if (null == $valid[0]->valid) {
             $this->skipEntry($locationLog,'ERRO: '.Lang::get('messages.geometry_invalid'));
             return false;
@@ -436,7 +436,8 @@ class ImportLocations extends AppJob
           }
         }
         //this is important to prevent duplicated values
-        $sameGeometry = Location::where('geom', 'like', $geom)->count();
+        $smallGeom = substr($geom, 0,1000);
+        $sameGeometry = Location::whereRaw("geom=ST_GeomFromText('$geom')")->count();
         if ($sameGeometry>0) {
           $locationLog = $location;
           $locationLog['geom'] = substr($locationLog['geom'],0,20);

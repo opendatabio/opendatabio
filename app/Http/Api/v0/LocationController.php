@@ -45,7 +45,7 @@ class LocationController extends Controller
         if ($request->querytype and isset($request->lat) and isset($request->long)) {
             $geom = "POINT($request->long $request->lat)";
             if ('exact' == $request->querytype) {
-                $locations->whereRaw('AsText(geom) = ?', [$geom]);
+                $locations->whereRaw('ST_AsText(geom) = ?', [$geom]);
             }
             if ('parent' == $request->querytype) {
                 $parent = Location::detectParent($geom, 100, false);

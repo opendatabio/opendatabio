@@ -90,7 +90,7 @@ class LocationController extends Controller
         $loc_level = null;
         $return_geom = null;
         if (Location::LEVEL_POINT == $request->adm_level) {
-          $exists_exact = Location::whereRaw("geom=geomfromtext('$geom')")->cursor();
+          $exists_exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->cursor();
           if ($exists_exact->count()) {
             $loc_id = $exists_exact->first()->id;
             $loc_name = $exists_exact->first()->searchablename;
@@ -228,14 +228,14 @@ class LocationController extends Controller
                   $geom = $request->geom;
                 }
                 // we check if this exact geometry is already registered
-                $exact = Location::whereRaw("geom=geomfromtext('$geom')")->get();
+                $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->get();
                 if (sizeof($exact)) {
                     $validator->errors()->add('geom', Lang::get('messages.geom_duplicate'));
                 }
                 return;
             }
             // Case poligons, validate dimensions , returns NULL for invalid geometries
-            $valid = DB::select('SELECT Dimension(GeomFromText(?)) as valid', [$request->geom]);
+            $valid = DB::select('SELECT ST_Dimension(ST_GeomFromText(?)) as valid', [$request->geom]);
 
             if (is_null($valid[0]->valid)) {
                 $validator->errors()->add('geom', Lang::get('messages.geom_error'));
@@ -255,7 +255,7 @@ class LocationController extends Controller
                 return;
             }
 
-            $valid = DB::select('SELECT ST_Within(GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->parent_id]);
+            $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->parent_id]);
 
             if (1 != $valid[0]->valid) {
                 $validator->errors()->add('geom', Lang::get('messages.geom_parent_error'));
@@ -548,7 +548,7 @@ class LocationController extends Controller
         //if identical geometry exists return
         if ($request->geom) {
           $geom = $request->geom;
-          $exact = Location::whereRaw("geom=geomfromtext('$geom')")->get();
+          $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->get();
           if (sizeof($exact)) {
             return Response::json(
             [

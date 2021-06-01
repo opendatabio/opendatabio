@@ -61,7 +61,7 @@ class IndividualLocationsDataTable extends DataTable
             'individual_location.notes',
             'individual_location.date_time',
             'individual_location.altitude',
-            DB::raw('AsText(individual_location.relative_position) as relativePosition'),
+            DB::raw('ST_AsText(individual_location.relative_position) as relativePosition'),
           ]);
         if ($this->noaction) {
           $query = $query->addSelect(DB::raw('1 as noaction'));
