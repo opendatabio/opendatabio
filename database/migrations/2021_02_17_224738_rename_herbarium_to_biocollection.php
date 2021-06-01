@@ -32,15 +32,15 @@ class RenameHerbariumToBiocollection extends Migration
           $table->foreign('biocollection_id')->references('id')->on('biocollections');
 
         });
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Schema::disableForeignKeyConstraints();
         Schema::table('vouchers', function (Blueprint $table) {
-          $table->dropIndex('vouchers_unique');
+          //$table->dropUnique('vouchers_unique');
           $table->renameColumn('herbarium_id', 'biocollection_id');
           $table->renameColumn('herbarium_number', 'biocollection_number');
           $table->renameColumn('herbarium_type', 'biocollection_type');
           $table->foreign('biocollection_id')->references('id')->on('biocollections');
         });
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        Schema::enableForeignKeyConstraints();
     }
 
     /**

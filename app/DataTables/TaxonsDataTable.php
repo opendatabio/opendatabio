@@ -268,7 +268,7 @@ class TaxonsDataTable extends DataTable
                 [
                   'targets' => [5],
                   'searchPane' => [
-                    'options' => Taxon::select(DB::raw('DISTINCT level'))->cursor()->pluck('level')->toArray()
+                    'options' => $taxons_level
                   ]
                 ]
 

@@ -43,7 +43,7 @@ class VoucherController extends Controller
           'vouchers.biocollection_id',
           'vouchers.biocollection_type',
           'vouchers.biocollection_number',
-          DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id) as fullname')
+          DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number) as fullname')
         )->with('collectors');
         //query();
 

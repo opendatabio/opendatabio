@@ -56,7 +56,7 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => env('APP_URL').'storage',
+            'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
         ],
 
@@ -72,7 +72,7 @@ return [
         'media' => [
             'driver' => 'local',
             'root'   => storage_path('app/public/media'),
-            'url' => env("APP_URL")."storage/media",
+            'url' => env("APP_URL")."/storage/media",
             'permissions' => [
                 'file' => [
                     'public' => 0664,
@@ -88,7 +88,7 @@ return [
         'downloads' => [
             'driver' => 'local',
             'root'   => storage_path('app/public/downloads'),
-            'url' => env("APP_URL")."downloads",
+            'url' => env("APP_URL")."/downloads",
             'permissions' => [
                 'file' => [
                     'public' => 0664,
