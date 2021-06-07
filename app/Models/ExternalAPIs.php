@@ -198,10 +198,10 @@ class ExternalAPIs
         $client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
         //# STEP ONE, search for name summary
         try {
-            $response = $client->request('GET',
-                        "Name/Search?name=$searchstring&type=exact&apikey=$apikey&format=json"
-                );
-        } catch (ClientException $e) {
+            $response = $client->request('GET',"Name/Search?name=$searchstring&type=exact&apikey=$apikey&format=json");
+        } catch (\ClientException $e) {
+            return null; //FAILED
+        } catch (\Exception $e) {
             return null; //FAILED
         }
         if (200 != $response->getStatusCode()) {
@@ -300,7 +300,9 @@ class ExternalAPIs
         $client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
         try {
             $response = $client->request('GET',"ipni/simplePlantNameSearch.do?find_wholeName=$searchstring&output_format=delimited-short");
-        } catch (ClientException $e) {
+        } catch (\ClientException $e) {
+            return null; //FAILED
+        } catch (\Exception $e) {
             return null; //FAILED
         }
         if (200 != $response->getStatusCode()) {
@@ -392,7 +394,9 @@ class ExternalAPIs
       $client = new Guzzle(['base_uri' => $base_uri]);// 'proxy' => $this->proxystring]);
       try {
           $response = $client->request('GET',"NomenclaturalActs.json/".$searchstring2);
-      } catch (ClientException $e) {
+      } catch (\ClientException $e) {
+          return null; //FAILED
+      } catch (\Exception $e) {
           return null; //FAILED
       }
       if (200 != $response->getStatusCode()) {
@@ -527,7 +531,9 @@ class ExternalAPIs
       $client = new Guzzle(['base_uri' => $base_uri]);// 'proxy' => $this->proxystring]);
       try {
           $response = $client->request('GET',"v1/species?name=".$searchstring);
-      } catch (ClientException $e) {
+      } catch (\ClientException $e) {
+          return null; //FAILED
+      } catch (\Exception $e) {
           return null; //FAILED
       }
       if (200 != $response->getStatusCode()) {
@@ -602,7 +608,9 @@ class ExternalAPIs
         try {
             $response = $client->request('GET',"Services/Generic/SearchService.svc/rest/xml?layout=14682616000000161&filter=name%3D%22$searchstring%22"
                 );
-        } catch (ClientException $e) {
+        } catch (\ClientException $e) {
+            return null; //FAILED
+        } catch (\Exception $e) {
             return null; //FAILED
         }
         if (200 != $response->getStatusCode()) {

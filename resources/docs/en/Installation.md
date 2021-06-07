@@ -54,11 +54,11 @@ These are modified from [](https://github.com/dimadeush/docker-nginx-php-laravel
 1. Make sure your user is the owner of files and folders, else, change ownership and user to your user
 1. Enter the opendatabio directory created;
 1. Edit the environment file name `.env.docker`
-1. To install locally for development just adjust the following variables in the .env file, which are needed to map the files owners to a docker user;
-    1. `WWWUSER` the numeric user your are logged in and which is the owner of all files and directories in the app directory.
-    1. `WWWGROUP` the numeric group the user belongs, usually same as UID.
-1. File `Makefile` containes short cuts to the docker-compose commands used to build the services configured in the `docker-compose.yml` and auxiliary files in the `docker` folder.
-1. Build the docker containers using the shortcuts (check the Makefile to undersand the commands)
+1. To install locally for development just adjust the following variables in the Dockerfile, which are needed to map the files owners to a docker user;
+    1. `UID` the numeric user your are logged in and which is the owner of all files and directories in the app directory.
+    1. `GDI` the numeric group the user belongs, usually same as UID.
+1. File `Makefile` containes shortcuts to the docker-compose commands used to build the services configured in the `docker-compose.yml` and auxiliary files in the `docker` folder.
+1. Build the docker containers using the shortcuts (read the Makefile to undersand the commands)
 ```bash
 make build
 ```

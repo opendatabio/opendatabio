@@ -45,12 +45,9 @@ class ExportData extends AppJob
          } else {
            $endpoint = strtolower($object_type)."s";
          }
-         $base_uri = env("APP_URL")."api/v0/";
-
-
-
+         $base_uri = env("APP_DOCKER_URL")."/api/v0/";
+         #$base_uri = "http://172.17.0.1/api/v0/";
          //records to export
-
          //if user selected records, this is set
          $params = [];
          $export_ids = [];

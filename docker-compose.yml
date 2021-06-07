@@ -1,0 +1,107 @@
+version: '3.5'
+services:
+    nginx:
+      image: ${COMPOSE_PROJECT_NAME}_nginx:latest
+      build:
+        context: ./docker/
+        args:
+          - "BUILD_ARGUMENT_ENV=dev"
+        dockerfile: ./nginx/Dockerfile
+      container_name: odb_nginx
+      restart: always
+      ports:
+        - 8080:80
+        - 443:443
+      volumes:
+        - .:/var/www/html:ro
+        - ./storage/app/public:/var/www/html/public/storage/
+      depends_on:
+        - laravel
+      networks:
+        - odbnetwork
+    laravel: &laravel-template
+      image: ${COMPOSE_PROJECT_NAME}_laravel:latest
+      build:
+        context: .
+        args:
+          - "BUILD_ARGUMENT_ENV=dev"
+          - "BUILD_ARGUMENT_DEBUG_ENABLED=false"
+          - "UID=${WWWUSER}"
+          - "GID=${WWWGROUP}"
+        dockerfile: ./Dockerfile
+      container_name: odb_laravel
+      volumes:
+        - .:/var/www/html
+        - ./storage/app/public/:/var/www/html/public/storage/
+      depends_on:
+        - mysql
+        #- redis
+      networks:
+        - odbnetwork
+
+    # Redis, if want to use the redis QUEUE_CONNECTION
+    #redis:
+    #  image: redis:alpine
+    #  container_name: ${COMPOSE_PROJECT_NAME}_redis
+    #  restart: unless-stopped
+    #  command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"
+      # OPTIONAL: change or open up Redis port binding.
+      # Disabled by default for security. Redis should not be exposed to the world!
+      # your other containers should still be able to access it without this enabled
+      #ports:
+      #    - 8002:6379
+    #  networks:
+    #    - odbnetwork
+    #  volumes:
+    #    - ./data/redis:/data
+
+    ### queue tasks - user jobs
+    supervisord:
+      <<: *laravel-template
+      container_name: ${COMPOSE_PROJECT_NAME}_supervisord
+      #this solution stops after some time and does not complete for the taxon import, which search ExternalAPIs that may fail
+      #the restart always directive has no effect, must restart container manually
+      #restart: always
+      #command: php /var/www/html/artisan queue:work --sleep=3 --tries=40 --timeout=0
+
+      #same results for this solution
+      #restart: always
+      #command: /bin/bash -c 'while true; do php /var/www/html/artisan queue:work --sleep=3 --tries=20 --timeout=0; done'
+
+      # supervisord - this works, but has too many retries of the same record as if different queues are running at the same time
+      #is the only solution that completes a taxon import without breaking
+      #it may also stop after some time
+      restart: unless-stopped
+      user: root
+      command: /usr/bin/supervisord -c /etc/supervisor/supervisord.conf
+      volumes:
+        - .:/var/www/html
+      depends_on:
+        - laravel
+        #- redis
+      networks:
+        - odbnetwork
+    mysql:
+      image: mysql:8.0
+      container_name: ${COMPOSE_PROJECT_NAME}_mysql
+      command: --default-authentication-plugin=mysql_native_password
+      environment:
+        - MYSQL_ROOT_PASSWORD=secret
+        - MYSQL_DATABASE=laravel
+      ports:
+        - 33061:3306
+      volumes:
+        - odbmysqldata:/var/lib/mysql
+        - ./docker/mysql:/etc/mysql/conf.d
+        - ./docker/dev/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      networks:
+        - odbnetwork
+
+networks:
+  odbnetwork:
+    driver: bridge
+
+#mysql data save in local container
+volumes:
+  odbmysqldata:
+    driver: local
