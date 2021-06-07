@@ -4,7 +4,7 @@
     "license": "GPLv3",
     "type": "project",
     "require": {
-        "php": "^7.3",
+        "php": "^7.4",
         "andrechalom/laravel-multiselect": "1.0.x-dev",
         "barryvdh/laravel-translation-manager": "^0.5.9",
         "baum/baum": "2.x-dev",

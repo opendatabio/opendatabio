@@ -49,7 +49,7 @@ class Person extends Model
     // For use in Person::duplicates
     public static function normalize($text)
     {
-        $text = trim(strtolower($text));
+        $text = trim(mb_strtolower($text));
         $text = preg_replace('/[^a-z ]/', '', $text);
         $tarr = explode(' ', $text);
         foreach ($tarr as $key => $token) {

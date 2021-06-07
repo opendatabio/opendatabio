@@ -94,7 +94,6 @@ class ImportTaxons extends AppJob
           $this->skipEntry($taxon, 'Author is mandatory for this record');
           return false;
         }
-        //$this->appendLog("GOT HERE 06");
         //or clade is the level and bibreference is missing, then issues a warning only,
         $condition = ($taxon['level']==Taxon::getRank('clade') and !isset($taxon['bibreference']) and !isset($taxon['bibkey']));
         $condition2 = ($taxon['level']==Taxon::getRank('clade') and !isset($taxon['author']) and !isset($taxon['author_id']));
@@ -103,7 +102,6 @@ class ImportTaxons extends AppJob
           $this->appendLog("WARNING: taxon ".$taxon['name']." was registered without a bibreference or a Authorship. Consider adding this information to the record");
           //return false;
         }
-        //$this->appendLog("GOT HERE 07");
         return true;
     }
 
@@ -400,6 +398,7 @@ class ImportTaxons extends AppJob
         $taxon = new Taxon($values);
         $taxon->fullname = $name;
         $taxon->save();
+        //sleep(2);
         if (!is_null($mobot)) {
           $taxon->setapikey('Mobot', $mobot);
         }
@@ -415,7 +414,6 @@ class ImportTaxons extends AppJob
         if (!is_null($mycobankkey)) {
           $taxon->setapikey('Mycobank', $mycobankkey);
         }
-
         $taxon->save();
         $this->affectedId($taxon->id);
 
