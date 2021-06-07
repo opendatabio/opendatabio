@@ -1,4 +1,5 @@
 * ## [Home](Home)
+* ## [Installation](Installation)
 * ## Imports & Exports
   * [API Explained](API)
   * [API EndPoints](API#endpoints)
@@ -31,7 +32,6 @@
       * [User Jobs](Data-Access-Objects#jobs)
 
   * [**Auditing**](Auditing)
-
   * [**For For-Developers**](For-Developers)
 
 
