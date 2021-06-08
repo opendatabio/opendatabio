@@ -1,4 +1,4 @@
-# Opendatabio Version 0.9.0
+# Opendatabio
 
 OpenDataBio is web software to store, manage and distribute biodiversity and ecological data. It is designed to accommodate many data types used in taxonomy, systematics and ecology, allowing any information, including audio, image and video files, to be linked to Individuals, Vouchers, Locations and/or Taxons.
 <br>

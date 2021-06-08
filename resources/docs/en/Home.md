@@ -35,7 +35,7 @@ The facilitate data model understanding, as it includes many tables and complex 
 
 ## Where to get it?
 
-<a href="https://github.com/opendatabio/opendatabio/tree/version.0.9.0-rc1" target="__blank" >
+<a href="https://github.com/opendatabio/opendatabio" target="__blank" >
   <i class="fab fa-github"></i>
   GitHub - IN DEVELOPMENT - UNSTABLE
 </a>
