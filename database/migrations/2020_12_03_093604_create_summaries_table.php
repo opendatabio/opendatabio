@@ -33,7 +33,7 @@ class CreateSummariesTable extends Migration
       });
 
 
-      Summary::updateSummaryTable($what="all");
+      #Summary::updateSummaryTable($what="all");
 
 
   }

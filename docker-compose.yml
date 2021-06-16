@@ -24,10 +24,8 @@ services:
       build:
         context: .
         args:
-          - "BUILD_ARGUMENT_ENV=dev"
+          - "BUILD_ARGUMENT_ENV=${APP_ENV}"
           - "BUILD_ARGUMENT_DEBUG_ENABLED=false"
-          - "UID=${WWWUSER}"
-          - "GID=${WWWGROUP}"
         dockerfile: ./Dockerfile
       container_name: odb_laravel
       volumes:
@@ -86,8 +84,8 @@ services:
       container_name: ${COMPOSE_PROJECT_NAME}_mysql
       command: --default-authentication-plugin=mysql_native_password
       environment:
-        - MYSQL_ROOT_PASSWORD=secret
-        - MYSQL_DATABASE=laravel
+        - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+        - MYSQL_DATABASE=${DB_DATABASE}
       ports:
         - 33061:3306
       volumes:

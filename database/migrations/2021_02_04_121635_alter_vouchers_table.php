@@ -18,6 +18,7 @@ class AlterVouchersTable extends Migration
      */
     public function up()
     {
+        Schema::disableForeignKeyConstraints();
         Schema::table('vouchers', function (Blueprint $table) {
               $table->dropForeign('vouchers_person_id_foreign');
               $table->dropIndex('vouchers_person_id_number_unique');
@@ -34,8 +35,10 @@ class AlterVouchersTable extends Migration
               //$table->foreign('herbarium_id')->references('id')->on('herbaria');
               $table->unique(['individual_id','herbarium_id','herbarium_number','number'],'vouchers_unique');
 
-              $table->foreign('individual_id')->references('id')->on('individuals');              
+              $table->foreign('individual_id')->references('id')->on('individuals');
         });
+        Schema::enableForeignKeyConstraints();
+
     }
 
     /**
