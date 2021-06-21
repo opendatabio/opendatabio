@@ -135,7 +135,7 @@ Enable the Apache modules 'mod_rewrite' and 'mod_alias'. Add the following to yo
 
 ```bash
 <IfModule alias_module>
-        Alias /      /home/odbserver/opendatabio/public
+        Alias /      /home/odbserver/opendatabio/public/
         Alias /fonts /home/odbserver/opendatabio/public/fonts
         Alias /images /home/odbserver/opendatabio/public/images
         <Directory "/home/odbserver/opendatabio/public">
