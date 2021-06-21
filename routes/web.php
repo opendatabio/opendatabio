@@ -117,7 +117,6 @@ Route::post('individuals/batchidentify', 'IndividualController@batchidentificati
 //Route::get('locations/{id}/plants/create', 'PlantController@createLocations');
 //Route::get('locations/{id}/plants', 'PlantController@indexLocations');
 
-Route::get('individuals/{id}/location', 'IndividualController@indexLocations');
 Route::get('individuals/{id}/location/create', 'IndividualController@createLocations');
 Route::get('individuals/{id}/location', 'IndividualController@indexLocations');
 Route::get('individuals/{id}/location_project', 'IndividualController@indexLocationsProjects');

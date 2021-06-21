@@ -15,6 +15,9 @@ use App\Models\Project;
 
 class Tag extends Model
 {
+
+    protected $table = 'tags';
+
     use Translatable;
 
     public function rawLink()
@@ -35,5 +38,10 @@ class Tag extends Model
     public function projects()
     {
       return $this->belongsToMany(Project::class);
+    }
+
+    public function getTableName()
+    {
+      return 'tags';
     }
 }

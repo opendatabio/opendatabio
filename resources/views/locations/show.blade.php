@@ -118,18 +118,10 @@
                @lang('messages.vouchers')
              </a>
              &nbsp;&nbsp;
-         @else
-           @can ('create', App\Models\Voucher::class)
-               <a href="{{url ('locations/' . $location->id . '/vouchers/create')}}" class="btn btn-default">
-                 <i class="fa fa-btn fa-plus"></i>
-                 @lang('messages.create_voucher')
-               </a>
-             &nbsp;&nbsp;
-           @endcan
          @endif
 
          @if ($location->getCount('all',null,'individuals'))
-             <a href="{{ url('locations/'. $location->id. '/individuals')  }}" class="btn btn-default">
+             <a href="{{ url('individuals/'. $location->id. '/location')  }}" class="btn btn-default">
                <i class="fa fa-btn fa-search"></i>
                {{ $location->getCount('all',null,'individuals')}}
                @lang('messages.individuals')
@@ -137,7 +129,7 @@
              &nbsp;&nbsp;
          @else
            @can ('create', App\Models\Individual::class)
-                <a href="{{url ('locations/' . $location->id . '/individuals/create')}}" class="btn btn-default">
+                <a href="{{url ('individuals/' . $location->id . '/location/create')}}" class="btn btn-default">
                  <i class="fa fa-btn fa-plus"></i>
                  @lang('messages.create_individual')
                </a>

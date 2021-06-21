@@ -194,7 +194,7 @@ class ExternalAPIs
         $searchstring = str_replace('.', '%2e', $searchstring);
         $flags = 0;
         $apikey = config('app.mobot_api_key');
-        $base_uri = 'http://services.tropicos.org/';
+        $base_uri = 'https://services.tropicos.org/';
         $client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
         //# STEP ONE, search for name summary
         try {

@@ -195,7 +195,7 @@
                   @lang('messages.location')
                 </label>
                 <div class="col-sm-6">
-                    {{ $current_location_print }}
+                    {!! $current_location_print !!}
                     <input type="hidden" name="location_id" value="{{ old('location_id', $location->id) }}">
                     <input type="hidden" id="location_type" name="location_type" value ="{{old('location_type', $location->adm_level)}}">
                   </div>

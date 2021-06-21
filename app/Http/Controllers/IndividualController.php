@@ -183,10 +183,10 @@ class IndividualController extends Controller
     }
 
     // Route for quicly creating an individual from a Location page
-    public function createLocations($id)
+    public function createLocations($id, IndividualLocationsDataTable $dataTable)
     {
         $location = Location::findOrFail($id);
-        return $this->create($location);
+        return $this->create($location, $dataTable);
     }
 
 
