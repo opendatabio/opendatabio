@@ -95,6 +95,19 @@ services:
       networks:
         - odbnetwork
 
+    phpmyadmin:
+      image: phpmyadmin/phpmyadmin
+      depends_on:
+        - mysql
+      ports:
+        - "8082:80"
+      environment:
+        - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+        - PMA_HOST=mysql
+        - PHP_UPLOAD_MAX_FILESIZE=100MB
+      networks:
+        - odbnetwork
+
 networks:
   odbnetwork:
     driver: bridge
