@@ -15,4 +15,6 @@ return array (
   'previous' => 'Anterior',
   'next' => 'Próximo',
   'colvis' => 'Alternar colunas',
+  'export' => 'Exportar',
+  'delete'  => 'Apagar',
 );

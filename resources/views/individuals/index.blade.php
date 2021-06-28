@@ -328,19 +328,6 @@ $('#submit_batch_identifications').on('click',function(e){
 });
 
 // Handle form submission event
-$('#exports').on('click', function(e){
-    if ($('#export_pannel').is(":visible")) {
-      $('#export_pannel').hide();
-    } else {
-      $('#export_pannel').show();
-    }
-    /* var table =  $('#dataTableBuilder').DataTable();
-    var form = this;
-    var rows_selected = table.column( 0 ).checkboxes.selected();
-    Iterate over all selected checkboxes
-    $('#batch_list').val( rows_selected.join());
-    */
-});
 $('#export_sumbit').on('click',function(e){
   var table =  $('#dataTableBuilder').DataTable();
   var rows_selected = table.column( 0 ).checkboxes.selected();

@@ -56,10 +56,9 @@ class LocationPolicy
             $m = $location->measurements()->withoutGlobalScopes()->get()->count();
             $p = $location->individuals()->withoutGlobalScopes()->get()->count();
             $v = $location->vouchers()->withoutGlobalScopes()->get()->count();
-
-            return 0 == $m + $p + $v;
+            $media = $location->media()->withoutGlobalScopes()->count();
+            return 0 == $m + $p + $v + $media;
         }
-
         return false;
     }
 
@@ -73,13 +72,19 @@ class LocationPolicy
      */
     public function delete(User $user, Location $location)
     {
-        if (($user->access_level >= User::USER) and
-            (Location::LEVEL_PLOT == $location->adm_level or Location::LEVEL_POINT == $location->adm_level)) {
-            $m = $location->measurements()->withoutGlobalScopes()->get()->count();
-            $p = $location->individuals()->withoutGlobalScopes()->get()->count();
-            $v = $location->vouchers()->withoutGlobalScopes()->get()->count();
-
-            return 0 == $m + $p + $v;
+        /* any full user can delete if there is no data associated with the location
+        * nor the location has children
+        */
+        if ($user->access_level >= User::USER) {
+        //and (Location::LEVEL_PLOT == $location->adm_level or Location::LEVEL_POINT == $location->adm_level)) {
+            $m = $location->measurements()->withoutGlobalScopes()->count();
+            $p = $location->individuals()->withoutGlobalScopes()->count();
+            $v = $location->vouchers()->withoutGlobalScopes()->count();
+            $media = $location->media()->withoutGlobalScopes()->count();
+            $children = $location->getDescendants()->count();
+            return 0 == ($m + $p + $v + $media + $children);
         }
+
+        return false;
     }
 }

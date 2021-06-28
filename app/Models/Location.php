@@ -343,25 +343,47 @@ class Location extends Node implements HasMedia
         return $this->geom_array;
     }
 
-    public static function detectParent($geom, $max_level, $parent_uc)
+    public static function detectParent($geom, $max_level, $parent_uc, $ignore_level=false,$parent_buffer=0)
     {
         // there can be plots inside plots
         if (self::LEVEL_PLOT == $max_level) {
             $max_level += 1;
         }
-        $possibles = self::whereRaw('ST_Within(ST_GeomFromText(?), geom)', [$geom])
-            ->where('adm_level','!=',self::LEVEL_POINT)
-            ->orderBy('adm_level', 'desc');
-        if ($parent_uc) { // only looks for UCs
-            $possibles = $possibles->where('adm_level', '=', self::LEVEL_UC);
-        } else { // only looks for NON-UCs
-            $possibles = $possibles->where('adm_level', '!=', self::LEVEL_UC)
-            ->where('adm_level', '<', $max_level);
+
+        //the $query
+        if ($parent_buffer>0) {
+          $query = 'ST_Within(ST_GeomFromText(?), ST_Buffer(geom,'.$parent_buffer.'))';
+        } else {
+          $query = 'ST_Within(ST_GeomFromText(?), geom)';
         }
-        $possibles = $possibles->cursor();
+
+
+        //check which registered polygons (except World)
+        //are possible parents (CONTAIN) of submitted location
+        //order by adm_level to get the most inclusive first
+        $possibles = self::whereRaw($query, [$geom])
+            ->where('adm_level','!=',self::LEVEL_POINT)
+            ->noWorld()
+            ->orderBy('adm_level', 'desc');
+
+        //if looking for an UC parent
+        if ($parent_uc) {
+            $possibles = $possibles->where('adm_level', '=', self::LEVEL_UC);
+        } else {
+            // only looks for NON-UCs with level smaller
+            // than informed for location
+            $possibles = $possibles->where('adm_level', '!=', self::LEVEL_UC);
+            if (!$ignore_level) {
+                $possibles = $possibles->where('adm_level', '<', $max_level);
+            }
+        }
+        //$possibles = $possibles->cursor();
+
+        //if found return the greatest adm_level location found
         if ($possibles->count()) {
             return $possibles->first();
         }
+
         return null;
     }
 
@@ -525,8 +547,11 @@ class Location extends Node implements HasMedia
         return $query->addSelect(
             DB::raw('name'),
             DB::raw('ST_AsText(geom) as geom'),
-            DB::raw('IF(adm_level<999,ST_Area(geom),null) as area'),
-            DB::raw('IF(adm_level=999,ST_AsText(geom),ST_AsText(ST_Centroid(geom))) as centroid_raw')
+            //DB::raw('IF(adm_level<999,ST_Area(geom),null) as area'),
+            DB::raw("IF(ST_GeometryType(geom) like '%Polygon%', ST_Area(geom), null) as area"),
+            DB::raw("IF(ST_GeometryType(geom) like '%Point%', ST_AsText(geom),ST_AsText(ST_Centroid(geom))) as centroid_raw")
+            //DB::raw('IF(adm_level<999,ST_Area(geom),null) as area'),
+            //DB::raw('IF(adm_level=999,ST_AsText(geom),ST_AsText(ST_Centroid(geom))) as centroid_raw')
         );
     }
 

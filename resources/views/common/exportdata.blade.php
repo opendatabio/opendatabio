@@ -1,11 +1,6 @@
-<div class="panel-body">
-  <div class="col-sm-2">
-    <button class="dt-button" id='exports'>
-      @lang('messages.export_button')
-    </button>
-  </div>
+<div class="panel-body" style="display: none;" id='export_pannel'>
   <!--- EXPORT FORM hidden -->
-  <div  id='export_pannel' hidden>
+  <div class="col-sm-12" >
     <form action="{{ url('exportdata')}}" method="POST" class="form-horizontal" id='export_form'>
     <!-- csrf protection -->
       {{ csrf_field() }}

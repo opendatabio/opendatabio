@@ -61,6 +61,7 @@ Route::get('locations/{id}/dataset', 'LocationController@indexDatasets');
 Route::get('locations/autocomplete', 'LocationController@autocomplete');
 Route::post('locations/autodetect', 'LocationController@autodetect')->name('autodetect');
 Route::post('locations/individual_location', 'LocationController@saveForIndividual')->name('saveForIndividual');
+Route::post('locations/batch_delete', 'LocationController@batchDelete');
 Route::resource('locations', 'LocationController');
 
 Route::get('taxons/{id}/project', 'TaxonController@indexProjects');

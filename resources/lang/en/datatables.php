@@ -15,4 +15,6 @@ return array (
   'search' => 'Search',
   'zero_records' => 'No records to show',
   'colvis' => 'Toggle columns',
+  'export' => 'Export',
+  'delete'  => 'Delete',
 );

@@ -130,8 +130,29 @@ class IndividualsDataTable extends DataTable
 
       if (Auth::user()) {
         $hidcol = [1,5, 6];
+        $buttons = [
+            'pageLength',
+            'reload',
+            ['extend' => 'colvis',  'columns' => ':gt(0)', 'collectionLayout' => 'two-column'],
+            [
+              'text' => Lang::get('datatables.export'),
+              'action' => "function () {
+                var isvisible = document.getElementById('export_pannel').style.display;
+                if (isvisible == 'none') {
+                  document.getElementById('export_pannel').style.display = 'block';
+                } else {
+                    document.getElementById('export_pannel').style.display = 'none';
+                }
+              }",
+            ],
+          ];
       } else {
         $hidcol = [0,1,5, 6];
+        $buttons = [
+            'pageLength',
+            'reload',
+            ['extend' => 'colvis',  'columns' => ':gt(0)', 'collectionLayout' => 'two-column'],
+          ];
       }
         return $this->builder()
             ->columns([
@@ -150,15 +171,7 @@ class IndividualsDataTable extends DataTable
                 'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
-                'buttons' => [
-                    /* export buttons are in views now. Print button also disable because large tables will stuck requests
-                    'csv',
-                    'excel',
-                    'print',
-                    */
-                    'reload',
-                    ['extend' => 'colvis',  'columns' => ':gt(0)', 'collectionLayout' => 'two-column'],
-                ],
+                'buttons' => $buttons,
                 'columnDefs' => [
                   [
                     'targets' => $hidcol,

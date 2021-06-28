@@ -36,18 +36,18 @@
                        <code>@lang('messages.download_login')</code>
                     </div>
 
-
-
-
                     @if (Auth::user())
-                    {!! View::make('common.exportdata')->with([
-                          'object' => isset($object) ? $object : null,
-                          'export_what' => 'Location'
-                    ]) !!}
+                      {!! View::make('common.exportdata')->with([
+                            'object' => isset($object) ? $object : null,
+                            'export_what' => 'Location'
+                      ]) !!}
+                      <!--- delete form -->
+                      {!! View::make('common.batchdelete')->with([
+                            'url' => url('locations/batch_delete'),
+                      ]) !!}
                     @else
-                    <br>
+                      <br>
                     @endif
-
                 <div class="panel-body">
                   {!! $dataTable->table() !!}
                 </div>
@@ -84,13 +84,7 @@
 
 $(document).ready(function() {
 
-$('#exports').on('click', function(e){
-    if ($('#export_pannel').is(":visible")) {
-      $('#export_pannel').hide();
-    } else {
-      $('#export_pannel').show();
-    }
-});
+
 $('#export_sumbit').on('click',function(e){
   var table =  $('#dataTableBuilder').DataTable();
   var rows_selected = table.column( 0 ).checkboxes.selected();

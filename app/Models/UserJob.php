@@ -25,8 +25,10 @@ class UserJob extends Model
     // event fired from job on success
     public function setSuccess()
     {
+      if ($this->percentage>=100) {
         $this->status = 'Success';
         $this->save();
+      }
     }
 
     // event fired from job on failure

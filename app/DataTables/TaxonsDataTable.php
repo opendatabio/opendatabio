@@ -222,8 +222,30 @@ class TaxonsDataTable extends DataTable
 
         if (Auth::user()) {
           $hidcol = [1,5,6];
+          $buttons = [
+              'pageLength',
+              'reload',
+              ['extend' => 'colvis',  'columns' => ':gt(0)'],
+              [
+                'text' => Lang::get('datatables.export'),
+                'action' => "function () {
+                  var isvisible = document.getElementById('export_pannel').style.display;
+                  if (isvisible == 'none') {
+                    document.getElementById('export_pannel').style.display = 'block';
+                  } else {
+                      document.getElementById('export_pannel').style.display = 'none';
+                  }
+                }",
+              ],
+            ];
+
         } else {
           $hidcol = [0,1,5,6];
+          $buttons = [
+              'pageLength',
+              'reload',
+              ['extend' => 'colvis',  'columns' => ':gt(0)'],
+            ];
         }
         if ($this->related_taxa) {
           $hidcol = [0,1,4,5,6,11];
@@ -248,13 +270,7 @@ class TaxonsDataTable extends DataTable
                 'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
-                'buttons' => [
-                    /*'csv',
-                    'excel',
-                    'print',*/
-                    'reload',
-                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
-                ],
+                'buttons' => $buttons,
                 'columnDefs' => [[
                     'targets' => $hidcol,
                     'visible' => false,

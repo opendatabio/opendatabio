@@ -204,8 +204,53 @@ class LocationsDataTable extends DataTable
         }
         if (Auth::user()) {
           $hidcol = [1,4,5,11,12,13,14,15,16,17];
+          $buttons = [
+              'pageLength',
+              'reload',
+              ['extend' => 'colvis',  'columns' => ':gt(0)'],
+              [
+                'text' => Lang::get('datatables.export'),
+                'action' => "function () {
+                  var isvisible = document.getElementById('export_pannel').style.display;
+                  if (isvisible == 'none') {
+                    document.getElementById('export_pannel').style.display = 'block';
+                  } else {
+                      document.getElementById('export_pannel').style.display = 'none';
+                  }
+                }",
+              ],
+              [
+               'text' => Lang::get('datatables.delete'),
+               'action' => "function ( e, dt, node, config ) {
+                 var rows_selected = dt.column( 0 ).checkboxes.selected();
+                 var nrecords = rows_selected.length;
+                 var isvisible = document.getElementById('delete_pannel').style.display;
+                 document.getElementById('ids_to_delete').value = '';
+                 if (isvisible == 'none') {
+                   document.getElementById('delete_pannel').style.display = 'block';
+                 } else {
+                   if (nrecords== 0) {
+                     document.getElementById('delete_pannel').style.display = 'none';
+                   }
+                 }
+                 if (nrecords == 0) {
+                   document.getElementById('delete_hint').innerHTML = '".Lang::get('messages.select_rows_deletion')."';
+                   document.getElementById('delete_form').style.display = 'none';
+                 } else {
+                   document.getElementById('delete_hint').innerHTML = nrecords + ' ".Lang::get('messages.selected_for_deletion')."';
+                   document.getElementById('delete_form').style.display = 'block';
+                   document.getElementById('ids_to_delete').value = rows_selected.join();
+                 }
+                }",
+              ],
+          ];
         } else {
           $hidcol = [0,1,4,5,11,12,13,14,15,16,17];
+          $buttons = [
+              'pageLength',
+              'reload',
+              ['extend' => 'colvis',  'columns' => ':gt(0)'],
+          ];
         }
 
         return $this->builder()
@@ -234,13 +279,7 @@ class LocationsDataTable extends DataTable
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
                 'lengthMenu' => [3,5,10,15,20,50],
-                'buttons' => [
-                    'pageLength',
-                    /*'csv',
-                    'excel',*/
-                    'reload',
-                    ['extend' => 'colvis',  'columns' => ':gt(0)'],
-                ],
+                'buttons' => $buttons,
                 'pageLength' => 10,
                 'autoWidth' => false,
                 'columnDefs' => [

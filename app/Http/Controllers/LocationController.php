@@ -20,6 +20,7 @@ use Response;
 use Storage;
 use App\Models\UserJob;
 use App\Jobs\ImportLocations;
+use App\Jobs\DeleteMany;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
 use Illuminate\Support\Facades\Input;
@@ -69,7 +70,8 @@ class LocationController extends Controller
             return Response::json(['error' => Lang::get('messages.autodetect_blank')]);
         }
 
-        $parent = Location::detectParent($geom, $request->adm_level, false);
+        $parent = Location::detectParent($geom, $request->adm_level, false,
+false,0);
         if (null == $parent) {
             return Response::json(['error' => Lang::get('messages.autodetect_error')]);
         }
@@ -77,7 +79,7 @@ class LocationController extends Controller
         $uc_ac = null;
         $uc_id = null;
         if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_POINT == $request->adm_level) {
-            $uc = Location::detectParent($geom, $request->adm_level, true);
+            $uc = Location::detectParent($geom, $request->adm_level, true,false,0);
             if ($uc) {
                 $uc_ac = $uc->fullname;
                 $uc_id = $uc->id;
@@ -214,53 +216,69 @@ class LocationController extends Controller
             ]);
         }
         $validator = Validator::make($request->all(), $rules);
-        // Now we check if the geometry received is valid, and if it falls inside the parent geometry
+        // Now we check if the geometry received is valid
+        // if it falls inside the parent geometry polygon
+        // if an identical geometry already exists
         $validator->after(function ($validator) use ($request) {
             //case point locations, either Plot or Point, then validate exact duplicate geometry
-            if (
-                (Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type)
+            if ((Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type)
                 or
-                (Location::LEVEL_POINT == $request->adm_level)
-               ) {
+               (Location::LEVEL_POINT == $request->adm_level))
+            {
                 if (!isset($request->geom)) {
                   $geom = Location::geomFromParts($request);
                 } else {
                   $geom = $request->geom;
                 }
-                // we check if this exact geometry is already registered
-                $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->get();
-                if (sizeof($exact)) {
-                    $validator->errors()->add('geom', Lang::get('messages.geom_duplicate'));
-                }
-                return;
+            } else {
+                $geom = $request->geom;
             }
-            // Case poligons, validate dimensions , returns NULL for invalid geometries
-            $valid = DB::select('SELECT ST_Dimension(ST_GeomFromText(?)) as valid', [$request->geom]);
-
-            if (is_null($valid[0]->valid)) {
-                $validator->errors()->add('geom', Lang::get('messages.geom_error'));
-            }
-        });
-        $validator->after(function ($validator) use ($request) {
-            if ($request->parent_id < 1 or 0 == $request->adm_level) {
-                return;
-            } // don't validate if parent = 0 (country) for none
-            $geom = $request->geom;
-            if ((Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type) or (Location::LEVEL_POINT == $request->adm_level and $geom == null)) {
-                $geom = Location::geomFromParts($request);
-            }
-            $parent = Location::withGeom()->findOrFail($request->parent_id);
-            // skip validation if parent is dimensionless
-            if ('point' == $parent->geomType) {
-                return;
-            }
-
-            $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->parent_id]);
-
+            //1. check the geometry is valid
+            $valid = DB::select('SELECT ST_IsValid(ST_GeomFromText(?)) as valid', [$geom]);
             if (1 != $valid[0]->valid) {
-                $validator->errors()->add('geom', Lang::get('messages.geom_parent_error'));
+                $validator->errors()->add('geom', Lang::get('messages.geom_error'));
+                return;
             }
+
+            //2. check if this exact geometry is already registered
+            $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->get();
+            if (sizeof($exact)) {
+               $validator->errors()->add('geom', Lang::get('messages.geom_duplicate'));
+               return;
+            }
+
+            //3. parent validation
+            if ($request->parent_id > 1)
+            {
+              $parent = Location::withGeom()->findOrFail($request->parent_id);
+              $parent_dim = !is_null($parent->x) ? (($parent->x >= $parent->y) ? $parent->x : $parent->y) : null;
+              if (!is_null($parent_dim)) {
+                /* add a buffer to parent point in the ~ size of its dimension if set */
+                $buffer_dd = (($parent_dim*0.00001)/1.11);
+              } else {
+                /* else use config buffer */
+                $buffer_dd = config('app.location_parent_buffer');
+              }
+              //if parent is point location has to consider a buffer
+              //this will only happen if geometry is plot and within parent
+              if ('point' == $parent->geomType) {
+                  $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), ST_BUFFER(geom,?)) as valid FROM locations where id = ?', [$geom, $buffer_dd, $request->parent_id]);
+              } else {
+                  //test without buffer
+                  $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->parent_id]);
+                  //if not valid, test with buffer
+                  if (1 != $valid[0]->valid) {
+                    $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), ST_BUFFER(geom,?)) as valid FROM locations where id = ?', [$geom, $buffer_dd, $request->parent_id]);
+                  }
+              }
+              if (1 != $valid[0]->valid) {
+                $validator->errors()->add('geom', Lang::get('messages.geom_parent_error'));
+                return;
+              }
+            }
+
         });
+
 
         return $validator;
     }
@@ -624,5 +642,19 @@ class LocationController extends Controller
         }
       }
       return redirect('import/locations')->withStatus($message);
+    }
+
+    /*
+      * Batch delete locations
+    */
+    public function batchDelete(Request $request)
+    {
+        $data = $request->all();
+        $data['model'] = 'Location';
+        UserJob::dispatch(DeleteMany::class,
+        [
+          'data' => ['data' => $data,]
+        ]);
+        return redirect('locations')->withStatus(Lang::get('messages.dispatched'));
     }
 }

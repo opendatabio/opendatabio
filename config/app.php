@@ -85,6 +85,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Filesize uploads
+    |--------------------------------------------------------------------------
+    |
+    | This value is only used in resources/common/import-blade.php
+    |
+    */
+    'import_file_size' => env('MEDIA_MAX_FILE_SIZE', '209715200'),
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
@@ -103,6 +114,21 @@ return [
      * resources/lang/[language]/levels.php file
      * following directives of OSM   https://wiki.openstreetmap.org/wiki/Key:admin_level */
     'adm_levels' => [2,3,4,5,6,7,8,9,10],
+
+    /* Location parent detection buffer
+     * When inserting locations, parent detection uses ST_Within to detect
+     * or validate the parent of a location.
+     * This however may fail when borders overlap or have different precisions
+     * and the inserted  geometry (POLYGON or MULTIPOLYGON or LINESTRING )
+     * may fail to detect the desired parent
+     *
+     * This value is used with ST_Buffer to detect a parent if ST_Within fails
+     * and represent the buffer distance required to accept a parent
+     * given polygons are in lat/long, the unit is degrees
+     * default 0.001degrees or ca. 0.11km  
+     */
+    'location_parent_buffer' => 0.01,
+
 
     /*
      * This string represents a regular expression describing what is a valid

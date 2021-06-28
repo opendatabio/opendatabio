@@ -62,6 +62,7 @@
 
       <form action="{{ url($action) }}" method="POST" class="form-horizontal" enctype="multipart/form-data">
         {{ csrf_field() }}
+        <input type="hidden" name="MAX_FILE_SIZE" value="{{config('import_file_size')}}" />
         <div class="form-group">
           <label for="data_file" class="col-sm-4 control-label mandatory">
             @lang('messages.import_file')

@@ -101,13 +101,6 @@ $("#about_list").on('click',function(){
 });
 
 
-$('#exports').on('click', function(e){
-    if ($('#export_pannel').is(":visible")) {
-      $('#export_pannel').hide();
-    } else {
-      $('#export_pannel').show();
-    }
-});
 $('#export_sumbit').on('click',function(e){
   var table =  $('#dataTableBuilder').DataTable();
   var rows_selected = table.column( 0 ).checkboxes.selected();
