@@ -340,7 +340,7 @@ The `locations` endpoints interact with the [locations](Core-Objects#locations) 
 
 ### GET optional parameters
 - `id=list` return only locations having the id or ids provided (ex `id=1,2,3,10`)
-- `admlevel=number` return only locations for the specified level:
+- `adm_level=number` return only locations for the specified level:
   - **0** for country; **1** for first division within country (province, state); **2** for second division (e.g. municipality)... up to adm_level 6 as administrative areas;
   - **99** is the code for Conservation Units;
   - **100** is the code for plots and subplots;
