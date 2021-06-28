@@ -45,20 +45,21 @@ laraverl-app/
 ----Dockerfile
 ----Makefile
 ```
-These are modified from [](https://github.com/dimadeush/docker-nginx-php-laravel), where you find a production setting as well.
+
+These are adapted from [this link](https://github.com/dimadeush/docker-nginx-php-laravel), where you find a production setting as well.
 
 #### Installation
 1. Make sure you have [Docker](https://www.docker.com/) and [Docker-compose](https://docs.docker.com/compose/install/) installed in your system;
 1. Check if your user is in the [docker group](https://github.com/sindresorhus/guides/blob/main/docker-without-sudo.md) created during docker installation;
 1. Download or clone the OpenDataBio in your machine;
-1. Make sure your user is the owner of files and folders, else, change ownership and user to your user
+1. Make sure **your user is the owner of files and folders**
 1. Enter the opendatabio directory created;
-1. Edit the environment file name `.env.docker`
-1. To install locally for development just adjust the following variables in the Dockerfile, which are needed to map the files owners to a docker user;
-    1. `UID` the numeric user your are logged in and which is the owner of all files and directories in the app directory.
+1. Edit the environment file name `.env.docker` and adjust accordingly
+1. Adjust the Dockerfile to map the files owners to a docker user;
+    1. `UID` the numeric user your are logged in and which is the owner of all files and directories in the opendatabio directory.
     1. `GDI` the numeric group the user belongs, usually same as UID.
-1. File `Makefile` containes shortcuts to the docker-compose commands used to build the services configured in the `docker-compose.yml` and auxiliary files in the `docker` folder.
-1. Build the docker containers using the shortcuts (read the Makefile to undersand the commands)
+1. File `Makefile` contains shortcuts to the docker-compose commands used to build the services configured in the `docker-compose.yml` and auxiliary files in the `docker` folder. Read the Makefile to understand the actual commands.
+1. Build the docker containers
 ```bash
 make build
 ```
@@ -72,20 +73,17 @@ docker ps
 make ssh #to enter the container shell
 make ssh-mysql #to enter the mysql container, where you may access the database shell using `mysql -uroot -p` or use the laravel user
 ```
-
 1. Install composer dependencies
 ```bash
 make composer-install
 ```
-
 1. Migrate the database. It will be stored as a local volume called odb_odbmysqldata
 ```bash
 make migrate
 ```
-
-1. If worked, then Opendatabio will be available in your browser [](http::/localhost:8080).
+1. If worked, then Opendatabio will be available in your browser [http::/localhost:8080](http::/localhost:8080).
 1. Login with superuser `admin@example.org` and password `password1`
-1. Additional configurations in these files are required for a production environment and deployment;
+1. Additional configurations in these files are required for a production environment
 
 ### Data persistence
 
@@ -94,6 +92,28 @@ The mysql tables are stored in a volume. You may change to a local path bind.
 ```bash
 docker volume list
 ```
+### Using
+See the contents of Makefile.
+```bash
+make stop
+make start
+make restart
+docker ps
+...
+```
+
+If you have issues and change docker files, you may need to rebuild:
+
+```bash
+#delete all images without loosing data
+make stop
+docker system prune -a  #and accepts Yes
+make build
+make start
+```
+
+
+
 
 <a name="withoutdocker"></a>
 ***
@@ -219,7 +239,7 @@ Configure Supervisor, which is required for jobs. Create a file name **opendatab
 ;--------------
 [program:opendatabio-worker]
 process_name=%(program_name)s_%(process_num)02d
-command=php /home/odbserver/opendatabio/artisan queue:work --sleep=3 --tries=1 --timeout=0 --daemon
+command=php /home/odbserver/opendatabio/artisan queue:work --sleep=3 --tries=3 --timeout=0
 autostart=true
 autorestart=true
 user=odbserver
