@@ -317,7 +317,68 @@ function initMap() {
     @endif
     center: uluru
   });
-        // display the main object
+  // display the main object
+  @php
+    $hasparent = false;    
+  @endphp
+  //parent location
+  @if(null !== $parent)
+      @php
+        $hasparent = true;
+        $largest = max(array_map(function($value) { return count($value);},$parent->geomArray));
+        $centroid = $parent->centroid;
+        $parentcontent = "<strong>".$parent->name."</strong><br><br>";
+        $parentcontent .= Lang::get('messages.individuals').":  <strong>".$parent->getCount("all",null,"individuals")."</strong><br>";
+        $parentcontent .= Lang::get('messages.vouchers').":  <strong>".$parent->getCount("all",null,"vouchers")."</strong><br>";
+        $parentcontent .= Lang::get('messages.taxons').":  <strong>".$parent->getCount("all",null,"taxons")."</strong><br>";
+        $parentcontent .= Lang::get('messages.measurements').":  <strong>".$parent->getCount("all",null,"measurements")."</strong><br>";
+        $parentcontent .= Lang::get('messages.media').":  <strong>".$parent->getCount("all",null,"media")."</strong><br>";
+    @endphp
+    @foreach($parent->geomArray as $parent_polygon)
+      @if (count($parent_polygon) == $largest)
+         var parentpol = new google.maps.Polygon({
+          paths: [
+             @foreach ($parent_polygon as $point)
+              {lat: {{ $point['y'] }}, lng: {{$point['x']}}},
+               @endforeach
+              ],
+          map: map,
+          strokeColor:'#fa98fa',
+          strokeOpacity: 0.7,
+          strokeWeight: 3,
+          fillColor: '#fa98fa',
+          fillOpacity: 0.2,
+        });
+      @else
+        new google.maps.Polygon({
+         paths: [
+            @foreach ($parent_polygon as $point)
+             {lat: {{$point['y']}}, lng: {{$point['x']}}},
+              @endforeach
+             ],
+         map: map,
+         strokeColor:'#fa98fa',
+         strokeOpacity: 0.7,
+         strokeWeight: 3,
+         fillColor: '#fa98fa',
+         fillOpacity: 0.2,
+       });
+     @endif
+    @endforeach
+
+     var parentpos = {lat: {{ $centroid['y']}}, lng: {{$centroid['x']}} };
+     var infowindow = new google.maps.InfoWindow({
+       content: "{!! $parentcontent !!}",
+       position: parentpos,
+     });
+     parentpol.addListener("click", () => {
+       infowindow.close();
+       locawindow.close();
+       infowindow.open(map, parentpol);
+     });
+
+  @endif
+  //parent
   @if (in_array($location->geomType, ['polygon', 'multipolygon']))
     @foreach ($location->geomArray as $polygon)
       @if(!isset($locacentroids))
@@ -331,67 +392,6 @@ function initMap() {
         $localcontent .= Lang::get('messages.media_files').":  <strong>".$location->getCount("all",null,"media")."</strong><br>";
       @endphp
       @endif
-      @if(!isset($hasparent) and null !== $parent)
-          @php
-            $hasparent = true;
-            $largest = max(array_map(function($value) { return count($value);},$parent->geomArray));
-            $centroid = $parent->centroid;
-            $hasparent = true;
-            $parentcontent = "<strong>".$parent->name."</strong><br><br>";
-            $parentcontent .= Lang::get('messages.individuals').":  <strong>".$parent->getCount("all",null,"individuals")."</strong><br>";
-            $parentcontent .= Lang::get('messages.vouchers').":  <strong>".$parent->getCount("all",null,"vouchers")."</strong><br>";
-            $parentcontent .= Lang::get('messages.taxons').":  <strong>".$parent->getCount("all",null,"taxons")."</strong><br>";
-            $parentcontent .= Lang::get('messages.measurements').":  <strong>".$parent->getCount("all",null,"measurements")."</strong><br>";
-            $parentcontent .= Lang::get('messages.media').":  <strong>".$parent->getCount("all",null,"media")."</strong><br>";
-        @endphp
-        @foreach($parent->geomArray as $parent_polygon)
-          @if (count($parent_polygon) == $largest)
-             var parentpol = new google.maps.Polygon({
-              paths: [
-                 @foreach ($parent_polygon as $point)
-                  {lat: {{ $point['y'] }}, lng: {{$point['x']}}},
-                   @endforeach
-                  ],
-              map: map,
-              strokeColor:'#fa98fa',
-              strokeOpacity: 0.7,
-              strokeWeight: 3,
-              fillColor: '#fa98fa',
-              fillOpacity: 0.2,
-            });
-          @else
-            new google.maps.Polygon({
-             paths: [
-                @foreach ($parent_polygon as $point)
-                 {lat: {{$point['y']}}, lng: {{$point['x']}}},
-                  @endforeach
-                 ],
-             map: map,
-             strokeColor:'#fa98fa',
-             strokeOpacity: 0.7,
-             strokeWeight: 3,
-             fillColor: '#fa98fa',
-             fillOpacity: 0.2,
-           });
-         @endif
-        @endforeach
-
-         var parentpos = {lat: {{ $centroid['y']}}, lng: {{$centroid['x']}} };
-         var infowindow = new google.maps.InfoWindow({
-           content: "{!! $parentcontent !!}",
-           position: parentpos,
-         });
-         parentpol.addListener("click", () => {
-           infowindow.close();
-           locawindow.close();
-           infowindow.open(map, parentpol);
-         });
-      @else
-        @php
-          $hasparent = null;
-        @endphp
-       @endif
-
 
 	     var curpol = new google.maps.Polygon({
 	        paths: [
@@ -413,16 +413,16 @@ function initMap() {
          position: {lat: {{ $locacentroids['y']}}, lng: {{$locacentroids['x']}} },
        });
 
-       @if ($hasparent)
+      @if ($hasparent)
         curpol.addListener("click", () => {
           infowindow.close();
           locawindow.close();
           locawindow.open(map, curpol);
         });
       @else
-      curpol.addListener("click", () => {
-        locawindow.close();
-        locawindow.open(map, curpol);
+        curpol.addListener("click", () => {
+          locawindow.close();
+          locawindow.open(map, curpol);
       });
       @endif
 
@@ -437,18 +437,7 @@ function initMap() {
           title: 'Plot'
         });
     @endif
-    // now we display children
-    /*
-    @foreach ($plot_children as $child)
-      @if (!is_null($child) and $child->geomType == "point")
-        new google.maps.Marker({
-          position: {lat: {{$child->geomArray['y']}}, lng: {{$child->geomArray['x']}} },
-          map: map,
-          title: '{{$child->name}}'
-        });
-      @endif
-    @endforeach
-    */
+
     }
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config('app.gmaps_api_key') }}&callback=initMap"></script>

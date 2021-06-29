@@ -125,7 +125,7 @@ return [
      * This value is used with ST_Buffer to detect a parent if ST_Within fails
      * and represent the buffer distance required to accept a parent
      * given polygons are in lat/long, the unit is degrees
-     * default 0.001degrees or ca. 0.11km  
+     * default 0.01degrees or ca. 1.1km
      */
     'location_parent_buffer' => 0.01,
 

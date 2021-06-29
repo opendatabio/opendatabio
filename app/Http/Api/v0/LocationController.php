@@ -48,7 +48,7 @@ class LocationController extends Controller
                 $locations->whereRaw('ST_AsText(geom) = ?', [$geom]);
             }
             if ('parent' == $request->querytype) {
-                $parent = Location::detectParent($geom, 100, false);
+                $parent = Location::detectParent($geom, 100, false,false,0);
                 if ($parent) {
                     $locations->where('id', $parent->id);
                 } else {

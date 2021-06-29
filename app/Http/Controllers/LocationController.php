@@ -363,8 +363,9 @@ false,0);
     public function show($id,LocationsDataTable $dataTable)
     {
         $location = Location::noWorld()->select('*')->with('children')->withGeom()->findOrFail($id);
-        $plot_children = $location->children->map(function ($c) { if ($c->adm_level > Location::LEVEL_UC) { return Location::withGeom()->find($c->id); } });
-        //$plot_children = null;
+        //$plot_children = $location->children->map(function ($c) { if ($c->adm_level > Location::LEVEL_UC) { return Location::withGeom()->find($c->id); } });
+        $plot_children = null;
+        //$parent = null;
         if (null !== $location->parent and $location->adm_level>config('app.adm_levels')[0]) {
           $parent = Location::noWorld()->select('*')->withGeom()->findOrFail($location->parent->id);
         } else {
