@@ -279,6 +279,13 @@ the database entirely and rebuild it. Of course, do not run this on a production
 ```bash
 php artisan migrate:fresh
 ```
+* if you browser return **500|SERVER ERROR** you should look to the last **error** in `storage/logs/laravel.log`. If you have **ERROR: No application encryption key has been specified** run:  
+
+```bash
+php artisan key:generate
+php artisan config:cache
+```
+
 
 ### Post-install configs
 * If your import/export jobs are not being processed, make sure Supervisor is running `systemctl start supervisord && systemctl enable supervisord`, and check the log files at `storage/logs/supervisor.log`.
@@ -297,7 +304,8 @@ You may change storage configurations in `config/filesystem.php`, where you may 
 
 1. **Data downloads** are queue as jobs and a file is written in a temporary folder, and the file is deleted when the job is deleted by the user. This folder is defined as the `download disk` in filesystem.php config file, which point to `storage/app/public/downloads`. UserJobs web interface difficult navegation will force users to delete old jobs, but a cron cleaning job may be advisable to implement in your installation;
 2. **Media files** are by default stored in the `media disk`, which place files in folder `storage/app/public/media`;
-3. Remember to include media folder in a backup plan;
+3. For regular configuration **create** both directories `storage/app/public/downloads` and `storage/app/public/media` with writable permition by the Server user, see below topic;
+4. Remember to include media folder in a backup plan;
 
 ### Folder permissions
 
