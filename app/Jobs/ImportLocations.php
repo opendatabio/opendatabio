@@ -360,18 +360,20 @@ class ImportLocations extends AppJob
                if (!is_null($parent_dim)) {
                  /* add a buffer to parent point in the ~ size of its dimension if set */
                  $buffer_dd = (($parent_dim*0.00001)/1.11);
-                 $simplify = $buffer_dd;
+                 $query_buffer ="ST_Buffer(geom, ".$buffer_dd.")";
                  //do not simplify parent geometry
                } else {
                  /* else use config buffer */
                  if ($informedRelated->adm_level == config('app.adm_levels')[0]) {
-                   //ca. 100m
-                   $simplify =0.01;
-                   $buffer_dd = 0.01;
+                   //if country, allow bigger buffer
+                   $simplify =0.001;
+                   $buffer_dd = 0.2;
+                   $query_buffer ="ST_Buffer(ST_Simplify(geom, ".$simplify."),".$buffer_dd.")";
                  } else {
-                   //ca. 10m
+                   //the config buffer
                    $simplify = config('app.location_parent_buffer');
                    $buffer_dd = config('app.location_parent_buffer');
+                   $query_buffer ="ST_Buffer(geom, ".$buffer_dd.")";
                  }
                }
               //test without buffer nor simplification
@@ -381,7 +383,7 @@ class ImportLocations extends AppJob
                 $location[$field] = $informedRelated->id;
                 return true ;
               } else {
-                $query = "ST_Within(ST_GeomFromText('".$location['geom']."'),ST_Buffer(ST_Simplify(geom,".$simplify."), ".$buffer_dd.")) as isparent";
+                $query = "ST_Within(ST_GeomFromText('".$location['geom']."'),".$query_buffer.") as isparent";
                 $isparent = Location::selectRaw($query)->where('id',$informedRelated->id)->get();
                 if ($isparent[0]->isparent) {
                   $location[$field] = $informedRelated->id;
@@ -389,7 +391,7 @@ class ImportLocations extends AppJob
                 } else {
                   $locationLog = $location;
                   $locationLog['geom'] = substr($locationLog['geom'],0,20);
-                  $this->skipEntry($locationLog,"ERROR: Location $field is not a valid parent for this location. Not even with considering a buffer around it.");
+                  $this->skipEntry($locationLog,"Location $field is not a valid parent for this location. Not even with considering a buffer around it.");
                   return false;
                 }
               }
