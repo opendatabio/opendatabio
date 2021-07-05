@@ -89,13 +89,11 @@ class ImportLocations extends AppJob
              }
              if ($geojsonFile) {
                $location = self::parseGeoJsonFeature($location);
-               if ($counter<100) {
-                 $this->userjob->tickProgress();
+               if ($counter<50) {
+                  $this->userjob->tickProgress();
                }
              } else {
-               if ($counter<100) {
-                 $this->userjob->tickProgress();
-               }
+               $this->userjob->tickProgress();
              }
 
             if ( null === $location) {
@@ -128,8 +126,12 @@ class ImportLocations extends AppJob
         $filesSaved = array_unique($filesSaved);
         // sort files by adm_level
         $filesSaved = Arr::sort($filesSaved);
+
         //restart counter
-        //$this->userjob->setProgressMax($counter);
+        $this->userjob->progress_max = ($counter*2);
+        $this->userjob->progress = $counter;
+        $this->userjob->save();
+
         // import records
         foreach ($filesSaved as $filename => $admLevel) {
             $path = storage_path('app/public/downloads/'.$filename);
@@ -144,9 +146,7 @@ class ImportLocations extends AppJob
                     $this->appendLog('Exception '.$e->getMessage().' at '.$e->getFile().'+'.$e->getLine().' on location '.$location['name']);
                   }
                 }
-                if ($counter<100) {
-                  $this->userjob->tickProgress();
-                }
+                $this->userjob->tickProgress();
             }
             if ($this->isCancelled()) {
                break;
@@ -243,53 +243,71 @@ class ImportLocations extends AppJob
 
     protected function validateGeom(&$location)
     {
+        /* if not set, then must be a point */
+        if (!isset($location['geom'])) {
+          /* and we expect lat and long attributes for location */
+          $lat = isset($location['lat']) ? $location['lat'] : (isset($location['latitude']) ? $location['latitude'] : null);
+          $long = isset($location['long']) ? $location['long'] : (isset($location['longitude']) ? $location['longitude'] : null);
+          if (is_null($lat) or is_null($long)) {
+            $this->skipEntry($location, "Coordinates for location $name not available");
+            return false;
+          }
+          $location['geom'] = "POINT($long $lat)";
+        }
+        /* a shorter geometry for logging */
         $locationLog = $location;
-        if (isset($location['geom'])) {
-          $locationLog['geom'] = substr($locationLog['geom'],0,20);
-          $geom = $location['geom'];
-          $geomType = self::geomTypeFromGeom($location['geom']);
-          if
-            (
-              (
-                Location::LEVEL_PLOT == $location['adm_level']
-                and
-                $geomType==Location::GEOM_POINT
-              )
-              or
-              Location::LEVEL_POINT == $location['adm_level']
-            )
-          {
-          // we check if this exact geometry is already registered
-          $alreadyPresent= Location::noWorld()->whereRaw("geom LIKE ST_GeomFromText('$geom')")->count();
-          if ($alreadyPresent>0) {
+        $locationLog['geom'] = substr($locationLog['geom'],0,50);
+
+        $geom = $location['geom'];
+        /* get the geometry type from the string submitted */
+        $geomType = self::geomTypeFromGeom($location['geom']);
+        if($geomType == null ) {
+          $this->skipEntry($locationLog, "Invalid geometry type for location $name");
+          return false;
+        }
+
+        //check if geometry is valid
+        //Understand https://dev.mysql.com/doc/refman/8.0/en/geometry-well-formedness-validity.html
+        //but mariadb does not have st_valid of mysql, so we can evaluate some of these issues only //
+        /* 1. geometry conversion from text should pass is valid*/
+        try {
+          $validGeom = DB::statement("SELECT ST_GeomFromText('".$geom."')");
+        } catch (\Exception $e) {
+          $this->skipEntry($locationLog,Lang::get('messages.geometry_invalid'));
+          return false;
+        }
+        /* 2 validate by calculating the area and the centroid if polygon */
+        /* because these are included in the queries */
+        if (in_array($geomType,['polygon','multipolygon'])) {
+          /* this functions should work for these geometries otherwise is an error */
+          /* area */
+          try {
+            $area  = DB::statement("SELECT ST_Area(ST_GeomFromText('".$geom."'))");
+          } catch (\Exception $e) {
+            $this->skipEntry($locationLog,"Could not calculate area of the informed polygon");
+            return false;
+          }
+          /*centroid */
+          try {
+            $centroid  = DB::statement("SELECT ST_Centroid(ST_GeomFromText('".$geom."'))");
+          } catch (\Exception $e) {
+            $this->skipEntry($locationLog,"Could not calculate the centroid for the informed polygon");
+            return false;
+          }
+        }
+
+        // TODO: implemente validation for linestrings (transects)
+
+        // finally check if this exact geometry is already registered
+        $alreadyPresent= Location::noWorld()->whereRaw("ST_AsText(geom) LIKE '".$geom."'")->count();
+        if ($alreadyPresent>0) {
             $this->skipEntry($locationLog,Lang::get('messages.geom_duplicate'));
             return false;
-          }
-          $validGeom = DB::select("SELECT ST_IsValid(ST_GeomFromText('".$geom."')) as valid");
-          if ($validGeom[0]->valid==0) {
-            $this->skipEntry($locationLog,Lang::get('messages.geometry_invalid'));
-            return false;
-          }
-          return true;
-          } else {
-          /* validate polygon geometries*/
-          $valid = DB::select('SELECT ST_IsValid(ST_GeomFromText(?)) as valid', [$location['geom']]);
-          if ($valid[0]->valid==0) {
-            $this->skipEntry($locationLog,Lang::get('messages.geometry_invalid'));
-            return false;
-          }
-          return true;
         }
-      }
-      /* else we expect lat and long attributes for location */
-      $lat = isset($location['lat']) ? $location['lat'] : (isset($location['latitude']) ? $location['latitude'] : null);
-      $long = isset($location['long']) ? $location['long'] : (isset($location['longitude']) ? $location['longitude'] : null);
-      if (is_null($lat) or is_null($long)) {
-        $this->skipEntry($location, "Coordinates for location $name not available");
-        return false;
-      }
-      $location['geom'] = "POINT($long $lat)";
-      return true;
+
+        return true;
+
+
     }
 
     protected function validateParent(&$location)
@@ -525,7 +543,7 @@ class ImportLocations extends AppJob
             return;
           }
         }
-        //this is important to prevent duplicated values
+        //this is important to prevent duplicated values (redundand?)
         $smallGeom = substr($geom, 0,1000);
         $sameGeometry = Location::whereRaw("ST_Equals(geom,ST_GeomFromText('$geom')) > 0")->count();
         if ($sameGeometry>0) {
@@ -589,9 +607,9 @@ class ImportLocations extends AppJob
       }
 
       $featureGeometry = $jsonFeature['geometry']['coordinates'];
-      if ($geomType == mb_strtolower(Location::GEOM_MULTIPOLYGON)) {
-        $featureGeometry = $featureGeometry[0];
-      }
+      //if ($geomType == mb_strtolower(Location::GEOM_MULTIPOLYGON)) {
+        //$featureGeometry = $featureGeometry[0];
+      //}
 
       /* if MultiPolygon but with different type attribute*/
       if (count($featureGeometry)>1
@@ -618,7 +636,18 @@ class ImportLocations extends AppJob
             }
             $wktPolygon = [];
             foreach($polygon as $coordinates) {
-              $wktPolygon[] =  implode(" ",$coordinates);
+              //$this->appendLog("THE WRONG VALUE IS : has ".count($polygon[1])."  polygons which have ".count($coordinates)." but coordinates have ".count($coordinates[1]));
+              //if true then there are smaller polygons
+              if (count($coordinates)>2) {
+                $wktSubPol = [];
+                foreach ($coordinates as $subcoordinates) {
+                  $wktSubPol[] =  implode(" ",$subcoordinates);
+                }
+                $wktSubPol = "((".implode(", ",$wktSubPol)."))";
+                $wktPolygon[] =  $wktSubPol;
+              } else {
+                $wktPolygon[] =  implode(" ",$coordinates);
+              }
             }
             $wktPolygon = "((".implode(", ",$wktPolygon)."))";
             $wktGeom[] = $wktPolygon;
@@ -639,7 +668,17 @@ class ImportLocations extends AppJob
         $polygon = count($featureGeometry[0])==1 ? $featureGeometry[0][0] : $featureGeometry[0];
         $wktPolygon = [];
         foreach($polygon as $coordinates) {
-          $wktPolygon[] =  implode(" ",$coordinates);
+          //$wktPolygon[] =  implode(" ",$coordinates);
+          if (count($coordinates)>2) {
+            $wktSubPol = [];
+            foreach ($coordinates as $subcoordinates) {
+              $wktSubPol[] =  implode(" ",$subcoordinates);
+            }
+            $wktSubPol = "((".implode(", ",$wktSubPol)."))";
+            $wktPolygon[] =  $wktSubPol;
+          } else {
+            $wktPolygon[] =  implode(" ",$coordinates);
+          }
         }
         $wktGeom = mb_strtoupper(Location::GEOM_POLYGON);
         $wktGeom .= "((".implode(", ",$wktPolygon)."))";

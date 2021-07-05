@@ -234,10 +234,13 @@ false,0);
                 $geom = $request->geom;
             }
             //1. check the geometry is valid
-            $valid = DB::select('SELECT ST_IsValid(ST_GeomFromText(?)) as valid', [$geom]);
-            if (1 != $valid[0]->valid) {
-                $validator->errors()->add('geom', Lang::get('messages.geom_error'));
-                return;
+            #$valid = DB::select('SELECT ST_IsValid(ST_GeomFromText(?)) as valid', [$geom]);
+            // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
+            $valid = DB::select("SELECT ST_IsEmpty(ST_GeomFromText('$geom')) as $valid");
+            $valid = count($valid) ? $valid[0]->$valid : 1;
+            if ($valid == 1) {
+               $validator->errors()->add('geom', Lang::get('messages.geom_error'));
+               return;
             }
 
             //2. check if this exact geometry is already registered

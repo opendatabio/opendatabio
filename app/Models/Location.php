@@ -320,7 +320,7 @@ class Location extends Node implements HasMedia
                 $element = $this->extractXY($element);
             }
             if (sizeof($array) > 1500) {
-                $array = $this->simplify($array, 1500);
+                //$array = $this->simplify($array, 1500);
             }
             $this->geom_array = [$array];
         }
@@ -333,7 +333,7 @@ class Location extends Node implements HasMedia
                 }
                 $factor = 1500;
                 if (sizeof($p_array) > $factor) {
-                    $p_array = $this->simplify($p_array, $factor);
+                    //$p_array = $this->simplify($p_array, $factor);
                 }
                 $polygon = $p_array;
             }
