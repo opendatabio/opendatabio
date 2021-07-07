@@ -257,6 +257,7 @@ class ImportLocations extends AppJob
         /* a shorter geometry for logging */
         $locationLog = $location;
         $locationLog['geom'] = substr($locationLog['geom'],0,50);
+        $locationLog['geojson'] = null;
 
         $geom = $location['geom'];
         /* get the geometry type from the string submitted */
@@ -368,7 +369,11 @@ class ImportLocations extends AppJob
              $informedRelated = Location::where('name','like',$hasRelated)->withoutGeom();
            }
            if ($field != "uc") {
-             $informedRelated = $informedRelated->where('adm_level','<',$location['adm_level']);
+             $maxadmin = $location['adm_level'];
+             if ($location['adm_level']==Location::LEVEL_PLOT) {
+               $maxadmin = $maxadmin+1;
+             }
+             $informedRelated = $informedRelated->where('adm_level','<',$maxadmin);
            } else {
              $informedRelated = $informedRelated->where('adm_level',Location::LEVEL_UC);
            }
@@ -386,7 +391,8 @@ class ImportLocations extends AppJob
                    //if country, allow bigger buffer
                    $simplify =0.001;
                    $buffer_dd = 0.2;
-                   $query_buffer ="ST_Buffer(ST_Simplify(geom, ".$simplify."),".$buffer_dd.")";
+                   $query_buffer ="ST_Buffer(geom,".$buffer_dd.")";
+                   //$query_buffer ="ST_Buffer(ST_Simplify(geom, ".$simplify."),".$buffer_dd.")";
                  } else {
                    //the config buffer
                    $simplify = config('app.location_parent_buffer');
@@ -637,19 +643,21 @@ class ImportLocations extends AppJob
             $wktPolygon = [];
             foreach($polygon as $coordinates) {
               //$this->appendLog("THE WRONG VALUE IS : has ".count($polygon[1])."  polygons which have ".count($coordinates)." but coordinates have ".count($coordinates[1]));
-              //if true then there are smaller polygons
+              //if true then polygons have holes
               if (count($coordinates)>2) {
                 $wktSubPol = [];
                 foreach ($coordinates as $subcoordinates) {
                   $wktSubPol[] =  implode(" ",$subcoordinates);
                 }
-                $wktSubPol = "((".implode(", ",$wktSubPol)."))";
+                $wktSubPol = "(".implode(", ",$wktSubPol).")";
                 $wktPolygon[] =  $wktSubPol;
               } else {
                 $wktPolygon[] =  implode(" ",$coordinates);
               }
             }
             $wktPolygon = "((".implode(", ",$wktPolygon)."))";
+            $wktPolygon = str_replace("(((","((",$wktPolygon);
+            $wktPolygon = str_replace(")))","))",$wktPolygon);
             $wktGeom[] = $wktPolygon;
         }
         $wktGeom = "(".implode(",",$wktGeom).")";
@@ -674,7 +682,7 @@ class ImportLocations extends AppJob
             foreach ($coordinates as $subcoordinates) {
               $wktSubPol[] =  implode(" ",$subcoordinates);
             }
-            $wktSubPol = "((".implode(", ",$wktSubPol)."))";
+            $wktSubPol = "(".implode(", ",$wktSubPol).")";
             $wktPolygon[] =  $wktSubPol;
           } else {
             $wktPolygon[] =  implode(" ",$coordinates);
@@ -682,6 +690,8 @@ class ImportLocations extends AppJob
         }
         $wktGeom = mb_strtoupper(Location::GEOM_POLYGON);
         $wktGeom .= "((".implode(", ",$wktPolygon)."))";
+        $wktGeom = str_replace("(((","((",$wktGeom);
+        $wktGeom = str_replace(")))","))",$wktGeom);
       }
 
       /* get attributes if found */

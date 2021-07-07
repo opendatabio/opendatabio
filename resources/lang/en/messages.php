@@ -192,6 +192,7 @@ return array (
   'geom_parent_error' => 'The coordinates for this location do not fall within the specified parent\'s coordinates, please check!',
   'geometry' => 'Geometry',
   'geom' => 'Geometry',
+  'geometry_invalid' => 'Geometry invalid',
   'help' => 'Help!',
   'biocollections' => 'BioCollections',
   'biocollection_number' => 'BioCollection.#',

@@ -191,6 +191,7 @@ return array (
   'geom_hint' => 'Forneça aqui a geometria da localidade. Este aceita Well Known Text de um Ponto, Linha, Polígono ou MultiPolígono (como o WKT que pode ser exportado de um sistema GIS). Note que longitudes devem ser inseridas antes de latitudes. Assim, o \'PONTO(-44.0 -22.5)\' WKT se refere a um ponto com 44 graus de longitude, oeste; e 22 graus e 30 minutos de latitude, sul.',
   'geom_parent_error' => 'As coordenadas desta localidade não estão contidas dentro das coordenadas da localidade de onde é filha, por favor verifique!',
   'geometry' => 'Geometria',
+  'geometry_invalid' => 'Geometria inválida',
   'geom' => 'Geometria',
   'help' => 'Ajuda!',
   'biocollections' => 'BioColeções',

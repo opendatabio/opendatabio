@@ -356,7 +356,9 @@ class Location extends Node implements HasMedia
           // (1) a simplify distance (due to memory for large putative large parents)
           // (2) and the buffer distance;
           // use buffer in parent detection only if noWorld location not detected without buffer.
-          $query = 'ST_Within(ST_GeomFromText(?), ST_Buffer(ST_Simplify(geom,'.$parent_buffer.'),'.$parent_buffer.'))';
+          // simplify remove because it does not exist i mariadb
+          //$query = 'ST_Within(ST_GeomFromText(?), ST_Buffer(ST_Simplify(geom,'.$parent_buffer.'),'.$parent_buffer.'))';
+          $query = 'ST_Within(ST_GeomFromText(?), ST_Buffer(geom,'.$parent_buffer.'))';
         } else {
           $query = 'ST_Within(ST_GeomFromText(?), geom)';
         }
