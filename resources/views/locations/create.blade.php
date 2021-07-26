@@ -55,6 +55,13 @@
   </div>
 </div>
 
+<div class="form-group super-button">
+    <div class="col-sm-6 col-sm-offset-3">
+    <input type="hidden" name="geom_type" id="geom_type" value="{{old('geom_type', isset($location) ? $location->geomType : 'point') }}">
+    <a href="#" id="toggle_geom" class="btn btn-primary">@lang ('messages.inform_geometry')</a>
+    </div>
+</div>
+
 <div id="super-geometry">
 <div class="form-group">
     <label for="geom" class="col-sm-3 control-label mandatory">
@@ -71,37 +78,33 @@
   </div>
 </div>
 </div>
+
+
 <div id="super-points">
 <div class="form-group">
     <label for="lat1" class="col-sm-3 control-label mandatory">
 @lang('messages.latitude')
 </label>
         <a data-toggle="collapse" href="#hint6" class="btn btn-default">?</a>
-	    <div class="col-sm-6">
+<div class="col-sm-7">
 	<input type="text" name="lat1" id="lat1" class="form-control latlongpicker" value="{{ old('lat1', isset($location) ? $location->lat1 : null) }}"><span style="font-size: 200%">&#176;</span>
-	<input type="text" name="lat2" id="lat2" class="form-control latlongpicker" value="{{ old('lat2', isset($location) ? $location->lat2 : null) }}"><span style="font-size: 200%">'</span>
-	<input type="text" name="lat3" id="lat3" class="form-control latlongpicker" value="{{ old('lat3', isset($location) ? $location->lat3 : null) }}"><span style="font-size: 200%">"</span>
-	<input type="radio" name="latO" value="1" @if (old('latO', isset($location) ? $location->latO : 1)) checked @endif > N
-&nbsp;
-
-	<input type="radio" name="latO" value="0" @if (!old('latO', isset($location) ? $location->latO : 1)) checked @endif > S
-
-            </div>
+	<input type="text"  name="lat2" id="lat2" class="form-control latlongpicker" value="{{ old('lat2', isset($location) ? $location->lat2 : null) }}"><span style="font-size: 200%">'</span>
+	<input type="text"  name="lat3" id="lat3" class="form-control latlongpicker" value="{{ old('lat3', isset($location) ? $location->lat3 : null) }}"><span style="font-size: 200%">"</span>
+	<input type="radio" name="latO" value="1" @if ( old('latO', isset($location) ? $location->latO : 1)) checked @endif >&nbsp;N
+&nbsp;<input type="radio" name="latO" value="0" @if ( !old('latO', isset($location) ? $location->latO : 1)) checked @endif >&nbsp;S
+  </div>
 </div>
-<div class="form-group">
+<div class="form-group" style='resize'>
     <label for="long1" class="col-sm-3 control-label mandatory">
 @lang('messages.longitude')
 </label>
-	    <div class="col-sm-6">
-	<input type="text" name="long1" id="long1" class="form-control latlongpicker" value="{{ old('long1', isset($location) ? $location->long1 : null) }}"><span style="font-size: 200%">&#176;</span>
-	<input type="text" name="long2" id="long2" class="form-control latlongpicker" value="{{ old('long2', isset($location) ? $location->long2 : null) }}"><span style="font-size: 200%">'</span>
-	<input type="text" name="long3" id="long3" class="form-control latlongpicker" value="{{ old('long3', isset($location) ? $location->long3 : null) }}"><span style="font-size: 200%">"</span>
-	<input type="radio" name="longO" value="1" @if (old('longO', isset($location) ? $location->longO : 1)) checked @endif > E
-&nbsp;
-
-	<input type="radio" name="longO" value="0" @if (!old('longO', isset($location) ? $location->longO : 1)) checked @endif > W
-
-            </div>
+	    <div class="col-sm-7">
+  <input type="text"    name="long1" id="long1" class="form-control latlongpicker" value="{{ old('long1', isset($location) ? $location->long1 : null) }}"><span style="font-size: 200%">&#176;</span>
+	<input type="text"    name="long2" id="long2" class="form-control latlongpicker" value="{{ old('long2', isset($location) ? $location->long2 : null) }}"><span style="font-size: 200%">'</span>
+	<input type="text"   name="long3" id="long3" class="form-control latlongpicker" value="{{ old('long3', isset($location) ? $location->long3 : null) }}"><span style="font-size: 200%">"</span>
+	<input type="radio" name="longO" value="1" @if (old('longO', isset($location) ? $location->longO : 1)) checked @endif >&nbsp;E
+&nbsp;<input type="radio" name="longO" value="0" @if (!old('longO', isset($location) ? $location->longO : 1)) checked @endif >&nbsp;W
+</div>
   <div class="col-sm-12">
     <div id="hint6" class="panel-collapse collapse">
 	@lang('messages.latlong_hint')
@@ -110,24 +113,19 @@
 </div>
 </div>
 
-<div class="form-group super-button">
-    <div class="col-sm-6 col-sm-offset-3">
-    <input type="hidden" name="geom_type" id="geom_type" value="{{old('geom_type', isset($location) ? $location->geomType : 'point') }}">
-    <a href="#" id="toggle_geom" class="btn btn-primary">@lang ('messages.edit_geometry')</a>
-    </div>
-</div>
 
+
+<!-- PLOT OR SUBPLOT DIMENSIONS -->
 <div id="super-x">
 <div class="form-group">
     <label for="x" class="col-sm-3 control-label mandatory">
-@lang('messages.dimensions')
-</label>
-        <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
-	    <div class="col-sm-6">
-	X: <input type="text" name="x" id="x" class="form-control latlongpicker" value="{{ old('x', isset($location) ? $location->x : null) }}">(m)&nbsp;
-	Y: <input type="text" name="y" id="y" class="form-control latlongpicker" value="{{ old('y', isset($location) ? $location->y : null) }}">(m)
-            </div>
-
+      @lang('messages.dimensions')
+    </label>
+    <a data-toggle="collapse" href="#hint7" class="btn btn-default">?</a>
+	  <div class="col-sm-6">
+      <span id='xlabel'>X</span>:&nbsp;<input type="text"  name="x" id="x" class="form-control latlongpicker" value="{{ old('x', isset($location) ? $location->x : null) }}">&nbsp;m&nbsp;
+      <span id='ylabel'>Y</span>:&nbsp;<input type="text"  name="y" id="y" class="form-control latlongpicker" value="{{ old('y', isset($location) ? $location->y : null) }}">&nbsp;m
+    </div>
   <div class="col-sm-12">
     <div id="hint7" class="panel-collapse collapse">
 	@lang('messages.dimensions_hint')
@@ -135,16 +133,18 @@
   </div>
 </div>
 </div>
-		        <div class="form-group autodetect">
-			    <div class="col-sm-offset-3 col-sm-6">
-            <input type="hidden" name="route-url" value="{{ route('autodetect') }}">
-				<button type="submit" class="btn btn-primary" id="autodetect">
-				    <i class="fa fa-btn fa-plus"></i>
-@lang('messages.autodetect')
-				</button>
-				<div class="spinner" id="spinner"> </div>
-			    </div>
-                </div>
+
+
+
+<div class="form-group autodetect">
+    <div class="col-sm-offset-3 col-sm-6">
+      <input type="hidden" name="route-url" value="{{ route('autodetect') }}">
+      <button type="submit" class="btn btn-primary" id="autodetect">
+          <i class="fa fa-btn fa-plus"></i>@lang('messages.autodetect')
+      </button>
+      <div class="spinner" id="spinner"> </div>
+    </div>
+</div>
 
 <div class="form-group parent_id">
     <label for="parent_id" class="col-sm-3 control-label mandatory">
@@ -270,74 +270,128 @@ $(document).ready(function() {
         });
     $("#uc_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}","#uc_id", "@lang('messages.noresults')", undefined, {'scope':  'ucs'});
 });
+
+  function toogleGeometryLatLong(vel)  {
+      var geomtype = $("#geom_type").val();
+      switch(geomtype) {
+        case "point":
+          $("#geom_type").val('nonpoint');
+          $("#super-geometry").show(vel);
+          $("#super-points").hide(vel);
+          $("#toggle_geom").html("Inform coordinates");
+          break;
+      default:
+          $("#geom_type").val('point');
+          $("#super-geometry").hide(vel);
+          $("#super-points").show(vel);
+          $("#toggle_geom").html("Inform geometry");
+      }
+  }
+
+
 	/** For Location create and edit pages. The available fields change with changes on adm_level.
 	 * The "vel" parameter determines the velocity in which the animation is made. **/
 	function setLocationFields(vel) {
 		var adm = $('#adm_level option:selected').val();
-        var geomtype = $('#geom_type').val();
-        var parent_type = $('#parent_type').val();
+    var geomtype = $('#geom_type').val();
+    var parent_type = $('#parent_type').val();
 		if ("undefined" === typeof adm) {
 			return; // nothing to do here...
 		}
 		switch (adm) {
 			case "999": // point
-				$("#super-geometry").hide(vel);
-				$("#super-points").show(vel);
-				$("#super-x").hide(vel);
-				$("#super-uc").show(vel);
-                $(".parent_id").show(vel);
-                $(".autodetect").show(vel);
-                $(".super-button").hide(vel);
-                $(".super-start").hide(vel);
+          //$("#super-buffer").hide(vel);
+  				$("#super-geometry").hide(vel);
+  				$("#super-points").show(vel);
+  				$("#super-x").hide(vel);
+  				$("#super-uc").show(vel);
+          $(".parent_id").show(vel);
+          $(".autodetect").show(vel);
+          $(".super-button").hide(vel);
+          $(".super-start").hide(vel);
 				break;
 			case "100": // plot
-            case "101": // transect, fall through
-                switch(geomtype) {
-                case "point":
-                    $("#super-geometry").hide(vel);
-                    $("#super-points").show(vel);
-                    $(".super-button").show(vel);
-                    break;
-                default:
-                    $("#super-geometry").show(vel);
-                    $("#super-points").hide(vel);
-                    $(".super-button").hide(vel);
-                }
-				$("#super-x").show(vel);
-				$("#super-uc").show(vel);
-                $(".parent_id").show(vel);
-                $(".autodetect").show(vel);
-                if (adm == 100 && parent_type == 100) { // start-x and start-y ONLY here
-                    $(".super-start").show(vel);
-                } else {
-                    $(".super-start").hide(vel);
-                }
-				break;
-            case "0": // country
-				$("#super-geometry").show(vel);
-				$("#super-points").hide(vel);
-				$("#super-x").hide(vel);
-				$("#super-uc").hide(vel);
-                $(".parent_id").hide(vel);
-                $(".autodetect").hide(vel);
-                $(".super-button").hide(vel);
-                $(".super-start").hide(vel);
+            switch(geomtype) {
+            case "point":
+                $("#super-geometry").hide(vel);
+                $("#super-points").show(vel);
                 break;
-			default: // other
-				$("#super-geometry").show(vel);
-				$("#super-points").hide(vel);
-				$("#super-x").hide(vel);
-				$("#super-uc").hide(vel);
-                $(".parent_id").show(vel);
-                $(".autodetect").show(vel);
-                $(".super-button").hide(vel);
+            default:
+                $("#super-geometry").show(vel);
+                $("#super-points").hide(vel);
+            }
+            $(".super-button").show(vel);
+    				$("#super-x").show(vel);
+    				$("#super-uc").show(vel);
+            $(".parent_id").show(vel);
+            $(".autodetect").show(vel);
+            //$("#super-buffer").hide(vel);
+
+            //in case the location is a subplot
+            // start-x and start-y ONLY here
+            if (adm == 100 && parent_type == 100) {
+                $(".super-start").show(vel);
+            } else {
                 $(".super-start").hide(vel);
-		}
-	}
+            }
+            $("#xlabel").html("X");
+            $("#ylabel").html("Y");
+            break;
+      case "101": // transect, fall through
+            switch(geomtype) {
+              case "point":
+                $("#super-geometry").hide(vel);
+                $("#super-points").show(vel);
+                break;
+              default:
+                $("#super-geometry").show(vel);
+                $("#super-points").hide(vel);
+            }
+            $(".super-button").show(vel);
+            $("#super-x").show(vel);
+            //$("#super-buffer").show(vel);
+        		$("#super-uc").show(vel);
+            $(".parent_id").show(vel);
+            $(".autodetect").show(vel);
+            $(".super-start").hide(vel);
+            $("#xlabel").html("@lang('messages.transect_length')");
+            $("#ylabel").html("@lang('messages.transect_buffer')");
+
+
+            break;
+      case "0": // country
+    				$("#super-geometry").show(vel);
+    				$("#super-points").hide(vel);
+    				$("#super-x").hide(vel);
+    				$("#super-uc").hide(vel);
+            $(".parent_id").hide(vel);
+            $(".autodetect").hide(vel);
+            $(".super-button").hide(vel);
+            $(".super-start").hide(vel);
+            //$("#super-buffer").hide(vel);
+
+            break;
+	    default: // other
+    				$("#super-geometry").show(vel);
+    				$("#super-points").hide(vel);
+    				$("#super-x").hide(vel);
+    				$("#super-uc").hide(vel);
+            $(".parent_id").show(vel);
+            $(".autodetect").show(vel);
+            $(".super-button").hide(vel);
+            $(".super-start").hide(vel);
+            $("#super-buffer").hide(vel);
+
+      }
+
+  }
 	$("#adm_level").change(function() { setLocationFields(400); });
-	$("#toggle_geom").click(function() { $("#geom_type").val('polygon'); setLocationFields(400); });
+	$("#toggle_geom").click(function() { toogleGeometryLatLong(400); });
     // trigger this on page load
 	setLocationFields(0);
+  $( function() {
+      $( ".form-control.latlongpicker" ).resizable();
+  } );
 
 	/** Ajax handling for autodetecting location */
 	$("#autodetect").click(function(e) {

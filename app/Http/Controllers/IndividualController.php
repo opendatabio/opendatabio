@@ -185,7 +185,7 @@ class IndividualController extends Controller
     // Route for quicly creating an individual from a Location page
     public function createLocations($id, IndividualLocationsDataTable $dataTable)
     {
-        $location = Location::findOrFail($id);
+        $location = Location::withoutGeom()->findOrFail($id);
         return $this->create($location, $dataTable);
     }
 
@@ -206,7 +206,7 @@ class IndividualController extends Controller
           $locationid = $request->location_id;
           $rules = ['location_id' => 'required|integer'];
         }
-        $location = Location::find($locationid);
+        $location = Location::withGeom()->find($locationid);
         $rules = array_merge((array) $rules, (array) [
             'project_id' => 'required|integer',
             'collector' => "required|array",
@@ -279,15 +279,19 @@ class IndividualController extends Controller
                     }
               }
             }
-            //if not editing then location must have additon checks
+            //if not editing then location must have additon checks (updates are treated separately)
             if (!$individual and ($request->distance or $request->x)) {
               // validates xy / angdist
               if (Location::LEVEL_POINT == $location->adm_level) {
                 if ($request->distance < 0 or $request->angle < 0 or $request->angle > 360 or null == self::validateRelativePosition($request->angle,$request->distance,$location->adm_level)) {
                     $validator->errors()->add('distance', Lang::get('messages.individual_ang_dist_error'));
                 }
-              } elseif (100 == $request->location_type or 101 == $request->location_type and $location) {
+              } elseif (Location::LEVEL_PLOT == $location->adm_level) {
                 if ($request->x < 0 or $request->y < 0 or $request->x > $location->x or $request->y > $location->y or null == self::validateRelativePosition($request->x,$request->y,$location->adm_level)) {
+                    $validator->errors()->add('x', Lang::get('messages.individual_xy_error'));
+                }
+              } elseif (Location::LEVEL_TRANSECT == $location->adm_level) {
+                if ($request->x < 0 or $request->x > $location->transect_length or abs($request->y) > $location->y or null == self::validateRelativePosition($request->x,$request->y,$location->adm_level)) {
                     $validator->errors()->add('x', Lang::get('messages.individual_xy_error'));
                 }
               }
@@ -694,16 +698,21 @@ class IndividualController extends Controller
         'date_time' => 'date_format:Y-m-d H:i:s|nullable',
       ];
       $validator = Validator::make($request->all(), $rules);
-      $location = Location::find($request->location_id);
+      $location = Location::withGeom()->find($request->location_id);
       $validator->after(function ($validator) use ($request, $location) {
         if ($request->distance or $request->x) {
+          // validates xy / angdist
           // validates xy / angdist
           if (Location::LEVEL_POINT == $location->adm_level) {
             if ($request->distance < 0 or $request->angle < 0 or $request->angle > 360 or null == self::validateRelativePosition($request->angle,$request->distance,$location->adm_level)) {
                 $validator->errors()->add('distance', Lang::get('messages.individual_ang_dist_error'));
             }
-          } elseif (100 == $request->location_type or 101 == $request->location_type and $location) {
+          } elseif (Location::LEVEL_PLOT == $location->adm_level) {
             if ($request->x < 0 or $request->y < 0 or $request->x > $location->x or $request->y > $location->y or null == self::validateRelativePosition($request->x,$request->y,$location->adm_level)) {
+                $validator->errors()->add('x', Lang::get('messages.individual_xy_error'));
+            }
+          } elseif (Location::LEVEL_TRANSECT == $location->adm_level) {
+            if ($request->x < 0 or $request->x > $location->transect_length or abs($request->y) > $location->y or null == self::validateRelativePosition($request->x,$request->y,$location->adm_level)) {
                 $validator->errors()->add('x', Lang::get('messages.individual_xy_error'));
             }
           }

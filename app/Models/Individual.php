@@ -145,7 +145,7 @@ class Individual extends Model implements HasMedia
     {
         if ($this->locations->count()) {
           $id = $this->locations->last()->id;
-          return Location::withGeom()->addSelect('id', 'name')->find($id);
+          return Location::withGeom()->find($id);
         }
         return;
     }
@@ -279,6 +279,54 @@ class Individual extends Model implements HasMedia
     {
       return strip_tags($this->locations->last()->precision);
     }
+
+    /* get geographical coordinates of individual based on relative position */
+    public function getGlobalPosition($geojson=false)
+    {
+      //if location is POINT
+      $geomtype = $this->locationWithGeom->geomType;
+      $bearing = null;
+      $distance = null;
+      $start_point = $this->locationWithGeom->geom;
+      if ($this->locationWithGeom->adm_level == Location::LEVEL_POINT and $this->angle and $this->distance) {
+         //map with bearing and distance (destination point)
+        $bearing = $this->angle;
+        $distance = $this->distance;
+        $individual_point = Location::destination_point($start_point,$bearing,$distance);
+      }
+      //if location is PLOT
+      if ($this->locationWithGeom->adm_level == Location::LEVEL_PLOT) {
+        if ($geomtype == 'polygon') {
+            $geom = $this->locationWithGeom->geom;
+        } else {
+            $geom = $this->locationWithGeom->plot_geometry;
+        }
+        $individual_point = Location::individual_in_plot($geom,$this->x,$this->y);
+      }
+      //linestrings mapping
+      if ($this->locationWithGeom->adm_level == Location::LEVEL_TRANSECT) {
+          if ($geomtype == 'linestring') {
+            $start_point = Location::interpolate_on_transect($this->locationWithGeom->id,$this->x);
+            $bearing = Location::bearing_at_postion_for_destination($this->locationWithGeom->id,$this->x,$this->y);
+          } else {
+            //then location is a transect but defined as point (the start point)
+            $start_point = Location::destination_point($this->locationWithGeom->geom,0,$this->x);
+            if ($this->y < 0) {
+              $bearing = 270;
+            } else {
+              $bearing = 90;
+            }
+          }
+          $distance = abs($this->y);
+          $individual_point = Location::destination_point($start_point,$bearing,$distance);
+      }
+      if ($geojson) {
+        $individual_point = DB::select("SELECT ST_ASGEOJSON(ST_GeomFromText('".$individual_point."')) as geojson")[0]->geojson;
+      }
+      return $individual_point;
+    }
+
+
 
     /* END INDIVIDUAL LOCATION */
 
@@ -431,7 +479,7 @@ class Individual extends Model implements HasMedia
     }
 
 
-  
+
 
     /* register media modifications */
     public function registerMediaConversions(BaseMedia $media = null): void

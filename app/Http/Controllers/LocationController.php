@@ -23,7 +23,7 @@ use App\Jobs\ImportLocations;
 use App\Jobs\DeleteMany;
 use Spatie\SimpleExcel\SimpleExcelReader;
 
-use Illuminate\Support\Facades\Input;
+//use Illuminate\Support\Facades\Input;
 use Activity;
 use App\Models\ActivityFunctions;
 use App\DataTables\ActivityDataTable;
@@ -35,8 +35,10 @@ class LocationController extends Controller
     // MAY receive optional "$request->scope" to return only UCs; default is to return all locations?
     public function autocomplete(Request $request)
     {
-        $locations = Location::noWorld()->where('name', 'LIKE', ['%'.$request->input('query').'%'])
-                        ->orderBy('name', 'ASC')->take(10);
+        $locations = Location::noWorld()
+            ->withoutGeom()
+            ->where('name', 'LIKE', ['%'.$request->input('query').'%'])
+            ->orderBy('name', 'ASC')->take(10);
         if ($request->scope) {
             switch ($request->scope) {
             case 'ucs':
@@ -49,7 +51,7 @@ class LocationController extends Controller
                 break;
             }
         }
-        $locations = $locations->get();
+        $locations = $locations->cursor();
         $locations = collect($locations)->transform(function ($location) {
             $location->data = $location->id;
             $location->value = $location->searchablename;
@@ -62,8 +64,10 @@ class LocationController extends Controller
 
     public function autodetect(Request $request)
     {
+        //return Response::json(['error' => json_encode($request)]);
+
         $geom = $request->geom;
-        if (('point' == $request->geom_type and Location::LEVEL_PLOT == $request->adm_level) or Location::LEVEL_POINT == $request->adm_level) {
+        if (('point' == $request->geom_type and Location::LEVEL_PLOT == $request->adm_level) or Location::LEVEL_POINT == $request->adm_level or ('point' == $request->geom_type and Location::LEVEL_TRANSECT == $request->adm_level)) {
             $geom = Location::geomFromParts($request);
         }
         if (!$geom) {
@@ -150,10 +154,11 @@ false,0);
      */
     public function create()
     {
-        $locations = Location::noWorld()->get();
-        $uc_list = Location::ucs()->get();
+        //$locations = Location::noWorld()->get();
+        //$uc_list = Location::ucs()->get();
 
-        return view('locations.create', compact('locations', 'uc_list'));
+        //return view('locations.create', compact('locations', 'uc_list'));
+        return view('locations.create');
     }
 
     // Validates the user input for CREATE or UPDATE requests
@@ -175,7 +180,7 @@ false,0);
             'altitude' => 'integer|nullable',
             'parent_id' => 'required_unless:adm_level,'.config('app.adm_levels')[0],
         ];
-        if (Location::LEVEL_PLOT == $request->adm_level) { // PLOT
+        if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_TRANSECT == $request->adm_level) { // PLOT
             if ('point' == $request->geom_type) {
                 $rules = array_merge($rules, [
                     'lat1' => 'required|numeric|min:0',
@@ -184,17 +189,25 @@ false,0);
                     'long2' => 'numeric|nullable|min:0',
                     'lat3' => 'numeric|nullable|min:0',
                     'long3' => 'numeric|nullable|min:0',
+                    'x' => 'required|numeric',
+                    'y' => 'required|numeric',
                 ]);
             } else {
                 $rules = array_merge($rules, [
                     'geom' => 'required|string',
                 ]);
+                if (Location::LEVEL_PLOT == $request->adm_level) {
+                  $rules = array_merge($rules, [
+                    'x' => 'required|numeric',
+                    'y' => 'required|numeric',
+                  ]);
+                } else { //this will be a transect
+                  $rules = array_merge($rules, [
+                    'y' => 'required|numeric',
+                  ]);
+                }
             }
-            $rules = array_merge($rules, [
-                'x' => 'required|numeric',
-                'y' => 'required|numeric',
-            ]);
-            if (100 == $request->parent_type) { // location is a subplot
+            if (Location::LEVEL_PLOT == $request->parent_type) { // location is a subplot
                 $parent = Location::findOrFail($request->parent_id);
                 $rules = array_merge($rules, [
                     'startx' => 'required|numeric|min:0|max:'.$parent->x,
@@ -219,11 +232,14 @@ false,0);
         // Now we check if the geometry received is valid
         // if it falls inside the parent geometry polygon
         // if an identical geometry already exists
-        $validator->after(function ($validator) use ($request) {
+        $validator->after(function ($validator) use ($request,  $id) {
             //case point locations, either Plot or Point, then validate exact duplicate geometry
             if ((Location::LEVEL_PLOT == $request->adm_level and 'point' == $request->geom_type)
                 or
-               (Location::LEVEL_POINT == $request->adm_level))
+               (Location::LEVEL_POINT == $request->adm_level)
+                 or
+               (Location::LEVEL_TRANSECT == $request->adm_level and 'point' == $request->geom_type)
+               )
             {
                 if (!isset($request->geom)) {
                   $geom = Location::geomFromParts($request);
@@ -236,16 +252,19 @@ false,0);
             //1. check the geometry is valid
             #$valid = DB::select('SELECT ST_IsValid(ST_GeomFromText(?)) as valid', [$geom]);
             // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
-            $valid = DB::select("SELECT ST_IsEmpty(ST_GeomFromText('$geom')) as $valid");
-            $valid = count($valid) ? $valid[0]->$valid : 1;
-            if ($valid == 1) {
+            $valid = DB::select("SELECT ST_IsEmpty(ST_GeomFromText('$geom')) as valid");
+            if (1 == $valid[0]->valid) {
                $validator->errors()->add('geom', Lang::get('messages.geom_error'));
                return;
             }
 
-            //2. check if this exact geometry is already registered
-            $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->get();
-            if (sizeof($exact)) {
+            //2. check if this exact geometry is already registered (only if not editing)
+            if (!is_null($id)) {
+             $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->where('id','<>',$id)->cursor();
+           } else {
+             $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->cursor();
+           }
+            if ($exact->count() > 0) {
                $validator->errors()->add('geom', Lang::get('messages.geom_duplicate'));
                return;
             }
@@ -254,7 +273,13 @@ false,0);
             if ($request->parent_id > 1)
             {
               $parent = Location::withGeom()->findOrFail($request->parent_id);
-              $parent_dim = !is_null($parent->x) ? (($parent->x >= $parent->y) ? $parent->x : $parent->y) : null;
+              $parent_dim = null;
+              //define a buffer size depending on the parent type
+              if (Location::LEVEL_PLOT == $parent->adm_level) { // location is a subplot
+                $parent_dim = !is_null($parent->x) ? (($parent->x >= $parent->y) ? $parent->x : $parent->y) : null;
+              } elseif (Location::LEVEL_TRANSECT == $parent->adm_level) {
+                $parent_dim = !is_null($parent->y) ? $parent->y : null;
+              }
               if (!is_null($parent_dim)) {
                 /* add a buffer to parent point in the ~ size of its dimension if set */
                 $buffer_dd = (($parent_dim*0.00001)/1.11);
@@ -276,6 +301,26 @@ false,0);
               }
               if (1 != $valid[0]->valid) {
                 $validator->errors()->add('geom', Lang::get('messages.geom_parent_error'));
+                return;
+              }
+            }
+
+            //4. uc validation
+            if ($request->uc_id > 1)
+            {
+              $uc_parent = Location::withGeom()->findOrFail($request->uc_id);
+              /* config buffer */
+              $buffer_dd = config('app.location_parent_buffer');
+
+              //test without buffer
+              $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->uc_id]);
+
+              //if not valid, test with buffer
+              if (1 != $valid[0]->valid) {
+                  $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), ST_BUFFER(geom,?)) as valid FROM locations where id = ?', [$geom, $buffer_dd, $request->uc_id]);
+              }
+              if (1 != $valid[0]->valid) {
+                $validator->errors()->add('geom', Lang::get('messages.geom_uc_error'));
                 return;
               }
             }
@@ -309,14 +354,13 @@ false,0);
                     return $obj->distance < 0.001;
                 });
             if (sizeof($dupes)) {
-                Input::flash();
-
+                $request->flash();
                 return view('locations.confirm', compact('dupes'));
             }
         }
-        if (Location::LEVEL_PLOT == $request->adm_level) { // plot
+        if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_TRANSECT == $request->adm_level) { // plot
             $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y']));
-            if (100 == $request->parent_type) { // see issue #40
+            if (Location::LEVEL_PLOT == $request->parent_type) { // see issue #40
                 $newloc->startx = $request->startx;
                 $newloc->starty = $request->starty;
             }
@@ -356,6 +400,41 @@ false,0);
         return redirect('locations/'.$newloc->id)->withStatus(Lang::get('messages.stored'));
     }
 
+
+    public function mapMe($id)
+    {
+      $location = Location::noWorld()->select('*')->with('children')->findOrFail($id);
+      if (null !== $location->parent and $location->adm_level>config('app.adm_levels')[0]) {
+        $parent = Location::noWorld()->select('*')->findOrFail($location->parent->id);
+      } else {
+        $parent = null;
+      }
+      return view('locations.map', compact('location','parent'));
+    }
+
+
+      public function maprender(Request $request)
+      {
+              if ($request->location_id) {
+                $location = Location::withGeom()->findOrFail($request->location_id);
+                if ($request->individual_id) {
+                    $location_features = $location->generateFeatureCollection($request->individual_id);
+                } else {
+                    $location_features = $location->generateFeatureCollection($request->individual_id);
+                }
+                return Response::json(
+                [
+                  'features' => $location_features,
+                ]);
+              }
+              return Response::json(
+              [
+                'error' => "Could not map data"
+              ]);
+      }
+
+
+
     /**
      * Display the specified resource.
      *
@@ -365,16 +444,18 @@ false,0);
      */
     public function show($id,LocationsDataTable $dataTable)
     {
-        $location = Location::noWorld()->select('*')->with('children')->withGeom()->findOrFail($id);
+        $location = Location::withoutGeom()->withGeom()->noWorld()->findOrFail($id);
+        //with('children')->with('children')->
         //$plot_children = $location->children->map(function ($c) { if ($c->adm_level > Location::LEVEL_UC) { return Location::withGeom()->find($c->id); } });
         $plot_children = null;
         //$parent = null;
-        if (null !== $location->parent and $location->adm_level>config('app.adm_levels')[0]) {
-          $parent = Location::noWorld()->select('*')->withGeom()->findOrFail($location->parent->id);
-        } else {
-          $parent = null;
-        }
-        $media = $location->mediaDescendantsAndSelf();
+        //if (null !== $location->parent and $location->adm_level>config('app.adm_levels')[0]) {
+        //  $parent = Location::noWorld()->select('*')->findOrFail($location->parent->id);
+        //} else {
+        //  $parent = null;
+        //}
+        //$media = $location->mediaDescendantsAndSelf();
+        $media = collect([]);
         if ($media->count()) {
           $media = $media->paginate(3);
         } else {
@@ -414,11 +495,11 @@ false,0);
 
              return $dataTable->with([
                     'location' => $id
-                ])->render('locations.show', compact('chartjs', 'location', 'plot_children','parent','media'));
+                ])->render('locations.show', compact('chartjs', 'location', 'plot_children','media'));
         } // else
         return $dataTable->with([
                'location' => $id
-           ])->render('locations.show', compact('location', 'plot_children','parent','media'));
+           ])->render('locations.show', compact('location', 'plot_children','media'));
     }
 
     /**
@@ -430,11 +511,12 @@ false,0);
      */
     public function edit($id)
     {
-        $locations = Location::all();
-        $uc_list = Location::ucs()->get();
+        //$locations = Location::all();
+        //locations
+        //$uc_list = Location::ucs()->ge();
         $location = Location::select('*')->withGeom()->findOrFail($id);
 
-        return view('locations.create', compact('locations', 'location', 'uc_list'));
+        return view('locations.create', compact('location'));
     }
 
     /**
@@ -458,9 +540,9 @@ false,0);
                 ->withErrors($validator)
                 ->withInput();
         }
-        if (Location::LEVEL_PLOT == $request->adm_level) {
+        if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_TRANSECT == $request->adm_level) {
             $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y']));
-            if (100 == $request->parent_type) { // see issue #40
+            if (Location::LEVEL_PLOT == $request->parent_type) { // see issue #40
                 $location->startx = $request->startx;
                 $location->starty = $request->starty;
             } else {

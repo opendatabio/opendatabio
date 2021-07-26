@@ -20,23 +20,25 @@
             @lang('messages.location_name')
             :
             </strong>
-            {{ $location->name }} {!! $location->coordinatesSimple !!}
+            {{ $location->name }}
           </p>
           <p>
 		    <strong>
           @lang('messages.adm_level')
           :
         </strong>
-        @lang ('levels.adm_level.' . $location->adm_level)
+          @lang ('levels.adm_level.' . $location->adm_level)
+          [ @lang('messages.geometry'): {{ $location->geomType }}]
         </p>
 
-        @if ($location->altitude)
-          <p>
-          <strong>
-            @lang('messages.altitude') :
-          </strong> {{ $location->altitude }}
-          </p>
-        @endif
+        <p>
+        <strong>
+          @lang('messages.centroid') :
+        </strong> {{ $location->centroid_raw }}
+        </p>
+
+
+
 
 
         <!-- Plot specific info when dimensions is present -->
@@ -45,9 +47,16 @@
           <p>
           <strong>
             @lang('messages.dimensions')
-            :</strong> X: {{ $location->x }}m, Y: {{$location->y}}m</a>
+            :</strong>
+            @if ($location->adm_level == 101)
+             @lang('messages.transect_length'): {{ $location->transect_length }}&nbsp;m, @lang('messages.transect_buffer'): {{$location->y}}&nbsp;m
+             @else
+             x: {{ $location->x }} m  | y: {{$location->y}} m  | area: {{$location->area}} m<sup>2</sup>
+            @endif
           </p>
         @endif
+
+
         @if ($location->startx or $location->starty)
            <p>
             <strong>
@@ -56,7 +65,7 @@
               </p>
         @endif
 
-
+        <!--- should remove and standardize to wgs84
         @if ($location->datum)
           <p>
           <strong>
@@ -64,6 +73,7 @@
             :</strong> {{ $location->datum }}
             </p>
         @endif
+        --->
 
         @if ($location->uc_id)
           <p>
@@ -72,14 +82,24 @@
             :</strong> {!! $location->uc->rawLink() !!}
             </p>
         @endif
-<p>
+
+  <p>
         <strong>
           @lang('messages.total_descendants')
           :</strong>
           <a data-toggle="collapse" href="#related_taxa" >
-            {{ $location->getDescendants()->count() }}
+            {{ $location->childrenCount() }}
           </a>
   </p>
+
+  @if ($location->altitude)
+    <p>
+    <strong>
+      @lang('messages.altitude') :
+    </strong> {{ $location->altitude }}
+    </p>
+  @endif
+
 
         @if ($location->notes)
           <p>
@@ -166,8 +186,21 @@
               <i class="fas fa-headphones-alt"></i>
               @lang('messages.create_media')
             </a>
+            &nbsp;&nbsp;
           @endif
         @endcan
+        <input type="hidden" name="map-route-url" value="{{ route('maprender') }}">
+        &nbsp;
+        <button type="submit" class="btn btn-primary" id="map_location">
+        <i class="fas fa-map-marked-alt fa-1x"></i>&nbsp;@lang('messages.map')
+        </button>
+        <div class="spinner" id="mapspinner" > </div>
+        <div id="ajax-error" class="collapse alert alert-danger">
+        @lang('messages.whoops')
+        </div>
+
+
+
       </div>
     </div>
   </div>
@@ -193,7 +226,7 @@
 	     @endif
 	      {{ $location->name }}
         <br>
-        @if($location->getDescendants()->count())
+        @if($location->childrenCount()>0)
         <hr>
         <strong>@lang('messages.location_children')</strong>:
         <br><br>
@@ -230,23 +263,26 @@
 
 
 <!-- MAP LOCATION -->
-<div class="panel panel-default">
+<div class="panel panel-default" id='map-box' tabindex='1' hidden>
   <div class="panel-heading">
     @lang ('messages.location_map')
-		   @if ($location->simplified)
+		   @if ($location->is_drawn)
 		    -
-		    @lang ('messages.simplified_map')
-		    @endif
+		    @lang ('messages.geometry_drawn')
+		   @endif
   </div>
-  <div class="panel-body" id='map_box'>
-  <div id="map" style="
-        height: 400px;
-        width: 100%;">
-	  @if (empty ($location->geomArray))
-	     @lang ('messages.location_map_error')
-	   @endif
-  </div>
-  </div>
+    <div class="panel-body">
+      <input type="hidden" name="location_id" value="{{ $location->id }}">
+      <input type="hidden" name="location_json" value="" id='location_json'>
+      <div id="osm_map" style="
+          height: 400px;
+          width: 100%;">
+     </div>
+     <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+      <div id="popup-content" ></div>
+      </div>
+    </div>
 </div>
 
 
@@ -254,31 +290,6 @@
   </div>
 </div>
 <!-- END -->
-
-<?php
-function getZoomLevel($area) {
-	if ($area > 400)
-		return 3;
-	if ($area > 200)
-		return 4;
-	if ($area > 50)
-		return 5;
-	if ($area > 15)
-		return 6;
-	if ($area > 5)
-		return 7;
-	if ($area > 0.8)
-		return 8;
-	if ($area > 0.1)
-		return 9;
-	if ($area > 0.01)
-		return 10;
-	if ($area > 0.001)
-		return 11;
-	// default zoom level
-	return 12;
-}
-?>
 
 @endsection
 
@@ -303,143 +314,56 @@ function getZoomLevel($area) {
 
 
 
-<script>
-
-function initMap() {
-
-  var uluru = {lat: {{$location->centroid['y']}}, lng: {{$location->centroid['x']}}  };
-
-  var map = new google.maps.Map(document.getElementById('map'), {
-    @if(null == $parent)
-    zoom: {{ getZoomLevel($location->area) }},
-    @else
-    zoom: {{ getZoomLevel($parent->area) }},
-    @endif
-    center: uluru
-  });
-  // display the main object
-  @php
-    $hasparent = false;    
-  @endphp
-  //parent location
-  @if(null !== $parent)
-      @php
-        $hasparent = true;
-        $largest = max(array_map(function($value) { return count($value);},$parent->geomArray));
-        $centroid = $parent->centroid;
-        $parentcontent = "<strong>".$parent->name."</strong><br><br>";
-        $parentcontent .= Lang::get('messages.individuals').":  <strong>".$parent->getCount("all",null,"individuals")."</strong><br>";
-        $parentcontent .= Lang::get('messages.vouchers').":  <strong>".$parent->getCount("all",null,"vouchers")."</strong><br>";
-        $parentcontent .= Lang::get('messages.taxons').":  <strong>".$parent->getCount("all",null,"taxons")."</strong><br>";
-        $parentcontent .= Lang::get('messages.measurements').":  <strong>".$parent->getCount("all",null,"measurements")."</strong><br>";
-        $parentcontent .= Lang::get('messages.media').":  <strong>".$parent->getCount("all",null,"media")."</strong><br>";
-    @endphp
-    @foreach($parent->geomArray as $parent_polygon)
-      @if (count($parent_polygon) == $largest)
-         var parentpol = new google.maps.Polygon({
-          paths: [
-             @foreach ($parent_polygon as $point)
-              {lat: {{ $point['y'] }}, lng: {{$point['x']}}},
-               @endforeach
-              ],
-          map: map,
-          strokeColor:'#fa98fa',
-          strokeOpacity: 0.7,
-          strokeWeight: 3,
-          fillColor: '#fa98fa',
-          fillOpacity: 0.2,
-        });
-      @else
-        new google.maps.Polygon({
-         paths: [
-            @foreach ($parent_polygon as $point)
-             {lat: {{$point['y']}}, lng: {{$point['x']}}},
-              @endforeach
-             ],
-         map: map,
-         strokeColor:'#fa98fa',
-         strokeOpacity: 0.7,
-         strokeWeight: 3,
-         fillColor: '#fa98fa',
-         fillOpacity: 0.2,
-       });
-     @endif
-    @endforeach
-
-     var parentpos = {lat: {{ $centroid['y']}}, lng: {{$centroid['x']}} };
-     var infowindow = new google.maps.InfoWindow({
-       content: "{!! $parentcontent !!}",
-       position: parentpos,
-     });
-     parentpol.addListener("click", () => {
-       infowindow.close();
-       locawindow.close();
-       infowindow.open(map, parentpol);
-     });
-
-  @endif
-  //parent
-  @if (in_array($location->geomType, ['polygon', 'multipolygon']))
-    @foreach ($location->geomArray as $polygon)
-      @if(!isset($locacentroids))
-      @php
-        $locacentroids = $location->centroid;
-        $localcontent = "<strong>".$location->name."</strong><br><br>";
-        $localcontent .= Lang::get('messages.individuals').":  <strong>".$location->getCount("all",null,"individuals")."</strong><br>";
-        $localcontent .= Lang::get('messages.vouchers').":  <strong>".$location->getCount("all",null,"vouchers")."</strong><br>";
-        $localcontent .= Lang::get('messages.taxons').":  <strong>".$location->getCount("all",null,"taxons")."</strong><br>";
-        $localcontent .= Lang::get('messages.measurements').":  <strong>".$location->getCount("all",null,"measurements")."</strong><br>";
-        $localcontent .= Lang::get('messages.media_files').":  <strong>".$location->getCount("all",null,"media")."</strong><br>";
-      @endphp
-      @endif
-
-	     var curpol = new google.maps.Polygon({
-	        paths: [
-	           @foreach ($polygon as $point)
-	            {lat: {{$point['y']}}, lng: {{$point['x']}}},
-	             @endforeach
-	            ],
-	        map: map,
-	        strokeColor:'#00FF00',
-          strokeOpacity: 0.7,
-          strokeWeight: 2,
-          fillColor: '#00FF00',
-          fillOpacity: 0.3
-      });
-
-
-      var locawindow = new google.maps.InfoWindow({
-         content: "{!! $localcontent !!}",
-         position: {lat: {{ $locacentroids['y']}}, lng: {{$locacentroids['x']}} },
-       });
-
-      @if ($hasparent)
-        curpol.addListener("click", () => {
-          infowindow.close();
-          locawindow.close();
-          locawindow.open(map, curpol);
-        });
-      @else
-        curpol.addListener("click", () => {
-          locawindow.close();
-          locawindow.open(map, curpol);
-      });
-      @endif
-
-
-
-      @endforeach
-    @elseif ($location->geomType == "point")
-      <?php $point = $location->geomArray; ?>
-      new google.maps.Marker({
-        position: {lat: {{$point['y']}}, lng: {{$point['x']}} },
-          map: map,
-          title: 'Plot'
-        });
-    @endif
-
+<script >
+/** Ajax handling for mapping */
+$("#map_location").click(function(e) {
+  var isrendered = $("#location_json").val();
+  if (isrendered == '') {
+  $( "#mapspinner" ).css('display', 'inline-block');
+  $.ajaxSetup({ // sends the cross-forgery token!
+    headers: {
+      'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
     }
+  })
+  $.ajax({
+    type: "POST",
+    url: $('input[name="map-route-url"]').val(),
+    dataType: 'json',
+          data: {
+              'location_id': $('input[name="location_id"]').val(),
+          },
+    success: function (data) {
+      $( "#mapspinner" ).hide();
+      if ("error" in data) {
+        $( "#ajax-error" ).collapse("show");
+        $( "#ajax-error" ).text(data.error);
+      } else {
+        // ONLY removes the error if request is success
+        $( "#ajax-error" ).collapse("hide");
+        $("#location_json").val(data.features);
+        $("#map-box").show();
+        $("#map-box").focus();
+        window.my_map.display();
+
+      }
+    },
+    error: function(e){
+      $( "#spinner" ).hide();
+      $( "#ajax-error" ).collapse("show");
+      $( "#ajax-error" ).text('Error sending AJAX request');
+    }
+  })
+  } else {
+    if ($('#map-box').is(":visible")) {
+      $('#map-box').hide();
+    } else {
+      $('#map-box').show();
+      $('#map-box').focus();
+    }
+  }
+});
+
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ config('app.gmaps_api_key') }}&callback=initMap"></script>
+
 
 @endpush

@@ -38,7 +38,7 @@ button.unstyle:hover {
 }
 
 // used in Location screens
-.form-control.latlongpicker { display:inline; width: 20%; }
+.form-control.latlongpicker { display:inline; width: 20%;}
 .form-control.partdatepicker { display:inline; width: 25%; }
 
 // used in forms to group input in a relevant way
@@ -67,10 +67,10 @@ input.autocomplete, input.multiselect { border: 1px solid #5555FF }
 .mandatory { color: #a36b6f; }
 
 .picture {
-    max-width: calc(100%); 
-    max-height: 700px; 
-    margin-right: auto; 
-    margin-left: auto; 
+    max-width: calc(100%);
+    max-height: 700px;
+    margin-right: auto;
+    margin-left: auto;
     display: block;
 }
 
@@ -84,4 +84,50 @@ input.autocomplete, input.multiselect { border: 1px solid #5555FF }
 }
 .sp-palette-container {
     border: none!important;
+}
+
+
+// openlayers popup
+.ol-popup {
+    position: absolute;
+    min-width: 180px;
+    background-color: white;
+    -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
+    font-size: 12pt;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    bottom: 12px;
+    left: -50px;
+}
+.ol-popup:after, .ol-popup:before {
+    top: 100%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+}
+.ol-popup:after {
+    border-top-color: white;
+    border-width: 10px;
+    left: 48px;
+    margin-left: -10px;
+}
+.ol-popup:before {
+    border-top-color: #cccccc;
+    border-width: 11px;
+    left: 48px;
+    margin-left: -11px;
+}
+.ol-popup-closer {
+    text-decoration: none;
+    position: absolute;
+    top: 2px;
+    right: 8px;
+}
+.ol-popup-closer:after {
+    content: "✖";
 }

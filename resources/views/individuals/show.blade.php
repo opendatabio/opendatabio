@@ -85,7 +85,16 @@
           <strong>@lang('messages.location'): </strong>
           @if($individual->locations->count())
             &nbsp;&nbsp;{!! $individual->locations->last()->rawLink() !!} <br> {!! $individual->LocationDisplay(); !!}
-            <br>{!! $individual->locations->last()->precision !!} &nbsp;&nbsp;<a data-toggle="collapse" href='#hintp' class="btn btn-default">?</a>
+            <!-- <br>{!! $individual->locations->last()->precision !!} &nbsp;&nbsp;<a data-toggle="collapse" href='#hintp' class="btn btn-default">?</a> -->
+            <br>
+            <input type="hidden" name="map-route-url" value="{{ route('maprender') }}">
+            <button type="submit" class="btn btn-primary" id="map_individual">
+            <i class="fas fa-map-marked-alt fa-1x"></i>&nbsp;@lang('messages.map')
+            </button>
+            <div class="spinner" id="mapspinner" > </div>
+            <div id="ajax-error" class="collapse alert alert-danger">
+            @lang('messages.whoops')
+            </div>
             @if ($individual->locations->count()>1)
               <br><a data-toggle="collapse" href='#locationdatatable' class="btn btn-default">@lang('messages.all')</a>
             @endif
@@ -93,9 +102,11 @@
             @lang('messages.unknown_location')
           @endif
         </p>
+        <!--
         <div id='hintp' class='panel-collapse collapse'>
             @lang('messages.location_precision_hint')
         </div>
+      -->
         @if($individual->locations->count()>1)
         <div id='locationdatatable' class='panel-collapse collapse' >{!! $dataTable->table([],true) !!}</div>
         @endif
@@ -170,6 +181,34 @@
 
       </div>
     </div>
+
+    <!-- MAP LOCATION -->
+    <div class="panel panel-default" id='map-box' tabindex='1' hidden>
+      <div class="panel-body">
+        <strong>@lang ('messages.individual')</strong>
+        @if ($individual->x)
+         @lang ('messages.individual_geolocation')
+        @endif
+        <br>
+        @if ($individual->locationWithGeom->is_drawn)
+         [@lang ('messages.geometry_drawn')]
+        @endif
+      </div>
+      <div class="panel-body">
+        <input type="hidden" name="location_id" value="{{ $individual->locationWithGeom->id }}">
+        <input type="hidden" name="individual_id" value="{{ $individual->id }}">
+        <input type="hidden" name="location_json" value="" id='location_json'>
+        <div id="osm_map" style="
+            height: 400px;
+            width: 100%;">
+       </div>
+       <div id="popup" class="ol-popup">
+        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+        <div id="popup-content" ></div>
+        </div>
+      </div>
+    </div>
+
     <!--- MEDIA BLOCK -->
     @if (isset($media))
       {!! View::make('media.index-model', ['model' => $individual, 'media' => $media ]) !!}
@@ -182,5 +221,58 @@
 @push ('scripts')
 
 {!! $dataTable->scripts() !!}
+
+
+<script >
+/** Ajax handling for mapping */
+$("#map_individual").click(function(e) {
+  var isrendered = $("#location_json").val();
+  if (isrendered == '') {
+  $( "#mapspinner" ).css('display', 'inline-block');
+  $.ajaxSetup({ // sends the cross-forgery token!
+    headers: {
+      'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    }
+  })
+  $.ajax({
+    type: "POST",
+    url: $('input[name="map-route-url"]').val(),
+    dataType: 'json',
+          data: {
+              'location_id': $('input[name="location_id"]').val(),
+              'individual_id': $('input[name="individual_id"]').val(),
+          },
+    success: function (data) {
+      $( "#mapspinner" ).hide();
+      if ("error" in data) {
+        $( "#ajax-error" ).collapse("show");
+        $( "#ajax-error" ).text(data.error);
+      } else {
+        // ONLY removes the error if request is success
+        $( "#ajax-error" ).collapse("hide");
+        $("#location_json").val(data.features);
+        $("#map-box").show();
+        $("#map-box").focus();
+        window.my_map.display();
+
+      }
+    },
+    error: function(e){
+      $( "#spinner" ).hide();
+      $( "#ajax-error" ).collapse("show");
+      $( "#ajax-error" ).text('Error sending AJAX request');
+    }
+  })
+} else {
+  if ($('#map-box').is(":visible")) {
+    $('#map-box').hide();
+  } else {
+    $('#map-box').show();
+    $('#map-box').focus();
+  }
+}
+});
+
+</script>
 
 @endpush
