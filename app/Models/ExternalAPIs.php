@@ -8,6 +8,8 @@
 namespace App\Models;
 
 use App\Models\BibReference;
+use App\Models\Taxon;
+
 use Illuminate\Support\Str;
 
 use GuzzleHttp\Client as Guzzle;
@@ -477,60 +479,191 @@ class ExternalAPIs
       //return $results;
     }
 
-    //GBIF API IMPLEMENTED FOR ANIMAL NAMES MAINLY //
-    //gbif has several LIMITATIONS AS TAXON API,  as it is not really a nomenclature database (IT IS HERE ONLY BECAUSE ZOOBANK DOES NOT HAVE MANY COMMON NAMES
-    public static function filterGBIF($searchstring,$results)
-    {
-      $result = array();
-      foreach($results as $values) {
-        if ($values['canonicalName']== $searchstring and !$values['synonym'] and "" !== $values['authorship'] and array_key_exists('rank',$values)) {
-            $filtered = [
-              'author' => $values['authorship'],
-              'parent' => isset($values['parent']) ? $values['parent'] : null,
-              'rank' => mb_strtolower($values['rank']),
-              'scientificName' => $values['scientificName']
-            ];
-            $result[$values['key']] = $filtered;
-        }
-      }
-      //if there is more than one, get one for which the author pattern is more common
-      $counts = array_count_values(array_column($result,'author'));
-      if (count($counts)>1) {
-         $max_counts = max($counts);
-         $filtered_counts = array_filter($counts, function($element) use($max_counts){
-            return $element == $max_counts;
-          });
-         if (count($filtered_counts) == 1) {
-              $keys = array_search(array_keys($filtered_counts),array_column($result,'author'));
-              $key = array_keys($result)[$keys];
-              $result= $result[$key];
-              $result = array_merge($result,array('gbif_key'=> $key));
-         } else {
-              //STILL MANY, MUST BE CHECKED MANUALLY
-              $result = null;
-         }
-      } else {
-        if (count($result)==1) {
-          $key = array_keys($result)[0];
-          $result = $result[$key];
-          $result = array_merge($result,array('gbif_key' => $key));
-        } else {
-          $result = null;
-        }
-      }
-
-      return $result;
-    }
-
-
+    //GBIF API //
+    //It includes tropicos and ipni, so, try to get all results from this single query
     public function getGBIF($searchstring)
     {
-      $flags = 0;
-      $base_uri = 'https://api.gbif.org/';
-      //$searchstring = htmlspecialchars($searchstring);
+        $gbif_record = null;
+        $gbif_senior = null;
+        $base_uri = 'https://api.gbif.org/';
+        //search locale_canonicalName exact match
+        $get_string = "v1/species?name=".$searchstring;
+        $results = self::makeRequest($base_uri,$get_string);
+        $isarray = is_array($results);
+
+        $matchtype = "EXACT";
+        //try a fuzzy match if not found
+        if (is_null($results) or ($isarray and count($results)==0)) {
+          $get_string = "v1/species/match?name=".$searchstring;
+          $results = self::makeRequest($base_uri,$get_string);
+          if ($results['matchType']=="NONE") {
+            return null;
+          }
+          $matchtype = $results['matchType'];
+          $searchstring =$results["canonicalName"];
+          $get_string = "v1/species?name=".$searchstring;
+          $results = self::makeRequest($base_uri,$get_string);
+        }
+        $result = [];
+        $keys = [];
+        $nubkeys = [];
+        foreach($results as $values) {
+          $canonicalName = $values['canonicalName'];
+          $nubkey = (isset($values['nubKey']) and $values['nubKey'] != "") ? $values['nubKey'] : null;
+          $taxonID = (isset($values['taxonID']) and $values['taxonID'] != "") ? $values['taxonID'] : null;
+          $is_ipni = preg_match("/lsid:ipni.org/i", $taxonID);
+          $is_tropicos = (mb_strtolower(substr($taxonID,0,4))=="tro-" or preg_match("/tropicos/i", $taxonID));
+          if($canonicalName==$searchstring) {
+              if ($is_ipni) {
+                $keys['ipni'] = $taxonID;
+              }
+              if ($is_tropicos) {
+                $keys['tropicos'] = $taxonID;
+              }
+              if ($nubkey!=null) {
+                $keys['gbif'] = $nubkey;
+                $nubkeys[] = $nubkey;
+              }
+          }
+        }
+
+
+        //get record
+        $nubkeys = array_unique($nubkeys);
+        if (count($nubkeys)==1) {
+            $get_string = "v1/species/".$nubkeys[0];
+            $gbif_record = self::makeRequest($base_uri,$get_string);
+            if ($gbif_record['synonym']) {
+              $get_string = "v1/species/".$gbif_record['acceptedKey'];
+              $gbif_senior = self::makeRequest($base_uri,$get_string);
+            }
+            return ['keys' => $keys, 'gbif_record'=>$gbif_record, 'match_type' => $matchtype, 'gbif_senior' => $gbif_senior ];
+        }
+        return null;
+    }
+
+    public static function getGBIFParentPathData($gbifnubkey,$include_first=false)
+    {
+        if (!isset($gbifnubkey)) {
+          return [];
+        }
+        $base_uri = 'https://api.gbif.org/';
+        $get_string = "v1/species/".$gbifnubkey;
+        $firstrecord = self::makeRequest($base_uri,$get_string);
+        if (is_null($firstrecord) or (is_array($firstrecord) and count($firstrecord)==0)) {
+          return [];
+        }
+        $running_key = isset($firstrecord['parentKey']) ? $firstrecord['parentKey'] : null;
+        if ($include_first) {
+          $data_array[$gbifnubkey] = $firstrecord;
+        } else {
+          $data_array = [];
+        }
+        if (isset($running_key)) {
+            $stop =0;
+            while($stop == 0) {
+                $get_string = "v1/species/".$running_key;
+                $gbifdata = self::makeRequest($base_uri,$get_string);
+                if (is_null($gbifdata) or (is_array($gbifdata) and count($gbifdata)==0)) {
+                  $stop = 1;
+                  break;
+                }
+                $rank = Taxon::getRank($gbifdata['rank']);
+                $name = $gbifdata['canonicalName'];
+                $is_registered = Taxon::whereRaw('(odb_txname(name, level, parent_id) LIKE "'.$name.'") AND level='.$rank)->get();
+                if ($is_registered->count()>0) {
+                  //add this registered parent to record
+                  $data_array[$nubKey]['parent_id'] = $is_registered->first()->id;
+                  $stop =1;
+                  break;
+                }
+                $running_key = isset($gbifdata['parentKey']) ? $gbifdata['parentKey'] : null;
+                $nubKey =  isset($gbifdata["nubKey"]) ? $gbifdata['nubKey'] : null;
+                if (isset($nubKey)) {
+                  $data_array[$nubKey] = $gbifdata;
+                } else {
+                  $data_array[] = $gbifdata;
+                }
+                if ($rank === 0 or !isset($running_key)) {
+                  $stop =1;
+                  break;
+                }
+            }
+        }
+        //if a synonym has an accepted key as well
+        $accepted_key = isset($firstrecord['acceptedKey']) ? $firstrecord['acceptedKey'] : null;
+        if (isset($accepted_key)) {
+            $stop =0;
+            while($stop == 0) {
+                if (array_key_exists($accepted_key,$data_array)) {
+                  $stop=1;
+                  break;
+                }
+                $get_string = "v1/species/".$accepted_key;
+                $gbifdata = self::makeRequest($base_uri,$get_string);
+                if (is_null($gbifdata) or ($isarray and count($gbifdata)==0)) {
+                  $stop = 1;
+                  break;
+                }
+                $rank = Taxon::getRank($gbifdata['rank']);
+                $name = $gbifdata['canonicalName'];
+                $is_registered = Taxon::whereRaw('(odb_txname(name, level, parent_id) LIKE "'.$name.'") AND level='.$rank)->get();
+                if ($is_registered->count()>0) {
+                  //add this registered parent to record
+                  $data_array[$nubKey]['parent_id'] = $is_registered->first()->id;
+                  $stop =1;
+                  break;
+                }
+                $nubKey =  isset($gbifdata["nubKey"]) ? $gbifdata['nubKey'] : null;
+                if (isset($nubKey)) {
+                  $data_array[$nubKey] = $gbifdata;
+                } else {
+                  $data_array[] = $gbifdata;
+                }
+                $accepted_key = isset($gbifdata['parentKey']) ? $gbifdata['parentKey'] : null;
+                if ($rank === 0 or !isset($running_key)) {
+                  $stop =1;
+                  break;
+                }
+            }
+        }
+        $final_data = [];
+        if (count($data_array)>0) {
+            foreach($data_array as $gbif_record) {
+                  if (!is_null($gbif_record)) {
+                      $taxonID = (isset($gbif_record['taxonID']) and $gbif_record['taxonID'] != "") ? $gbif_record['taxonID'] : null;
+                      $ipni = preg_match("/lsid:ipni.org/i", $taxonID) ? $taxonID : null;
+                      $tropicos = (mb_strtolower(substr($taxonID,0,4))=="tro-" or preg_match("/tropicos/i", $taxonID)) ? $taxonID : null;
+                      $rank = isset($gbif_record["rank"]) ? Taxon::getRank($gbif_record['rank']) : null;
+                      $data = [
+                        "name"  => isset($gbif_record["canonicalName"]) ? $gbif_record['canonicalName'] : null,
+                        "rank" => $rank,
+                        "author" => isset($gbif_record["authorship"]) ? $gbif_record['authorship'] : null,
+                        "valid" => isset($gbif_record["taxonomicStatus"]) ? $gbif_record['taxonomicStatus']=="ACCEPTED" : 0,
+                        "reference" => isset($gbif_record["publishedIn"]) ? $gbif_record['publishedIn'] : null,
+                        "parent" => isset($gbif_record["parent"]) ? $gbif_record['parent'] : null,
+                        "senior" => null,
+                        "mobot" => $tropicos,
+                        "ipni" => $ipni,
+                        'mycobank' => null,
+                        'gbif' => isset($gbif_record["nubKey"]) ? $gbif_record['nubKey'] : null,
+                        'zoobank' => null,
+                        'parent_id' => isset($gbif_record["parent_id"]) ? $gbif_record['parent_id'] : ($rank===0 ? 1 : null),
+                    ];
+                    $final_data[$rank] = $data;
+                  }
+            }
+            ksort($final_data);
+        }
+
+        return $final_data;
+    }
+
+    public static function makeRequest($base_uri,$get_string)
+    {
       $client = new Guzzle(['base_uri' => $base_uri]);// 'proxy' => $this->proxystring]);
       try {
-          $response = $client->request('GET',"v1/species?name=".$searchstring);
+          $response = $client->request('GET',$get_string);
       } catch (\ClientException $e) {
           return null; //FAILED
       } catch (\Exception $e) {
@@ -539,22 +672,72 @@ class ExternalAPIs
       if (200 != $response->getStatusCode()) {
           return null;
       } // FAILED
-      $answer = json_decode($response->getBody(),true);
+      $results = json_decode($response->getBody(),true);
+      if (isset($results['results']))
+      {
+        return $results['results'];
+      }
+      return $results;
+    }
 
-      $results = $answer['results'];
 
+
+    public function oldgetGBIF($searchstring)
+    {
+      $flags = 0;
+      $base_uri = 'https://api.gbif.org/';
+      //$searchstring = htmlspecialchars($searchstring);
+
+      //search name and get all results
+      $get_string = "v1/species?name=".$searchstring;
+      $results = self::makeRequest($base_uri,$get_string);
+      if (is_null($results)) {
+        return [self::NOT_FOUND];
+      }
+
+      //filter valid data
       $result = self::filterGBIF($searchstring,$results);
 
       if (is_null($result)) {
         return [self::NOT_FOUND];
       }
 
+      //use the nubkey to get the publication info
+      $nubkey = $result['nubKey'];
+      if (!is_null($nubkey)) {
+        try {
+            $response = $client->request('GET',"v1/species/".$nubkey);
+        } catch (\ClientException $e) {
+            return null; //FAILED
+        } catch (\Exception $e) {
+            return null; //FAILED
+        }
+        if (200 != $response->getStatusCode()) {
+            return null;
+        } // FAILED
+        $answer = json_decode($response->getBody(),true);
+        $pubin = null;
+        if (isset($answer['publishedIn'])) {
+          $pubin = str_replace($answer['authorship']." In:","",$answer['publishedIn']);
+          $pubin = (string) Str::of($pubin)->trim();
+        }
+
+        return [$flags,
+                'rank' => mb_strtolower($answer['rank']),
+                'author' => $answer['authorship'],
+                'valid' => null,
+                'reference' => $pubin,
+                'parent' => isset($answer['parent']) ? $answer['parent'] : null,
+                'key' => $nubkey,
+                'senior' => null,
+        ];
+      }
       return [$flags,
-              'rank' => $result['rank'],
+              'rank' => mb_strtolower($result['rank']),
               'author' => $result['author'],
               'valid' => null,
               'reference' => null,
-              'parent' => $result['parent'],
+              'parent' => isset($result['parent']) ? $result['parent'] : null,
               'key' => $result['gbif_key'],
               'senior' => null,
       ];

@@ -465,245 +465,159 @@ class TaxonController extends Controller
     {
     }
 
+    //get first match of key in array of arrays
+    public static function filterSearchData($arrays,$key) {
+        $found = null;
+        foreach($arrays as $values) {
+            $value = isset($values[$key]) ? $values[$key] : null;
+            if (isset($value)) {
+                $found = $value;
+                break;
+            }
+        }
+        return $found;
+    }
+
     public function checkapis(Request $request)
     {
-        if (is_null($request['name'])) {
+        if (!isset($request->name)) {
             return Response::json(['error' => Lang::get('messages.name_error')]);
         }
         $apis = new ExternalAPIs();
-        $mobotdata = $apis->getMobot($request->name);
+        //check first GBIF which may have already tropicos and ipni
+        $gbifsearch = $apis->getGBIF($request->name);
 
-        // // TODO: IPNI has changed and will implement an API
-        //$ipnidata = $apis->getIpni($request->name);
-        $ipnidata= null;
+        $finaldata = [];
 
-        // WARNING: MYCOBANK API OUT OF SERVICE 18-11-2020
-        //THEY PROVIDE A STATIC ZIP FILE THAT COULD USED LOCALLY TO SEARCH names
-        //WAIT FOR API, as no rush
-        //only search fungi if not found as Individual
+        if (!is_null($gbifsearch)) {
+          $gbif_record = $gbifsearch['gbif_record'];
+          $gbif_senior = $gbifsearch['gbif_senior'];
+          $externalkeys = $gbifsearch['keys'];
+          $finaldata = [
+              "rank" => isset($gbif_record["rank"]) ? mb_strtolower($gbif_record['rank']) : null,
+              "author" => isset($gbif_record["authorship"]) ? $gbif_record['authorship'] : null,
+              "valid" => isset($gbif_record["taxonomicStatus"]) ? $gbif_record['taxonomicStatus'] : null,
+              "reference" => isset($gbif_record["publishedIn"]) ? $gbif_record['publishedIn'] : null,
+              "parent" => isset($gbif_record["parent"]) ? $gbif_record['parent'] : null,
+              "senior" => isset($gbif_senior) ? $gbif_senior['canonicalName'] : null,
+              "mobot" => isset($externalkeys["tropicos"]) ? $externalkeys['tropicos'] : null,
+              "ipni" => isset($externalkeys["ipni"]) ? $externalkeys['ipni'] : null,
+              'mycobank' => null,
+              'gbif' => isset($gbif_record["nubKey"]) ? $gbif_record['nubKey'] : null,
+              'zoobank' => null,
+          ];
+        }
+        $mobotdata = null;
+        $ipnidata = null;
+        if (count($finaldata)==0 or is_null($finaldata['mobot'])) {
+            $mobotdata = $apis->getMobot($request->name);
+            if (count($finaldata)>0 and $mobotdata[0]!=ExternalAPIs::NOT_FOUND) {
+              $finaldata['mobot'] = $mobotdata['key'];
+            }
+        }
+
+        // // TODO: IPNI has changed and will implement an API (capture by gbif)
         /*
-        if ($mobotdata[0] == ExternalAPIs::NOT_FOUND  and $ipnidata[0] == ExternalAPIs::NOT_FOUND) {
-          $mycobankdata = $apis->getMycobank($request->name);
-        } else {
-
+        if (count($finaldata)==0 or is_null($finaldata['ipni'])) {
+            $ipnidata = $apis->getIpni($request->name);
+            if (count($finaldata)>0 and (null !== $ipnidata)) {
+              $finaldata['ipni'] = $ipnidata['key'];
+            }
         }
         */
-        $mycobankdata = [ExternalAPIs::NOT_FOUND];
-        $gbifdata = [ExternalAPIs::NOT_FOUND];
-        $zoobankdata = [ExternalAPIs::NOT_FOUND];
-        if (null == $ipnidata) {
+        if (!isset($ipnidata)) {
           $ipnidata = [ExternalAPIs::NOT_FOUND];
         }
-        if (null == $mobotdata) {
+        if (!isset($mobotdata))  {
           $mobotdata = [ExternalAPIs::NOT_FOUND];
         }
 
+        // WARNING: MYCOBANK API OUT OF SERVICE 18-11-2020
+            /*
+            if ($mobotdata[0] == ExternalAPIs::NOT_FOUND  and $ipnidata[0] == ExternalAPIs::NOT_FOUND) {
+              $mycobankdata = $apis->getMycobank($request->name);
+            } else {
 
-        //this is for animal names (and fungi), so only if not found previously
-        if ($mobotdata[0] == ExternalAPIs::NOT_FOUND  and $ipnidata[0] == ExternalAPIs::NOT_FOUND and $mycobankdata[0] == ExternalAPIs::NOT_FOUND) {
-          $gbifdata = $apis->getGBIF($request->name);
+            }
+            */
+        $mycobankdata = [ExternalAPIs::NOT_FOUND];
+
+        //zoobank only if not found a plant or fungi
+        $zoobankdata = [ExternalAPIs::NOT_FOUND];
+
+        if ($mobotdata[0] == ExternalAPIs::NOT_FOUND and $ipnidata[0] == ExternalAPIs::NOT_FOUND and $mycobankdata[0] == ExternalAPIs::NOT_FOUND) {
           $zoobankdata = $apis->getZOOBANK($request->name);
           if (is_null($zoobankdata)) {
             $zoobankdata = [ExternalAPIs::NOT_FOUND];
+          } elseif (count($finaldata)>0) {
+            $finaldata['zoobank'] = isset($zoobankdata['key'])  ? $zoobankdata['key'] : null;
           }
         }
 
 
 
-        // includes the messages in the return object
+        //assemble data if does not exists (i.e. not found on GBIF)
+        if (count($finaldata)==0) {
+            $alldata = ['mobot' => $mobotdata,'ipni' => $ipnidata,'mycobank' => $mycobankdata, 'gbif' => [], 'zoobank' => $zoobankdata];
+            $keystoget = ["rank","author","valid","reference","parent","senior"];
+            foreach($keystoget as $key) {
+                $value = self::filterSearchData($alldata,$key);
+                $finaldata[$key] = $value;
+            }
+            //get external ids if they exist
+            if (count($finaldata)>0) {
+              foreach($alldata as $name => $apidata) {
+                $finaldata[$name] = isset($apidata['key']) ? $apidata['key'] : null;
+              }
+            }
+        }
+
+        if (count($finaldata)==0) {
+            return Response::json(['error' => Lang::get('messages.apis_not_found_or_multiple_hits')]);
+        }
+
         $bag = new MessageBag();
-        if (is_null($mobotdata)) {
-            $bag->add('e1', Lang::get('messages.mobot_error'));
-        }
-        if (is_null($ipnidata)) {
-            $bag->add('e5', Lang::get('messages.ipni_error'));
-        }
-        if (is_null($mycobankdata)) {
-            $bag->add('e8', Lang::get('messages.mycobank_error'));
-        }
-        if (is_null($gbifdata)) {
-            $bag->add('e8', Lang::get('messages.gbif_error'));
-        }
 
-        if (($mobotdata[0] == ExternalAPIs::NOT_FOUND) and
-                ($ipnidata[0] == ExternalAPIs::NOT_FOUND) and
-                ($mycobankdata[0] == ExternalAPIs::NOT_FOUND) and
-                ($gbifdata[0] == ExternalAPIs::NOT_FOUND) and
-                ($zoobankdata[0] == ExternalAPIs::NOT_FOUND)
-            ) {
-            $bag->add('e2', Lang::get('messages.apis_not_found'));
-        }
-        if ($mobotdata[0] & ExternalAPIs::MULTIPLE_HITS) {
-            $bag->add('e3', Lang::get('messages.mobot_multiple_hits'));
-        }
-        if ($mobotdata[0] & ExternalAPIs::NONE_SYNONYM) {
-            $bag->add('e4', Lang::get('messages.mobot_none_synonym'));
-        }
-        if ($ipnidata[0] & ExternalAPIs::MULTIPLE_HITS) {
-            $bag->add('e7', Lang::get('messages.ipni_multiple_hits'));
-        }
-        if ($mycobankdata[0] & ExternalAPIs::MULTIPLE_HITS) {
-            $bag->add('e10', Lang::get('messages.mycobank_multiple_hits'));
-        }
+        $finaldata['rank'] = Taxon::getRank($finaldata['rank']);
+        $finaldata['valid'] = in_array($finaldata['valid'],['Legitimate','nom. cons.','No opinion','ACCEPTED']);
 
-        // 0 -> rank
-        // 1 -> author
-        // 2 -> valid
-        // 3 -> reference
-        // 4 -> parent
-        // 5 -> senior
-        // 6 -> mobot key
-        // 7 -> ipni key
-        // 8 -> mycobank key
-        $rank = null;
-        if (!is_null($ipnidata) && array_key_exists('rank', $ipnidata)) {
-            $rank = $ipnidata['rank'];
-        }
-        if (!is_null($mobotdata) && array_key_exists('rank', $mobotdata)) {
-            $rank = $mobotdata['rank'];
-        }
-        if (!is_null($mycobankdata) && array_key_exists('rank', $mycobankdata)) {
-            $rank = $mycobankdata['rank'];
-        }
-        if (is_null($rank) and !is_null($gbifdata) and array_key_exists('rank', $gbifdata)) {
-            $rank = $gbifdata['rank'];
-        }
-        if (is_null($rank) and !is_null($zoobankdata) and array_key_exists('rank', $zoobankdata)) {
-            $rank = $zoobankdata['rank'];
-        }
-
-
-        $author = null;
-        if (!is_null($ipnidata) && array_key_exists('author', $ipnidata)) {
-            $author = $ipnidata['author'];
-        }
-        if (!is_null($mobotdata) && array_key_exists('author', $mobotdata)) {
-            $author = $mobotdata['author'];
-        }
-        if (!is_null($mycobankdata) && array_key_exists('author', $mycobankdata)) {
-            $author = $mycobankdata['author'];
-        }
-        //gbif only if not found before, as Individuals and animals may share names
-        if (is_null($author) and !is_null($gbifdata) && array_key_exists('author', $gbifdata)) {
-            $author = $gbifdata['author'];
-        }
-        if (is_null($author) and !is_null($zoobankdata) and array_key_exists('author', $zoobankdata)) {
-            $author = $zoobankdata['author'];
-        }
-
-        $reference = null;
-        if (!is_null($ipnidata) && array_key_exists('reference', $ipnidata)) {
-            $reference = $ipnidata['reference'];
-        }
-        if (!is_null($mobotdata) && array_key_exists('reference', $mobotdata)) {
-            $reference = $mobotdata['reference'];
-        }
-        if (!is_null($mycobankdata) && array_key_exists('reference', $mycobankdata)) {
-            $reference = $mycobankdata['reference'];
-        }
-
-        $rank = Taxon::getRank($rank);
-        $valid = null;
-        if (!is_null($mobotdata) && array_key_exists('valid', $mobotdata)) {
-            $valid = in_array($mobotdata['valid'], [
-                    'Legitimate',
-                    'nom. cons.',
-                    'No opinion',
-                ]);
-        }
-        if (!is_null($mycobankdata) && array_key_exists('valid', $mycobankdata)) {
-            $valid = in_array($mycobankdata['valid'], [
-                    'Legitimate',
-                    'nom. cons.',
-                    'No opinion',
-                ]);
-        }
-
-        $getparent = null;
-        $parent = null;
-        if (!is_null($mobotdata) and array_key_exists('parent', $mobotdata)) {
-            $getparent = $mobotdata['parent'];
-        }
-        if (is_null($getparent) and !is_null($ipnidata) and array_key_exists('parent', $ipnidata)) {
-            $getparent = $ipnidata['parent'];
-        }
-        if (is_null($getparent) and !is_null($gbifdata) and array_key_exists('parent', $gbifdata)) {
-            $getparent = $gbifdata['parent'];
-        }
-        //zoobank does not provide parent for genus, only species
-        if (is_null($getparent) and !is_null($zoobankdata) and array_key_exists('parent', $zoobankdata)) {
-            $getparent = $zoobankdata['parent'];
-        }
-
-        $parent = Taxon::getParent($request['name'], $rank, $getparent);
-        if (!is_null($mycobankdata) && array_key_exists('parent', $mycobankdata)) {
-            $parent = $mycobankdata['parent'];
-        } // mycobank api already returns a "getParent"
-
-        if (!is_null($parent) and !is_array($parent)) {
-            $bag->add('parent_id', Lang::get('messages.parent_not_registered', ['name' => $parent]));
-            $parent = null;
-        }
-
-        $senior = null;
-        if (!is_null($mobotdata) && array_key_exists('senior', $mobotdata) and !is_null($mobotdata['senior'])) {
-            $tosenior = Taxon::valid()
-            ->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) = ?', [$mobotdata['senior']])
-            ->first();
-            if ($tosenior) {
-                $senior = [$tosenior->id, $tosenior->fullname];
+        //is parent registered?
+        $parent = $finaldata['parent'];
+        if (!is_null($parent)) {
+            $finalparent = $finaldata['parent'];
+            if (is_numeric($parent)) {
+                $finalparent = null;
+                $hasParent = Taxon::where('id',$parent)->get();
             } else {
-                $bag->add('senior_id', Lang::get('messages.senior_not_registered', ['name' => $mobotdata['senior']]));
+                $hasParent = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$parent])->get();
+            }
+            if ($hasParent->count()==1) {
+                $finaldata['parent'] =  [$hasParent->first()->id, $hasParent->first()->fullname];
+            } else {
+                $finaldata['parent'] = [null,$finalparent];
+                $bag->add('e1', Lang::get('messages.parent_not_registered', ['name' => $parent]));
             }
         }
-        if (!is_null($mycobankdata) && array_key_exists('senior', $mycobankdata) and !is_null($mycobankdata['senior'])) {
-            $tosenior = Taxon::valid()
-            ->whereRaw('odb_txname(taxons.name, taxons.level, taxons.parent_id) = ?', [$mycobankdata['senior']])
-            ->first();
-            if ($tosenior) {
-                $senior = [$tosenior->id, $tosenior->fullname];
+        //if is a synonym - check if accepted is registered
+        $senior = $finaldata['senior'];
+        if (!is_null($senior)) {
+            $finalsenior = $finaldata['senior'];
+            if (is_numeric($senior)) {
+                $hasSenior = Taxon::where('id',$senior)->get();
+                $finalsenior = null;
             } else {
-                $bag->add('senior_id', Lang::get('messages.senior_not_registered', ['name' => $mycobankdata['senior']]));
+                $hasSenior = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$senior])->get();
+            }
+            if ($hasSenior->count()==1) {
+                $finaldata['senior'] =  [$hasSenior->first()->id, $hasSenior->first()->fullname];
+            } else {
+                $finaldata['senior'] =[null,$finalsenior];
+                $bag->add('e2', Lang::get('messages.senior_not_registered', ['name' => $senior]));
             }
         }
 
-        $mobotkey = null;
-        if (!is_null($mobotdata) && array_key_exists('key', $mobotdata)) {
-            $mobotkey = $mobotdata['key'];
-        }
-        $ipnikey = null;
-        if (!is_null($ipnidata) && array_key_exists('key', $ipnidata)) {
-            $ipnikey = $ipnidata['key'];
-        }
-        $mycobankkey = null;
-        if (!is_null($mycobankdata) && array_key_exists('key', $mycobankdata)) {
-            $mycobankkey = $mycobankdata['key'];
-        }
-        $gbifkey = null;
-        if (!is_null($gbifdata) && array_key_exists('key', $gbifdata)) {
-            $gbifkey = $gbifdata['key'];
-        }
-        $zoobankkey = null;
-        if (!is_null($zoobankdata) && array_key_exists('key', $zoobankdata)) {
-            $zoobankkey = $zoobankdata['key'];
-        }
-        return Response::json(['bag' => $bag,
-                    'apidata' => [
-                            $rank,
-                            $author,
-                            $valid,
-                            $reference,
-                            $parent,
-                            $senior,
-                            $mobotkey,
-                            $ipnikey,
-                            $mycobankkey,
-                            $gbifkey,
-                            $zoobankkey,
-                    ],
-            ]);
+        return Response::json(['bag' => $bag,'apidata' => $finaldata]);
     }
-
 
     public function activity($id, ActivityDataTable $dataTable)
     {

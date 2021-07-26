@@ -48,31 +48,58 @@ class ImportTaxons extends AppJob
         if (!$this->hasRequiredKeys(['name'], $taxon)) {
             return false;
         }
+        $this->cleanRecord($taxon);
 
-        //check if taxon is already in database before validating the API
-        $parent = isset($taxon['parent_name']) ? $taxon['parent_name'] : (isset($taxon['parent']) ? $taxon['parent'] : null);
+        //validate informed parent to the parent field if present
+        $parent = isset($taxon['parent_name']) ? $taxon['parent_name'] : (isset($taxon['parent']) ? $taxon['parent'] : (isset($taxon['parent_id']) ? $taxon['parent_id'] : null ));
         if (!is_null($parent)) {
-          if (!$this->validateParent($taxon)) {
-            return false;
+          // parent might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
+          $checkedparent = $this->getTaxonId($parent);
+          if (null === $checkedparent) {
+              $taxon['parent'] = ($parent=="") ? null : $parent;
+          } else {
+              $taxon['parent_id'] = $checkedparent->id;
+              $taxon['parent'] = $checkedparent->fullname;
           }
-          $name = $taxon['name'];
-          $parent_id = $taxon['parent_id'];
-          $hadtaxon = Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent_id])->count();
-          if ($hadtaxon>0) {
-              $this->appendLog('WARNING: taxon '.$name.' under the parent '.$parent.' is already imported into the database');
-              return false;
+        }
+        $senior = isset($taxon['senior']) ? $taxon['senior'] : null;
+        if (!is_null($senior)) {
+          // parent might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
+          $checkedsenior = $this->getTaxonId($senior);
+          if (!is_null($checkedsenior)) {
+            $taxon['senior_id'] = $checkedsenior->id;
+            $taxon['senior'] = $checkedsenior->fullname;
+          } else {
+            $taxon['senior'] = ($senior=="") ? null : $senior;
           }
         }
 
         //VALIDATE MOBOT, IPNI, MYCOBANK, GBIF AND ZOOBANK apis
         $this->validateAPIs($taxon);
 
-        if (!$this->validateParentAndLevel($taxon)) {
+        //check if registered if parent is registered
+        if (isset($taxon['parent_id'])) {
+          $name = $taxon['name'];
+          $parent_id = $taxon['parent_id'];
+          $hadtaxon = Taxon::whereRaw('(odb_txname(name, level, parent_id) LIKE ?) AND parent_id = ?', [$name, $parent_id])->count();
+          if ($hadtaxon>0) {
+              $this->appendLog('WARNING: taxon '.$name.' under the parent '.$parent.' is already imported into the database');
+              return false;
+          }
+        }
+
+        //validate parents and senior paths and create array to import them as needed
+        //this will got down the root
+        if (!$this->validateRelatedAndLevel($taxon)) {
               return false;
         }
-        if (!$this->validateSeniorAndValid($taxon)) {
-              return false;
+        if (!$this->validateValid($taxon)) {
+            return false;
         }
+
+        //if (!$this->validateSeniorAndValid($taxon)) {
+        //      return false;
+        //}
         //for unpublished names validation must include a check of persons id
         //then assumes that it is an unpublished name and requires a valid person
         if (!isset($taxon['apiwaschecked']) ) {
@@ -80,24 +107,22 @@ class ImportTaxons extends AppJob
         }
 
         //IF BIBKEY PROVIDED VALIDATE
-        //$this->appendLog("GOT HERE 04");
-        if (array_key_exists('bibkey',$taxon)) {
+        if (isset($taxon['bibkey'])) {
           if (!$this->validateBibKey($taxon['bibkey']))
           {
               return false;
           }
         }
-        //if author is not informed for levels diferent than clade, then information is missing
-        $condition = (!isset($taxon['author_id']) and !isset($taxon['author']) and $taxon['level']!=Taxon::getRank('clade'));
+        //if author is not informed for levels genus or below, then missing info
+        $condition = (!isset($taxon['author_id']) and !isset($taxon['author']) and $taxon['level']>=Taxon::getRank('genus'));
         if ($condition)
         {
-          $this->skipEntry($taxon, 'Author is mandatory for this record');
+          $this->skipEntry($taxon, 'Author is mandatory for levels genus or below');
           return false;
         }
         //or clade is the level and bibreference is missing, then issues a warning only,
-        $condition = ($taxon['level']==Taxon::getRank('clade') and !isset($taxon['bibreference']) and !isset($taxon['bibkey']));
-        $condition2 = ($taxon['level']==Taxon::getRank('clade') and !isset($taxon['author']) and !isset($taxon['author_id']));
-        if ($condition and $condition2 )
+        $condition = ($taxon['level']==Taxon::getRank('clade') and !isset($taxon['bibreference']) and !isset($taxon['bibkey']) and !isset($taxon['author']) and !isset($taxon['author_id']));
+        if ($condition)
         {
           $this->appendLog("WARNING: taxon ".$taxon['name']." was registered without a bibreference or a Authorship. Consider adding this information to the record");
           //return false;
@@ -115,44 +140,51 @@ class ImportTaxons extends AppJob
         $checkname = ['name' => $taxon['name']];
         $request = new therequest;
         $request = $request->merge($checkname);
+
+
         //get results from api checks
-        $apidata = app('App\Http\Controllers\TaxonController')->checkapis($request);
-        $apidata = $apidata->getData()->apidata;
+        $apicheck = app('App\Http\Controllers\TaxonController')->checkapis($request);
+
+        $apiresults = $apicheck->getData(true);
+        if (isset($apiresults["error"])) {
+          return false;
+        }
+        $apidata = $apiresults['apidata'];
 
         //if level and author the api has found something by the name informed
         //if this is the case all fields that could be retrieved by the api are informed
-        if (null != $apidata[0] and null != $apidata[0]) {
+        if (isset($apidata['rank'])) {
           $info_level = isset($taxon['level']) ? Taxon::getRank($taxon['level']) : null;
           if (is_null($info_level)) {
-            $taxon['level'] = $apidata[0];
-          } elseif (!is_null($info_level) and $info_level != $apidata[0] ) {
-            $apilevel = Lang::get('levels.tax.'.$apidata[0]);
+            $taxon['level'] = $apidata['rank'];
+          } elseif (!is_null($info_level) and $info_level != $apidata['rank'] ) {
+            $apilevel = Lang::get('levels.tax.'.$apidata['rank']);
             $this->appendLog('WARNING: the informed level "'.$taxon['level'].'" for taxon "'.$taxon['name'].'"  is different from the API detected level: "'.$apilevel.'". The informed level was used for the record.');
           }
           //if this true, the informed parent exists and was validated (requires the validationParent to be executed before validateAPIs)
-          $taxon['author'] = $apidata[1];
+          $taxon['author'] = $apidata['author'];
           $taxon['author_id'] = null;
-          $taxon['bibreference'] = (null == $apidata[3] and isset($taxon['bibreference'])) ? $taxon['bibreference'] : $apidata[3];
-          if (is_array($apidata[4])) {
-            if (is_null($taxon['parent_id'])) {
-              $taxon['parent_id'] =  $apidata[4][0];
+          $taxon['bibreference'] = (null == $apidata['reference'] and isset($taxon['bibreference'])) ? $taxon['bibreference'] : $apidata['reference'];
+          if (is_array($apidata['parent'])) {
+            if (!isset($taxon['parent_id'])) {
+              $taxon['parent_id'] =  $apidata['parent'][0];
             }
             //if this true, the informed parent exists and was validated (requires the validationParent to be executed before validateAPIs)
-            if ($taxon['parent_id'] != $apidata[4][0]) {
-                $this->appendLog('WARNING: the parent '.$taxon['parent'].'  informed for taxon '.$taxon['name'].' is different from the one found by the API: '.$apidata[4][1].'. The informed parent was used for the record.');
+            if (isset($taxon['parent_id']) and $taxon['parent_id'] != $apidata['parent'][0]) {
+                $this->appendLog('WARNING: the parent '.$taxon['parent'].'  informed for taxon '.$taxon['name'].' is different from the one found by the API: '.$apidata['parent'][1].'. The Informed parent was used for the record.');
             } else {
-              $taxon['parent'] =  $apidata[4][1];
+                //just add the api detected parent as the parent, regardless of whether it is registered or not in odb
+                $taxon['parent'] =  $apidata['parent'][1];
             }
           }
-          if (is_array($apidata[5])) {
-            $taxon['senior_id'] = $apidata[5][0];
-            $taxon['senior'] = $apidata[5][1];
+          if (is_array($apidata['senior'])) {
+            $taxon['senior_id'] = $apidata['senior'][0];
+            $taxon['senior'] = $apidata["senior"][1];
           }
-          $taxon['mobotkey'] = $apidata[6];
-          $taxon['ipnikey'] = $apidata[7];
-          $taxon['mycobankkey'] = $apidata[8];
-          $taxon['gbifkey'] = $apidata[9];
-          //if API did not found a registered parent, but parent was informed, check if it is already registered
+          $taxon['mobotkey'] = $apidata["mobot"];
+          $taxon['ipnikey'] = $apidata['ipni'];
+          $taxon['mycobankkey'] = $apidata['mycobank'];
+          $taxon['gbifkey'] = $apidata['gbif'];
           $taxon['apiwaschecked'] = 1;
           //return true;
         }
@@ -164,33 +196,103 @@ class ImportTaxons extends AppJob
         return true;
     }
 
-    protected function validateParentAndLevel(&$taxon)
-    {
-        //will only test if api validation has not already found a registered parent
-        if (!isset($taxon['parent_id'])) {
-           if (!$this->validateParent($taxon)) {
-             return false;
-           }
+        protected function cleanRecord(&$taxon)
+        {
+          foreach($taxon as $key => $value) {
+              if ($value == "" or empty($value)) {
+                unset($taxon[$key]);
+              }
+          }
         }
 
-        if (!$this->validateLevel($taxon)) {
-            return false;
-        }
-        //if taxon is genus or below it must have a parent taxon assigned and so a parent value must have been validated
-        if (($taxon['level'] > 180) and (null === $taxon['parent_id'])) {
-            $this->skipEntry($taxon, 'Parent for taxon '.$taxon['name'].' is required!');
-            return false;
-        }
-        if (is_null($taxon['parent_id'])) {
-          $root = Taxon::root();
-          $taxon['parent_id'] = $root->id;
-          $parent = $root->fullname;
-          $this->appendLog("WARNING: missing parent for taxon ".$taxon['name']." The root node of the taxon table  '".$parent."' was used");
-        }
-        return true;
-    }
+        protected function validateRelatedAndLevel(&$taxon)
+        {
+            if (!$this->validateLevel($taxon)) {
+                return false;
+            }
 
-    protected function validateSeniorAndValid(&$taxon)
+            //will only test if api validation has not already found a registered parent
+            $gbifkey = isset($taxon['gbifkey']) ? $taxon['gbifkey'] : null;
+            $parent_id = isset($taxon['parent_id']) ? $taxon['parent_id'] : null;
+            $parent = (isset($taxon['parent']) and $taxon['parent']!="") ? $taxon['parent'] : null;
+            $senior = (isset($taxon['senior']) and $taxon['senior']!="") ? $taxon['senior'] : null;
+            $senior_id = isset($taxon['senior_id']) ? $taxon['senior_id'] : null;
+
+            $condition1 = (!isset($parent_id) and null != $parent);
+            $condition2 = (!isset($senior_id) and null != $senior);
+            $condition3 = isset($gbifkey);
+
+            //$this->appendLog($condition1." ".$condition2." senior:".$senior.serialize($taxon));
+            //return false;
+
+            if ($condition3 and ($condition1 or $condition2)) {
+                $related = ExternalAPIs::getGBIFParentPathData($gbifkey,$include_first=false);
+                $taxon['related_to_import'] = $related;
+            }
+            if (!$condition3 and ($condition1 or $condition2)) {
+                $related_data = null;
+                $level = $taxon['level'];
+                if ($condition1) {
+                   $checkname = ['name' => $taxon['parent']];
+                   $request = new therequest;
+                   $request = $request->merge($checkname);
+                   $apicheck = app('App\Http\Controllers\TaxonController')->checkapis($request);
+                   $apiresults = $apicheck->getData(true);
+                   if (isset($results['apidata'])) {
+                      $gbif = $results['apidata']['gbif'];
+                      $rank = $results['apidata']['rank'];
+                      $validlevel = ((isset($level) and $level>$rank) or !isset($level)) ? true : false;
+                      if (isset($gbif) and $validlevel) {
+                        $related_data = ExternalAPIs::getGBIFParentPathData($gbif,$include_first=true);
+                      }
+                   }
+                }
+                if ($condition2) {
+                   $checkname = ['name' => $taxon['senior']];
+                   $request = new therequest;
+                   $request = $request->merge($checkname);
+                   $apicheck = app('App\Http\Controllers\TaxonController')->checkapis($request);
+                   $apiresults = $apicheck->getData(true);
+                   if (isset($results['apidata'])) {
+                      $gbif = $results['apidata']['gbif'];
+                      $rank = $results['apidata']['rank'];
+                      $validlevel = ((isset($level) and $level>=$rank) or !isset($level)) ? true : false;
+                      if (isset($gbif) and $validlevel) {
+                        $related_data2 = ExternalAPIs::getGBIFParentPathData($gbif,$include_first=true);
+                        if (isset($related_data)) {
+                          $related_data = array_merge($related_data,$related_data2);
+                        }
+                      }
+                   }
+                }
+                if (is_array($related_data)) {
+                  $related_data = array_unique($related_data);
+                  ksort($related_data);
+                  $taxon['related_to_import'] = $related_data;
+                }
+            }
+            $condition4 = isset($taxon['related_to_import']) ? count($taxon['related_to_import'])>0 : false;
+            $condition5 = ($taxon['level'] > 0);
+            if ($condition1 and $condition2 and !$condition4 and $condition5) {
+                $name = $taxon['name'];
+                $parent = $taxon['parent'];
+                $senior = $taxon['senior'];
+                $message = $condition1 ? ("The informed Parent for taxon $name is $parent, but this is not registered and was not found by the API") : "";
+                $message2 = $condition2 ? ("The informed Senior for taxon $name is $senior, but this is not registered and was not found by the API") : "";
+                $message = $message." ".$message2;
+                $this->skipEntry($taxon,$message);
+                return false;
+            }
+            if (!$condition5 and $condition1 and !$condition4) {
+                $root = Taxon::root();
+                $taxon['parent_id'] = $root->id;
+                $parent = $root->fullname;
+                $this->appendLog("WARNING: missing parent for taxon ".$taxon['name']." The root node of the taxon table  '".$parent."' was used");
+            }
+            return true;
+        }
+
+        protected function validateSeniorAndValid(&$taxon)
     {
         if (!$this->validateSenior($taxon)  and !isset($taxon['apiwaschecked']) and !isset($taxon['senior_id'])) {
             return false;
@@ -247,16 +349,16 @@ class ImportTaxons extends AppJob
         return true;
     }
 
-    //must be used afeter validateAPIs or will always fail
+    //must be used after validateAPIs or will always fail
     protected function validateParent(&$taxon)
     {
-        $parent = isset($taxon['parent_name']) ? $taxon['parent_name'] : (isset($taxon['parent']) ? $taxon['parent'] : null);
+        $parent = isset($taxon['parent_name']) ? $taxon['parent_name'] : (isset($taxon['parent']) ? $taxon['parent'] : (isset($taxon['parent_id']) ? $taxon['parent_id'] : null ));
         if (!is_null($parent)) {
           // parent might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
           $checkedparent = $this->getTaxonId($parent);
           if (null === $checkedparent) {
               $name = $taxon['name'];
-              $this->skipEntry($taxon, "Parent for taxon $name is listed as $parent, but this was not found in the database");
+              $this->skipEntry($taxon, "The informed Parent for taxon $name is $parent, but this was not found in the database");
               return false;
           } else {
               $taxon['parent_id'] = $checkedparent->id;
@@ -309,11 +411,11 @@ class ImportTaxons extends AppJob
         }
         // ref might be numeric (ie, already the ID) or a name. if it's a name, let's get the id
         if (is_numeric($ref)) {
-            $ref = Taxon::findOrFail($ref);
+            $ref = Taxon::where('id',$ref)->get();
         } else {
             $ref = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$ref])->get();
         }
-        if ($ref->count()) {
+        if ($ref->count() == 1) {
             return $ref->first();
         }
 
@@ -338,16 +440,12 @@ class ImportTaxons extends AppJob
     protected function validateValid(&$taxon)
     {
         //this depends on senior, if it exist or no
-        if (!isset($taxon['senior_id'])) {
-            //if (!array_key_exists('valid', $taxon)) {
+        if (!isset($taxon['senior_id']) and !isset($taxon['senior'])) {
             $taxon['valid'] = true;
-            //}
             //$taxon
             return $taxon['valid'];
         } else {
-            //if (!array_key_exists('valid', $taxon)) {
             $taxon['valid'] = false;
-            //}
             //returns true
             return !$taxon['valid'];
         }
@@ -356,7 +454,25 @@ class ImportTaxons extends AppJob
     public function import($taxon)
     {
         $name = $taxon['name'];
-        $parent = $taxon['parent_id'];
+        $parent = isset($taxon['parent_id']) ? $taxon['parent_id'] : null;
+        $related_to_import = isset($taxon['related_to_import']) ? $taxon['related_to_import'] : [];
+        //import related taxa as needed retrieving last parent
+        if (is_null($parent) and count($related_to_import)>0) {
+          self::importRelated($taxon);
+          $parent = isset($taxon['parent_id']) ? $taxon['parent_id'] : null;
+        }
+        if (is_null($parent)) {
+          $this->appendLog("ERROR: taxon '$name' could not be imported into the database. Missing parent");
+          return;
+        }
+        // Is this taxon already imported?
+        $hadtaxon = Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count();
+        if ($hadtaxon>0) {
+            $parentname = Taxon::findOrFail($parent)->fullname;
+            $this->appendLog("ERROR: taxon '$name' under parent '$parentname' is already imported into the database");
+            return;
+        }
+
         $level = $taxon['level'];
         $valid = $taxon['valid'];
         $bibreference = array_key_exists('bibreference', $taxon) ? $taxon['bibreference'] : null;
@@ -369,17 +485,6 @@ class ImportTaxons extends AppJob
         $mycobankkey = array_key_exists('mycobankkey', $taxon) ? $taxon['mycobankkey'] : null;
         $gbifkey = array_key_exists('gbifkey', $taxon) ? $taxon['gbifkey'] : null;
         $zoobankkey = array_key_exists('zoobankkey', $taxon) ? $taxon['zoobankkey'] : null;
-
-
-
-
-        // Is this taxon already imported?
-        $hadtaxon = Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND parent_id = ?', [$name, $parent])->count();
-        if ($hadtaxon>0) {
-            $parentname = Taxon::findOrFail($parent)->fullname;
-            $this->appendLog("ERROR: taxon '$name' under parent '$parentname' is already imported into the database");
-            return;
-        }
 
         $values = [
             'level' => $level,
@@ -395,28 +500,80 @@ class ImportTaxons extends AppJob
         //$this->skipEntry($taxon, 'taxon '.$name.' ARRIVED  here to be save');
         //return;
 
-        $taxon = new Taxon($values);
-        $taxon->fullname = $name;
-        $taxon->save();
+        $newtaxon = new Taxon($values);
+        $newtaxon->fullname = $name;
+        $newtaxon->save();
         //sleep(2);
         if (!is_null($mobot)) {
-          $taxon->setapikey('Mobot', $mobot);
+          $newtaxon->setapikey('Mobot', $mobot);
         }
         if (!is_null($ipni)) {
-          $taxon->setapikey('IPNI', $ipni);
+          $newtaxon->setapikey('IPNI', $ipni);
         }
         if (!is_null($gbifkey)) {
-          $taxon->setapikey('GBIF', $gbifkey);
+          $newtaxon->setapikey('GBIF', $gbifkey);
         }
         if (!is_null($zoobankkey)) {
-          $taxon->setapikey('ZOOBANK', $zoobankkey);
+          $newtaxon->setapikey('ZOOBANK', $zoobankkey);
         }
         if (!is_null($mycobankkey)) {
-          $taxon->setapikey('Mycobank', $mycobankkey);
+          $newtaxon->setapikey('Mycobank', $mycobankkey);
         }
-        $taxon->save();
-        $this->affectedId($taxon->id);
+        $newtaxon->save();
+        $this->affectedId($newtaxon->id);
 
         return;
     }
+
+
+    public function importRelated(&$taxon)
+    {
+      $related_to_import = isset($taxon['related_to_import']) ? $taxon['related_to_import'] : [];
+      $parent = isset($taxon['parent']) ? $taxon['parent'] : null;
+      $senior = isset($taxon['senior']) ? $taxon['senior'] : null;
+
+      //$parent_id = isset($related_to_import[0]['parent_id']) ? $related_to_import[0]['parent_id'] : 1;
+      //$this->appendLog(serialize($related_to_import));
+      //return false;
+      $finalid = null;
+      foreach($related_to_import as $related) {
+            if (!isset($previous_id)) {
+              $previous_id = $related['parent_id'];
+            }
+            $values = [
+                'level' => $related['rank'],
+                'parent_id' => $previous_id,
+                'valid' => $related['valid'],
+                'author' => $related['author'],
+                'bibreference' => $related['reference'],
+            ];
+            $newtaxon = new Taxon($values);
+            $newtaxon->fullname = $related['name'];
+            $newtaxon->save();
+            if (isset($related['mobot'])) {
+              $newtaxon->setapikey('Mobot', $related['mobot']);
+            }
+            if (isset($related['ipni'])) {
+              $newtaxon->setapikey('IPNI', $related['ipni']);
+            }
+            if (isset($related['gbif'])) {
+              $newtaxon->setapikey('GBIF', $related['gbif']);
+            }
+            if (isset($related['zoobank'])) {
+              $newtaxon->setapikey('ZOOBANK', $related['zoobank']);
+            }
+            if (isset($related['mycobank'])) {
+              $newtaxon->setapikey('Mycobank', $related['zoobank']);
+            }
+            $newtaxon->save();
+            $previous_id = $newtaxon->id;
+            if ($related['name']==$parent) {
+              $taxon['parent_id'] = $previous_id;
+            }
+            if ($related['name']==$senior) {
+              $taxon['senior_id'] = $previous_id;
+            }
+    }
+    return true;
+  }
 }

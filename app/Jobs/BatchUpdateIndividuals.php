@@ -14,7 +14,6 @@ use Activity;
 use App\Models\ActivityFunctions;
 //use Spatie\Activitylog\Traits\LogsActivity;
 
-
 class BatchUpdateIndividuals extends ImportCollectable
 {
 
@@ -62,51 +61,55 @@ class BatchUpdateIndividuals extends ImportCollectable
               if (!$this->authorize('update', $individual)) {
                 $this->appendLog('WARNING: You do not have permission to alter identification of individual'.$individual->fullname);
               } else {
-                //identification will be set to self
+                //identification will be set to self if explicitly informed
                 $oldidentification = null;
                 if ($individual->identification) {
                   $oldidentification = $individual->identification()->first()->toArray();
                 }
+                $old_identification_individual_id = $individual->identification_individual_id;
 
-                if ($individual->identification_individual_id != $individual->id) {
-                  // TODO: LONG CHANGE ON THIS
-                  $individual->identification_individual_id  =  $individual->id;
-                  $individual->save();
-                }
                 //has old update or else create
                 $makechange = false;
+                $date = $identifiers['date'];
+
                 if ($individual->identificationSet) {
                     $individual->identificationSet()->update($identifiers_nodate);
                     $makechange = true;
+                    $individual->identificationSet->setDate($date);
+                    $individual->identificationSet->save();
                 } else {
                     //if it is linked to another individual do not update and issues a warning
-                    if ($individual->identification_individual_id != $individual->id  and $update_nonself_identification==0) {
-                      $this->appendLog('FAILED: Identification for Individual '.$individual->fullname.' was not updated because the Identification of this individual is that of another individual. You must specify to change this explicitly.');
+                    if ($old_identification_individual_id != $individual->id  and $old_identification_individual_id>0 and $update_nonself_identification==0) {
+                      $this->appendLog('FAILED: Identification for Individual '.$individual->fullname.' was not updated because the Identification of this individual is that of another individual. You must specify to change this explicitly');
                     } else {
-                      if ($update_nonself_identification>0 or $individual->identification_individual_id == null) {
+                      if ($update_nonself_identification>0 or $old_identification_individual_id == null or $old_identification_individual_id == $individual->id) {
                         $makechange = true;
+                        $individual->identification_individual_id  =  $individual->id;
+                        $individual->save();
+
                         $individual->identificationSet = new Identification(array_merge($identifiers_nodate, ['object_id' => $individual->id, 'object_type' => 'App\Models\Individual']));
-                        //the individual
+                        $individual->identificationSet->setDate($date);
+                        $individual->identificationSet->save();
                       }
                     }
                 }
                 if ($makechange) {
-                  $date = $identifiers['date'];
-                  $individual->identificationSet->setDate($date);
-                  $individual->identificationSet->save();
                   //log identification changes if any
                   $identifiers_nodate['date'] = $individual->identificationSet->date;
-                  if ($individual->identification_individual_id != $individual->id and null != $individual->identification_individual_id) {
-                      $oldidentification['identification_individual_id']  = $individual->identification_individual_id;
+                  if ($old_identification_individual_id != $individual->id and null != $old_identification_individual_id and $update_nonself_identification>0) {
+                      $oldidentification['identification_individual_id']  = $old_identification_individual_id;
                       $identifiers_nodate['identification_individual_id'] = $individual->id;
                   }
                   ActivityFunctions::logCustomChanges($individual,$oldidentification,$identifiers_nodate,'individual','identification updated',null);
 
-                  $individual = Individual::findOrFail($id);
-                  $individual->identification_individual_id = $individual->id;
-                  $individual->save();
+                  $this->appendLog('UPDATED'.$individual->fullname);
+                  //$individual = Individual::findOrFail($id);
+                  //$individual->identification_individual_id = $individual->id;
+                  //$individual->save();
 
                   $this->affectedId($individual->id);
+                } else {
+                  $this->appendLog('FAILED'.$individual->fullname);
                 }
 
 

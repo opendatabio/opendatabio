@@ -88,7 +88,7 @@ class Taxon extends Node implements HasMedia
 
     public function mediaDescendantsAndSelf()
     {
-        $ids = $this->getDescendantsAndSelf()->pluck('id')->toArray();
+        $ids =  self::select("id")->where('lft',">=",$this->lft)->where('lft',"<=",$this->rgt)->pluck('id')->toArray();
         return Media::whereIn('model_id',$ids)->where('model_type','=','App\Models\Taxon');
     }
 
@@ -597,101 +597,79 @@ class Taxon extends Node implements HasMedia
 
     public function individualsCount($scope='all',$scopeId=null)
     {
+      $sql = "SELECT DISTINCT(individuals.id) FROM individuals,identifications,taxons where  identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
       if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
-          return array_sum($this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual) use($scopeId ) {
-              $individual->withoutGlobalScopes()->where('project_id',$scopeId);
-            }])->pluck('individual_count')->toArray());
+        $sql .= " AND individuals.project_id=".$scope_id;
       }
       if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
-          $query = $this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual)  use($scopeId) {
-            $individual->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scopeId) {
-              $measurement->withoutGlobalScopes()->where('dataset_id','=',$scopeId);
-            });}]);
-          return array_sum($query->pluck('individuals_count')->toArray());
+        $sql = "SELECT DISTINCT(measurements.measured_id) FROM measurements,identifications,taxons where  identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE %individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+        $sql .= " AND measurements.dataset_id=".$scope_id;
       }
       if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
-          $locations_ids = Location::findOrFail($scopeId)->getDescendantsAndSelf()->pluck('id')->toArray();
-          $query = $this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual)  use($locations_ids) {
-            $individual->withoutGlobalScopes()->whereHas('locations',function($location) use($locations_ids) {
-              $location->whereIn('location_id',$locations_ids);});
-            }]);
-          return array_sum($query->pluck('individuals_count')->toArray());
+        $location = Location::withoutGeom()->findOrFail($scopeId);
+        $sql = "SELECT DISTINCT(individuals.id) FROM individuals,identifications,taxons,individual_location,locations where individual_location.individual_id=individuals.id AND locations.id=individual_location.location_id AND identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt." AND locations.lft>=".$location->lft." AND locations.lft<=".$location->rgt;
       }
-      return array_sum($this->getDescendantsAndSelf()->loadCount(['individuals' => function ($individual) {
-            $individual->withoutGlobalScopes();
-        }])->pluck('individuals_count')->toArray());
+      $query = DB::select($sql);
+      return count($query);
     }
 
 
     public function vouchersCount($scope='all',$scopeId=null)
     {
+      $sql = "SELECT DISTINCT(vouchers.id) FROM vouchers,individuals,identifications,taxons where vouchers.individual_id=individuals.id AND identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id  AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
       if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
-        $query = $this->getDescendantsAndSelf()->loadCount(
-            ['vouchers' => function ($voucher)  use($scopeId) {
-                $voucher->withoutGlobalScopes()->where('project_id','=',$scopeId); } ]);
+        $sql .= " AND individuals.project_id=".$scope_id;
       }
       if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
-        $query = $this->getDescendantsAndSelf()->loadCount(
-            ['vouchers' => function ($voucher)  use($scopeId) {
-                $voucher->withoutGlobalScopes()->whereHas('measurements',function($measurement) use($scopeId) {
-                  $measurement->withoutGlobalScopes()->where('dataset_id','=',$scopeId);
-                }); }]);
+        $sql = "SELECT DISTINCT(vouchers.measured_id) FROM individuals,vouchers,measurements,identifications,taxons where identifications.object_id=individuals.id AND vouchers.individual_id=individuals.id AND identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE %individual%') AND identifications.taxon_id=taxons.id  AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+        $sql .= " AND measurements.dataset_id=".$scope_id;
       }
       if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
-          $locations_ids = Location::findOrFail($scopeId)->getDescendantsAndSelf()->pluck('id')->toArray();
-          $query = $this->getDescendantsAndSelf()->loadCount(
-              ['vouchers' => function ($voucher)  use($locations_ids) {
-                  $voucher->withoutGlobalScopes()->where('parent_type','=','App\Models\Location')->whereIn('parent_id',$locations_ids);
-               }]);
+        $location = Location::withoutGeom()->findOrFail($scopeId);
+        $sql = "SELECT DISTINCT(vouchers.id) FROM vouchers, individuals,identifications,taxons,individual_location,locations where vouchers.individual_id=individuals.id AND individual_location.individual_id=individuals.id AND locations.id=individual_location.location_id AND identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt." AND locations.lft>=".$location->lft." AND locations.lft<=".$location->rgt;
       }
-
-      if (!isset($query) or null == $scopeId) {
-      $query = $this->getDescendantsAndSelf()->loadCount(
-          ['vouchers' => function ($voucher) { $voucher->withoutGlobalScopes(); } ]);
-      }
-      $count1 = array_sum($query->pluck('vouchers_count')->toArray());
-      return $count1;
+      $query = DB::select($sql);
+      return count($query);
     }
 
     public function measurementsCount($scope='all',$scopeId=null)
     {
-      $taxon_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
+      $sql = "SELECT DISTINCT(measurements.id) FROM individuals,measurements,identifications,taxons where  identifications.object_id=individuals.id AND identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
       if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
-        $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$scopeId) { $measured->withoutGlobalScopes()->where('project_id',"=",$scopeId)->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
-        //$query = $query->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.$this->id);
-        return $query->count();
+        $sql .= " AND individuals.project_id=".$scope_id;
+        $query = DB::select($sql);
+        return count($query);
       }
       if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
-        $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$scopeId) { $measured->withoutGlobalScopes()->where('dataset_id',"=",$scopeId)->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
-        $query = $query->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.($this->id).' AND dataset_id='.$scopeId);
-        return $query->count();
+        $sql .= " AND measurements.dataset_id=".$scope_id;
+        $query = DB::select($sql);
+        return count($query);
       }
       if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
-        $locations_ids = Location::findOrFail($scopeId)->getDescendantsAndSelf()->pluck('id')->toArray();
-        $taxon_list = $this->getDescendantsAndSelf()->pluck('id')->toArray();
-        $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list,$locations_ids) {
-              $measured->withoutGlobalScopes()
-              ->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);})
-              ->whereHas('locations',function($location) use($locations_ids)  { $location->whereIn('location_id',$locations_ids);});
-        });
-        return $query->count();
+        $sql = "SELECT DISTINCT(measurements.id) FROM measurements,identifications,taxons,individual_location where  identifications.object_id=individuals.id AND identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND individual_location.individual_id=identifications.object_id AND locations.id=individual_location.location_id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt." AND locations.lft>=".$location->lft." AND locations.lft<=".$location->rgt;
+        $query = DB::select($sql);
+        return count($query);
       }
-      $query = Measurement::withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($measured) use($taxon_list) { $measured->withoutGlobalScopes()->whereHas('identification',function($idd) use($taxon_list)  { $idd->whereIn('taxon_id',$taxon_list);});});
-      $query = $query->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.$this->id);
-      return $query->count();
+      $sql = "SELECT DISTINCT(measurements.id) FROM individuals,measurements,identifications,taxons where  identifications.object_id=individuals.id AND identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+      $query = DB::select($sql);
+      return count($query)+$this->measurements()->count();
     }
 
 
     /* all media count*/
     public function all_media_count()
     {
-      $query = $this->getDescendantsAndSelf()->loadCount(
-          ['individualsMedia' => function ($individualsMedia)  {
-              $individualsMedia->withoutGlobalScopes(); } ])->loadCount(['media' => function ($media)  {
-                      $media->withoutGlobalScopes(); } ]);
-      $count1 = array_sum($query->pluck('media_count')->toArray());
-      $count2 = array_sum($query->pluck('individualsMedia_count')->toArray());
-      return $count1+$count2;
+      //media linked to individuals identified by the taxon or taxon descendants
+      $sql = "SELECT DISTINCT(media.id) FROM individuals,media,identifications,taxons where  identifications.object_id=individuals.id AND media.model_id=individuals.id AND (media.model_type LIKE '%individual%') AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+      $query = DB::select($sql);
+
+      //media linked to taxon or descendants
+      $sql = "SELECT DISTINCT(media.id) FROM media,taxons where (media.model_type LIKE '%taxons%') AND media.model_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+      $query2 = DB::select($sql);
+
+      //return unique count
+      $query = array_unique(array_merge($query,$query2));
+      return count($query);
     }
 
 

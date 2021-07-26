@@ -405,6 +405,9 @@ $("#checkapis").click(function(e) {
         dataType: 'json',
         data: {'name': $('input[name="name"]').val()},
         success: function (data) {
+            //alert(data.apidata['author']);
+            //console.log(data)
+
             $( "#spinner" ).hide();
             if ("error" in data) {
                 $( "#ajax-error" ).collapse("show");
@@ -424,33 +427,34 @@ $("#checkapis").click(function(e) {
                     });
                     $( "#ajax-error" ).append(newul);
                 }
-                $("#level").val(data.apidata[0]);
-                $("#author").val(data.apidata[1]);
-                if (data.apidata[2]) {
+                $("#level").val(data.apidata["rank"]);
+                $("#author").val(data.apidata["author"]);
+                if (data.apidata["valid"]) {
                     $("#valid").prop('checked', true);
                 } else {
                     $("#valid").prop('checked', false);
                 }
-                $("#bibreference").val(data.apidata[3]);
-                if (data.apidata[4]) {
-                    $("#parent_id").val(data.apidata[4][0]);
-                    $("#parent_autocomplete").val(data.apidata[4][1]);
+                $("#bibreference").val(data.apidata["reference"]);
+                if (data.apidata["parent"]) {
+                    $("#parent_id").val(data.apidata["parent"][0]);
+                    $("#parent_autocomplete").val(data.apidata["parent"][1]);
                 } else {
                     $("#parent_id").val("");
                     $("#parent_autocomplete").val("");
                 }
-                if (data.apidata[5]) {
-                    $("#senior_id").val(data.apidata[5][0]);
-                    $("#senior_autocomplete").val(data.apidata[5][1]);
+                if (data.apidata["senior"]) {
+                    $("#senior_id").val(data.apidata["senior"][0]);
+                    $("#senior_autocomplete").val(data.apidata["senior"][1]);
                 } else {
                     $("#senior_id").val("");
                     $("#senior_autocomplete").val("");
                 }
-                $("#mobotkey").val(data.apidata[6]);
-                $("#ipnikey").val(data.apidata[7]);
+                $("#mobotkey").val(data.apidata["mobot"]);
+                $("#ipnikey").val(data.apidata["ipni"]);
                 //$("#mycobankkey").val(data.apidata[8]);
-                $("#gbifkey").val(data.apidata[9]);
-
+                $("#gbifkey").val(data.apidata["gbif"]);
+                $("#zoobankey").val(data.apidata["zoobank"]);
+                $("#mycobank").val(data.apidata["mycobank"]);
                 // finally, set fields visibility
                 setFields(0);
             }
