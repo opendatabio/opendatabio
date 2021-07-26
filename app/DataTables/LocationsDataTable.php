@@ -37,9 +37,6 @@ class LocationsDataTable extends DataTable
         ->editColumn('adm_level', function ($location) {
           return Lang::get('levels.adm_level.'.$location->adm_level);
         })
-        ->addColumn('full_name', function ($location) {
-          return $location->full_name;
-        })
         ->addColumn('individuals', function ($location) {
           if ($this->project) {
             $individuals_count = $location->getCount('App\Models\Project',$this->project,'individuals');
@@ -97,7 +94,7 @@ class LocationsDataTable extends DataTable
           }
         })
         ->addColumn('media', function ($location) {
-          $mediaCount = $location->getCount('all',null,"media");
+          $mediaCount = $location->mediaDescendantsAndSelf()->count();
           $urlShowAllMedia = "media/".$location->id."/locations";
           return '<a href="'.url($urlShowAllMedia).'">'.$mediaCount.'</a>';
         })
@@ -203,7 +200,7 @@ class LocationsDataTable extends DataTable
           $title_level  .= '</select>';
         }
         if (Auth::user()) {
-          $hidcol = [1,4,5,11,12,13,14,15,16,17];
+          $hidcol = [1,4,10,11,12,13,14,15,16];
           $buttons = [
               'pageLength',
               'reload',
@@ -245,7 +242,7 @@ class LocationsDataTable extends DataTable
               ],
           ];
         } else {
-          $hidcol = [0,1,4,5,11,12,13,14,15,16,17];
+          $hidcol = [0,1,4,10,11,12,13,14,15,16];
           $buttons = [
               'pageLength',
               'reload',
@@ -260,7 +257,6 @@ class LocationsDataTable extends DataTable
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'adm_level' => ['title' => $title_level, 'searchable' => false, 'orderable' => true],
                 'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
-                'full_name' => ['title' => Lang::get('messages.full_name'), 'searchable' => false, 'orderable' => false],
                 'individuals' => ['title' => Lang::get('messages.individuals'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],

@@ -99,7 +99,7 @@ class IndividualLocationsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [0,1,3],
+                    'targets' => [0,3],
                     'visible' => false,
                 ]],
             ]);

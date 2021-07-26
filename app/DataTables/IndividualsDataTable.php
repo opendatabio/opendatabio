@@ -84,6 +84,7 @@ class IndividualsDataTable extends DataTable
      */
     public function query()
     {
+        //
         $query = Individual::query()->with(['project', 'locations', 'collectors.person'])
             ->select([
                 'individuals.id',
@@ -92,10 +93,12 @@ class IndividualsDataTable extends DataTable
                 'individuals.date',
                 DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),
                 DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'),
-            ])->withCount('measurements','vouchers');
+            ]);
+            //->withCount('measurements','vouchers');
         // customizes the datatable query
         if ($this->location) {
-            $locationsids = Location::where('id', '=', $this->location)->first()->getDescendantsAndSelf()->pluck('id');
+            $location = Location::withoutGeom()->findOrFail($this->location);
+            $locationsids =  Location::select("id")->where('lft',">=",$location->lft)->where('lft',"<=",$location->rgt)->pluck('id')->toArray();
             $query = $query->whereHas('locations',function($q) use($locationsids) {
               $q->whereIn('location_id',$locationsids);
             });

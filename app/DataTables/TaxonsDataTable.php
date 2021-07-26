@@ -116,16 +116,19 @@ class TaxonsDataTable extends DataTable
         ->addColumn('external', function ($taxon) {
             $ret = '';
             if ($taxon->mobot) {
-                $ret .= '<a href="http://tropicos.org/Name/'.$taxon->mobot.'"  data-toggle="tooltip" rel="tooltip" data-placement="right" title="MOBOT-Tropicos.org" ><img src="'.asset('images/TropicosLogo.gif').'"  height="24px"></a>"';
+                $ret .= '<a href="http://tropicos.org/Name/'.$taxon->mobot.'"  data-toggle="tooltip" rel="tooltip" data-placement="right" title="MOBOT-Tropicos.org" target="_blank"><img src="'.asset('images/TropicosLogo.gif').'"  height="24px"></a>&nbsp;"';
             }
             if ($taxon->ipni) {
-                $ret .= '<a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id='.$taxon->ipni.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="International Plant Names Index - IPNI" ><img src="'.asset('images/IpniLogo.png').'" height="24px"></a>';
+                $ret .= '<a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id='.$taxon->ipni.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="International Plant Names Index - IPNI" target="_blank"><img src="'.asset('images/IpniLogo.png').'" height="24px"></a>&nbsp;';
             }
             if ($taxon->mycobank) {
-                $ret .= '<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec='.$taxon->mycobank.'&Fields=All" data-toggle="tooltip" rel="tooltip" data-placement="right" title="MycoBank.org" ><img src="'.asset('images/MBLogo.png').'" height="24px"></a>';
+                $ret .= '<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec='.$taxon->mycobank.'&Fields=All" data-toggle="tooltip" rel="tooltip" data-placement="right" title="MycoBank.org" target="_blank"><img src="'.asset('images/MBLogo.png').'" height="24px"></a>&nbsp;';
             }
             if ($taxon->zoobank) {
-                $ret .= '<a href="http://zoobank.org/NomenclaturalActs/'.$taxon->zoobank.' data-toggle="tooltip" rel="tooltip" data-placement="right" title="ZooBank.org" ><img src="'.asset('images/zoobank.png').'" height="24px"></a>';
+                $ret .= '<a href="http://zoobank.org/NomenclaturalActs/'.$taxon->zoobank.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="ZooBank.org" target="_blank"><img src="'.asset('images/zoobank.png').'" height="24px"></a>&nbsp;';
+            }
+            if ($taxon->gbif) {
+                $ret .= '<a href="https://www.gbif.org/species/'.$taxon->gbif.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="GBIF.org" target="_blank"><img src="'.asset('images/GBIF-2015-mark.png').'" height="24px"></a>&nbsp;';
             }
             return $ret;
         })
