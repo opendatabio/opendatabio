@@ -49,6 +49,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
       gd \
       exif \
       pcntl \
+      bcmath \
     && rm -rf /tmp/* \
     && rm -rf /var/list/apt/* \
     && rm -rf /var/lib/apt/lists/* \
