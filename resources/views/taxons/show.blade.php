@@ -8,23 +8,31 @@
                     @lang('messages.taxon')
 <div style="float:right;">
 @if ($taxon->mobot)
-<a href="http://tropicos.org/Name/{{$taxon->mobot}}" target="_blank"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
+<a href="http://tropicos.org/Name/{{$taxon->mobot}}" data-toggle="tooltip" rel="tooltip" data-placement="right" title="Tropicos.org"  target="_blank"><img src="{{asset('images/TropicosLogo.gif')}}" alt="Tropicos"></a>
 @endif
 @if ($taxon->ipni)
-<a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id={{$taxon->ipni}}" target="_blank"><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
+&nbsp;
+<a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id={{$taxon->ipni}}" data-toggle="tooltip" rel="tooltip" data-placement="right" title="IPNI.org"   target="_blank"><img src="{{asset('images/IpniLogo.png')}}" alt="IPNI" width="33px"></a>
 @endif
 @if ($taxon->mycobank)
-<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec={{$taxon->mycobank}}&Fields=All" target="_blank"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
+&nbsp;
+<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec={{$taxon->mycobank}}&Fields=All" data-toggle="tooltip" rel="tooltip" data-placement="right" title="MycoBank.org"  target="_blank"><img src="{{asset('images/MBLogo.png')}}" alt="Mycobank" width="33px"></a>
 @endif
 @if ($taxon->zoobank)
-<a href=="http://zoobank.org/NomenclaturalActs/{{$taxon->zoobank}}" target="_blank"><img src="{{asset('images/zoobank.png')}}" alt="ZOOBANK" width="33px"></a>
+&nbsp;
+<a href=="http://zoobank.org/NomenclaturalActs/{{$taxon->zoobank}}" data-toggle="tooltip" rel="tooltip" data-placement="right" title="ZooBank.org"  target="_blank"><img src="{{asset('images/zoobank.png')}}" alt="ZOOBANK" width="33px"></a>
+@endif
+@if ($taxon->gbif)
+&nbsp;
+<a href="https://www.gbif.org/species/{{$taxon->gbif}}" data-toggle="tooltip" rel="tooltip" data-placement="right" title="GBIF.org" target="_blank"><img src="{{asset('images/GBIF-2015-mark.png')}}" height="33px"></a>
 @endif
 &nbsp;
-<span class="history" style="float:right">
-<a href="{{url("taxons/$taxon->id/activity")}}">
-@lang ('messages.see_history')
-</a>
-</span>
+<a href="http://servicos.jbrj.gov.br/flora/search/{{ urlencode($taxon->name) }}" data-toggle="tooltip" rel="tooltip" data-placement="right" title="Flora-Brazil" target="_blank"><img src="{{asset('images/logofb.png')}}" height="33px"></a>
+
+&nbsp;&nbsp;&nbsp;
+<a class="history" href="{{url("taxons/$taxon->id/activity")}}">
+@lang ('messages.see_history')</a>
+
 
 </div>
 

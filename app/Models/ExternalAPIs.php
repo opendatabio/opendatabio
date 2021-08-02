@@ -164,40 +164,40 @@ class ExternalAPIs
         $searchar = explode(' ', $searchstring);
         // special case! MOBOT treats "forma" abbreviation as f.
         if (4 == sizeof($searchar) and 'f.' == $searchar[2]) {
-            return $this->getMobotInner(
+            return self::getMobotInner(
                 $searchar[0].' '.$searchar[1].' fo. '.$searchar[3]
             );
         }
         // just get MOBOT data if single name or binomial name or a full subsp/var name
         if (3 != sizeof($searchar)) {
-            return $this->getMobotInner($searchstring);
+            return self::getMobotInner($searchstring);
         }
 
         // otherwise... we need to guess if this is subsp, var or f...
         $subname = $searchar[0].' '.$searchar[1].' subsp. '.$searchar[2];
-        $try = $this->getMobotInner($subname);
+        $try = self::getMobotInner($subname);
         // if we find something, return it!
         if (!($try[0] & self::NOT_FOUND)) {
             return $try;
         }
         $varname = $searchar[0].' '.$searchar[1].' var. '.$searchar[2];
-        $try = $this->getMobotInner($varname);
+        $try = self::getMobotInner($varname);
         if (!($try[0] & self::NOT_FOUND)) {
             return $try;
         }
         $fname = $searchar[0].' '.$searchar[1].' fo. '.$searchar[2];
         // if we arrived here and nothing was found, nothing will.
-        return $this->getMobotInner($fname);
+        return self::getMobotInner($fname);
     }
 
-    protected function getMobotInner($searchstring)
+    public static function getMobotInner($searchstring)
     {
         // replaces . in "var." or "subsp."
         $searchstring = str_replace('.', '%2e', $searchstring);
         $flags = 0;
         $apikey = config('app.mobot_api_key');
         $base_uri = 'https://services.tropicos.org/';
-        $client = new Guzzle(['base_uri' => $base_uri, 'proxy' => $this->proxystring]);
+        $client = new Guzzle(['base_uri' => $base_uri]); //, 'proxy' => $this->proxystring]);
         //# STEP ONE, search for name summary
         try {
             $response = $client->request('GET',"Name/Search?name=$searchstring&type=exact&apikey=$apikey&format=json");
@@ -633,14 +633,26 @@ class ExternalAPIs
                   if (!is_null($gbif_record)) {
                       $taxonID = (isset($gbif_record['taxonID']) and $gbif_record['taxonID'] != "") ? $gbif_record['taxonID'] : null;
                       $ipni = preg_match("/lsid:ipni.org/i", $taxonID) ? $taxonID : null;
-                      $tropicos = (mb_strtolower(substr($taxonID,0,4))=="tro-" or preg_match("/tropicos/i", $taxonID)) ? $taxonID : null;
                       $rank = isset($gbif_record["rank"]) ? Taxon::getRank($gbif_record['rank']) : null;
+                      $publishedin = isset($gbif_record["publishedIn"]) ? $gbif_record['publishedIn'] : null;
+                      $author = isset($gbif_record["authorship"]) ? $gbif_record['authorship'] : null;
+                      $tropicos = (mb_strtolower(substr($taxonID,0,4))=="tro-" or preg_match("/tropicos/i", $taxonID)) ? $taxonID : null;
+                      //try to get a tropicos key from tropicos and more info if present
+                      if (null == $tropicos) {
+                        $mobotdata = self::getMobotInner($gbif_record['canonicalName']);
+                        if ($mobotdata[0]!=self::NOT_FOUND) {
+                          $tropicos = $mobotdata['key'];
+                          $author = (null != $author) ? $author : $mobotdata['author'];
+                          $publishedin = (null != $publishedin) ? $publishedin : $mobotdata['reference'];
+                        }
+                      }
+
                       $data = [
                         "name"  => isset($gbif_record["canonicalName"]) ? $gbif_record['canonicalName'] : null,
                         "rank" => $rank,
-                        "author" => isset($gbif_record["authorship"]) ? $gbif_record['authorship'] : null,
+                        "author" => $author,
                         "valid" => isset($gbif_record["taxonomicStatus"]) ? $gbif_record['taxonomicStatus']=="ACCEPTED" : 0,
-                        "reference" => isset($gbif_record["publishedIn"]) ? $gbif_record['publishedIn'] : null,
+                        "reference" => $publishedin,
                         "parent" => isset($gbif_record["parent"]) ? $gbif_record['parent'] : null,
                         "senior" => null,
                         "mobot" => $tropicos,
