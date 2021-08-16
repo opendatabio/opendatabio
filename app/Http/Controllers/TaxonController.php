@@ -186,7 +186,8 @@ class TaxonController extends Controller
                 $validator->errors()->add('parent_id', Lang::get('messages.taxon_parent_required_error'));
             });
         }
-        if ($request->level > 180) {
+        //allows species only to be linked to a non-genus parent
+        if ($request->level > 180 and $request->level!=210) {
             $parent = Taxon::findOrFail($request->parent_id);
             if ($parent->level < 170) {
                 $validator->after(function ($validator) {
