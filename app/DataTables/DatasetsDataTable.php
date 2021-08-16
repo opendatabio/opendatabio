@@ -32,14 +32,14 @@ class DatasetsDataTable extends DataTable
           return $dataset->rawLink();
         })
         ->editColumn('title', function ($dataset) {
-            $ret =  "<h4 style='cursor:pointer;'>".$dataset->generateCitation(true,true)."</h4>";
+            $ret =  "<span style='cursor:pointer;'>".$dataset->generateCitation(true,true)."</span>";
             $id = "description_".$dataset->id;
             //$ret .= '<a class="showdataset"  data-target="'.$id.'" style="font-size: 1em;"><span class="glyphicon glyphicon-plus unstyle"></span></a>';
 
             $btn= $dataset->description.'<br><a href="'.url('datasets/'.$dataset->id).'" class="btn btn-primary btn-xs" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.details').'">
               <i class="fas fa-info"></i>&nbsp;info
             </a>&nbsp;&nbsp;';
-            if (Gate::allows('export', $dataset)) {
+            if (Gate::allows('export',$dataset)) {
               $btn .=  '<a href="'.url('datasets/'.$dataset->id."/download").'" class="btn btn-success btn-xs datasetexport" id='.$dataset->id.' data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.data_download').'"><span class="glyphicon glyphicon-download-alt unstyle"></span></a>';
             } elseif (Auth::user()) {
               $btn .= '<a href="'.url('datasets/'.$dataset->id."/request").'" class="btn btn-warning btn-xs datasetexport" id='.$dataset->id.'  data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.data_request').'"><span class="glyphicon glyphicon-download-alt unstyle"></span></a>';
@@ -50,7 +50,7 @@ class DatasetsDataTable extends DataTable
         })
         ->editColumn('privacy', function ($dataset) {
             $txt = "";
-            if ($dataset->privacy == Dataset::PRIVACY_AUTH) {
+            if (in_array($dataset->privacy,[Dataset::PRIVACY_PROJECT, Dataset::PRIVACY_AUTH])) {
               $txt .='<i class="fas fa-lock"></i> ';
             }
             if ($dataset->privacy == Dataset::PRIVACY_PUBLIC) {
@@ -75,9 +75,8 @@ class DatasetsDataTable extends DataTable
             return $txt;
         })
         //->addColumn('full_name', function ($dataset) {return $dataset->full_name; })
-        ->addColumn('measurements', function ($dataset) {
-            $measurements_count = $dataset->measurements()->withoutGlobalScopes()->count();
-            return '<a href="'.url('measurements/'.$dataset->id.'/dataset').'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="'.Lang::get('messages.tooltip_view_measurements').'" >'.$measurements_count.'</a>';
+        ->addColumn('contents', function ($dataset) {
+            return $dataset->getDataTypeRawLink();
         })
         ->addColumn('downloads', function ($dataset) {
             return $dataset->downloads;
@@ -138,7 +137,7 @@ class DatasetsDataTable extends DataTable
         })
         */
         //->rawColumns(['name', 'members', 'tags','measurements','individuals','vouchers','taxons','locations','projects','action']);
-        ->rawColumns(['name', 'title','tags','measurements','license','privacy']);
+        ->rawColumns(['name', 'title','tags','contents','license','privacy']);
     }
 
     /**
@@ -178,9 +177,9 @@ class DatasetsDataTable extends DataTable
                 'privacy' => ['title' => Lang::get('messages.privacy'), 'searchable' => false, 'orderable' => true],
                 'license' => ['title' => Lang::get('messages.license'), 'searchable' => false, 'orderable' => true],
                 //'admins' => ['title' => Lang::get('messages.administrators'), 'searchable' => false, 'orderable' => false],
+                'contents' => ['title' => Lang::get('messages.contains'), 'searchable' => false, 'orderable' => false],
                 'tags' => ['title' => Lang::get('messages.tags'), 'searchable' => false, 'orderable' => false],
                 'downloads' => ['title' => Lang::get('messages.downloads'), 'searchable' => false, 'orderable' => false],
-                'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
 
                 /*'individuals' => ['title' => Lang::get('messages.individuals'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
@@ -203,7 +202,7 @@ class DatasetsDataTable extends DataTable
                     ['extend' => 'colvis',  'columns' => ':gt(0)'],
                 ],
                 'columnDefs' => [[
-                    'targets' => [0,1],
+                    'targets' => [0,1,4,6],
                     'visible' => false,
                 ],
               ],

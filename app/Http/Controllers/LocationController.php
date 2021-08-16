@@ -454,8 +454,8 @@ false,0);
         //} else {
         //  $parent = null;
         //}
-        //$media = $location->mediaDescendantsAndSelf();
-        $media = collect([]);
+        $media = $location->mediaDescendantsAndSelf();
+        //$media = collect([]);
         if ($media->count()) {
           $media = $media->paginate(3);
         } else {

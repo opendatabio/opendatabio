@@ -147,6 +147,9 @@
               <li><a href="{{ url('import/individuals') }}">
                 @lang('messages.individuals')
               </a></li>
+              <li><a href="{{ url('import/individuallocations') }}">
+                @lang('messages.individuallocations')
+              </a></li>
               <li><a href="{{ url('import/locations') }}">
                 @lang('messages.locations')
               </a></li>

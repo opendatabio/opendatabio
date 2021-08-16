@@ -51,15 +51,16 @@ class Controller extends BaseController
             $result = [];
             foreach ($fields as $field) {
                 // appends custom accessors to the JSON response
-
                 //if ($obj->hasGetMutator($field)) {
-                    //$obj->append($field);
+                //    $obj->append($field);
                 //}
+
                 //just get all values as array, including mutators to preserve order in $fields
                 $result[$field] = isset($obj[$field]) ? $obj[$field] : null;
 
             }
             //$objarr = collect($obj->toArray())->only($fields)->all();
+            //return $objarr;
             return $result;
 
         });

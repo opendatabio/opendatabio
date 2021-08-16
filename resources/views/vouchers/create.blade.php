@@ -262,39 +262,24 @@ if (empty(old())) { // no "old" value, we're just arriving
 </div>
 
 
-<!-- PROJECT -->
+<!-- dataset -->
 <div class="form-group">
-    <label for="project" class="col-sm-3 control-label mandatory">
-      @lang('messages.project')
+    <label for="dataset" class="col-sm-3 control-label ">
+      @lang('messages.dataset')
     </label>
-    <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
+    <a data-toggle="collapse" href="#dataset_hint" class="btn btn-default">?</a>
     <div class="col-sm-6">
-      @if (count($projects))
-        @php
-          $selected = old('project_id', isset($voucher) ? $voucher->project_id : (isset($individual) ? $individual->project_id : (Auth::user()->defaultProject ? Auth::user()->defaultProject->id : null)));
-          @endphp
-	        <select name="project_id" id="project_id" class="form-control" >
-	           @foreach ($projects as $project)
-		             <option value="{{$project->id}}" {{ $project->id == $selected ? 'selected' : '' }}>
-                   {{ $project->name }}
-		             </option>
-	           @endforeach
-	        </select>
-        @else
-          <div class="alert alert-danger">
-            @lang ('messages.no_valid_project')
-          </div>
-        @endif
+      <input type="text" name="dataset_autocomplete" id="dataset_autocomplete" class="form-control autocomplete"
+      value="{{ old('dataset_autocomplete', (isset($voucher) and $voucher->dataset_id) ? $voucher->dataset->name : null) }}">
+      <input type="hidden" name="dataset_id" id="dataset_id"
+      value="{{ old('dataset_id', isset($voucher) ? $voucher->dataset_id : null) }}">
     </div>
     <div class="col-sm-12">
-      <div id="hint3" class="panel-collapse collapse">
-	       @lang('messages.voucher_project_hint')
+      <div id="dataset_hint" class="panel-collapse collapse">
+	       @lang('messages.vocher_dataset_hint')
        </div>
      </div>
 </div>
-
-
-
 
 
 <div class="form-group">
@@ -318,6 +303,8 @@ if (empty(old())) { // no "old" value, we're just arriving
 <script>
 
 $(document).ready(function() {
+
+$("#dataset_autocomplete").odbAutocomplete("{{url('datasets/autocomplete')}}","#dataset_id", "@lang('messages.noresults')");
 
 $(".collectors_self").hide();
 $('.collectors_individual').hide();
@@ -349,7 +336,8 @@ function onChangeIndividual() {
         $('#individual_collectors').html(data.individual[1]).show();
         $('#individual_date').html(data.individual[2]).show();
         $('#individual_tag').html(data.individual[3]).show();
-        $('#project_id').val(data.individual[4]);
+        $('#dataset_id').val(data.individual[4]);
+        $('#dataset_autocomplete').val(data.individual[5]);
       },
       error: function(e){
         alert( inid + " will be error" );

@@ -14,6 +14,7 @@ use App\Models\Person;
 use App\Models\Collector;
 use App\Models\Biocollection;
 use App\Models\Project;
+use App\Models\Dataset;
 use App\Models\ODBFunctions;
 use Auth;
 use Lang;
@@ -25,8 +26,8 @@ class ImportCollectable extends AppJob
 
     protected function validateHeader($field = 'collector')
     {
-        if (array_key_exists('project', $this->header)) {
-            $this->validateProject($this->header);
+        if (array_key_exists('dataset', $this->header)) {
+            $this->validateDataset($this->header);
         }
         if (array_key_exists($field, $this->header)) {
             $person = $this->extractCollectors('Header', $this->header, $field);
@@ -42,6 +43,7 @@ class ImportCollectable extends AppJob
      * Otherwise it interprets the value of this item as id or name of a project.
      * @retuns true if the project is validated; false if it fails.
      */
+     // TODO: FUNCTION OBSOLETE NOT BEING USED
     protected function validateProject(&$registry)
     {
         $project = array_key_exists('project',$registry) ? ((null != $registry['project']) ? $registry['project'] : null) : null;
@@ -60,6 +62,30 @@ class ImportCollectable extends AppJob
         $registry['project'] = Auth::user()->defaultProject->id;
         return true;
     }
+
+
+    /* if dataset is not informed return true, return false only if informed and invalid */
+    protected function validateDataset(&$registry)
+    {
+        $header = $this->header;
+        $dataset = isset($registry['dataset_id']) ? $registry['dataset_id'] : (isset($registry['dataset']) ? $registry['dataset'] : null);
+        $header = isset($header['dataset_id']) ? $header['dataset_id'] : (isset($header['dataset']) ? $header['dataset'] : null);
+        if (null == $dataset and $header != null) {
+            $dataset = $header;
+        }
+        if (null != $dataset) {
+            $valid = ODBFunctions::validRegistry(Dataset::select('id'),$dataset,['id','name']);
+            if (null === $valid) {
+                $this->skipEntry($registry, 'dataset'.' '.$dataset.' was not found in the database');
+                return false;
+            }
+            $registry['dataset'] = $valid->id;
+            return true;
+        }
+        $registry['dataset'] = Auth::user()->defaultDataset->id;
+        return true;
+    }
+
 
     protected function extractCollectors($callerName, $registry, $field = 'collector')
     {
@@ -356,7 +382,7 @@ class ImportCollectable extends AppJob
               return false;
             }
          }
-      }
+       }
       }
 
       /*if got here fields for location exist and must be validated */
@@ -458,7 +484,6 @@ class ImportCollectable extends AppJob
       }
 
       $registry['individual_locations'] = $finallocations;
-
       return true;
     }
 

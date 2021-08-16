@@ -77,19 +77,17 @@ class TaxonController extends Controller
         }
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $simple =  ['id', 'fullname', 'levelName', 'authorSimple', 'bibreferenceSimple', 'valid', 'senior_id', 'parent_id','parent_name','author_id','family'];
-        //include here to be able to add mutators and categories
-        if ('all' == $fields) {
-            $keys = array_keys($taxons->first()->toArray());
-            $fields = array_merge($simple,$keys);
-            $fields =  implode(',',$fields);
+        $possible_fields = config('api-fields.taxons');
+        $field_sets = array_keys($possible_fields);
+        if (in_array($fields,$field_sets)) {
+            $fields = implode(",",$possible_fields[$fields]);
         }
 
         $taxons = $taxons->cursor();
         if ($fields=="id") {
           $taxons = $taxons->pluck('id')->toArray();
         } else {
-          $taxons = $this->setFields($taxons, $fields, $simple);
+          $taxons = $this->setFields($taxons, $fields, null);
         }
         return $this->wrap_response($taxons);
     }

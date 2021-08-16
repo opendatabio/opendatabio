@@ -33,19 +33,18 @@ class BiocollectionController extends Controller
 
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $simple = ['id', 'acronym', 'name', 'irn'];
-        //include here to be able to add mutators and categories
-        if ('all' == $fields) {
-            $keys = array_keys($biocollections->first()->toArray());
-            $fields = array_merge($simple,$keys);
-            $fields =  implode(',',$fields);
+        $possible_fields = config('api-fields.biocollections');
+        $field_sets = array_keys($possible_fields);
+        if (in_array($fields,$field_sets)) {
+            $fields = implode(",",$possible_fields[$fields]);
         }
+
 
         $biocollections = $biocollections->cursor();
         if ($fields=="id") {
           $biocollections = $biocollections->pluck('id')->toArray();
         } else {
-          $biocollections = $this->setFields($biocollections, $fields, $simple);
+          $biocollections = $this->setFields($biocollections, $fields, null);
         }
         return $this->wrap_response($biocollections);
     }

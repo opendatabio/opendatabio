@@ -86,10 +86,12 @@ class TraitController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', ODBTrait::class);
+        if (!ODBTrait::validateExportName($request)) {
+            return redirect()->back()->withInput()->withErrors(Lang::get('messages.export_name_invalid'));
+        }
         $this->validate($request, ODBTrait::rules());
         $odbtrait = ODBTrait::create($request->only(['export_name', 'type','bibreference_id']));
         $odbtrait->setFieldsFromRequest($request);
-
         return redirect('traits/'.$odbtrait->id)->withStatus(Lang::get('messages.stored'));
     }
 
@@ -129,6 +131,9 @@ class TraitController extends Controller
     {
         $odbtrait = ODBTrait::findOrFail($id);
         $this->authorize('update', $odbtrait);
+        if (!ODBTrait::validateExportName($request)) {
+          return redirect()->back()->withInput()->withErrors(Lang::get('messages.export_name_invalid'));
+        }
         $this->validate($request, ODBTrait::rules($id));
         $odbtrait->update($request->only(['export_name', 'type','bibreference_id']));
         $odbtrait->setFieldsFromRequest($request);

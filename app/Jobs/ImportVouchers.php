@@ -10,7 +10,7 @@ namespace App\Jobs;
 use App\Models\Voucher;
 use App\Models\Location;
 use App\Models\Individual;
-use App\Models\Project;
+use App\Models\Dataset;
 use App\Models\ODBFunctions;
 use App\Models\Biocollection;
 use Illuminate\Http\Request;
@@ -65,7 +65,7 @@ class ImportVouchers extends ImportCollectable
             return false;
         }
 
-        if (!$this->validateProject($voucher)) {
+        if (!$this->validateDataset($voucher)) {
             return false;
         }
 
@@ -179,9 +179,9 @@ class ImportVouchers extends ImportCollectable
           }
           if ($ref->count()==1) {
               $voucher['individual_id'] = $ref->get()->first()->id;
-              //add project if does not exists
-              if (null == $voucher['project']) {
-                $voucher['project'] = $ref->get()->first()->project_id;
+              //add dataset if does not exists
+              if (null == $voucher['dataset']) {
+                $voucher['dataset'] = $ref->get()->first()->dataset_id;
               }
               return true;
           }
@@ -195,13 +195,13 @@ class ImportVouchers extends ImportCollectable
     {
 
         $keys_mandatory = ['individual','biocollection'];
-        $keys_other = ['biocollection_type','biocollection_number','project','collector','number','notes','date'];
+        $keys_other = ['biocollection_type','biocollection_number','dataset','collector','number','notes','date'];
         $store_request = [
           'from_the_api' => 1,
           'individual_id' => (int) $voucher['individual_id'],
           'biocollection_id' => (int) $voucher['biocollection_id'],
           'biocollection_type' => (int) $voucher['biocollection_type'],
-          'project_id' => (int) $voucher['project'],
+          'dataset_id' => (int) $voucher['dataset'],
           'biocollection_number' => array_key_exists('biocollection_number',$voucher) ? ((null != $voucher['biocollection_number']) ? $voucher['biocollection_number'] : null) : null,
           'number' =>  array_key_exists('number',$voucher) ? ((null != $voucher['number']) ? (string) $voucher['number'] : null) : null,
           'collector' => array_key_exists('collector',$voucher) ? ((null != $voucher['collector']) ? $voucher['collector'] : null) : null,

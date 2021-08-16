@@ -15,6 +15,7 @@ use Lang;
 use App\Models\Language;
 use App\Models\Media;
 use App\Models\Project;
+use App\Models\Dataset;
 use App\Models\Tag;
 use App\Models\Location;
 use App\Models\Voucher;
@@ -72,6 +73,13 @@ class MediaController extends Controller
       return view('media.index', compact('model','media'));
   }
 
+  public function indexDatasets($id)
+  {
+      $model = Dataset::findOrFail($id);
+      $media = $model->media();
+      $media = $media->paginate(20);
+      return view('media.index', compact('model','media'));
+  }
 
   public function show($id)
   {
@@ -113,14 +121,15 @@ class MediaController extends Controller
       $languages = Language::all();
       $tags = Tag::all();
       $persons = Person::all();
-      $projects = Project::all();
+      //$projects = Project::all();
+      $datasets = Auth::user()->datasets;
       $customProperties = null;
       if (class_basename($object) == 'Voucher') {
         $customProperties = json_encode(['voucher_id' => $object->id]);
         $object = $object->individual;
       }
       $validMimeTypes = 'image:apng,gif,jpeg,png,tif,svg; video: mp4,ogv,webm; audio: mp3,oga,wav';
-      return view('media.create', compact('object', 'languages', 'tags','persons', 'projects','validMimeTypes','customProperties'));
+      return view('media.create', compact('object', 'languages', 'tags','persons', 'datasets','validMimeTypes','customProperties'));
   }
 
   public function edit($id)
@@ -130,15 +139,20 @@ class MediaController extends Controller
     $languages = Language::all();
     $tags = Tag::all();
     $persons = Person::all();
-    $projects = Project::all();
+    $datasets = Auth::user()->datasets;
     $validMimeTypes = 'image:apng,gif,jpeg,png,tif,svg; video: mp4,ogv,webm; audio: mp3,oga,wav';
-    return view('media.create', compact('languages', 'tags','persons', 'projects','validMimeTypes','media','object'));
+    return view('media.create', compact('languages', 'tags','persons', 'datasets','validMimeTypes','media','object'));
   }
 
   public function store(Request $request)
   {
     // editing or saving
-    $this->authorize('create', Media::class);
+    $dataset= null;
+    if ($request->dataset_id) {
+      $dataset = Dataset::findOrFail($request->dataset_id);
+    }
+    $this->authorize('create',[Media::class,$dataset]);
+
     $licenses = implode(',',config('app.creativecommons_licenses'));
 
     $mimes = 'mimes:apng,gif,jpeg,png,svg,tif,mp3,oga,wav,mp4,ogv,webm';
@@ -149,7 +163,7 @@ class MediaController extends Controller
           'collector' => 'required_unless:license,CC0|array|min:1',
           'license' => 'required|string|max:191|in:'.$licenses,
           'date' => 'date_format:Y-m-d|nullable',
-          'project_id' => 'integer|nullable',
+          'dataset_id' => 'integer|nullable',
     ]);
 
     /* add media to model */
@@ -221,8 +235,8 @@ class MediaController extends Controller
       }
     }
 
-    if (null != $request->project_id) {
-      $media->project_id = $request->project_id;
+    if (null != $request->dataset_id) {
+      $media->dataset_id = $request->dataset_id;
       $media->save();
     }
     /* syncs title translation */
@@ -242,7 +256,12 @@ class MediaController extends Controller
   {
 
     $media = Media::findOrFail($id);
-    $this->authorize('update', $media);
+    // editing or saving
+    $dataset= null;
+    if ($request->dataset_id) {
+      $dataset = Dataset::findOrFail($request->dataset_id);
+    }
+    $this->authorize('update',[$media,$dataset]);
     // editing or saving
     $licenses = implode(',',config('app.creativecommons_licenses'));
     $this->validate($request, [
@@ -251,7 +270,7 @@ class MediaController extends Controller
           'collector' => 'required_unless:license,CC0|array|min:1',
           'license' => 'required|string|max:191|in:'.$licenses,
           'date' => 'date_format:Y-m-d|nullable',
-          'project_id' => 'integer|nullable',
+          'dataset_id' => 'integer|nullable',
     ]);
 
 
@@ -279,10 +298,10 @@ class MediaController extends Controller
       $media->setCustomProperty('notes',$notes);
     }
 
-    if ($request->project_id != $media->project_id) {
-      $oldCustomProperties['project_id'] = $media->project_id;
-      $media->project_id = $request->project_id;
-      $newCustomProperties['project_id'] = $request->project_id;
+    if ($request->dataset_id != $media->dataset_id) {
+      $oldCustomProperties['dataset_id'] = $media->dataset_id;
+      $media->dataset_id = $request->dataset_id;
+      $newCustomProperties['dataset_id'] = $request->dataset_id;
     }
     $media->save();
 

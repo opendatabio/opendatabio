@@ -6,9 +6,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use App\Models\User;
+use App\Models\Dataset;
 use Auth;
 
-class MediaProjectScope implements Scope
+class MediaDatasetScope implements Scope
 {
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -21,14 +22,14 @@ class MediaProjectScope implements Scope
     {
         // first, the easy cases. No logged in user? can access only public (privacy 2)
         if (is_null(Auth::user())) {
-            return $builder->whereRaw('(media.project_id IS NULL) OR media.project_id IN (SELECT id FROM projects WHERE projects.privacy = 2)');
+            return $builder->whereRaw('(media.dataset_id IS NULL) OR media.dataset_id IN (SELECT id FROM datasets WHERE datasets.privacy >='.Dataset::PRIVACY_REGISTERED.')');
         }
         // superadmins see everything
         if (User::ADMIN == Auth::user()->access_level) {
             return $builder;
         }
 
-        // now the complex case: the regular user see any registered or public or those having specific authorization
-        return $builder->whereRaw('(media.project_id IS NULL)  OR media.project_id IN (SELECT id FROM projects WHERE projects.privacy = 2) OR media.id IN (SELECT media.id FROM media JOIN projects ON projects.id=media.project_id JOIN project_user ON project_user.project_id=projects.id WHERE projects.privacy>0 OR project_user.user_id='.Auth::user()->id.')');
+        // now the complex case: the regular user
+        return $builder->whereRaw('(media.dataset_id IS NULL) OR media.id IN (SELECT media.id FROM media JOIN datasets ON datasets.id=media.dataset_id JOIN dataset_user ON dataset_user.dataset_id=datasets.id WHERE (datasets.privacy >='.Dataset::PRIVACY_REGISTERED.') OR dataset_user.user_id='.Auth::user()->id.')');
     }
 }

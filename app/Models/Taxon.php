@@ -36,7 +36,7 @@ class Taxon extends Node implements HasMedia
     protected $fillable = ['name', 'level', 'valid', 'validreference', 'senior_id', 'author', 'author_id',
                 'bibreference', 'bibreference_id', 'parent_id', 'notes', ];
 
-    protected $appends = ['family'];
+    //protected $appends = ['family'];
 
     //activity log trait (parent, uc and geometry are logged in controller)
     protected static $logName = 'taxon';
@@ -82,7 +82,8 @@ class Taxon extends Node implements HasMedia
         // includes the full name of a taxon in all queries
         return parent::newQuery($excludeDeleted)->addSelect(
                 '*',
-                DB::raw('odb_txname(taxons.name, taxons.level, taxons.parent_id) as fullname')
+                DB::raw('odb_txname(taxons.name, taxons.level, taxons.parent_id) as fullname'),
+                DB::raw('odb_txparent(taxons.lft,120) as family'),
             );
     }
 
@@ -119,7 +120,7 @@ class Taxon extends Node implements HasMedia
     }
     */
 
-    public function getLevelNameAttribute()
+    public function getTaxonRankAttribute()
     {
         return Lang::get('levels.tax.'.$this->level).
             ($this->author_person ? ' ('.Lang::get('messages.unpublished').')' : '');
@@ -138,22 +139,6 @@ class Taxon extends Node implements HasMedia
     public function measurements()
     {
         return $this->morphMany("App\Models\Measurement", 'measured');
-    }
-
-
-
-
-    public function setFullnameAttribute($value)
-    {
-        // Full names have only the first letter capitalized
-        $value = ucfirst(strtolower($value));
-
-        if ($this->level <= 200) {
-            $this->name = $value;
-        }
-        if ($this->level >= 210) { // sp. or below, strips evertyhing before the last space
-            $this->name = trim(substr($value, strrpos($value, ' ') - strlen($value)));
-        }
     }
 
     // returns rank numbers from common abbreviations
@@ -234,30 +219,13 @@ class Taxon extends Node implements HasMedia
         return $this->belongsTo('App\Models\Person', 'author_id');
     }
 
-    public function getAuthorSimpleAttribute()
-    {
-        if ($this->author) {
-            return $this->author;
-        }
-        if ($this->author_person) {
-            return $this->author_person->abbreviation;
-        }
-    }
+
 
     public function getFullnameWithAuthor()
     {
-      return $this->fullname." ".$this->authorSimple;
+      return $this->fullname." ".$this->scientificNameAuthorship;
     }
 
-    public function getBibreferenceSimpleAttribute()
-    {
-        if ($this->bibreference) {
-            return $this->bibreference;
-        }
-        if ($this->reference) {
-            return $this->reference->bibtex;
-        }
-    }
 
     public function reference()
     {
@@ -454,23 +422,6 @@ class Taxon extends Node implements HasMedia
         return null;
       }
 
-    public function getFamilyAttribute()
-    {
-        if ($this->level < $this->getRank('family')) {
-            return '';
-        }
-        if ($this->getRank('family') == $this->level) {
-            return $this->name;
-        }
-        // else
-        $parent = $this->parent;
-        while ($parent->parent and $parent->level > $this->getRank('family')) {
-            $parent = $parent->parent;
-        }
-
-        return $parent->name;
-    }
-
     public function parentByLevel($level)
     {
       return  DB::table('taxons')->where('lft',"<=",$this->lft)->where('rgt',">=",$this->lft)->where('level',$level)->get();
@@ -548,6 +499,137 @@ class Taxon extends Node implements HasMedia
 
 
 
+
+
+
+    /* this are DARWIN CORE TERMS translations for the API */
+    /* https://dwc.tdwg.org/terms/#dwc:scientificNameAuthorship */
+    public function getScientificNameAuthorshipAttribute()
+    {
+        if ($this->author) {
+            return $this->author;
+        }
+        if ($this->author_person) {
+            $person = $this->author_person;
+            isset($person->full_name) ? $person->full_name." - ".$person->abbreviation : $person->abbreviation;
+        }
+    }
+    //here without authors
+    public function getScientificNameAttribute()
+    {
+      return $this->fullname;
+    }
+
+    //external ids
+    public function getScientificNameIDAttribute()
+    {
+        $refs = $this->externalrefs()->get();
+        $external = [];
+        if ($refs->count()>0) {
+          $urls = config('external-apis');
+          foreach($refs as $rf) {
+              $db = mb_strtolower($rf->name);
+              $id = $rf->reference;
+              if ($db=='mobot') {
+                $linkto = $urls['tropicos']['linkto'];
+                $pattern = "/urn:lsid:tropicos.org:taxon:|tro-|trop-/i";
+                $id = preg_replace($pattern, '', $id);
+              } else {
+                $linkto = $urls[$db]['linkto'];
+              }
+              $external[] = $linkto.$id;
+          }
+          $external = implode(" | ",$external);
+      }
+      return $external;
+    }
+
+
+    public function getAcceptedNameUsageAttribute()
+    {
+      if ($this->senior()->count()) {
+        return $this->senior->fullname;
+      }
+      return null;
+    }
+
+    public function getAcceptedNameUsageIDAttribute()
+    {
+      if ($this->senior()->count()) {
+        return $this->senior->scientificNameID;
+      }
+      return null;
+    }
+
+    public function getParentNameUsageAttribute()
+    {
+        return $this->parentName;
+    }
+
+    public function getNamePublishedInAttribute()
+    {
+        if ($this->bibreference) {
+            return $this->bibreference;
+        }
+        if ($this->reference) {
+            return $this->reference->bibreferenceSimple;
+        }
+    }
+    public function getNamePublishedInIDAttribute()
+    {
+        if ($this->bibreference) {
+            return null;
+        }
+        if ($this->reference) {
+            return ($this->reference->doi!=null ? $this->reference->doi : $this->reference->url);
+        }
+    }
+    public function getNamePublishedInYearAttribute()
+    {
+        if ($this->bibreference) {
+          $pattern = "/(\d{4})/i";
+          $result = preg_match_all($pattern,$this->bibreference,$matches);
+          if (count($matches[0])==1) {
+            return $matches[0][0];
+          }
+          return null;
+        }
+        if ($this->reference) {
+            return ($this->reference->doi!=null ? $this->reference->doi : $this->reference->url);
+        }
+    }
+    public function getHigherClassificationAttribute()
+    {
+      if ($this->getAncestors()->count())
+      {
+        $hcl = $this->getAncestors()->map(function($a) { return $a->fullname; })->toArray();
+        return implode(" | ",$hcl);
+      }
+      return null;
+    }
+
+    public function getTaxonomicStatusAttribute()
+    {
+      $valid = $this->valid;
+      $hasperson = $this->author_person()->count()>0;
+      if (!$valid and $hasperson) {
+        return 'unpublished and invalid';
+      }
+      if ($hasperson) {
+        return 'unpublished';
+      }
+      if (!$valid) {
+        return 'invalid';
+      }
+      return 'accepted';
+    }
+    public function getTaxonRemarksAttribute()
+    {
+      return $this->notes;
+    }
+
+
+
     /* FUNCTIONS TO INTERACT WITH THE COUNT MODEL */
     public function summaryCounts()
     {
@@ -597,17 +679,29 @@ class Taxon extends Node implements HasMedia
 
     public function individualsCount($scope='all',$scopeId=null)
     {
-      $sql = "SELECT DISTINCT(individuals.id) FROM individuals,identifications,taxons where  identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+      $sql = "SELECT DISTINCT identifications.object_id FROM identifications,taxons where  (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+
       if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
-        $sql .= " AND individuals.project_id=".$scope_id;
+        $sql = "SELECT DISTINCT individuals.id FROM individuals,identifications,taxons where
+            (identifications.object_type LIKE '%individual%' AND identifications.object_id=individuals.id)
+        AND (identifications.taxon_id=taxons.id  AND taxons.lft>='".$this->lft."' AND taxons.lft<='".$this->rgt."')
+        AND (
+          individuals.dataset_id IN (SELECT datasets.id FROM datasets WHERE datasets.project_id='".$scopeId."')
+          OR individuals.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%individual%' AND measurements.dataset_id IN (SELECT mdataset.id FROM datasets as mdataset WHERE mdataset.project_id='".$scopeId."'))
+        )";
       }
       if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
-        $sql = "SELECT DISTINCT(measurements.measured_id) FROM measurements,identifications,taxons where  identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE %individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
-        $sql .= " AND measurements.dataset_id=".$scope_id;
+        $sql = "SELECT DISTINCT individuals.id FROM individuals,identifications,taxons where
+            (identifications.object_type LIKE '%individual%' AND identifications.object_id=individuals.id)
+        AND (identifications.taxon_id=taxons.id  AND taxons.lft>='".$this->lft."' AND taxons.lft<='".$this->rgt."')
+        AND (
+          individuals.dataset_id='".$scopeId."'
+          OR individuals.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%individual%' AND measurements.dataset_id='".$scopeId."')
+        )";
       }
       if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
-        $location = Location::withoutGeom()->findOrFail($scopeId);
-        $sql = "SELECT DISTINCT(individuals.id) FROM individuals,identifications,taxons,individual_location,locations where individual_location.individual_id=individuals.id AND locations.id=individual_location.location_id AND identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt." AND locations.lft>=".$location->lft." AND locations.lft<=".$location->rgt;
+        $location = Location::select(['lft','rgt'])->findOrFail($scopeId);
+        $sql = "SELECT DISTINCT individuals.id FROM individuals,identifications,taxons,individual_location,locations where individual_location.individual_id=individuals.id AND locations.id=individual_location.location_id AND identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt." AND locations.lft>=".$location->lft." AND locations.lft<=".$location->rgt;
       }
       $query = DB::select($sql);
       return count($query);
@@ -616,43 +710,74 @@ class Taxon extends Node implements HasMedia
 
     public function vouchersCount($scope='all',$scopeId=null)
     {
-      $sql = "SELECT DISTINCT(vouchers.id) FROM vouchers,individuals,identifications,taxons where vouchers.individual_id=individuals.id AND identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id  AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
-      if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
-        $sql .= " AND individuals.project_id=".$scope_id;
+
+      $sql = "SELECT DISTINCT vouchers.id FROM vouchers,identifications,taxons where vouchers.individual_id=identifications.object_id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id  AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+
+      /*DATASET SCOPE */
+      if (('project' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
+        $sql = "SELECT DISTINCT vouchers.id FROM vouchers WHERE vouchers.individual_id IN (
+          SELECT identifications.object_id FROM identifications,taxons WHERE (identifications.object_type LIKE '%individual%')
+          AND (identifications.taxon_id=taxons.id  AND taxons.lft>='".$this->lft."' AND taxons.lft<='".$this->rgt."')) AND (
+            vouchers.dataset_id IN (SELECT datasets.id FROM datasets WHERE datasets.project_id='".$scopeId."')
+            OR vouchers.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%vouchers%' AND measurements.dataset_id IN (SELECT mdataset.id FROM datasets as mdataset WHERE mdataset.project_id='".$scopeId."'))
+          )";
       }
+
+      /*DATASET SCOPE */
       if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
-        $sql = "SELECT DISTINCT(vouchers.measured_id) FROM individuals,vouchers,measurements,identifications,taxons where identifications.object_id=individuals.id AND vouchers.individual_id=individuals.id AND identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE %individual%') AND identifications.taxon_id=taxons.id  AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
-        $sql .= " AND measurements.dataset_id=".$scope_id;
+        $sql = "SELECT DISTINCT vouchers.id FROM vouchers WHERE vouchers.individual_id IN (
+          SELECT identifications.object_id FROM identifications,taxons WHERE (identifications.object_type LIKE '%individual%')
+          AND (identifications.taxon_id=taxons.id  AND taxons.lft>='".$this->lft."' AND taxons.lft<='".$this->rgt."')) AND (
+            vouchers.dataset_id='".$scopeId."'
+            OR vouchers.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%vouchers%' AND measurements.dataset_id='".$scopeId."')
+          )";
       }
+
       if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
-        $location = Location::withoutGeom()->findOrFail($scopeId);
-        $sql = "SELECT DISTINCT(vouchers.id) FROM vouchers, individuals,identifications,taxons,individual_location,locations where vouchers.individual_id=individuals.id AND individual_location.individual_id=individuals.id AND locations.id=individual_location.location_id AND identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt." AND locations.lft>=".$location->lft." AND locations.lft<=".$location->rgt;
-      }
+        $location = Location::select(['lft','rgt'])->findOrFail($scopeId);
+        $sql = "SELECT DISTINCT vouchers.id FROM vouchers,measurements,identifications,taxons,individual_location,locations  where
+          (identifications.object_id=vouchers.individual_id AND (identifications.object_type LIKE '%individual%'))
+          AND (identifications.taxon_id=taxons.id  AND taxons.lft>='".$this->lft."' AND taxons.lft<='".$this->rgt."')
+          AND (
+            individual_location.individual_id=vouchers.individual_id AND locations.id=individual_location.location_id AND locations.lft>=".$location->lft." AND locations.lft<='".$location->rgt."'
+          )";
+    }
       $query = DB::select($sql);
       return count($query);
     }
 
     public function measurementsCount($scope='all',$scopeId=null)
     {
-      $sql = "SELECT DISTINCT(measurements.id) FROM individuals,measurements,identifications,taxons where  identifications.object_id=individuals.id AND identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+      $basewhere = " WHERE
+            ((
+              (
+              ((measurements.measured_type LIKE '%individual%')  AND measurements.measured_id=individuals.id)
+              OR
+              ((measurements.measured_type LIKE '%vouchers%')  AND measurements.measured_id=vouchers.id AND individuals.id=vouchers.individual_id)
+              )
+              AND (
+              (identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id)
+            ))
+            OR (
+              (measurements.measured_type LIKE '%taxon%')  AND measurements.measured_id=taxons.id)
+            )
+            AND taxons.lft>='".$this->lft."' AND taxons.lft<='".$this->rgt."'";
+       $basefrom = "SELECT DISTINCT measurements.id FROM individuals,measurements,identifications,taxons,vouchers";
+       $datasetwhere = " AND (datasets.id=vouchers.dataset_id OR datasets.id=individuals.dataset_id OR datasets.id=measurements.dataset_id)";
+       $sql = $basefrom.$basewhere;
+
       if (('projects' == $scope or 'App\Models\Project' == $scope) and $scopeId>0) {
-        $sql .= " AND individuals.project_id=".$scope_id;
-        $query = DB::select($sql);
-        return count($query);
+        $sql = $basefrom.",datasets ".$basewhere.$datasetwhere." AND datasets.project_id=".$scopeId;
       }
       if (('datasets' == $scope or 'App\Models\Dataset' == $scope) and $scopeId>0) {
-        $sql .= " AND measurements.dataset_id=".$scope_id;
-        $query = DB::select($sql);
-        return count($query);
+        $sql = $basefrom.",datasets ".$basewhere.$datasetwhere." AND datasets.id=".$scopeId;
       }
       if (('locations' == $scope or 'App\Models\Location' == $scope) and $scopeId>0) {
-        $sql = "SELECT DISTINCT(measurements.id) FROM measurements,identifications,taxons,individual_location where  identifications.object_id=individuals.id AND identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND individual_location.individual_id=identifications.object_id AND locations.id=individual_location.location_id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt." AND locations.lft>=".$location->lft." AND locations.lft<=".$location->rgt;
-        $query = DB::select($sql);
-        return count($query);
+        $sql = $basefrom.",individual_location,locations ".$basewhere." AND
+        (individual_location.individual_id=individuals.id AND locations.id=individual_location.location_id locations.lft>='".$location->lft."' AND  locations.lft<='".$location->rgt."')";
       }
-      $sql = "SELECT DISTINCT(measurements.id) FROM individuals,measurements,identifications,taxons where  identifications.object_id=individuals.id AND identifications.object_id=measurements.measured_id AND (identifications.object_type LIKE '%individual%') AND (measurements.measured_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
       $query = DB::select($sql);
-      return count($query)+$this->measurements()->count();
+      return count($query);
     }
 
 
@@ -660,11 +785,13 @@ class Taxon extends Node implements HasMedia
     public function all_media_count()
     {
       //media linked to individuals identified by the taxon or taxon descendants
-      $sql = "SELECT DISTINCT(media.id) FROM individuals,media,identifications,taxons where  identifications.object_id=individuals.id AND media.model_id=individuals.id AND (media.model_type LIKE '%individual%') AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+      $type = "%individual%";
+
+      $sql = "SELECT DISTINCT(media.id) FROM individuals,media,identifications,taxons where  identifications.object_id=individuals.id AND media.model_id=individuals.id AND (media.model_type LIKE '$type') AND (identifications.object_type LIKE '$type') AND identifications.taxon_id=taxons.id AND taxons.lft>=$this->lft AND taxons.lft <=$this->rgt";
       $query = DB::select($sql);
 
       //media linked to taxon or descendants
-      $sql = "SELECT DISTINCT(media.id) FROM media,taxons where (media.model_type LIKE '%taxons%') AND media.model_id=taxons.id AND taxons.lft>=".$this->lft." AND taxons.lft<=".$this->rgt;
+      $sql = "SELECT DISTINCT(media.id) FROM media,taxons where (media.model_type LIKE '%taxons%') AND media.model_id=taxons.id AND taxons.lft>=$this->lft AND taxons.lft<=$this->rgt";
       $query2 = DB::select($sql);
 
       //return unique count
@@ -742,6 +869,11 @@ class Taxon extends Node implements HasMedia
     public static function getTableName()
     {
         return (new self())->getTable();
+    }
+
+    public function getBasisOfRecordAttribute()
+    {
+      return 'Taxon';
     }
 
 

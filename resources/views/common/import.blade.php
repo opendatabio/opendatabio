@@ -39,6 +39,9 @@
           case 'individuals':
               $action = 'import-individuals';
               break;
+          case 'individuallocations':
+              $action = 'import-individuallocations';
+              break;
           case 'taxons':
               $action = 'import-taxons';
               break;
@@ -94,6 +97,8 @@
           </div>
         @endif
 
+
+        <!--
         @if ($model == 'locations')
           <div class="form-group">
             <label for="location_parent_ignore" class="col-sm-4 control-label">
@@ -103,12 +108,6 @@
               <input type="checkbox" name="parent_options" value='ignore' >
               &nbsp;&nbsp;
               <a data-toggle="collapse" href="#hint_parent_ignore" class="btn btn-sm btn-default">?</a>
-              <!-- <?php // TODO: parent force locations? ?>
-              <br>
-              <input type="radio" name="parent_options" value='force' >
-              @lang('messages.parent_force')
-              <a data-toggle="collapse" href="#hint_parent_force" class="btn btn-sm btn-default">?</a>
-            -->
             </div>
             <div class="col-sm-12">
               <div id="hint_parent_ignore" class="panel-collapse collapse">
@@ -120,7 +119,7 @@
             </div>
           </div>
         @endif
-
+        --->
 
 
 

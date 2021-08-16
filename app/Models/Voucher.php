@@ -15,7 +15,7 @@ use Lang;
 use DB;
 use App\Models\IndividualLocation;
 use App\Models\Location;
-use App\Models\Project;
+use App\Models\Dataset;
 
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
@@ -27,7 +27,7 @@ class Voucher extends Model
 
     protected $fillable = [
       'individual_id', 'biocollection_id', 'biocollection_type',
-      'number', 'date', 'notes', 'project_id','biocollection_number'];
+      'number', 'date', 'notes', 'dataset_id','biocollection_number'];
 
     //add attributes for automatic use in datatabe
     //protected $appends = ['location_id'];
@@ -65,30 +65,18 @@ class Voucher extends Model
     {
         parent::boot();
 
-        static::addGlobalScope('projectScope', function (Builder $builder) {
+        static::addGlobalScope('datasetScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->whereRaw('vouchers.id IN
-(SELECT p1.id FROM vouchers AS p1
-JOIN projects ON (projects.id = p1.project_id)
-WHERE projects.privacy = 2)');
+                return $builder->whereRaw('(vouchers.dataset_id IS NULL) OR vouchers.id IN (SELECT p1.id FROM vouchers AS p1 JOIN datasets ON datasets.id = p1.dataset_id WHERE datasets.privacy >='.Dataset::PRIVACY_REGISTERED.')');
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {
                 return $builder;
             }
             // now the complex case: the regular user
-            return $builder->whereRaw('vouchers.id IN
-(SELECT p1.id FROM vouchers AS p1
-JOIN projects ON (projects.id = p1.project_id)
-WHERE projects.privacy > 0
-UNION
-SELECT p1.id FROM vouchers AS p1
-JOIN projects ON (projects.id = p1.project_id)
-JOIN project_user ON (projects.id = project_user.project_id)
-WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
-)');
-        });
+            return $builder->whereRaw('(vouchers.dataset_id IS NULL) OR vouchers.id IN (SELECT vouchers.id FROM vouchers JOIN datasets ON datasets.id=vouchers.dataset_id JOIN dataset_user ON dataset_user.dataset_id=datasets.id WHERE (datasets.privacy >='.Dataset::PRIVACY_REGISTERED.') OR dataset_user.user_id='.Auth::user()->id.')');
+          });
     }
 
 
@@ -99,7 +87,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     }
 
 
-    //voucher location is the location of the individual it relates
+    //voucher location is the location of the individual (the closes in date)
     //this direct functions are to GET data only, not to set the location for a voucher
     public function locations()
     {
@@ -108,39 +96,20 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
           'individual_id',
           'individual_id'
         );
-      /*
-      return $this->hasManyThrough(
-                  Location::class,
-                  IndividualLocation::class,
-                  'individual_id', // Foreign key on the individual_location table...
-                  'id', // Foreign key on the locations table...
-                  'individual_id', // Local key on the vouchers table...
-                  'location_id' // Local key on the individual_location table...
-            );
-        */
-
     }
+
+    /* get closest location if many */
     public function location_first()
     {
-      return $this->locations()->where('first',1);
-      /*
-      return $this->locations()->addSelect([
-            'date_time',
-            'individual_location.notes as locationNote',
-            'individual_location.altitude as locationAltitude',
-            'odb_ind_relativePosition(relative_position)',
-            ])
-            ->where('individual_location.first',1);
-      */
-    }
-
-    public function getLongitudeAttribute()
-    {
-      return (float) $this->locationWithGeom->centroid["x"];
-    }
-    public function getLatitudeAttribute( )
-    {
-      return (float) $this->locationWithGeom->centroid["y"];
+      if ($this->locations->count()==0) {
+        return null; //this should not exists;
+      }
+      $date = explode("-",$this->date);
+      $valid_date = checkdate($date[1],$date[2],$date[0]);
+      if ($this->locations->count()==1 or !$valid_date) {
+        return $this->locations()->where('first',1);
+      }
+      return $this->locations()->orderByRaw(" ABS(DATEDIFF(date_time, '".$date."')), id" )->limit(1);
     }
 
     // with access to the location geom field
@@ -151,16 +120,6 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
           return Location::withGeom()->addSelect('id', 'name')->find($id);
         }
         return;
-    }
-
-    public function getLocationNameAttribute()
-    {
-      return $this->location_first->first()->location_name;
-    }
-
-    public function getLocationFullnameAttribute()
-    {
-      return $this->location_first->first()->location_fullname;
     }
 
     public function getLocationDisplayAttribute()
@@ -191,74 +150,6 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
                     )->where('object_type', 'App\Models\Individual');
     }
 
-    /* IDENTIFICATION ATTRIBUTES ASSESSORS */
-    public function getTaxonNameAttribute()
-    {
-        if ($this->identification) {
-            return $this->identification->taxon->fullname;
-        }
-        return Lang::get('messages.unidentified');
-    }
-
-    public function getTaxonNameModifierAttribute()
-    {
-      $modifier = null;
-      if ($this->identification) {
-        $modifier = $this->identification->modifier;
-        if ($modifier>0) {
-          $modifier = Lang::get('levels.modifier.'.$modifier);
-          //$modifier = " (".$modifier.")";
-        } else {
-          $modifier = null;
-        }
-      }
-      return $modifier;
-    }
-
-
-    public function getTaxonNameWithAuthorAttribute()
-    {
-        if ($this->identification) {
-            return $this->identification->taxon->getFullnameWithAuthor();
-        }
-        return Lang::get('messages.unidentified');
-    }
-
-    public function getTaxonFamilyAttribute()
-    {
-      if ($this->identification) {
-          return $this->identification->taxon->family;
-      }
-      return Lang::get('messages.unidentified');
-    }
-
-    public function getIdentificationDateAttribute()
-    {
-      if ($this->identification) {
-          return $this->identification->formatDate;
-      }
-      return null;
-    }
-
-    public function getIdentifiedByAttribute()
-    {
-      if ($this->identification) {
-          return $this->identification->person->abbreviation;
-      }
-      return Lang::get('messages.unidentified');
-    }
-
-    public function getIdentificationNotesAttribute()
-    {
-      if ($this->identification) {
-          $text = "";
-          if ($this->identification->biocollection_id) {
-            $text = Lang::get('messages.identification_based_on')." ".Lang::get('messages.voucher')." #".$this->identification->biocollection_reference." @".$this->identification->biocollection->acronym.". ";
-          }
-          return $text.$this->identification->notes;
-      }
-      return "";
-    }
 
 
     public function newQuery($excludeDeleted = true)
@@ -268,7 +159,7 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
             'vouchers.id',
             'vouchers.number',
             'vouchers.individual_id',
-            'vouchers.project_id',
+            'vouchers.dataset_id',
             'vouchers.date',
             'vouchers.notes',
             'vouchers.biocollection_id',
@@ -301,71 +192,17 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
           return $this->collectors()->where('main',1);
       }
 
-      //ASSESSORS OR MUTATORS - DEFINED AS ATTRIBUTES
-        //1. fullname attribute depends on type of collector and for voucher is the taxonomy museum standard of collector+collector_number
-        /*public function getFullNameAttribute()
-        {
-            return $this->FullName;
-            if ($this->collector_main()->count()) {
-                return $this->main_collector.' - '.$this->number;
-            }
-            return $this->main_collector." - ".$this->individual->tag;
-
-        }
-        */
-        //voucher collector_main attribute depends on type of collector
-        public function getMainCollectorAttribute()
-        {
-            if ($this->collectors()->count()) {
-                return $this->collector_main()->first()->person->abbreviation;
-            }
-            return $this->individual->main_collector;
-        }
-
-        public function getCollectorNumberAttribute()
-        {
-          if ($this->collectors()->count()) {
-              return $this->number;
-          }
-          return $this->individual->tag;
-        }
-
-
-        //full list of collectors for display and exports, pipe delimited
-        public function getAllCollectorsAttribute()
-        {
-            if ($this->collectors()->count()) {
-                $collectors = $this->collectors();
-                $persons = $collectors->cursor()->map(function($q) { return $q->person->abbreviation;})->toArray();
-                $persons = implode(' | ',$persons);
-            } else {
-                $persons = $this->individual->all_collectors;
-            }
-            return $persons;
-        }
-
-
-        public function getCollectionDateAttribute()
-        {
-          if ($this->collectors()->count()) {
-            return $this->formatDate;
-          } else {
-            return $this->individual->formatDate;
-          }
-        }
-
-
-    /* PROJECT */
-    public function project()
+    /* DATASET */
+    public function dataset()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Dataset::class);
     }
-    public function getProjectNameAttribute()
+    public function getDatasetNameAttribute()
     {
-        if ($this->project) {
-            return $this->project->name;
+        if ($this->dataset) {
+            return $this->dataset->name;
         }
-        return 'Unknown project';
+        return 'Unknown dataset';
     }
 
     /* BIOCOLLECTION RELATIONS */
@@ -385,24 +222,10 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         }
       }
 
-      public function getBiocollectionAcronymAttribute()
-      {
-        return $this->biocollection->acronym;
-      }
 
-      /*
-      public function getBiocollectionNumberAttribute()
+      public function getOrganismIDAttribute()
       {
-        if ($this->biocollection_number) {
-          return $this->biocollection_number;
-        }
-        return "";
-      }
-      */
-
-      public function getIndividualFullnameAttribute()
-      {
-        return $this->individual->fullname;
+        return $this->individual->organismID;
       }
 
     /*
@@ -418,6 +241,8 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
         ->where('custom_properties','like','%'.$searchStr.'%');
     }
 
+
+
     public static function getTableName()
     {
         return (new self())->getTable();
@@ -429,6 +254,203 @@ WHERE projects.privacy = 0 AND project_user.user_id = '.Auth::user()->id.'
     public function identifiableName()
     {
         return $this->fullname;
+    }
+
+    /*dwc terms */
+    public function getOccurrenceIDAttribute()
+    {
+      $this->fullname;
+    }
+
+    public function getCollectionCodeAttribute()
+    {
+      return $this->biocollection->acronym;
+    }
+    public function getCatalogNumberAttribute()
+    {
+      return $this->biocollection_number;
+    }
+    public function getRecordedByMainAttribute()
+    {
+        if ($this->collectors()->count()) {
+            return $this->collector_main()->first()->person->abbreviation;
+        }
+        return $this->individual->recordedByMain;
+    }
+
+    public function getRecordNumberAttribute()
+    {
+      if ($this->collectors()->count()) {
+          return $this->number;
+      }
+      return $this->individual->tag;
+    }
+
+
+    //full list of collectors for display and exports, pipe delimited
+    public function getRecordedByAttribute()
+    {
+        if ($this->collectors()->count()) {
+            $collectors = $this->collectors();
+            $persons = $collectors->cursor()->map(function($q) { return $q->person->abbreviation;})->toArray();
+            $persons = implode(' | ',$persons);
+        } else {
+            $persons = $this->individual->recordedBy;
+        }
+        return $persons;
+    }
+
+
+    public function getRecordedDateAttribute()
+    {
+      if ($this->collectors()->count()) {
+        return $this->formatDate;
+      } else {
+        return $this->individual->formatDate;
+      }
+    }
+
+    /* IDENTIFICATION ATTRIBUTES ASSESSORS */
+    public function getScientificNameAttribute()
+    {
+        if ($this->identification and $this->identification->taxon) {
+            return $this->identification->taxon->fullname;
+        }
+        return Lang::get('messages.unidentified');
+    }
+    public function getFamilyAttribute()
+    {
+        if ($this->identification) {
+            return $this->identification->taxon->family;
+        }
+        return Lang::get('messages.unidentified');
+    }
+    public function getGenusAttribute()
+    {
+        if ($this->identification) {
+            return $this->identification->taxon->genus;
+        }
+        return Lang::get('messages.unidentified');
+    }
+    public function getIdentificationQualifierAttribute()
+    {
+      $modifier = null;
+      if ($this->identification) {
+        $modifier = $this->identification->modifier;
+        if ($modifier>0) {
+          $modifier = Lang::get('levels.modifier.'.$modifier);
+        }
+      }
+      return $modifier;
+    }
+    public function getScientificNameWithAuthorAttribute()
+    {
+        if ($this->identification) {
+            return $this->identification->taxon->getFullnameWithAuthor();
+        }
+        return Lang::get('messages.unidentified');
+    }
+    public function getDateIdentifiedAttribute()
+    {
+      if ($this->identification) {
+          return $this->identification->date;
+      }
+      return null;
+    }
+    public function getIdentifiedByAttribute()
+    {
+      if ($this->identification) {
+          return $this->identification->person->abbreviation;
+      }
+      return Lang::get('messages.unidentified');
+    }
+    public function getIdentificationRemarksAttribute()
+    {
+      if ($this->identification) {
+          $text = "";
+          if ($this->identification->biocollection_id) {
+            $text = Lang::get('messages.identification_based_on')." ".Lang::get('messages.voucher')." #".$this->identification->biocollection_reference." @".$this->identification->biocollection->acronym.". ";
+          }
+          return $text.$this->identification->notes;
+      }
+      return "";
+    }
+    public function getLocationNameAttribute()
+    {
+      return $this->location_first->first()->location_name;
+    }
+
+    public function getHigherGeographyAttribute()
+    {
+      return $this->individual->higherGeography;
+    }
+
+    public function getDecimalLongitudeAttribute()
+    {
+      return (float) $this->individual->decimalLongitude;
+    }
+    public function getDecimalLatitudeAttribute()
+    {
+      return (float) $this->individual->decimalLatitude;
+    }
+    public function getGeoreferenceRemarksAttribute()
+    {
+      return $this->individual->georeferenceRemarks;
+    }
+
+
+    public function getOccurrenceRemarksAttribute()
+    {
+      $notes = [];
+      if ($this->notes) {
+        $notes[]= $this->notes;
+      }
+      if (isset($this->individual->notes)) {
+        $notes[] = $this->individual->notes;
+      }
+      return implode(" | ",$notes);
+    }
+
+    public function getTypeStatusAttribute()
+    {
+      return Lang::get('levels.vouchertype.'.$this->biocollection_type);
+    }
+
+    public function getAssociatedMediaAttribute()
+    {
+      $media = $this->media;
+      if ($media->count()) {
+        $result = $media->cursor()->map(function($v){
+            return url('media/'.$v->id);
+        })->toArray();
+        return implode(" | ",$result);
+      }
+      return null;
+    }
+    public function getAccessRightsAttribute()
+    {
+      if ($this->dataset) {
+        return $this->dataset->accessRights;
+      }
+      return "Open access";
+    }
+    public function getBibliographicCitationAttribute()
+    {
+      if ($this->dataset) {
+        return $this->dataset->bibliographicCitation;
+      }
+      return null;
+    }
+    public function getBasisOfRecordAttribute()
+    {
+      return 'PreservedSpecimens';
+    }
+    public function getLicenseAttribute()
+    {
+      if ($this->dataset) {
+        return $this->dataset->dwcLicense;
+      }
+      return null;
     }
 
 }

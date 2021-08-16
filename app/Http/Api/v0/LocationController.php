@@ -92,19 +92,16 @@ class LocationController extends Controller
 
         $fields = ($request->fields ? $request->fields : 'simple');
         // NOTE that "distance" as a field is only defined for querytype='closest', but it is ignored for other queries
-        $simple =  ['id', 'name', 'levelName', 'geom', 'distance','parentName','parent_id','x','y','startx','starty','centroid_raw','area'];
-        //include here to be able to add mutators and categories
-        if ('all' == $fields) {
-            $keys = array_keys($locations->first()->toArray());
-            $fields = array_merge($simple,$keys);
-            $fields =  implode(',',$fields);
+        $possible_fields = config('api-fields.locations');
+        $field_sets = array_keys($possible_fields);
+        if (in_array($fields,$field_sets)) {
+            $fields = implode(",",$possible_fields[$fields]);
         }
-
         $locations = $locations->cursor();
         if ($fields=="id") {
           $locations = $locations->pluck('id')->toArray();
         } else {
-          $locations = $this->setFields($locations, $fields, $simple);
+          $locations = $this->setFields($locations, $fields, null);
         }
 
         return $this->wrap_response($locations);

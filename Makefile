@@ -81,6 +81,11 @@ logs-mysql:
 
 drop-migrate:
 	@make exec cmd="php artisan migrate:fresh"
+	@make exec-bash cmd="rm -r storage/app/public/downloads/*"
+	@make exec-bash cmd="rm -r storage/app/public/tmp/*"
+	@make exec-bash cmd="rm -r storage/app/public/downloads/*"
+	@make exec-bash cmd="rm -r storage/app/public/media/*"
+	@make exec cmd="php artisan optimize"
 
 migrate:
 	@make exec cmd="php artisan migrate --force"
@@ -89,5 +94,7 @@ optimize:
 	@make exec cmd="php artisan cache:clear"
 	@make exec cmd="php artisan view:clear"
 	@make exec cmd="php artisan config:clear"
-	@make exec cmd="echo '' > storage/logs/laravel.log"
-	@make exec cmd="echo '' > storage/logs/supervisor.log"
+	@make exec-bash cmd="echo '' > storage/logs/laravel.log"
+	@make exec-bash cmd="echo '' > storage/logs/supervisor.log"
+	@make exec-bash cmd="rm -r storage/app/public/downloads/*"
+	@make exec-bash cmd="rm -r storage/app/public/tmp/*"

@@ -87,20 +87,17 @@ class MeasurementController extends Controller
         }
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $simple = ['id', 'measured_type', 'measured_id', 'traitName', 'valueActual','valueDate','traitUnit','datasetName'];
-        $other = ['measuredFullname', 'measuredTaxonName','measuredTaxonFamily','measuredProject'];
-        //include here to be able to add mutators and categories
-        if ('all' == $fields) {
-            $keys = array_keys($measurements->first()->toArray());
-            $fields = array_merge($simple,$keys,$other);
-            $fields =  implode(',',$fields);
+        $possible_fields = config('api-fields.measurements');
+        $field_sets = array_keys($possible_fields);
+        if (in_array($fields,$field_sets)) {
+            $fields = implode(",",$possible_fields[$fields]);
         }
 
         $measurements = $measurements->cursor();
         if ($fields=="id") {
           $measurements = $measurements->pluck('id')->toArray();
         } else {
-          $measurements = $this->setFields($measurements, $fields, $simple);
+          $measurements = $this->setFields($measurements, $fields, null);
         }
         return $this->wrap_response($measurements);
     }

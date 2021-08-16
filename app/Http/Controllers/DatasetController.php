@@ -8,6 +8,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Response;
 use Illuminate\Support\Facades\Storage;
 use App\DataTables\DatasetsDataTable;
 use App\Jobs\DownloadDataset;
@@ -26,6 +27,7 @@ use Gate;
 use Mail;
 use App\Models\UserJob;
 use Log;
+use Validator;
 
 use Activity;
 use App\Models\ActivityFunctions;
@@ -34,6 +36,19 @@ use App\DataTables\ActivityDataTable;
 
 class DatasetController extends Controller
 {
+
+    // Functions for autocompleting project
+    // filter by those the user is an admin or collabs
+    public function autocomplete(Request $request)
+    {
+        $datasets = Auth::user()->editableDatasets()->where('datasets.name', 'LIKE', ['%'.$request->input('query').'%'])
+            ->selectRaw('datasets.id as data, datasets.name as value')
+            ->orderBy('datasets.name', 'ASC')
+            ->get();
+        return Response::json(['suggestions' => $datasets]);
+    }
+
+
 
     /**
      * Display a listing of the resource.download_dispatched
@@ -84,6 +99,57 @@ class DatasetController extends Controller
         return view('datasets.create', compact('fullusers', 'allusers', 'tags', 'references','persons'));
     }
 
+
+
+    /**
+     * Validate dataset request
+     *
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return Validator
+     */
+    public function customValidate(Request $request, $id = null)
+    {
+        /* define rules */
+        $fullusers = User::where('access_level', '=', User::USER)
+        ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
+        $fullusers = implode(',', $fullusers->all());
+        $licenses = implode(',',config('app.creativecommons_licenses'));
+        $rules = [
+            'name' => 'required|string|max:50',
+            'privacy' => 'required|integer',
+            'admins' => 'required_unless:privacy,'.Dataset::PRIVACY_PROJECT.'|array|min:1',
+            'admins.*' => 'numeric|in:'.$fullusers,
+            'collabs' => 'nullable|array',
+            'collabs.*' => 'numeric|in:'.$fullusers,
+            'title' => 'nullable|string|max:191|required_if:privacy,'.Dataset::PRIVACY_REGISTERED.','.Dataset::PRIVACY_PUBLIC,
+            'license' => 'nullable|string|max:191|in:'.$licenses.'|required_if:privacy,'.Dataset::PRIVACY_REGISTERED.','.Dataset::PRIVACY_PUBLIC,
+            'project_id' => 'nullable|integer|required_if:privacy,'.Dataset::PRIVACY_PROJECT,
+            'description' => 'nullable|string|max:500',
+            'authors' => 'nullable|array'
+        ];
+        $validator = Validator::make($request->all(), $rules);
+
+        /*check for duplicated entries */
+        $validator->after(function ($validator) use ($request,  $id) {
+            $query = "name like '".$request->name."'";
+            if ($request->title) {
+                $query = "(".$query."  OR title like '".$request->title."')";
+            }
+            if (!is_null($id)) {
+              $query .= " AND WHERE id<>".$id;
+            }
+            $has_similar = Dataset::whereRaw($query)->cursor();
+            if ($has_similar->count() > 0) {
+              $validator->errors()->add('name', Lang::get('messages.dataset_name_or_title_duplicated'));
+              return;
+            }
+        });
+
+        return $validator;
+    }
+
+
     /**
      * Store a newly created resource in storage.
      *
@@ -94,50 +160,47 @@ class DatasetController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Dataset::class);
-        $fullusers = User::where('access_level', '=', User::USER)
-            ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
-        $fullusers = implode(',', $fullusers->all());
-        $licenses = implode(',',config('app.creativecommons_licenses'));
-        $this->validate($request, [
-            'name' => 'required|string|max:50',
-            'privacy' => 'required|integer',
-            'admins' => 'required|array|min:1',
-            'admins.*' => 'numeric|in:'.$fullusers,
-            'collabs' => 'nullable|array',
-            'collabs.*' => 'numeric|in:'.$fullusers,
-            'title' => 'nullable|string|max:191|required_if:privacy,'.Dataset::PRIVACY_PUBLIC,
-            'license' => 'nullable|string|max:191|in:'.$licenses.'|required_if:privacy,'.Dataset::PRIVACY_PUBLIC,
-        ]);
+        $validator = $this->customValidate($request);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
         //add version to license field
         $newlicense = null;
         if (isset($request->license)) {
           $version = isset($request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
           $newlicense = $request->license." ".$version;
         }
-        $data = $request->only(['name', 'description', 'privacy', 'policy','metadata','title','license']);
+        //store the new dataset record
+        $data = $request->only(['name', 'description', 'privacy', 'policy','metadata','title','license','project_id']);
         $data['license'] = $newlicense;
         $dataset = Dataset::create($data);
-        $dataset->setusers($request->viewers, $request->collabs, $request->admins);
+        //if not a project dataset, set users
+        if ($request->privacy != Dataset::PRIVACY_PROJECT) {
+            $dataset->setusers($request->viewers, $request->collabs, $request->admins);
+        }
+        //link any informed keywords
         $dataset->tags()->attach($request->tags);
 
         /*mandatory references */
-        $references = array();
+        $references = [];
         if (is_array($request->references)) {
           foreach($request->references as $bib_reference_id) {
-              $references[] = array(
+              $references[] = [
                 'bib_reference_id' => $bib_reference_id,
                 'mandatory' => 1
-              );
+              ];
           }
         }
         /* aditional references */
         if (is_array($request->references_aditional)) {
           foreach($request->references_aditional as $bib_reference_id) {
             if (!in_array($bib_reference_id,$request->references)) {
-              $references[] = array(
+              $references[] = [
                 'bib_reference_id' => $bib_reference_id,
                 'mandatory' => 0
-              );
+              ];
             }
           }
         }
@@ -146,16 +209,17 @@ class DatasetController extends Controller
         }
 
         //authors
-        $first = true;
-        foreach ($request->authors as $author) {
-            $theauthor = new Collector(['person_id' => $author]);
-            if ($first) {
-                $theauthor->main = 1;
-            }
-            $dataset->authors()->save($theauthor);
-            $first = false;
+        if (isset($request->authors) and is_array($request->authors)) {
+          $first = true;
+          foreach ($request->authors as $author) {
+              $theauthor = new Collector(['person_id' => $author]);
+              if ($first) {
+                  $theauthor->main = 1;
+              }
+              $dataset->authors()->save($theauthor);
+              $first = false;
+          }
         }
-
         return redirect('datasets/'.$dataset->id)->withStatus(Lang::get('messages.stored'));
     }
 
@@ -173,8 +237,7 @@ class DatasetController extends Controller
 
         //with(['measurements.measured', 'measurements.odbtrait'])->
         //Summarize data set (only direct links are reported)
-        $trait_summary = $dataset->traits_summary();
-        return view('datasets.show', compact('dataset','trait_summary'));
+        return view('datasets.show', compact('dataset'));
     }
 
 
@@ -207,36 +270,26 @@ class DatasetController extends Controller
      */
     public function update(Request $request, $id)
     {
-
-
-
         $dataset = Dataset::findOrFail($id);
         $this->authorize('update', $dataset);
-        $fullusers = User::where('access_level', '=', User::USER)
-            ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
-        $fullusers = implode(',', $fullusers->all());
-        $licenses = implode(',',config('app.creativecommons_licenses'));
-        $this->validate($request, [
-            'name' => 'required|string|max:50',
-            'privacy' => 'required|integer',
-            'admins' => 'required|array|min:1',
-            'admins.*' => 'numeric|in:'.$fullusers,
-            'collabs' => 'nullable|array',
-            'collabs.*' => 'numeric|in:'.$fullusers,
-            'title' => 'nullable|string|max:191|required_if:privacy,'.Dataset::PRIVACY_PUBLIC,
-            'license' => 'nullable|string|max:191|in:'.$licenses.'|required_if:privacy,'.Dataset::PRIVACY_PUBLIC,
-        ]);
+        $validator = $this->customValidate($request);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
         //add version to license field
         $newlicense = null;
         if (isset($request->license)) {
           $version = isset($request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
           $newlicense = $request->license." ".$version;
         }
-        $data = $request->only(['name', 'description', 'privacy', 'policy','metadata','title','license']);
+        $data = $request->only(['name', 'description', 'privacy', 'policy','metadata','title','license','project_id']);
         $data['license'] = $newlicense;
         $dataset->update($data);
         $dataset->setusers($request->viewers, $request->collabs, $request->admins);
         $dataset->tags()->sync($request->tags);
+
         /*mandatory references */
         $references = array();
         if (is_array($request->references)) {
@@ -446,8 +499,22 @@ class DatasetController extends Controller
     public function summarize_identifications($id)
     {
       $dataset = Dataset::findOrFail($id);
-      $html = view("datasets.taxoninfo",compact('dataset'))->render();
+      $identification_summary = $dataset->identification_summary();
+      $taxonomic_summary = $dataset->taxonomic_summary();
+      $html = view("datasets.taxoninfo",compact('dataset','identification_summary','taxonomic_summary'))->render();
       return $html;
     }
+
+    public function summarize_contents($id)
+    {
+      $dataset = Dataset::findOrFail($id);
+      $trait_summary = $dataset->traits_summary();
+      $data_included = $dataset->data_included();
+      $plot_included = $dataset->plot_included();
+      $html = view("datasets.summary",compact('dataset','trait_summary','data_included','plot_included'))->render();
+      return $html;
+    }
+
+
 
 }

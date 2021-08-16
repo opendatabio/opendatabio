@@ -153,6 +153,7 @@ return [
     | shall be made avaliable for Datasets, Pictures and Occurrence data in Projects.
     | The version is informed separately
     | Name for popus are defined in lang/levels
+    | most restrictive last in array (least first)
     */
     'creativecommons_licenses' => env('CREATIVECOMMONS_LICENSES', ['CC0','CC-BY','CC-BY-SA','CC-BY-ND','CC-BY-NC','CC-BY-NC-SA','CC-BY-NC-ND']),
     'creativecommons_version' => env('CREATIVECOMMONS_VERSIONS',['4.0']),

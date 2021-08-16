@@ -3,7 +3,7 @@
 namespace App\Models;
 
 //use Illuminate\Database\Eloquent\Model;
-use App\Scopes\MediaProjectScope;
+use App\Scopes\MediaDatasetScope;
 use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
 use CodeInc\StripAccents\StripAccents;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -18,12 +18,13 @@ class Media extends BaseMedia
     //only the `deleted` event will get logged automatically
     protected static $recordEvents = ['deleted'];
 
-    /* adds project to fillable */
+    /* adds dataset to fillable */
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $this->mergeFillable(['project_id']);
+        $this->mergeFillable(['dataset_id']);
     }
+
 
 
     public function rawLink()
@@ -31,6 +32,7 @@ class Media extends BaseMedia
         return "<em><a href='".url('media/'.$this->id)."'>".htmlspecialchars($this->fullname).'</a></em>';
     }
 
+    /* this must be turned into a unique ID */
     public function getFullnameAttribute()
     {
       return $this->media_type." ".Lang::get('messages.for')." ".$this->model->fullname;
@@ -43,7 +45,7 @@ class Media extends BaseMedia
     */
     protected static function booted()
     {
-       static::addGlobalScope(new MediaProjectScope);
+       static::addGlobalScope(new MediaDatasetScope);
      }
 
     /* adjust GET query key names
@@ -72,7 +74,7 @@ class Media extends BaseMedia
              'media.order_column',
              'media.created_at',
              'media.updated_at',
-             'media.project_id'
+             'media.dataset_id'
          );
      }
 
@@ -82,33 +84,19 @@ class Media extends BaseMedia
       return $this->morphMany(Collector::class, 'object')->with('person');
     }
 
-    public function getTaxonNameAttribute()
+
+
+    /* dataset */
+    public function dataset()
     {
-      if ($this->model_type == 'App\Models\Individual' or $this->model_type == 'App\Models\Voucher' ) {
-        return $this->model()->withoutGlobalScopes()->first()->taxon_name;
-      }
-      if ($this->model_type == 'App\Models\Taxon' ) {
-        return $this->model()->first()->fullname;
-      }
-      return null;
+        return $this->belongsTo(Dataset::class);
     }
-
-
-
-
-
-
-    /* PROJECT */
-    public function project()
+    public function getDatasetNameAttribute()
     {
-        return $this->belongsTo(Project::class);
-    }
-    public function getProjectNameAttribute()
-    {
-        if ($this->project) {
-            return $this->project->name;
+        if ($this->dataset) {
+            return $this->dataset->name;
         }
-        return 'Unknown project';
+        return 'Unknown dataset';
     }
 
     /* MEDIA AUTHORS */
@@ -118,7 +106,7 @@ class Media extends BaseMedia
           return null;
         }
         $persons = $this->collectors->map(function($person) { return $person->person->abbreviation;})->toArray();
-        $persons = implode(' & ',$persons);
+        $persons = implode(' | ',$persons);
         return $persons;
     }
 
@@ -197,6 +185,15 @@ class Media extends BaseMedia
 
     public function getLicenseAttribute()
     {
+      $dataset_license = $this->dataset ? $this->dataset->license : null;
+      return ($dataset_license!=null) ? $dataset_license : $this->getCustomProperty('license');
+    }
+
+    public function getDwcLicenseAttribute()
+    {
+      if ($this->dataset) {
+        return $this->dataset->dwcLicense;
+      }
       return $this->getCustomProperty('license');
     }
 
@@ -230,7 +227,7 @@ class Media extends BaseMedia
     public function gallery_citation($iconsSizeClass='fa-2x')
     {
       //$icons= $this->license_icons($iconsSizeClass);
-      $taxon = (null != $this->taxon_name) ? '<em>'.$this->taxon_name."</em>. " : "";
+      $taxon = (null != $this->scientificName) ? '<em>'.$this->scientificName."</em>. " : "";
       $title = (null != $this->description and preg_match("/missing/i",$this->description)==0) ? "<strong>".$this->description."</strong>. " : "";
       $authors = (null != $this->abbreviated_collectors) ? $this->abbreviated_collectors." " : "";
       $size = "<small>".$this->human_readable_size."</small>";
@@ -254,9 +251,9 @@ class Media extends BaseMedia
         $title .= $this->title.". ";
         $bibtitle .= $title;
       }
-      if (null != $this->taxon_name) {
-        $title .= '<em>'.$this->taxon_name."</em>. ";
-        $bibtitle .= $this->taxon_name;
+      if (null != $this->scientificName) {
+        $title .= '<em>'.$this->scientificName."</em>. ";
+        $bibtitle .= $this->scientificName;
       }
       $title = "<strong>".$title."</strong>";
       $year = (null != $this->year) ? "(".$this->year.") " : "";
@@ -312,5 +309,125 @@ class Media extends BaseMedia
     {
         return $this->measurements()->withoutGlobalScopes()->count();
     }
+
+
+
+    public function individualIdentification()
+    {
+      return $this->hasOne(Identification::class, 'individual_id', 'model_id')->where('identifications.object_type','App\Models\Individual')->where('media.model_type','App\Models\Individual');
+    }
+
+    public function voucherIdentification($value='')
+    {
+      return $this->hasOneThrough(
+            Identification::class,
+            Voucher::class,
+            'individual_id', // Foreign key on the Voucher table...
+            'individual_id', // Foreign key on the Identification table...
+            'model_id', // Local key on the media table...
+            'id' // Local key on the Voucher table...
+        )->where('media.model_type','App\Models\Voucher');
+    }
+
+
+    /*dwc objects */
+    public function getScientificNameAttribute()
+    {
+      if ($this->model_type == Individual::class or $this->model_type == Voucher::class ) {
+        return $this->model()->withoutGlobalScopes()->first()->scientificName;
+      }
+      if ($this->model_type == Taxon::class ) {
+        return $this->model->fullname;
+      }
+      return null;
+    }
+
+    public function getAccessRightsAttribute()
+    {
+      $dataset = $this->dataset;
+      $rights = "Open access.";
+      if ($this->dataset) {
+          return $dataset->accessRights;
+     }
+     return $rights;
+    }
+    public function getResourceRelationshipAttribute()
+    {
+      $measured_type = $this->model_type;
+      switch ($measured_type) {
+          case "App\Models\Individual":
+            $type = 'Organism';
+            break;
+          case "App\Models\Voucher":
+            $type = 'PreservedSpecimen';
+            break;
+          case "App\Models\Taxon":
+            $type = 'Taxon';
+            break;
+          case "App\Models\Location":
+            $type = 'Location';
+            break;
+        default:
+          $type=null;
+          break;
+      }
+      return $type;
+    }
+
+    public function getResourceRelationshipIDAttribute()
+    {
+      return isset($this->model->fullname) ? $this->model->fullname : $this->model->name;
+    }
+    public function getRelationshipOfResourceAttribute()
+    {
+      return $this->dwcType." of ";
+      return;
+    }
+    public function getBasisOfRecordAttribute()
+    {
+      return 'MachineObservation';
+    }
+    /* HELPERS */
+    public function getDwcTypeAttribute()
+    {
+      if (preg_match("/image/i",$this->mime_type)) {
+        return 'StillImage';
+      }
+      if (preg_match("/audio/i",$this->mime_type)) {
+        return 'Sound';
+      }
+      if (preg_match("/video/i",$this->mime_type)) {
+        return 'MovingImage';
+      }
+      if (preg_match("/pdf/i",$this->mime_type)) {
+        return 'TextFile';
+      }
+      return null;
+    }
+    public function getRecordedByAttribute()
+    {
+      return $this->all_collectors;
+    }
+    public function getRecordedDateAttribute()
+    {
+      return $this->date;
+    }
+    public function getBibliographicCitationAttribute()
+    {
+      if ($this->all_collectors) {
+        return $this->citation;
+      }
+      if ($this->dataset) {
+        return $this->dataset->bibliographicCitation;
+      }
+      return null;
+    }
+    public function getFileUrlAttribute()
+    {
+      return $this->getUrl();
+    }
+
+
+
 
 }

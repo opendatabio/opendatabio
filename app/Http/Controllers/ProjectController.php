@@ -9,6 +9,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use Response;
+
 use App\DataTables\ProjectsDataTable;
 use App\Models\Project;
 use App\Models\Dataset;
@@ -29,6 +31,20 @@ use App\DataTables\ActivityDataTable;
 
 class ProjectController extends Controller
 {
+
+
+    // Functions for autocompleting project
+    // filter by those the user is an admin or collabs
+    public function autocomplete(Request $request)
+    {
+        $projects = Auth::user()->projects()->where('name', 'LIKE', ['%'.$request->input('query').'%'])
+            ->wherePivot('access_level',">",Project::VIEWER)
+            ->selectRaw('projects.id as data, name as value')
+            ->orderBy('name', 'ASC')
+            ->get();
+        return Response::json(['suggestions' => $projects]);
+    }
+
     /**
      * Display a listing of the resource.
      *

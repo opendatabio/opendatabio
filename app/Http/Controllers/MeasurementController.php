@@ -359,6 +359,7 @@ class MeasurementController extends Controller
         $measurement->save();
 
         /* SUMMARY COUNT UPDATE */
+        /*
         $taxon_id = null;
         $project_id = null;
         $location_id = null;
@@ -393,7 +394,7 @@ class MeasurementController extends Controller
           'dataset_id' => $request->dataset_id
         ];
         Summary::updateSummaryMeasurementsCounts($newvalues,$value="value + 1");
-        /* END SUMMARY COUNT UPDATE */
+        */
 
         return redirect('measurements/'.$measurement->id)->withStatus(Lang::get('messages.stored'));
     }
@@ -429,6 +430,7 @@ class MeasurementController extends Controller
         }
 
         /*if measured changed need to update counts */
+        /*
         if ($request->measured_id != $measurement->measured_id) {
           $oldvalues = ['taxon_id' => null, 'location_id' => null, 'project_id' => null];
           if ($measurement->measured_type == Individual::class) {
@@ -486,6 +488,7 @@ class MeasurementController extends Controller
           }
           Summary::updateSummaryMeasurementsCounts($newvalues,$value="value + 1");
         }
+        */
 
         $measurement->update($request->only([
             'trait_id', 'dataset_id', 'person_id', 'bibreference_id', 'notes',

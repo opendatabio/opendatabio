@@ -179,15 +179,13 @@
         @endcan
         <!-- this will show only if no media as media are shown below -->
         @can ('create', App\Models\Media::class)
-          @if (null == $media)
-        <a href="{{ url('locations/'. $location->id. '/media-create')  }}" class="btn btn-success">
+          <a href="{{ url('locations/'. $location->id. '/media-create')  }}" class="btn btn-success">
               <i class="fa fa-btn fa-plus"></i>
               <i class="fas fa-photo-video"></i>
               <i class="fas fa-headphones-alt"></i>
               @lang('messages.create_media')
-            </a>
-            &nbsp;&nbsp;
-          @endif
+          </a>
+          &nbsp;&nbsp;
         @endcan
         <input type="hidden" name="map-route-url" value="{{ route('maprender') }}">
         &nbsp;
@@ -254,6 +252,8 @@
   </div>
 </div>
 @endif
+
+
 
 <!--- MEDIA BLOCK -->
 @if (null != $media)

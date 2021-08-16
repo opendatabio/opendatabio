@@ -594,8 +594,30 @@ class TaxonController extends Controller
             if ($hasParent->count()==1) {
                 $finaldata['parent'] =  [$hasParent->first()->id, $hasParent->first()->fullname];
             } else {
-                $finaldata['parent'] = [null,$finalparent];
-                $bag->add('e1', Lang::get('messages.parent_not_registered', ['name' => $parent]));
+                $parent_id = null;
+                //should import parent path?
+                if ($request->importparents==1) {
+                    $gbifsearch = $apis->getGBIF($finalparent);
+                    if (!is_null($gbifsearch)) {
+                      $gbifkey = isset($gbifsearch['gbif_record']['nubKey']) ? $gbifsearch['gbif_record']['nubKey'] : null;
+                      if (null != $gbifkey) {
+                          $related_data = ExternalAPIs::getGBIFParentPathData($gbifkey,$include_first=true);
+                          $parent_id = self::importParents($related_data);
+                      } else {
+                        $related_data = ExternalAPIs::getMobotParentPath($finalparent,$include_first=true);
+                        if (count($related_data)>0) {
+                          $parent_id = self::importParents($related_data);
+                        } else {
+                          $bag->add('e1', Lang::get('messages.parent_not_registered', ['name' => $finalparent]));
+                        }
+                      }
+                    } else {
+                      $bag->add('e1', Lang::get('messages.parent_not_registered', ['name' => $finalparent]));
+                    }
+                } else {
+                  $bag->add('e1', Lang::get('messages.parent_not_registered', ['name' => $finalparent]));
+                }
+                $finaldata['parent'] = [$parent_id,$finalparent];
             }
         }
         //if is a synonym - check if accepted is registered
@@ -662,6 +684,46 @@ class TaxonController extends Controller
       }
       return redirect('import/taxons')->withStatus($message);
     }
+
+
+    /* similar to function in ImportTaxons, may merge */
+    public static function importParents($parents_array)
+    {
+      $previous_id = null;
+      foreach($parents_array as $related) {
+            if (!isset($previous_id)) {
+              $previous_id = $related['parent_id'];
+            }
+            $values = [
+                'level' => $related['rank'],
+                'parent_id' => $previous_id,
+                'valid' => $related['valid'],
+                'author' => $related['author'],
+                'bibreference' => $related['reference'],
+            ];
+            $newtaxon = new Taxon($values);
+            $newtaxon->fullname = $related['name'];
+            $newtaxon->save();
+            if (isset($related['mobot'])) {
+              $newtaxon->setapikey('Mobot', $related['mobot']);
+            }
+            if (isset($related['ipni'])) {
+              $newtaxon->setapikey('IPNI', $related['ipni']);
+            }
+            if (isset($related['gbif'])) {
+              $newtaxon->setapikey('GBIF', $related['gbif']);
+            }
+            if (isset($related['zoobank'])) {
+              $newtaxon->setapikey('ZOOBANK', $related['zoobank']);
+            }
+            if (isset($related['mycobank'])) {
+              $newtaxon->setapikey('Mycobank', $related['zoobank']);
+            }
+            $newtaxon->save();
+            $previous_id = $newtaxon->id;
+    }
+    return $previous_id;
+   }
 
 
 

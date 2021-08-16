@@ -48,10 +48,11 @@ class UserJobController extends Controller
     }
 
 
-    public function destroy($id)
+    public function destroy($id, $redirect=true)
     {
         $userjob = UserJob::findOrFail($id);
         $this->authorize('delete', $userjob);
+        $errors= [];
         try {
             $job_id = $userjob->job_id;
             $userjob->delete();
@@ -59,8 +60,12 @@ class UserJobController extends Controller
                 Queue::deleteReserved(config('queue.default'), $job_id);
             }
         } catch (\Illuminate\Database\QueryException $e) {
-            return redirect()->back()
+            if ($redirect) {
+              return redirect()->back()
                 ->withErrors([Lang::get('messages.fk_error')])->withInput();
+            } else {
+              return false;
+            }
         }
         $file_deleted = self::deleteJobFiles($id);
 
@@ -69,9 +74,27 @@ class UserJobController extends Controller
           $path = storage_path('app/public/tmp/'.$userjob->submitted_file);
           File::delete($path);
         }
-
-        return redirect('userjobs')->withStatus(Lang::get('messages.removed'));
+        if ($redirect) {
+          return redirect('userjobs')->withStatus(Lang::get('messages.removed'));
+        } else {
+          return true;
+        }
     }
+
+
+    public function purgeall()
+    {
+        $jobs = Auth::user()->userjobs()->get();
+        $count = 0;
+        if ($jobs->count()) {
+          foreach ($jobs as $job) {
+             $n = $this->destroy($job->id, $redirect=false);
+             $count = $count+$n;
+          }
+        }
+        return redirect('userjobs')->withStatus($count." jobs ".Lang::get('messages.removed'));
+    }
+
 
     public function cancel($id)
     {

@@ -15,6 +15,7 @@ use App\Models\Taxon;
 use Spatie\Activitylog\Traits\LogsActivity;
 use CodeInc\StripAccents\StripAccents;
 
+use Illuminate\Support\Arr;
 
 use Spatie\MediaLibrary\MediaCollections\Models\Media as BaseMedia;
 use Spatie\MediaLibrary\HasMedia;
@@ -55,93 +56,108 @@ class Project extends Model implements HasMedia
         return "<a href='".url('projects/'.$this->id)."'>".htmlspecialchars($this->fullname).'</a>';
     }
 
-
-    public function individuals()
+    /* relation to the datasets included in project */
+    public function datasets()
     {
-        return $this->hasMany(Individual::class);
+      return $this->hasMany(Dataset::class);
     }
 
-
-    public function vouchers()
-    {
-        return $this->hasMany(Voucher::class);
-    }
-
-    public function individualLocations( )
+    public function measurements()
     {
       return $this->hasManyThrough(
-                    'App\Models\IndividualLocation',
-                    'App\Models\Individual',
-                    'project_id', // Foreign key on individuals table...
-                    'individual_id', // Foreign key on Measurements table...
-                    'id', // Local key on Project table...
-                    'id' // Local key on individuals table...
+                    'App\Models\Measurement',
+                    'App\Models\Dataset',
+                    'project_id', // Foreign key on individual table...
+                    'dataset_id', // Foreign key on identification table...
+                    'id', // Local key on voucher table...
+                    'id' // Local key on individual table...
                     );
     }
 
-
-    public function individualsMeasurements( )
-    {
-      return $this->hasManyThrough(
-                    'App\Models\Measurement',
-                    'App\Models\Individual',
-                    'project_id', // Foreign key on individuals table...
-                    'measured_id', // Foreign key on Measurements table...
-                    'id', // Local key on Project table...
-                    'id' // Local key on individuals table...
-                    )->where('measurements.measured_type', 'App\Models\Individual');
-    }
-
-
-    public function individualsIdentifications( )
-    {
-      return $this->hasManyThrough(
-                    'App\Models\Identification',
-                    'App\Models\Individual',
-                    'project_id', // Foreign key on individuals table...
-                    'object_id', // Foreign key on Measurements table...
-                    'id', // Local key on Project table...
-                    'identification_individual_id' // Local key on individuals table...
-                    )->where('identifications.object_type', 'App\Models\Individual');
-    }
-
-    public function individualsMedia( )
+    public function themedia()
     {
       return $this->hasManyThrough(
                     'App\Models\Media',
-                    'App\Models\Individual',
-                    'project_id', // Foreign key on individuals table...
-                    'model_id', // Foreign key on Media table...
-                    'id', // Local key on Project table...
-                    'id' // Local key on individuals table...
-                    )->where('media.model_type', 'App\Models\Individual');
+                    'App\Models\Dataset',
+                    'project_id', // Foreign key on dataset table...
+                    'dataset_id', // Foreign key on media table...
+                    'id', // Local key on project table...
+                    'id' // Local key on dataset table...
+                    );
     }
-
-    public function voucher_identifications( )
+    /* ids for models retrieved from associated datasets */
+    public function all_media_ids()
     {
-      return $this->hasManyThrough(
-                    'App\Models\Identification',
-                    'App\Models\Voucher',
-                    'project_id', // Foreign key on individuals table...
-                    'object_id', // Foreign key on Measurements table...
-                    'id', // Local key on Project table...
-                    'individual_id' // Local key on voucher table...
-                    )->where('identifications.object_type', 'App\Models\Individual');
+      $ids = $this->datasets()->cursor()->map(function($d) {
+        return $d->all_individuals_ids();
+      })->toArray();
+      $ids = Arr::flatten($ids);
+      return array_unique($ids);
     }
 
-    public function voucherMeasurements( )
+    public function getMediaCountAttribute($value='')
     {
-      return $this->hasManyThrough(
-                    'App\Models\Measurement',
-                    'App\Models\Voucher',
-                    'project_id', // Foreign key on Voucher table...
-                    'measured_id', // Foreign key on Measurements table...
-                    'id', // Local key on Project table...
-                    'id' // Local key on Voucher table...
-                    )->where('measurements.measured_type', 'App\Models\Voucher');
+      return count($this->all_media_ids());
     }
 
 
+    /* ids for models retrieved from associated datasets */
+    public function all_individuals_ids()
+    {
+      $ids = $this->datasets()->cursor()->map(function($d) {
+        return $d->all_individuals_ids();
+      })->toArray();
+      $ids = Arr::flatten($ids);
+      return array_unique($ids);
+    }
+
+    public function all_voucher_ids()
+    {
+      $ids = $this->datasets()->cursor()->map(function($d) {
+        return $d->all_voucher_ids();
+      })->toArray();
+      $ids = Arr::flatten($ids);
+      return array_unique($ids);
+    }
+
+    public function all_locations_ids()
+    {
+      $ids = $this->datasets()->cursor()->map(function($d) {
+        return $d->all_locations_ids();
+      })->toArray();
+      $ids = Arr::flatten($ids);
+      return array_unique($ids);
+    }
+    public function all_taxons_ids()
+    {
+      $ids = $this->datasets()->cursor()->map(function($d) {
+        return $d->all_taxons_ids();
+      })->toArray();
+      $ids = Arr::flatten($ids);
+      return array_unique($ids);
+    }
+
+
+    public function getPeopleAttribute()
+    {
+      $admins = $this->admins->map(function($u) {
+        $person = isset($u->person_id) ? $u->person->full_name : null;
+        return [$u->email,$person];
+      });
+      $collabs = $this->collabs->map(function($u) {
+        $person = isset($u->person_id) ? $u->person->full_name : null;
+        return [$u->email,$person];
+      });
+      $viewers = $this->viewers->map(function($u) {
+        $person = isset($u->person_id) ? $u->person->full_name : null;
+        return [$u->email,$person];
+      });
+      return [
+        'admins' => $admins->toArray(),
+        'collabs' => $collabs->toArray(),
+        'viewers' => $viewers->toArray(),
+      ];
+    }
 
     // for compatibity with $object->fullname calls
     public function getFullnameAttribute()
@@ -149,30 +165,10 @@ class Project extends Model implements HasMedia
         return $this->name;
     }
 
-    // for use in the trait edit dropdown
-    public function getPrivacyLevelAttribute()
-    {
-        return Lang::get('levels.privacy.'.$this->privacy);
-    }
-
     public function getContactEmailAttribute()
     {
-        return $this->users()->wherePivot('access_level', '=', self::ADMIN)->first()->email;
+        return $this->admins->first()->email;
     }
-
-
-    /* authorship */
-    public function authors()
-    {
-      return $this->morphMany(Collector::class, 'object')->with('person');
-    }
-
-    public function author_first()
-    {
-        return $this->authors()->where('main',1);
-    }
-
-
 
     /* TAG related functions */
     public function tags()
@@ -211,27 +207,15 @@ class Project extends Model implements HasMedia
     }
 
 
-    /* GET THE UNIQUE TAXONS MODELS FOR THE IDENTIFICATIONS USED IN PROJECT OBJETS */
+    /* GET THE UNIQUE TAXONS MODELS FOR THE IDENTIFICATIONS USED IN PROJECT DATASETS */
     public function taxons()
     {
-      $ids = $this->taxons_ids();
+      $ids = $this->all_taxons_ids();
+      if (count($ids)==0) {
+        return null;
+      }
       return Taxon::select("*",DB::raw('odb_txparent(lft,120) as tx_family, odb_txparent(lft,180) as tx_genus, odb_txparent(lft,210) as tx_species'))->whereIn('taxons.id',$ids);
     }
-
-    public function taxons_ids()
-    {
-      $ids = $this->individualsIdentifications()->withoutGlobalScopes()->distinct('taxon_id')->pluck('taxon_id')->toArray();
-      return array_unique($ids);
-    }
-
-
-
-    public function locations_ids()
-    {
-      $ids = $this->individualLocations()->distinct('location_id')->pluck('location_id')->toArray();
-      return array_unique($ids);
-    }
-
 
     /* function to interact with the Count model */
     public function summary_counts()
@@ -259,115 +243,111 @@ class Project extends Model implements HasMedia
     }
 
 
-    public function locationsCount()
+    public function getLocationsCountAttribute()
     {
-      return $this->individualLocations()->distinct('location_id')->count();
+      return count($this->all_locations_ids());
     }
 
-    public function individualsCount()
+    public function getIndividualsCountAttribute()
     {
-       return $this->individuals()->withoutGlobalScopes()->count();
+      return count($this->all_individuals_ids());
     }
 
-    public function vouchersCount()
+    public function getVouchersCountAttribute()
     {
-        return $this->vouchers()->withoutGlobalScopes()->count();
+      return count($this->all_voucher_ids());
     }
+
+
     public function measurementsCount()
     {
+      return null;
+
       return ($this->vouchers_measurements_count())+($this->individuals_measurements_count());
     }
 
     /*count distinct individual and voucher identification taxon at or below the species level*/
-    public function speciesCount()
+    public function getSpeciesCountAttribute()
     {
-      $taxonsp = $this->individualsIdentifications()->withoutGlobalScopes()->with('taxon')->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
-      $taxons = array_unique($taxonsp);
-      return count($taxons);
+      return Taxon::whereIn('id',$this->all_taxons_ids())->where('level',">=",Taxon::getRank('species'))->count();
     }
 
     /* for faster display of taxon counts on datatables */
-    public function taxonsCount()
+    public function getTaxonsCountAttribute()
     {
-      $count_level = Taxon::getRank('species');
-      return $this->summary_scopes()->whereHasMorph('object',['App\Models\Taxon'],function($object) use($count_level) { $object->where('level','>=',$count_level);})->where('object_type','App\Models\Taxon')->selectRaw("DISTINCT object_id")->cursor()->count();
+      return count($this->all_taxons_ids());
     }
 
     /* media count for individuals */
     public function mediaCount()
     {
+      return null;
+
       return $this->individualsMedia()->withoutGlobalScopes()->count();
     }
 
 
     public function vouchers_measurements_count()
     {
+      return null;
+
       return $this->voucherMeasurements()->withoutGlobalScopes()->count();
     }
 
     public function individuals_measurements_count()
     {
+      return null;
+
       return $this->individualsMeasurements()->withoutGlobalScopes()->count();
 
     }
 
-    public function datasetIDS()
-    {
-      $query = DB::select('SELECT DISTINCT tb.dataset_id FROM ((SELECT DISTINCT dataset_id FROM measurements INNER JOIN individuals ON individuals.id=measurements.measured_id WHERE measured_type="App\\\Models\\\Individual" AND individuals.project_id='.$this->id.') UNION (SELECT DISTINCT dataset_id FROM measurements INNER JOIN vouchers ON vouchers.id=measurements.measured_id WHERE measured_type="App\\\Models\\\Voucher" AND vouchers.project_id='.$this->id.')) as tb');
-      $query  = array_map(function($value) { return (array)$value;},$query);
-      return $query;
-    }
+      public function describe_project()
+      {
+        $individuals = count($this->all_individuals_ids());
+        $vouchers = count($this->all_voucher_ids());
+        $locations = count($this->all_locations_ids());
+        $taxons = count($this->all_taxons_ids());
+        $species = $this->species_count;
+        $media = count($this->all_media_ids());
+        $datasets = $this->datasets()->count();
+        $result = [
+           'datasets' => $datasets,
+           'individuals' => $individuals,
+           'vouchers' => $vouchers,
+           'locations' => $locations,
+           'taxons' => $taxons,
+           'species' => $species,
+           'media_files' => $media,
+        ];
+        $result = array_filter($result,function($v) { return $v>0;});
+        return $result;
+      }
 
-    public function datasetsCount()
-    {
-      return count($this->datasetIDS());
-    }
+
 
     /* summarize the counts of identifications per taxons.level and published vs unpublished names*/
     public function identification_summary()
     {
-        $query = DB::select('SELECT tb.level, SUM(CASE tb.status  WHEN 0 THEN 1 ELSE 0 END) AS unpublished, SUM(CASE tb.status  WHEN 1 THEN 1 ELSE 0 END) AS published, count(tb.taxon_id) as total FROM (SELECT identifications.taxon_id,taxons.level, IF(taxons.author_id IS NULL,1,0) as status FROM individuals RIGHT JOIN identifications ON individuals.id=identifications.object_id LEFT JOIN taxons ON taxons.id=identifications.taxon_id WHERE identifications.object_type="App\\\Models\\\Individual" AND project_id='.$this->id.' AND (identifications.taxon_id IS NOT NULL) UNION SELECT identifications.taxon_id,taxons.level,IF(taxons.author_id IS NULL,1,0) as status FROM vouchers RIGHT JOIN identifications ON vouchers.individual_id=identifications.object_id LEFT JOIN taxons ON taxons.id=identifications.taxon_id WHERE identifications.object_type="App\\\Models\\\Individual" AND project_id='.$this->id.' AND (identifications.taxon_id IS NOT NULL)) as tb WHERE tb.taxon_id>0 GROUP BY tb.level');
-      return $query;
+        $ids = $this->all_individuals_ids();
+        if (count($ids)) {
+          return DB::table('identifications')->join('taxons','taxon_id','=','taxons.id')->selectRaw("taxons.level, SUM(IF(taxons.author_id IS NULL,1,0)) as published,  SUM(IF(taxons.author_id IS NULL,0,1)) as unpublished, COUNT(taxons.id) as total")->where('object_type','like','%individual%')->whereIn('object_id',$ids)->groupBy('taxons.level')->get();
+        } else {
+          return null;
+        }
     }
 
     public function taxonomic_summary()
     {
-      $taxons_ids = $this->taxons_ids();
-
-      if (count($taxons_ids)) {
+      $taxons_ids = $this->all_taxons_ids();
+      if (count($taxons_ids)>0) {
         $ids = implode(",",$taxons_ids);
         $query = DB::select('SELECT COUNT(DISTINCT tb.fam) as families, COUNT(DISTINCT tb.genus) as genera, COUNT(DISTINCT tb.species) as species FROM (SELECT odb_txparent(taxons.lft,120) as fam,odb_txparent(taxons.lft,180) as genus, odb_txparent(taxons.lft,210) as species FROM taxons WHERE taxons.id IN('.$ids.')) as tb');
         $query  = array_map(function($value) { return (array)$value;},$query);
-
         return $query[0];
       } else {
         return null;
       }
-    }
-
-
-    public function getAllAuthorsAttribute()
-    {
-      if ($this->authors->count()==0) {
-        return null;
-      }
-      $persons = $this->authors->map(function($person) { return $person->person->abbreviation;})->toArray();
-      $persons = implode(' and ',$persons);
-      return $persons;
-    }
-
-    public function getShortAuthorsAttribute()
-    {
-      if ($this->authors->count()==0) {
-        return null;
-      }
-      $persons = $this->authors->map(function($person) { return $person->person->abbreviation;})->toArray();
-      if (count($persons)>2) {
-        $persons = implode(' and ',$persons);
-      } elseif (count($persons)>0) {
-        $persons = $persons[0]." et al.";
-      }
-      return $persons;
     }
 
     public function getYearAttribute()
@@ -378,115 +358,21 @@ class Project extends Model implements HasMedia
       return null;
     }
 
-    public function getVersionAttribute()
-    {
-      if ($this->last_edition_date) {
-        return $this->last_edition_date->format("Y-m-d");
-      }
-      return null;
-    }
-
-    public function getCitationAttribute()
-    {
-      return $this->generateCitation($short=false,$for_dt=false);
-    }
-
-    public function generateCitation($short=true,$for_dt=false)
-    {
-      if ($short) {
-        $author = $this->short_authors;
-      } else {
-        $author = $this->all_authors;
-      }
-      $when = today()->format("Y-m-d");
-      $year = isset($this->last_edition_date) ? $this->last_edition_date->format('Y') : 'no data yet';
-      $version = isset($this->last_edition_date) ? $this->last_edition_date->format('Y-m-d') : 'no data yet';
-      $license = (null != $this->license) ? $this->license : 'not defined, some restrictions may apply';
-      $title = isset($this->title) ? $this->title  : $this->name;
-      if ($for_dt) {
-        $title = "<a href='".url('projects/'.$this->id)."'>".htmlspecialchars($title).'</a>';
-      }
-      if (preg_match("/CC0/i",$license)) {
-        $license = "Public domain - CC0";
-      }
-      $dataType = $this->isOnlyPlotData();
-      if($dataType) {
-        $dataType ='Plot occurrence data';
-      } else {
-        $dataType = 'Occurrence data';
-      }
-      if ($author != null) {
-        $citation = $author." (".$year.").  <strong>".$title."</strong>. ".$dataType.". Version: ".$version.".";
-      } else {
-        $citation = "<strong>".$title."</strong>. ".$dataType.". Version: ".$version.".";
-      }
-      /* ONLY ADDED WHEN NOT RESTRICTED */
-      if ($this->privacy != self::PRIVACY_AUTH) {
-        $citation .= " License: ".$license;
-      } else {
-        $citation .= " License: has restrictions";
-      }
-
-
-      if (!$for_dt) {
-        $url =  url('project/'.$this->id);
-        $citation .= '. From '.$url.', accessed '.$when.".";
-      }
-      return $citation;
-    }
-
-    public function isOnlyPlotData()
-    {
-      $admLevel = $this->individualLocations()->cursor()->map(function($ind) { return $ind->location->adm_level;})->toArray();
-      $admLevel = array_unique($admLevel);
-      if (count($admLevel)==1 and $admLevel[0]==100) {
-        return true;
-      }
-      return false;
-
-    }
-
-    public function getBibtexAttribute()
-    {
-      if ($this->individuals()->withoutGlobalScopes()->count() ==0 ) {
-        return null;
-      }
-      $bibkey = preg_replace('[,| |\\.|-|_]','',StripAccents::strip( (string) $this->name ))."_".$this->last_edition_date->format("Y");
-      $version = $this->last_edition_date->format("Y-m-d");
-      $license = (null != $this->license and $this->privacy != self::PRIVACY_AUTH) ? $this->license : 'Not public - some restrictions may apply.';
-      if (preg_match("/CC0/i",$license)) {
-        $license = "Public domain - CC0";
-      }
-      $dataType = $this->isOnlyPlotData();
-      if($dataType) {
-        $dataType ='Plot occurrence data';
-      } else {
-        $dataType = 'Occurrence data';
-      }
-      $bib =  [
-         'title' => $this->title,
-         'year' => $this->last_edition_date->format("Y"),
-         'author' => $this->all_authors,
-         'howpublished' => "url\{".url('project/'.$this->id)."}",
-         'version' => $version,
-         'license' => $license,
-         'note' => $dataType.' Version: '.$version.'. License: '.$license.". Accessed: ".today()->format("Y-m-d"),
-         'url' => "{".url('project/'.$this->id)."}",
-      ];
-      return "@misc{".$bibkey.",\n".json_encode($bib,JSON_PRETTY_PRINT);
-    }
-
     //get date of last edit in this dataset
     public function getLastEditionDateAttribute()
     {
-      if ($this->individuals()->withoutGlobalScopes()->count() ==0 ) {
+      $ids = $this->datasets()->cursor()->map(function($d) {
+        return $d->last_edition_date;
+      })->toArray();
+      if (count($ids)==0) {
         return null;
       }
-      $lastdate = $this->individuals()->withoutGlobalScopes()->select('individuals.updated_at')->orderBy('updated_at','desc')->first()->updated_at;
-      return $lastdate;
+      $ids = array_unique($ids);
+      return array_reverse(asort($ids))[0];
     }
 
-    /* register media modifications */
+
+    /* register media modifications, this is for the project logo object */
     public function registerMediaConversions(BaseMedia $media = null): void
     {
         $this->addMediaConversion('thumb')

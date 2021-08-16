@@ -25,7 +25,7 @@
 <em>@lang('messages.unit'): {{ $odbtrait->unit }} </em><br/>
 @endif
 @if (isset($odbtrait->range_min) or isset($odbtrait->range_max))
-<em>@lang('messages.range'): {{ $odbtrait->rangeDisplay }} </em>
+<em>@lang('messages.range'): {!! $odbtrait->rangeDisplay !!} </em>
 @endif
 @if (!isset($index))
 </div>

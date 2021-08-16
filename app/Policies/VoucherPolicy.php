@@ -9,7 +9,7 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\Voucher;
-use App\Models\Project;
+use App\Models\Dataset;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class VoucherPolicy
@@ -26,42 +26,69 @@ class VoucherPolicy
     }
 
     /**
-     * Determine whether the user can create vouchers under a given project.
+     * Determine whether the user can create vouchers under a given dataset.
      */
-    public function create(User $user, Project $project = null)
+    public function create(User $user, Dataset $dataset = null)
     {
         if (User::ADMIN == $user->access_level) {
             return true;
         }
-        // this policy called with null project probably means that we're checking a @can
-        if (is_null($project)) {
+        // this policy called with null dataset probably means that we're checking a @can
+        if (is_null($dataset)) {
             return User::USER == $user->access_level;
         }
         // for regular users, when actually creating a voucher
-        return User::USER == $user->access_level and
-            ($project->admins->contains($user) or $project->users->contains($user));
+        $privacy = $dataset->privacy;
+        if ($privacy==Dataset::PRIVACY_PROJECT) {
+          return User::USER == $user->access_level and
+              ($dataset->project->admins->contains($user) or $dataset->project->collabs->contains($user));
+        }
+        return User::USER == $user->access_level and ($dataset->admins->contains($user) or $dataset->collabs->contains($user));
     }
 
     /**
      * Determine whether the user can update a voucher.
      */
-    public function update(User $user, Voucher $voucher)
+    public function update(User $user, Voucher $voucher, Dataset $dataset = null)
     {
         if (User::ADMIN == $user->access_level) {
             return true;
         }
         // for regular users
-        $project = $voucher->project;
-
-        return User::USER == $user->access_level and
-            ($project->admins->contains($user) or $project->users->contains($user));
+        if (is_null($dataset)) {
+            $dataset = $voucher->dataset;
+        }
+        // for regular users, when actually creating a voucher
+        $privacy = $dataset->privacy;
+        if ($privacy==Dataset::PRIVACY_PROJECT) {
+          return User::USER == $user->access_level and
+              ($dataset->project->admins->contains($user) or $dataset->project->collabs->contains($user));
+        }
+        return User::USER == $user->access_level and ($dataset->admins->contains($user) or $dataset->collabs->contains($user));
     }
 
     /**
-     * Determine whether the user can delete the person.
+     * Determine whether the user can delete the vocuher.
      */
     public function delete(User $user, Voucher $voucher)
     {
+        $has_media = $voucher->media()->count()==0;
+        $has_measurements = $voucher->measurements()->count()==0;
+        if (User::ADMIN == $user->access_level) {
+            $is_user = true;
+        } else {
+          $dataset = $voucher->dataset;
+          $privacy = $dataset->privacy;
+          if ($privacy==Dataset::PRIVACY_PROJECT) {
+            $is_user = User::USER == $user->access_level and
+              ($dataset->project->admins->contains($user) or $dataset->project->collabs->contains($user));
+          } else {
+            $is_user =  User::USER == $user->access_level and ($dataset->admins->contains($user) or $dataset->collabs->contains($user));
+          }
+        }
+        if ($has_media and $has_measurements and $is_user) {
+          return true;
+        }
         return false;
     }
 }

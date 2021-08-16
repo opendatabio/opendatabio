@@ -122,16 +122,53 @@ class ImportMeasurements extends AppJob
       $this->appendLog('Bibreference '.$bibreference.' not found in database');
       return false;
     }
-    protected function validateDataset($dataset)
+
+    //duplicated from ImportCollectable
+    protected function validateDataset(&$registry)
     {
-        $valid = Auth::user()->datasets()->where('id', $dataset);
-        if (null === $valid) {
-            $this->appendLog('Error: Header reffers to '.$dataset.' as dataset, but this dataset was not found in the database.');
-            return false;
-        } else {
+        $header = $this->header;
+        $dataset = isset($registry['dataset_id']) ? $registry['dataset_id'] : (isset($registry['dataset']) ? $registry['dataset'] : null);
+        $header = isset($header['dataset_id']) ? $header['dataset_id'] : (isset($header['dataset']) ? $header['dataset'] : null);
+        if (null == $dataset and $header != null) {
+            $dataset = $header;
+        }
+        if (null != $dataset) {
+            $valid = ODBFunctions::validRegistry(Dataset::select('id'),$dataset,['id','name']);
+            if (null === $valid) {
+                $this->skipEntry($registry, 'dataset'.' '.$dataset.' was not found in the database');
+                return false;
+            }
+            $registry['dataset'] = $valid->id;
             return true;
         }
+        $registry['dataset'] = Auth::user()->defaultDataset->id;
+        return true;
     }
+
+    //the informed dataset is open access while the measurement dataset is restricted access.
+    //making this data not completely open access
+    //prevent importation ad warn
+    public function validateDatasetPolicies($measurement)
+    {
+        //measurements must have a dataset, although measured object need not..
+        $object_type = array_key_exists('object_type', $measurement['object_type']);
+        $object = app('App\Models\\'.$object_type)::where('id', $measurement['object_id']);
+        $parent_dataset = isset($object->dataset) ? $object->dataset->id : null;
+        if (null == $parent_dataset) {
+           //locations and taxons objects should not have datasets defined.
+           return true;
+        }
+        $parent = Dataset::findOrFail($parent_dataset);
+        $current = Dataset::findOrFail($measurement['dataset']);
+        $parent_privacy = $parent->privacy;
+        $current_privacy = $current->privacy;
+        if ($current_privacy>=Dataset::PRIVACY_REGISTERED and $parent_license<Dataset::PRIVACY_REGISTERED) {
+          $this->appendLog('Error: Privacy for the dataset '.$parent->name.' to which belongs the measured object has restricted access privacy, while the dataset of the measurement is open access. Therefore, the access is not complete and this must be prevented. In this case both should be open acess. Else, restrict the privacy of dataset '.$current->name);
+          return false;
+        }
+        return true;
+    }
+
 
     protected function validateObjetType($object_type)
     {
@@ -154,19 +191,19 @@ class ImportMeasurements extends AppJob
         if (array_key_exists('person',$measurement) and !$this->validatePerson($measurement['person'])) {
               return false;
         }
-
-        if (array_key_exists('dataset',$measurement) and !$this->validateDataset($measurement['dataset'])) {
-              return false;
-        }
-
         if (array_key_exists('object_type',$measurement) and !$this->validateObjetType($measurement['object_type'])) {
               return false;
         }
-
         if (!$this->validateObject($measurement)) {
             return false;
         }
 
+        if (!$this->validateDataset($measurement)) {
+              return false;
+        }
+        if (!$this->validateDatasetPolicies($measurement)) {
+              return false;
+        }
         if (!$this->validateMeasurements($measurement)) {
             return false;
         }
@@ -178,11 +215,12 @@ class ImportMeasurements extends AppJob
         return true;
     }
 
-    protected function validateObject($measurement)
+    protected function validateObject(&$measurement)
     {
         $object_type = array_key_exists('object_type', $this->header) ? $this->header['object_type'] : $measurement['object_type'];
         $valid = app('App\Models\\'.$object_type)::where('id', $measurement['object_id']);
         if ($valid->count()) {
+            $measurements['object_type'] = $object_type;
             return true;
         } else {
             $this->appendLog('WARNING: Object '.$object_type.' - '.$measurement['object_id'].' not found. Measurement ignored.');
@@ -463,17 +501,17 @@ class ImportMeasurements extends AppJob
 
         /* SUMMARY COUNT UPDATE */
         $taxon_id = null;
-        $project_id = null;
+        $dataset_id = null;
         $location_id = null;
         if ($measurement->measured_type == Individual::class) {
           $individual = Individual::findOrFail($measurement->measured_id);
           $taxon_id = $individual->identification->taxon_id;
           $location_id = $individual->location_id;
-          $project_id = $individual->project_id;
+          $dataset_id = $individual->dataset_id;
         }
         if ($measurement->measured_type == Voucher::class) {
             $voucher = Voucher::findOrFail($measurement->measured_id);
-            $project_id = $voucher->project_id;
+            $dataset_id = $voucher->dataset_id;
             $taxon_id =  $voucher->identification->taxon_id;
             $location_id = $voucher->locations->last()->location_id;
         }
@@ -486,7 +524,7 @@ class ImportMeasurements extends AppJob
         $newvalues = [
           'taxon_id' => $taxon_id,
           'location_id' => $location_id,
-          'project_id' => $project_id,
+          'dataset_id' => $dataset_id,
           'dataset_id' => $measurement->dataset_id
         ];
         $target = 'measurements';

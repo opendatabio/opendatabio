@@ -106,7 +106,7 @@ The available `POST` APIs are listed below and under each endpoint. Batch import
 | [persons](#endpoint_persons) | `POST` | Imports a list of people |
 | [traits](#endpoint_traits) | `POST` | Import traits |
 | [taxons](#endpoint_taxons)  | `POST` | Imports taxonomic names |
-| [vouchers](#endpoint_taxons)  | `POST` | Imports voucher specimens |
+| [vouchers](#endpoint_vouchers)  | `POST` | Imports voucher specimens |
 
 
 
@@ -153,6 +153,7 @@ The `datasets` endpoint interact with the [datasets](management_objects#datasets
 - `id=list` return only datasets having the id or ids provided (ex `id=1,2,3,10`)
 
 ### Fields obtained with 'simple' option
+
   - `id` - the id of the Dataset in the datasets table (a local database id)
   - `name` - the name of the dataset
   - `privacyLevel` - the access level for the dataset
@@ -198,24 +199,39 @@ The `individuals` endpoints interact with the [Individual](Core-Objects#individu
 
 Notice that all search fields (taxon, location and project) may be specified as names (eg, "taxon=Euterpe edulis") or as database ids. If a list is specified for one of these fields, all items of the list must be of the same type, i.e. you cannot search for 'taxon=Euterpe,24'. Also, location and taxon have priority over location_root and taxon_root if both informed.
 
-#### Fields obtained with 'simple' option
-  - `id` - the id of the individual in the individuals table (a local database id)
-  - `fullName` - the individual fullName is a unique identifier composed of `LocationName+Tag`
-  - `taxonName`- the current taxonomic identification of the individual in a canonicalName format (no authors) or "unidentified"
-  - `taxonFamily` - the taxon Family level parent
-  - `location_id` - the where the individual is located for link with location data
-  - `locationName` - the location name
-  - `locationParentName` - the parent location, to simplify when location is subplot
-  - `tag` - the individual number code on an physical tag on a living individual in the field
-  - `date` - the date the individual was marked and tagged
-  - `relativePosition` - if individual has X and Y cartesian coordinates within location, their [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation, ex: POINT(X,Y)
-  - `xInParentLocation` - x cartesian position in relation to parent location when individual location is subplot
-  - `yInParentLocation` - y cartesian position in relation to parent location when individual location is subplot
-  - `notes` - any note
-  - `projectName` - the projectName the individual belongs to
-
-  #### Additional relevant fields
-  - `angle` and `distance` - azimuth in degrees and distance in meteres of the individual position in relation to its location (which in this case would be a geographical POINT). This may be used in some specific individual inventory surveys
+#### Fields obtained
+  - `id` - the ODB id of the Individual in the individuals table (a local database id)
+  - `basisOfRecord` [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) - will be always 'organism' [dwc location]([DWC](https://dwc.tdwg.org/terms/#organism)
+  - `organismID` [DWC](https://dwc.tdwg.org/terms/#dwc:organismID) - a local unique combination of record info, composed of recordNumber,recordedByMain,locationName
+  - `recordedBy` [DWC](https://dwc.tdwg.org/terms/#dwc:recordedBy) - pipe "|" separated list of registered Persons abbreviations
+  - `recordedByMain` - the first person in recordedBy, the main collectors
+  - `recordNumber` [DWC](https://dwc.tdwg.org/terms/#dwc:recordNumber) - an identifier for the individual, may be the code in a tree aluminum tag, a bird band code, a collector number
+  - `recordedDate` [DWC](https://dwc.tdwg.org/terms/#dwc:recordedDate) - the record date
+  - `scientificName` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificName)  - the current taxonomic identification of the individual (no authors) or "unidentified"
+  - `scientificNameAuthorship` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificNameAuthorship) - the taxon authorship. For **taxonomicStatus unpublished**: will be a ODB registered Person name
+  - `family` [DWC](https://dwc.tdwg.org/terms/#dwc:family)
+  - `genus` [DWC](https://dwc.tdwg.org/terms/#dwc:genus)
+  - `identificationQualifier` [DWC](https://dwc.tdwg.org/terms/#dwc:identificationQualifier) - identification name modifiers cf. aff. s.l., etc.
+  - `identifiedBy` [DWC](https://dwc.tdwg.org/terms/#dwc:identifiedBy) - the Person identifying the scientificName  of this record
+  - `dateIdentified` [DWC](https://dwc.tdwg.org/terms/#dwc:dateIdentified) - when the identification was made (may be incomplete, with 00 in the month and or day position)
+  - `identificationRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:identificationRemarks) - any notes associated with the identification
+  - `locationName` - the location name (if plot the plot name, if point the point name, ...)
+  - `locationParentName` - the immediate parent locationName, to facilitate use when location is subplot
+  - `higherGeography` [DWC](https://dwc.tdwg.org/terms/#dwc:higherGeography) - the parent LocationName '|' separated (e.g. Brasil | Amazonas | Rio Preto da Eva | Fazenda Esteio | Reserva km37 | Manaus ForestGeo-PDBFF Plot | Quadrat 100x100 );
+  - `decimalLatitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLatitude) - depends on the location adm_level and the individual X and Y, or Angle and Distance attributes, which are used to calculate these global coordinates for the record; if individual has multiple locations (a monitored bird), the last location is obtained with this get API
+  - `decimalLongitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLongitude) - same as for decimalLatitude
+  - `x` - the individual X position in a Plot location
+  - `y` - the individual Y position in a Plot location
+  - `gx` - the individual global X position in a Parent Plot location, when location is subplot (ForestGeo standards)
+  - `gy` - the individual global Y position in a Parent Plot location, when location is subplot (ForestGeo standards)
+  - `angle` - the individual azimuth direction in relation to a POINT reference, either when adm_level is POINT or when X and Y are also provided for a Plot location this is calculated from X and Y positions  
+  - `distance` - the individual distance direction in relation to a POINT reference, either when adm_level is POINT or when X and Y are also provided for a Plot location this is calculated from X and Y positions  
+  - `organismRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:organismRemarks) - any note associated with the Individual record
+  - `associatedMedia` [DWC](https://dwc.tdwg.org/terms/#dwc:associatedMedia) - urls to ODB media files associated with the record
+  - `datasetName` - the name of the ODB Dataset to which the record belongs to [DWC](https://dwc.tdwg.org/terms/#dwc:datasetName)
+  - `accessRights` - the ODB Dataset access privacy setting - [DWC](https://dwc.tdwg.org/terms/#dwc:accessRights)
+  - `bibliographicCitation` - the ODB Dataset citation - [DWC](https://dwc.tdwg.org/terms/#dwc:bibliographicCitation)
+  - `license` - the ODB Dataset license - [DWC](https://dwc.tdwg.org/terms/#dwc:license)
 
 <br>
 
@@ -226,7 +242,7 @@ The following fields are allowed in a post API:
 
 * `collector=mixed` - **required**  - persons  'id', 'abbreviation', 'full_name', 'email'; if multiple persons, separate values in your list with  pipe `|` or `;` because commas may be present within names. Main collector is the first on the list;
 * `tag=string` -  **required** -  the individual number or code (if the individual identifier is as MainCollector+Number, this is the field for Number);
-* `project=mixed` - **required** - name or id or the Project;
+* `dataset=mixed` - **required** - name or id or the Project;
 * `date=YYYY-MM-DD or array` - the date the individual was recorded/tagged, for historical records you may inform an incomplete string in the form "1888-05-NA" or "1888-NA-NA" when day and/or month are unknown. You may also inform as an array in the form "date={ 'year' : 1888, 'month': 5}". OpenDataBio deals with incomplete dates, see the [IncompleteDate Model](Auxiliary-Objects#incompletedate). At least `year` is **required**.
 * `notes` - any annotation for the Individual;
 
@@ -265,6 +281,64 @@ If the Individual has Vouchers **with the same** Collectors, Date and CollectorN
   }"
 
 
+<a name="endpoint_individual_locations"></a>
+***
+## Individual-locations Endpoint
+The `individual-locations` endpoint interact with the [individual_location](Core-Objects#individuals) table. Their basic usage is getting location data for individuals, i.e. occurrence data for organisms. And for importing multiple locations for registered individuals. Designed for occurrences of organisms that move and have multiple locations, else the same info is retrieved with the [Individuals endpoint](#endpoint_individuals).
+
+### GET optional parameters
+- `individual_id=number or list` - return locations for individuals that have id or ids ex: `id=2345,345`
+- `location=mixed` - return by location id or name or ids or names ex: `location=24,25,26` `location=Parcela 25ha` of the locations where the individuals
+- `location_root` - same as location but return  also from the descendants of the locations informed
+- `taxon=mixed` - the id or ids, or canonicalName taxon names (fullnames) ex: `taxon=Aniba,Ocotea guianensis,Licaria cannela tenuicarpa` or `taxon=456,789,3,4`
+- `taxon_root` - same as taxon but return also all the the locations for individuals identified as any of the descendants of the taxons informed
+- `dataset=mixed` - the id or ids or names of the datasets, return individuals belonging to the datasets informed
+- `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of individuals, as the request may fail due to memory constraints. See [Common endpoints](endpoint_common).
+
+Notice that all search fields (taxon, location and dataset) may be specified as names (eg, "taxon=Euterpe edulis") or as database ids. If a list is specified for one of these fields, all items of the list must be of the same type, i.e. you cannot search for 'taxon=Euterpe,24'. Also, location and taxon have priority over location_root and taxon_root if both informed.
+
+#### Fields obtained
+- `individual_id` - the ODB id of the Individual in the individuals table (a local database id)
+- `location_id` - the ODB id of the Location in the locations table (a local database id)
+- `basisOfRecord` - will be always 'occurrence' - [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) and [dwc location]([DWC](https://dwc.tdwg.org/terms/#occurrence);
+- `occurrenceID` - the unique identifier for this record, the individual+location+date_time  - [DWC](https://dwc.tdwg.org/terms/#dwc:occurrenceID)  
+- `organismID` - the unique identifier for the Individual [DWC](https://dwc.tdwg.org/terms/#dwc:organismID)
+- `recordedDate` - the occurrence date+time observation - [DWC](https://dwc.tdwg.org/terms/#dwc:recordedDate)
+- `locationName` - the location name (if plot the plot name, if point the point name, ...)
+- `higherGeography` - the parent LocationName '|' separated (e.g. Brasil | Amazonas | Rio Preto da Eva | Fazenda Esteio | Reserva km37 | Manaus ForestGeo-PDBFF Plot | Quadrat 100x100 ) - [DWC](https://dwc.tdwg.org/terms/#dwc:higherGeography)
+- `decimalLatitude` - depends on the location adm_level and the individual X and Y, or Angle and Distance attributes, which are used to calculate these global coordinates for the record - [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLatitude)
+- `decimalLongitude` - same as for decimalLatitude - [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLongitude)
+- `georeferenceRemarks` - will contain the explanation of the type of decimalLatitude - [DWC](https://dwc.tdwg.org/terms/#dwc:georeferenceRemarks)
+- `x` - the individual X position in a Plot location
+- `y` - the individual Y position in a Plot location
+- `angle` - the individual azimuth direction in relation to a POINT reference, either when adm_level is POINT or when X and Y are also provided for a Plot location this is calculated from X and Y positions  
+- `distance` - the individual distance direction in relation to a POINT reference, either when adm_level is POINT or when X and Y are also provided for a Plot location this is calculated from X and Y positions  
+- `minimumElevation` - the altitude for this occurrence record if any - [DWC](https://dwc.tdwg.org/terms/#dwc:minimumElevation)
+- `occurrenceRemarks` - any note associated with this record - [DWC](https://dwc.tdwg.org/terms/#dwc:occurrenceRemarks)
+- `scientificName` - the current taxonomic identification of the individual (no authors) or "unidentified" - [DWC](https://dwc.tdwg.org/terms/#dwc:scientificName)  
+- `family` - the current taxonomic family name, if apply - [DWC](https://dwc.tdwg.org/terms/#dwc:family)
+- `datasetName` - the name of the ODB Dataset to which the record belongs to - [DWC](https://dwc.tdwg.org/terms/#dwc:datasetName)
+- `accessRights` - the ODB Dataset access privacy setting - [DWC](https://dwc.tdwg.org/terms/#dwc:accessRights)
+- `bibliographicCitation` - the ODB Dataset citation - [DWC](https://dwc.tdwg.org/terms/#dwc:bibliographicCitation)
+- `license` - the ODB Dataset license [DWC](https://dwc.tdwg.org/terms/#dwc:license)
+
+<br>
+
+### POST format
+This method is for importing additional locations for Individuals that are already registered. Designed for moving organisms.
+Possible fields are:
+  * `individual` - the Individual's id **required**
+  * `location` - the Individual's location name or id **required OR longitude+latitude**
+  * `latitude` and `longitude`- geographical coordinates in decimal degrees; **required if location is not informed**
+  * `altitude` - the Individual location elevation (altitude) in meters above see level;
+  * `location_notes` - any note for the individual location;
+  * `location_date_time` - if different than the individual's date, a complete date or a date+time (hh:mm:ss) value for the individual location. **required**
+  * `x` - if location is of Plot type, the x coordinate of the individual in the location;
+  * `y` - if location is of Plot type, the y coordinate of the individual in the location;
+  * `distance` - if location is of POINT type (or latitude and longitude are informed), the individual distance in meters from the location;
+  * `angle` - if location is of POINT type, the individual azimuth (angle) from the location
+
+
 <a name="endpoint_measurements"></a>
 ***
 ## Measurements Endpoint
@@ -283,22 +357,26 @@ The `measurements` endpoint interact with the [measurements](Auxiliary-Objects#m
 
 
 #### Fields obtained with 'simple' option
-  - `id` - the id of the measurement in the measurements table (a local database id)
-  - `measured_type` - the measured object, one of Individual, Location, Taxon or Voucher
-  - `measured_id` - the id of the measured object in the respective object table (individuals.id, locations.id, taxons.id, vouchers.id)
-  - `measuredFullname` - the fullname of the measured object (for a Individual will be Location+Tag, for a Voucher Collector+Number, for a Location is name and for the Taxon its fullname)
-  - `traitName` - the export_name for the trait measured
-  - `valueActual` - the value for the measurement (format depends on trait type)
-  - `traitUnit` - the unit of measurement for quantitative traits
-  - `valueDate` - the measurement measured date
-  - `datasetName` - the dataset name to which the measurement belong to
-
-
-#### Addition relevant fields
-  - `measuredTaxonName` - the taxon name in case the measurement is from a Taxon, Voucher or Individual
-  - `measuredTaxonFamily` - the taxon Family name in case the measurement is from a Taxon, Voucher or Individual
-  - `measuredProject` - the project that indirectly the measurement belongs to, if any.
-
+- `id` - the Measurement ODB id in the measurements table (local database id)
+- `basisOfRecord` [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) - will be always 'MeasurementsOrFact' [dwc measurementorfact]([DWC](https://dwc.tdwg.org/terms/#measurementorfact)
+- `measured_type` - the measured object, one of 'Individual', 'Location', 'Taxon' or 'Voucher'
+- `measured_id` - the id of the measured object in the respective object table (individuals.id, locations.id, taxons.id, vouchers.id)
+- `measurementID` [DWC](https://dwc.tdwg.org/terms/#measurementorfact) -  a unique identifier for the Measurement record - combine measured resourceRelationshipID, measurementType and date
+- `measurementType` [DWC](https://dwc.tdwg.org/terms/#measurementorfact) - the export_name for the ODBTrait measured
+- `measurementValue` [DWC](https://dwc.tdwg.org/terms/#measurementorfact) - the value for the measurement - will depend on kind of the measurementType (i.e. ODBTrait)
+- `measurementUnit` [DWC](https://dwc.tdwg.org/terms/#measurementorfact) - the unit of measurement for quantitative traits
+- `measurementDeterminedDate` [DWC](https://dwc.tdwg.org/terms/#measurementorfact) - the Measurement measured date
+- `measurementDeterminedBy` [DWC](https://dwc.tdwg.org/terms/#dwc:measurementDeterminedBy) - Person responsible for the measurement
+- `measurementRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:measurementRemarks) - text note associated with this Measurement record
+- `resourceRelationship` [DWC](https://dwc.tdwg.org/terms/#dwc:resourceRelationship) - the measured object (resource) - one of 'location','taxon','organism','preservedSpecimen'
+- `resourceRelationshipID` [DWC](https://dwc.tdwg.org/terms/#dwc:resourceRelationshipID) - the id of the resourceRelationship
+- `relationshipOfResource` [DWC](https://dwc.tdwg.org/terms/#dwc:relationshipOfResource) - will always be 'measurement of'
+- `scientificName` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificName)  - the current taxonomic identification (no authors) or 'unidentified' if the resourceRelationship object is not 'location'
+- `family` [DWC](https://dwc.tdwg.org/terms/#dwc:family) - taxonomic family name if applies
+- `datasetName` - the name of the ODB Dataset to which the record belongs to - [DWC](https://dwc.tdwg.org/terms/#dwc:datasetName)
+- `accessRights` - the ODB Dataset access privacy setting - [DWC](https://dwc.tdwg.org/terms/#dwc:accessRights)
+- `bibliographicCitation` - the ODB Dataset citation - [DWC](https://dwc.tdwg.org/terms/#dwc:bibliographicCitation)
+- `license` - the ODB Dataset license - [DWC](https://dwc.tdwg.org/terms/#dwc:license)
 
 ### POST format
 See the **Import Data Vignette** of the [OpenDataBio-R Client](https://github.com/opendatabio/opendatabio-r) for detailed information on how to import measurements for different types of [traits](Trait-Objects#traits).
@@ -316,6 +394,46 @@ The following fields are allowed in a post API:
 * `bibreference=number` - the id of the BibReference for the measurement. Should be use when the measurement was taken from a publication
 * `notes` - any note you whish. In same cases this is a usefull place to store measurement related information. For example, when measuring 3 leaves of a voucher, you may indicate here to which leaf the measurement belongs, leaf1, leaf2, etc. allowing to link measurements from different traits by this field.
 * `duplicated` - by default, the import API will prevent duplicated measurements for the same trait, object and date; specifying `duplicated=1` will allow to import such duplicated measurements. Will assume 0 if not informed and will then check for duplicated values.
+
+
+
+
+<a name="endpoint_media"></a>
+***
+## Media Endpoint
+The `media` endpoint interact with the [media](Auxiliary-Objects#mediafiles) table. Their basic usage is getting the metadata associated with MediaFiles and the files URL. POST method is only available through the web interface.
+
+### GET optional parameters
+- `individual=number or list` - return media associated with the individuals having id or ids ex: `id=2345,345`
+- `voucher=number or list` - return media associated with the vouchers having id or ids ex: `id=2345,345`
+- `location=mixed` - return media associated with the locations having id or name or ids or names ex: `location=24,25,26` `location=Parcela 25ha`
+- `location_root` - same as location but return also media associated with the descendants of the locations informed
+- `taxon=mixed` - the id or ids, or canonicalName taxon names (fullnames) ex: `taxon=Aniba,Ocotea guianensis,Licaria cannela tenuicarpa` or `taxon=456,789,3,4`
+- `taxon_root` - same as taxon but return also all the locations for individuals identified as any of the descendants of the taxons informed
+- `dataset=mixed` - the id or ids or names of the datasets, return individuals belonging to the datasets informed
+- `limit` and `offset` are SQL statements to limit the amount of data when trying to download a large number of individuals, as the request may fail due to memory constraints. See [Common endpoints](endpoint_common).
+
+Notice that all search fields (taxon, location and dataset) may be specified as names (eg, "taxon=Euterpe edulis") or as database ids. If a list is specified for one of these fields, all items of the list must be of the same type, i.e. you cannot search for 'taxon=Euterpe,24'. Also, location and taxon have priority over location_root and taxon_root if both informed.
+
+#### Fields obtained
+- `id` - the Measurement ODB id in the measurements table (local database id)
+- `basisOfRecord` [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) - will be always 'MachineObservation' [DWC](https://dwc.tdwg.org/terms/#machineobservation)
+- `model_type` - the related object, one of 'Individual', 'Location', 'Taxon' or 'Voucher'
+- `model_id` - the id of the related object in the respective object table (individuals.id, locations.id, taxons.id, vouchers.id)
+- `resourceRelationship` [DWC](https://dwc.tdwg.org/terms/#dwc:resourceRelationship) - the related object (resource) - one of 'location','taxon','organism','preservedSpecimen'
+- `resourceRelationshipID` [DWC](https://dwc.tdwg.org/terms/#dwc:resourceRelationshipID) - the id of the resourceRelationship
+- `relationshipOfResource` [DWC](https://dwc.tdwg.org/terms/#dwc:relationshipOfResource) - will be the dwcType
+- `recordedBy` [DWC](https://dwc.tdwg.org/terms/#dwc:recordedBy) - pipe "|" separated list of registered Persons abbreviations
+- `recordedDate` [DWC](https://dwc.tdwg.org/terms/#dwc:recordedDate) - the media file date
+- `scientificName` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificName)  - the current taxonomic identification of the individual (no authors) or "unidentified"
+- `family` [DWC](https://dwc.tdwg.org/terms/#dwc:family)
+- `dwcType` [DWC](https://dwc.tdwg.org/terms/#type) - one of StillImage, MovingImage, Sound
+- `datasetName` - the name of the ODB Dataset to which the record belongs to [DWC](https://dwc.tdwg.org/terms/#dwc:datasetName)
+- `accessRights` - the ODB Dataset access privacy setting - [DWC](https://dwc.tdwg.org/terms/#dwc:accessRights)
+- `bibliographicCitation` - the ODB Dataset citation - [DWC](https://dwc.tdwg.org/terms/#dwc:bibliographicCitation)
+- `license` - the ODB Dataset license - [DWC](https://dwc.tdwg.org/terms/#dwc:license)
+- `file_name` - the file name
+- `file_url` - the url to the file
 
 
 <a name="endpoint_languages"></a>
@@ -359,23 +477,29 @@ The `locations` endpoints interact with the [locations](Core-Objects#locations) 
 Notice that `id`, `search`, `parent` and `root` should probably not be combined in the same query.
 
 
-#### Fields obtained with 'simple' option
-  - `id` - the id of the location in the locations table (a local database id)
-  - `name` - the location name;
-  - `fullname` - the name with all parents (e.g. Brazil > São Paulo > Sorocaba);
-  - `adm_level` - the numeric value for administrative level (0 for countries, etc);
-  - `levelName` - the name of the administrative level;
-  - `geom` - the [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation of the location;
-  - `parent_id` - id of the parent location;
-  - `x` and `y` - when location is a plot (100 type) its X and Y dimension in meters
-  - `startx` and `starty` - when location is a subplot the X and Y start position in relation to the 0,0 coordinate of the parent plot location
-  - `centroid_raw` - when location is a polygon, then its centroid WKT representation
-  - `area` - when location is a polygon its area in squared meters.
+#### Fields obtained
 
+  - `id` - the ODB id of the Location in the locations table (a local database id)
+  - `basisOfRecord` [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) - will be always 'location' [dwc location]([DWC](https://dwc.tdwg.org/terms/#location)
+  - `locationName` - the location name (if country the country name, if state the state name, etc...)
+  - `adm_level` - the numeric value for the ODB administrative level (0 for countries, etc)
+  - `levelName` - the name of the ODB administrative level
+  - `parent_id` - the ODB id of the parent location
+  - `parentName` - the immediate parent locationName
+  - `higherGeography` [DWC](https://dwc.tdwg.org/terms/#dwc:higherGeography) - the parent LocationName '|' separated (e.g. Brasil | São Paulo | Sorocaba);
+  - `footprintWKT` [DWC](https://dwc.tdwg.org/terms/#dwc:footprintWKT) - the [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation of the location; if adm_level==100 (plots) or adm_level==101 (transects) and they have been informed as a POINT location, the respective polygon or linestring geometries were generated using the location x and y dimensions.
+  - `x` and `y` - when location is a plot (100 == adm_level) its X and Y dimension in meters
+  - `startx` and `starty` - when location is a subplot (100 == adm_level with parent also adm_level==100), the X and Y start position in relation to the 0,0 coordinate of the parent plot location
+  - `distance` - only when querytype==closest, this value will be present
+  - `locationRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:locationRemarks) - any notes associated with this Location record
+  - `decimalLatitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLatitude) - depends on the adm_level: if adm_level<=99, the latitude of the centroid; if adm_level == 999 (point), its latitude; if adm_level==100 but is POINT geometry, the POINT latitude, else if POLYGON geometry, then the first point of the POLYGON; similarly, if adm_level==101 (transects), the either the POINT latitude or the the first point of the linestring geometry.
+  - `decimalLongitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLongitude) - same as for decimalLatitude
+  - `georeferenceRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:georeferenceRemarks) - will contain the explanation of the type of decimalLatitude
+  - `geodeticDatum` -[DWC](https://dwc.tdwg.org/terms/#dwc:geodeticDatum)  the geodeticDatum informed for the geometry (ODB does not treat map projections, assumes data is always is WSG84)
 
 ## POST format
 
-ODB Locations are stored with a parent-child relationship, assuring validations and facilitating queries. Parent will be guessed by the import process using the location geometry, and this will only work if the imported location is  completely contained by a registered parent (using postgis [ST_WITHIN](https://postgis.net/docs/ST_Within.html) function to  detect parent). If parent is not found, the system will issue an error and will not import the record unless you pass `parent=0`, in which case the location will be placed under the root (world). POINT locations, however, cannot be stored without parent.
+ODB Locations are stored with a parent-child relationship, assuring validations and facilitating queries. Parent will be guessed by the import process using the location geometry. If parent is not informed, the imported location must be completely contained by a registered parent (using postgis [ST_WITHIN](https://postgis.net/docs/ST_Within.html) function to  detect parent). However, if a parent is informed, the importation may also test if the geometry fits a buffered version of the parent geometry, thus ignoring minor geometries overlap. Only countries can be imported without parent specification;
 
 Available POST variables are:
 * `name` -  the location name (parent+name must be unique in the database) - **required**
@@ -473,36 +597,44 @@ Taxon level options are:
 |40 for ` subdiv. `                       |100 for ` subord. `              |190 for ` subg., subgenus, sect. ` |                                         |
 
 
-#### Fields obtained with 'simple' option
-- `id` - the id of the Taxon in the taxons table (a local database id)
-- `fullname` - the 'canonicalName' or full taxonomic name without authors (i.e. including genus name and epithet for species name)
-- `level` - the numeric value of the taxon rank
-- `levelName` - the string value of the taxon rank
-- `authorSimple` - the taxon authorship, will be a Person name if the taxon is unpublished.
-- `bibreferenceSimple` - unified bibliographic reference (i.e. either the short format or an extract of the bibtext reference assinged). Only reference for taxon description, aditional taxon linked references can be extracted with the [BibReference API](API#endpoint_bibreferences).
-- `valid` - if valid or invalid
-- `senior_id` - if invalid the id of the valid synonym that the taxon belongs to
+#### Fields obtained
+
+- `id` - this ODB id for this Taxon record in the taxons table
+- `senior_id` - if invalid this ODB identifier of the valid synonym for this taxon (acceptedNameUsage) - only when taxonomicStatus == 'invalid'
 - `parent_id` - the id of the parent taxon
 - `author_id` - the id of the person that defined the taxon for unpublished names (having an author_id means the taxon is unpublished)
-- `notes` - any note the taxon may have
-- `family` - the family name if taxon is family or lower rank.
+- `scientificName` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificName) - the full taxonomic name without authors (i.e. including genus name and epithet for species name)
+- `scientificNameID` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificNameID) - nomenclatural databases ids, if any external reference is stored for this Taxon record
+- `taxonRank` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificName)  - the string value of the taxon rank
+- `level` - the ODB numeric value of the taxon rank
+- `scientificNameAuthorship` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificNameAuthorship) - the taxon authorship. For **taxonomicStatus unpublished**: will be a ODB registered Person name
+- `namePublishedIn` - unified bibliographic reference (i.e. either the short format or an extract of the bibtext reference assigned). This will be mostly retrieved from nomenclatural databases; Taxon linked references can be extracted with the [BibReference API](API#endpoint_bibreferences).
+- `taxonomicStatus` [DWC](https://dwc.tdwg.org/terms/#dwc:taxonomicStatus) - one of  'accepted', 'invalid' or 'unpublished'; if invalid, fields senior_id and acceptedNameUsage* will be filled
+- `parentNameUsage` [DWC](https://dwc.tdwg.org/terms/#dwc:parentNameUsage) - the name of the parent taxon, if species, the genus, if genus, family, and so on
+- `family` [DWC](https://dwc.tdwg.org/terms/#dwc:family) - the family name if taxonRank family or below
+- `higherClassification` [DWC](https://dwc.tdwg.org/terms/#dwc:higherClassification) - the full taxonomic hierarchical classification, pipe separated (will include only Taxons registered in this database)
+- `acceptedNameUsage` [DWC](https://dwc.tdwg.org/terms/#dwc:acceptedNameUsage) - if taxonomicStatus invalid the valid scientificName for this Taxon
+- `acceptedNameUsageID` [DWC](https://dwc.tdwg.org/terms/#dwc:acceptedNameUsageID) - if taxonomicStatus invalid the scientificNameID ids of the valid Taxon
+- `taxonRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:taxonRemarks) - any note the taxon record may have
+- `basisOfRecord` [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) - will always be 'taxon'
 - `externalrefs` - the Tropicos, IPNI, MycoBank, ZOOBANK or GBIF reference numbers
 
 
 ### POST format
 
-The POST API requires only the **full name** of the taxon to be imported, i.e. for species or below species taxons the complete name must be informed (e.g. *Ocotea guianensis*  or *Licaria cannela aremeniaca*). The script will validate the name retrieving the remaining required info from the nomenclatural databases using external APIs, unless you are trying to import an unpublished names. The following fields are allowed in the POST taxons API:
-* `name` - taxon full name **required**
-* `level` - may be the numeric id or a string describing the level (see above)
-* `parent` - the taxon's parent full name or id - **note** - if you inform a valid parent and the system detects a different parent through the API to the nomenclatural databases, preference will be given to the informed parent;
+The POST API requires ONLY the **full name** of the taxon to be imported, i.e. for species or below species taxons the complete name must be informed (e.g. *Ocotea guianensis*  or *Licaria cannela aremeniaca*). The script will validate the name retrieving the remaining required info from the nomenclatural databases using their API services. It will search GBIF and Tropicos if the case and retrieve taxon info, their ids in these repositories and also the full classification path and senior synonyms (if the case) up to when it finds a valid record name in this ODB database. So, unless you are trying to import unpublished names, just submit the name parameter of the list below.
+* `name` - taxon full name **required**, e.g. "Ocotea floribunda"  or "Pagamea plicata glabrescens"
+* `level` - may be the numeric id or a string describing the taxonRank (see above) **recommended for unpublished names**
+* `parent` - the taxon's parent full name or id - **note** - if you inform a valid parent and the system detects a different parent through the API to the nomenclatural databases, preference will be given to the informed parent; **required for unpublished names**
 * `bibreference` - the bibliographic reference in which the taxon was published;
 * `author` - the taxon author's name;
-* `author_id` or `person` - the person name, abbrevition, email or id, representing the author of unpublished names -  **required for unpublished names**
-* `valid` - boolean, true if this taxon name is valid;
+* `author_id` or `person` - the registered Person name, abbreviation, email or id, representing the author of unpublished names -  **required for unpublished names**
+* `valid` - boolean, true if this taxon name is valid; 0 or 1
 * `mobot` - Tropicos.org id for this taxon
 * `ipni` - IPNI id for this taxon
 * `mycobank` - MycoBank id for this taxon
 * `zoobank` - ZOOBANK id for this taxon
+* `gbif` - GBIF nubKey for this taxon
 
 
 <a name="endpoint_traits"></a>
@@ -513,17 +645,19 @@ The `traits` endpoint interact with the [Trait](Trait-Objects#traits) table. The
 ### GET optional parameters
 - `id=list` return only traits having the id or ids provided (ex `id=1,2,3,10`);
 - `name=string` return only traits having the `export_name` as indicated (ex `name=DBH`)
-- `categories`
+- `categories` - if true return the categories for categorical traits
 - `language=mixed` return name and descriptions of both trait and categories in the specified language. Values may be 'language_id', 'language_code' or 'language_name';
 - `bibreference=boolean` - if true, include the [BibReference](Auxiliary-Objects#bibreferences) associated with the trait in the results;
 - `limit` and `offset` are SQL statements to limit the amount. See [Common endpoints](endpoint_common).
 
-### Fields obtained with 'simple' option
+### Fields obtained
 - `id` - the id of the Trait in the odbtraits table (a local database id)
 - `type` - the numeric code defining the Trait type
 - `typename` - the name of the Trait type
 - `export_name` - the export name value
-- `unit` - the unit of measurement for Quantitative traits
+- `measurementType` [DWC](https://dwc.tdwg.org/terms/#measurementorfact) - same as export_name for DWC compatibility
+- `measurementMethod` [DWC](https://dwc.tdwg.org/terms/#measurementorfact) - combine name, description and categories if apply (included in the Measurement GET API, for DWC compatibility)
+- `measurementUnit` - the unit of measurement for Quantitative traits
 - `range_min` - the minimum allowed value for Quantitative traits
 - `range_max` - the maximum allowed value for Quantitative traits
 - `link_type` - if Link type trait, the class of the object the trait links to (currently only Taxon)
@@ -532,6 +666,7 @@ The `traits` endpoint interact with the [Trait](Trait-Objects#traits) table. The
 - `value_length` - the length of values allowed for Spectral trait types
 - `objects` - the types of object the trait may be used for, separated by pipe '|'
 - `categories` - each category is given for Categorical and Ordinal traits, with the following fields (the category `id`, `name`, `description` and `rank`). Ranks are meaningfull only for ORDINAL traits, but reported for all categorical traits.
+-  `bibreference` - the BibReference record associated with the Trait definition
 
 ### POST format
 The POST method allows you to batch import traits into the database and is designed for transfering data to OpenDataBio from other systems, including Trait Ontologies databases.  When entering few traits, it is **strongly recommended** that you enter traits one by one using the Web Interface form and then use the GET option for ids to import measurements.
@@ -601,37 +736,43 @@ Notice that some search fields (taxon, location, project and collector) may be s
 
 
 #### Fields obtained with 'simple' option
-* `id` - the Voucher id in the vouchers table (local database id)
-* `fullname` - the unique database combination collectorMain+Number;
-* `collectorMain` - the person associated with number that gives the voucher fullname.
-* `number` -  the **collector number**, that tracks the history of individual collectors activity
-* `collectorsAll` - a pipe '|' delimited list of all collectors
-* `date` - the date the voucher was collected
-* `taxonName` - the identification taxon name
-* `taxonNameWithAuthor` - same with authorship (in case of unpublished names, authors are persons)
-* `taxonFamily` -the taxon family level parent
-* `identificationDate` - the date the voucher was given the taxonName
-* `identifiedBy` - person giving the taxonName
-* `identificationNotes` - person note regarding the application of the taxonName
-* `depositedAt` - a point-comma ';' delimited list of collections where the record has a physical specimen deposited (collection # and type kind are given when available)
-* `isType` - if the voucher is a nomenclatural type, the kind of type or just 'Type', or else, 'Not a Type'
-* `locationName` - the location name where the voucher is assigned
-* `locationFullname` - the full location hierarchy, separated by ">"
-* `longitudeDecimalDegrees` - the longitude in decimal degrees
-* `latitudeDecimalDegrees` - the latitude in decimal degrees
-* `coordinatesPrecision` - whether the coordinates are from "Point", when location is of POINT type; "Plot" when location is of PLOT type, or the "Centroid" of the `locationName` when location is a larger area;
-* `coordinatesWKT` - coordinates in [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation; e.g. 'POINT(long lat)'
-* `individualTag` - if parent is individual, then the Individual fullname, which is the combination of Location+FieldTag
-* `projectName` - the project the voucher belongs too
-* `notes` - a note that has been associated with the voucher (does not include notes assigned as measurements values, these should be gathered through the [Measurements API Endpoints](API#measurements).
 
-
+- `id` - the Voucher ODB id in the vouchers table (local database id)
+- `basisOfRecord` [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) - will be always 'preservedSpecimen' [dwc location]([DWC](https://dwc.tdwg.org/terms/#preservedspecimen)
+- `occurrenceID` [DWC](https://dwc.tdwg.org/terms/#dwc:occurrenceID) - a unique identifier for the Voucher record - combine organismID with biocollection info
+- `organismID` [DWC](https://dwc.tdwg.org/terms/#dwc:organismID) - a unique identifier for the Individual the Voucher belongs to
+- `individual_id` - the ODB id for the Individual the Voucher belongs to
+- `collectionCode` [DWC](https://dwc.tdwg.org/terms/#dwc:collectionCode) - the Biocollection acronym where the Voucher is deposited
+- `catalogNumber` [DWC](https://dwc.tdwg.org/terms/#dwc:catalogNumber) - the Biocollection number or code for the Voucher
+- `typeStatus` [DWC](https://dwc.tdwg.org/terms/#dwc:typeStatus) - if the Voucher represent a nomenclatural type
+- `recordedBy` [DWC](https://dwc.tdwg.org/terms/#dwc:recordedBy) - collectors pipe "|" separated list of registered Persons abbreviations that collected the vouchers
+- `recordedByMain` - the first person in recordedBy, the main collector
+- `recordNumber` [DWC](https://dwc.tdwg.org/terms/#dwc:recordNumber) - an identifier for the Voucher, generaly the Collector Number value
+- `recordedDate` [DWC](https://dwc.tdwg.org/terms/#dwc:recordedDate) - the record date, collection date
+- `scientificName` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificName)  - the current taxonomic identification of the individual (no authors) or "unidentified"
+- `scientificNameAuthorship` [DWC](https://dwc.tdwg.org/terms/#dwc:scientificNameAuthorship) - the taxon authorship. For **taxonomicStatus unpublished**: will be a ODB registered Person name
+- `family` [DWC](https://dwc.tdwg.org/terms/#dwc:family)
+- `genus` [DWC](https://dwc.tdwg.org/terms/#dwc:genus)
+- `identificationQualifier` [DWC](https://dwc.tdwg.org/terms/#dwc:identificationQualifier) - identification name modifiers cf. aff. s.l., etc.
+- `identifiedBy` [DWC](https://dwc.tdwg.org/terms/#dwc:identifiedBy) - the Person identifying the scientificName  of this record
+- `dateIdentified` [DWC](https://dwc.tdwg.org/terms/#dwc:dateIdentified) - when the identification was made (may be incomplete, with 00 in the month and or day position)
+- `identificationRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:identificationRemarks) - any notes associated with the identification
+- `locationName` - the location name for the organismID the voucher belongs to  (if plot the plot name, if point the point name, ...)
+- `higherGeography` [DWC](https://dwc.tdwg.org/terms/#dwc:higherGeography) - the parent LocationName '|' separated (e.g. Brasil | Amazonas | Rio Preto da Eva | Fazenda Esteio | Reserva km37);
+- `decimalLatitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLatitude) - depends on the location adm_level and the individual X and Y, or Angle and Distance attributes, which are used to calculate these global coordinates for the record; if individual has multiple locations (a monitored bird), the location closest to the voucher date is obtained
+- `decimalLongitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLongitude) - same as for decimalLatitude
+- `occurrenceRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:occurrenceRemarks) - text note associated with this record
+- `associatedMedia` [DWC](https://dwc.tdwg.org/terms/#dwc:associatedMedia) - urls to ODB media files associated with the record
+- `datasetName` - the name of the ODB Dataset to which the record belongs to [DWC](https://dwc.tdwg.org/terms/#dwc:datasetName)
+- `accessRights` - the ODB Dataset access privacy setting - [DWC](https://dwc.tdwg.org/terms/#dwc:accessRights)
+- `bibliographicCitation` - the ODB Dataset citation - [DWC](https://dwc.tdwg.org/terms/#dwc:bibliographicCitation)
+- `license` - the ODB Dataset license - [DWC](https://dwc.tdwg.org/terms/#dwc:license)
 
 ### POST format
 
 The following fields are allowed in a post API:
 
-* `individual=mixed` - the numeric id or fullname of the Individual the Voucher belongs to **required**;
+* `individual=mixed` - the numeric id or organismID of the Individual the Voucher belongs to **required**;
 * `biocollection=mixed` - the id, name or acronym of a registered  [Biocollection](management_objects#biocollections) the Voucher belongs to **required**;
 * `biocollection_type=mixed` - the name or numeric code of numeric representing the kind of nomenclatural type the voucher represents in the Biocollection. If not informed, defaults to 0 = 'Not a Type'. See [nomenclatural types list](API#nomenclaturaltypes) for a full list of options;
 * `biocollection_number=mixed` - the alpha numeric code of the voucher in the biocollection;

@@ -18,25 +18,23 @@
       </div>
       @php
         $lockimage= '<i class="fas fa-lock"></i>';
-        if ($dataset->privacy != App\Models\Dataset::PRIVACY_AUTH) {
+        $license_logo = 'images/cc_srr_primary.png';
+        if ($dataset->privacy >= App\Models\Dataset::PRIVACY_REGISTERED) {
+          $lockimage= '<i class="fas fa-lock-open"></i>';
           $license = explode(" ",$dataset->license);
           $license_logo = 'images/'.mb_strtolower($license[0]).".png";
-        } else {
-          $license_logo = 'images/cc_srr_primary.png';
-        }
-        if ($dataset->privacy == App\Models\Dataset::PRIVACY_PUBLIC) {
-          $lockimage= '<i class="fas fa-lock-open"></i>';
         }
       @endphp
       <div class="panel-body">
-        <h3>
+        <h4>
           {{$dataset->title}}
-        </h3>
+        </h4>
         @if (isset($dataset->description))
         <p>
           {{ $dataset->description }}
         </p>
         @endif
+
         @if ($dataset->tags->count())
         <br>
         <p>
@@ -46,6 +44,8 @@
           {!! $dataset->tagLinks !!}
         </p>
         @endif
+
+
         <br>
         <span style='float:right;'>
           <h2>
@@ -53,14 +53,16 @@
           </h2>
           <small>Downloads</small>
         </span>
+
         <p>
           <a href="http://creativecommons.org/license" target="_blank">
             <img src="{{ asset($license_logo) }}" alt="{{ $dataset->license }}" width='100px'>
           </a>
           {!! $lockimage !!} @lang('levels.privacy.'.$dataset->privacy)
-
         </p>
-        @if ($dataset->measurements()->withoutGlobalScopes()->count())
+
+
+        @if (count($dataset->data_type)>0)
         <p>
           @can('export', $dataset)
             <a href="{{ url('datasets/'.$dataset->id."/download") }}" class="btn btn-success">
@@ -68,7 +70,7 @@
               @lang('messages.data_download')
             </a>
           @else
-            @if ($dataset->privacy ==0)
+            @if ($dataset->privacy < App\Models\Dataset::PRIVACY_REGISTERED)
               <a href="{{ url('datasets/'.$dataset->id."/request") }}" class="btn btn-warning">
                 <span class="glyphicon glyphicon-download-alt unstyle"></span>
                 @lang('messages.data_request')
@@ -79,10 +81,10 @@
                 @lang('messages.download_login')
               </a>
             @endif
-
           @endcan
         </p>
         @endif
+
         @if (isset($dataset->citation))
           <br>
           <p>
@@ -94,6 +96,7 @@
             <pre><code>{{ $dataset->bibtex }}</code></pre>
           </div>
         @endif
+
         @if ($dataset->policy)
           <br>
           <p>
@@ -107,43 +110,46 @@
         <br>
 
 <p>
-  <button type="button" class="btn btn-default btntoogle" data='dataset_summary' >@lang('messages.dataset_summary')</button>
+  <button id='dataset_summary_button' type="button" type="button" class="btn btn-default">
+    <span id='dataset_summary_loading' hidden><i class="fas fa-sync fa-spin"></i></span>
+    @lang('messages.dataset_summary')
+  </button>
   &nbsp;&nbsp;
   <button id='identifications_summary_button' type="button" class="btn btn-default">
     <span id='identifications_summary_loading' hidden><i class="fas fa-sync fa-spin"></i></span>
-    @lang('messages.identifications_summary')
+    @lang('messages.taxonomic_summary')
   </button>
-
-  @if ($dataset->measurements()->withoutGlobalScopes()->count())
-    <a href="{{ url('measurements/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
-          <i class="fa fa-btn fa-search"></i>
-          {{ $dataset->measurements()->withoutGlobalScopes()->count() }}
-          @lang('messages.measurements')
-    </a>
-    &nbsp;&nbsp;
-  @endif
+  &nbsp;&nbsp;
+  <button type="button" class="btn btn-default btntoogle" data='dataset_references' >
+   <i class="fas fa-book-open"></i>
+   @lang('messages.references')
+ </button>
 </p>
 <br>
 <p>
-  <button type="button" class="btn btn-default btntoogle" data='dataset_references' >
-    <i class="fas fa-book-open"></i>
-    @lang('messages.references')
-  </button>
+  <a href="{{ url('measurements/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
+        <i class="fa fa-btn fa-search"></i>
+        @lang('messages.measurements')
+  </a>
+  &nbsp;&nbsp;
+  <a href="{{ url('individuals/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
+        <i class="fa fa-btn fa-search"></i>
+        @lang('messages.individuals')
+  </a>
 
-
-    &nbsp;&nbsp;
-    <a href="{{ url('individuals/'. $dataset->id. '/datasets')  }}" class="btn btn-default" name="submit" value="submit">
-          <i class="fa fa-btn fa-search"></i>
-          @lang('messages.individuals')
-    </a>
-  
-    &nbsp;&nbsp;
-    <a href="{{ url('vouchers/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
-          <i class="fa fa-btn fa-search"></i>
-          @lang('messages.vouchers')
-    </a>
-
-    &nbsp;&nbsp;
+  &nbsp;&nbsp;
+  <a href="{{ url('vouchers/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
+        <i class="fa fa-btn fa-search"></i>
+        @lang('messages.vouchers')
+  </a>
+  &nbsp;&nbsp;
+  <a href="{{ url('media/'. $dataset->id. '/datasets')  }}" class="btn btn-default" name="submit" value="submit">
+        <i class="fa fa-btn fa-search"></i>
+        @lang('messages.media_files')
+  </a>
+</p>
+<br>
+<p>
     <a href="{{ url('locations/'. $dataset->id. '/dataset')  }}" class="btn btn-default" name="submit" value="submit">
           <i class="fa fa-btn fa-search"></i>
           @lang('messages.locations')
@@ -159,169 +165,45 @@
 </div>
 
 <!-- START dataset people block -->
-<div class='hiddeninfo' id='dataset_people' hidden>
-  <hr>
-  <div class="panel-heading">
-    <h4>
-      @lang('messages.persons')
-    </h4>
-  </div>
-  <div class="panel-body">
-    <p><strong>
-    @lang('messages.admins')
-    :</strong>
-    <ul>
-    @foreach ($dataset->users()->wherePivot('access_level', '=', App\Models\Project::ADMIN)->get() as $admin)
-    @if(isset($admin->person))
-      <li>{{ $admin->person->full_name." -  ".$admin->email }} </li>
-    @else
-      <li>{{ $admin->email }} </li>
-    @endif
-    @endforeach
-    </ul>
-    </p>
+<!-- START people  BLOCK -->
+<div class="hiddeninfo collapse" id='dataset_people'>
+<hr>
+    <div class="panel-heading">
+      <h4>
+        @lang('messages.persons')
+      </h4>
+    </div>
+    <div class="panel-body">
+  <table class="table table-striped user-table">
+  <thead>
+    <th>@lang('messages.email')</th>
+    <th>@lang('messages.name')</th>
+    <th>@lang('messages.role')</th>
+  </thead>
+  <tbody>
+  @foreach($dataset->people as $role => $list)
+  @foreach($list as $member)
+  <tr>
+  <td class="table-text">
+      {{ $member[0] }}
+  </td>
+  <td class="table-text">
+      {{ $member[1] }}
+  </td>
+  <td class="table-text">
+      {{ $role }}
+  </td>
+  </tr>
+  @endforeach
+  @endforeach
+</tbody>
+</table>
 
-    <p><strong>
-    @lang('messages.collaborators')
-    :</strong>
-    <ul>
-    @foreach ($dataset->users()->wherePivot('access_level', '=', App\Models\Project::COLLABORATOR)->get() as $admin)
-      @if(isset($admin->person))
-        <li>{{ $admin->person->full_name." -  ".$admin->email }} </li>
-      @else
-        <li>{{ $admin->email }} </li>
-      @endif
-    @endforeach
-    </ul>
-    </p>
-
-    <p><strong>
-    @lang('messages.viewers')
-    :</strong>
-    <ul>
-    @foreach ($dataset->users()->wherePivot('access_level', '=', App\Models\Project::VIEWER)->get() as $admin)
-      @if(isset($admin->person))
-        <li>{{ $admin->person->full_name." -  ".$admin->email }} </li>
-      @else
-        <li>{{ $admin->email }} </li>
-      @endif
-    @endforeach
-    </ul>
-    </p>
-  </div>
+</div>
 </div>
 
-    <!-- START dataset summary BLOCK -->
-    <div  class='hiddeninfo' id='dataset_summary' hidden>
-      <hr>
-      <div class="panel-heading">
-        <h4>
-        @lang('messages.dataset_summary_hint')
-        </h4>
-      </div>
-      <div class="panel-body">
-      @if (isset($trait_summary))
-    <table class="table table-striped user-table">
-      <thead>
-        <th>@lang('messages.trait')</th>
-        <th>@lang('messages.individuals')</th>
-        <th>@lang('messages.vouchers')</th>
-        <th>@lang('messages.taxons')</th>
-        <th>@lang('messages.locations')</th>
-        <th>@lang('messages.total')</th>
-      </thead>
-      <tbody>
-        @php
-          $individuals = 0;
-          $locations=0;
-          $taxons=0;
-          $vouchers=0;
-          $totals=0;
-        @endphp
-        @foreach ($trait_summary as $summary)
-          @php
-            $individuals = $individuals+$summary->individuals;
-            $locations = $locations+$summary->locations;
-            $taxons = $taxons+$summary->taxons;
-            $vouchers = $vouchers+$summary->vouchers;
-            $totals = $totals+$summary->total;
-          @endphp
-          <tr>
-              <td class="table-text">
-                  <a href="{{ url('traits/'.$summary->trait_id) }}">{{ $summary->export_name }}</a>
-              </td>
-              <td class="table-text">
-                  @if ($summary->individuals>0)
-                    <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'|Plant/dataset') }}">{{ $summary->individuals }}</a>
-                  @else
-                    {{ $summary->individuals }}
-                  @endif
-              </td>
-
-              <td class="table-text">
-                  @if ($summary->vouchers>0)
-                <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'|Voucher/dataset') }}">{{ $summary->vouchers }}</a>
-              @else
-                {{ $summary->vouchers }}
-              @endif
-              </td>
-
-              <td class="table-text">
-                  @if ($summary->taxons>0)
-                <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'|Taxon/dataset') }}">{{ $summary->taxons }}</a>
-              @else
-                {{ $summary->taxons }}
-              @endif
-              </td>
-              <td class="table-text">
-                  @if ($summary->locations>0)
-                <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'|Location/dataset') }}">{{ $summary->locations }}</a>
-              @else
-                {{ $summary->locations }}
-              @endif
-              </td>
-              <td class="table-text">
-                  <a href="{{ url('measurements/'.$dataset->id.'|'.$summary->trait_id.'/dataset') }}">{{ $summary->total }}</a>
-              </td>
-          </tr>
-      @endforeach
-        <tr>
-        <td>
-          <strong>
-          @lang('messages.total')
-          </strong>
-        </td>
-        <td>
-          <strong>
-            {{ $individuals }}
-          </strong>
-        </td>
-        <td>
-          <strong>
-            {{ $vouchers }}
-          </strong>
-        </td>
-        <td>
-          <strong>
-            {{ $taxons }}
-          </strong>
-        </td>
-        <td>
-          <strong>
-            {{ $locations }}
-          </strong>
-        </td>
-        <td>
-          <strong>
-            {{ $totals }}
-          </strong>
-        </td>
-        </tr>
-      </tbody>
-    </table>
-    @endif
-    </div>
-    </div>
+<!-- START dataset summary BLOCK -->
+<div  class='hiddeninfo' id='dataset_summary_block' hidden></div>
 
 <!-- IDENTIFICATIONS SUMMARY PANEL DO NOT CHANGE THIS LINE  MAY BREAK jquery below-->
 <div class="panel-body hiddeninfo" id='identifications_summary_block' hidden></div>
@@ -426,7 +308,7 @@ $('.btntoogle').on('click',function() {
       e.preventDefault();
       $.ajax({
         type: 'POST',
-        url: "{{ route('datasetTaxonInfo',$dataset->id) }}",
+        url: "{{ route('dataset_identification_summary',$dataset->id) }}",
         data: {
           "id" : "{{ $dataset->id }}",
           "_token" : "{{ csrf_token() }}"
@@ -452,7 +334,38 @@ $('.btntoogle').on('click',function() {
   }
   });
 
-
+  $('#dataset_summary_button').on('click', function(e){
+    if ($('#dataset_summary_block').is(':empty')){
+      $('#dataset_summary_loading').show();
+      $('.hiddeninfo').hide();
+      e.preventDefault();
+      $.ajax({
+        type: 'POST',
+        url: "{{ route('dataset_summary',$dataset->id) }}",
+        data: {
+          "id" : "{{ $dataset->id }}",
+          "_token" : "{{ csrf_token() }}"
+        },
+        success: function(data) {
+            $('#dataset_summary_block').html(data);
+            $('#dataset_summary_block').show();
+            $('#dataset_summary_loading').hide();
+        },
+        error: function(data) {
+            $('#dataset_summary_block').html("Nothing to display");
+            $('#dataset_summary_block').show();
+            $('#dataset_summary_loading').hide();
+        }
+      });
+  } else {
+    if ($('#dataset_summary_block').is(':visible')) {
+      $('#dataset_summary_block').hide();
+    } else {
+      $('.hiddeninfo').hide();
+      $('#dataset_summary_block').show();
+    }
+  }
+  });
 
 
 });

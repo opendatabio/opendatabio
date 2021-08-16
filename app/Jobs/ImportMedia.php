@@ -11,7 +11,7 @@ use App\Models\Taxon;
 use App\Models\Individual;
 use App\Models\ODBFunctions;
 use App\Models\Tag;
-use App\Models\Project;
+use App\Models\Dataset;
 use Spatie\SimpleExcel\SimpleExcelReader;
 use Illuminate\Support\Str;
 use Lang;
@@ -101,7 +101,7 @@ class ImportMedia extends ImportCollectable
       if(!$this->validateCollector($data)) {
             return false;
       }
-      if(!$this->projectValidate($data)) {
+      if(!$this->datasetValidate($data)) {
             return false;
       }
       if(!$this->validateLicense($data)) {
@@ -160,19 +160,19 @@ public function validateDate(&$data)
   return true;
 }
 
-    public function projectValidate(&$data)
+    public function datasetValidate(&$data)
     {
-      $project = isset($data['project']) ? $data['project'] : (isset($data['project_id']) ? $data['project_id'] : null);
-      if (null == $project) {
+      $dataset = isset($data['dataset']) ? $data['dataset'] : (isset($data['dataset_id']) ? $data['dataset_id'] : null);
+      if (null == $dataset) {
           /* not informed is valid */
           return true;
       }
-      $valid = ODBFunctions::validRegistry(Project::select('id'),$project,['id','name']);
+      $valid = ODBFunctions::validRegistry(dataset::select('id'),$dataset,['id','name']);
       if (null === $valid) {
-          $this->skipEntry($data, 'project'.' '.$project.' was not found in the database');
+          $this->skipEntry($data, 'dataset'.' '.$dataset.' was not found in the database');
             return false;
       }
-      $data['project'] = $valid->id;
+      $data['dataset'] = $valid->id;
       return true;
     }
 
@@ -406,8 +406,8 @@ public function validateDate(&$data)
       }
     }
 
-    if (null != $line['project']) {
-      $media->project_id = $line['project'];
+    if (null != $line['dataset']) {
+      $media->dataset_id = $line['dataset'];
       $media->save();
     }
     /* syncs title translation */

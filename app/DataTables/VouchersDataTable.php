@@ -48,14 +48,14 @@ class VouchersDataTable extends DataTable
             return $voucher->is_type;
         })
         ->addColumn('identification', function ($voucher) {
-            return $voucher->taxon_name == Lang::get('messages.unidentified') ?
-                   $voucher->taxon_name : '<em>'.htmlspecialchars($voucher->taxon_name).'</em>';
+            return $voucher->scientificName == Lang::get('messages.unidentified') ?
+                   $voucher->scientificName : '<em>'.htmlspecialchars($voucher->scientificName).'</em>';
         })
         ->addColumn('collectors', function ($voucher) {
             return $voucher->all_collectors;
         })
         ->addColumn('individual', function ($voucher) {
-            return $voucher->individual->rawLink();
+            //return $voucher->individual()->first()->rawLink();
         })
         ->addColumn('location',function($voucher) {
             //return $voucher->location_first()->first()->location()->first()->rawLink();
@@ -70,8 +70,8 @@ class VouchersDataTable extends DataTable
         ->addColumn('select_vouchers',  function ($voucher) {
             return $voucher->id;
         })
-        ->addColumn('project', function ($voucher) {
-          return $voucher->project_name;
+        ->addColumn('dataset', function ($voucher) {
+          return $voucher->dataset_name;
         })
         ->rawColumns(['fullname', 'identification','location','measurements','parent_type','individual','biocollection_id']);
     }
@@ -83,31 +83,29 @@ class VouchersDataTable extends DataTable
      */
     public function query()
     {
-        //This slows down and is not needed here
         $query = Voucher::query()->select([
           'vouchers.id',
-          'vouchers.individual_id',
-          'vouchers.biocollection_id',
-          'vouchers.biocollection_number',
-          'vouchers.biocollection_type',
-          'vouchers.notes',
           'vouchers.number',
-          'vouchers.project_id',
+          'vouchers.individual_id',
+          'vouchers.dataset_id',
           'vouchers.date',
+          'vouchers.notes',
+          'vouchers.biocollection_id',
+          'vouchers.biocollection_type',
+          'vouchers.biocollection_number',
           DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number) as fullname')
         ]);
         // customizes the datatable query
         if ($this->location) {
-            $locationsids = Location::find($this->location)->getDescendantsAndSelf()->pluck('id')->toArray();
-            $query = $query->whereHas('location_first',function($q) use($locationsids) {
-                $q->whereIn('location_id',$locationsids);
-            });
+            $ids  = Location::find($this->location)->first()->all_voucher_ids();
+            $query = $query->whereIn('id',$ids);
         }
         if ($this->individual) {
             $query = $query->where('individual_id',$this->individual);
         }
-        if ($this->project) {
-            $query = $query->where('project_id', '=', $this->project);
+        if ($this->dataset) {
+            $dataset = $this->dataset;
+            $query = $query->where('dataset_id', '=', $dataset)->orWhereHas('measurements', function ($q) use ($dataset) {$q->where('dataset_id', '=', $dataset); });
         }
         if ($this->taxon) {
             $taxon = $this->taxon;
@@ -120,10 +118,13 @@ class VouchersDataTable extends DataTable
                 $q->where('person_id', '=', $person);
             });
         }
-        if ($this->dataset) {
-            $dataset  = $this->dataset;
-            $query = $query->whereHas('measurements', function ($q) use ($dataset) {$q->where('dataset_id', '=', $dataset); });
-
+        if ($this->project) {
+            $project  = $this->project;
+            $query = $query->whereHas('dataset', function ($q) use ($project) {$q->where('project_id', '=', $project); })->orWhereHas('measurements', function ($q) use ($project) {
+              $q->whereHas('dataset',function($dt) use ($project) {
+                $dt->where('project_id', '=', $project);
+              });
+            });
         }
         if ($this->biocollection_id) {
             $query = $query->where('biocollection_id',$this->biocollection_id);
@@ -178,7 +179,7 @@ class VouchersDataTable extends DataTable
                 'location' => ['title' => Lang::get('messages.location'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => false],
-                'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
+                'dataset' => ['title' => Lang::get('messages.dataset'), 'searchable' => false, 'orderable' => false],
                 'collectors' => ['title' => Lang::get('messages.collectors'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([

@@ -174,9 +174,9 @@ class VoucherController extends Controller
         }
         $biocollections = Biocollection::orderBy('acronym')->cursor();
         $persons = Person::all();
-        $projects = Auth::user()->projects;
+        $datasets = Auth::user()->datasets;
 
-        return view('vouchers.create', compact('persons','biocollections','individual','projects'));
+        return view('vouchers.create', compact('persons','biocollections','individual','datasets'));
     }
 
 
@@ -196,7 +196,7 @@ class VoucherController extends Controller
             'individual_id' => 'required|integer',
             'biocollection_id' => 'required|integer',
             'biocollection_type' => 'required|integer',
-            'project_id' => 'required|integer'
+            'dataset_id' => 'required|integer'
         ];
         $checkcollector = false;
         //if number or collector is provided, then this required different validation
@@ -319,8 +319,8 @@ class VoucherController extends Controller
         $voucher = Voucher::findOrFail($id);
         $biocollections = Biocollection::all();
         $persons = Person::all();
-        $projects = Auth::user()->projects;
-        return view('vouchers.create', compact('voucher', 'persons', 'projects', 'biocollections'));
+        $datasets = Auth::user()->datasets;
+        return view('vouchers.create', compact('voucher', 'persons', 'datasets', 'biocollections'));
     }
 
 
@@ -336,9 +336,11 @@ class VoucherController extends Controller
      */
     public function store(Request $request)
     {
-
-        $project = Project::findOrFail($request->project_id);
-        $this->authorize('create', [Voucher::class, $project]);
+        $dataset= null;
+        if ($request->dataset_id) {
+          $dataset = Dataset::findOrFail($request->dataset_id);
+        }
+        $this->authorize('create', [Voucher::class, $dataset]);
         $validator = $this->customValidate($request);
         if ($validator->errors()->count()) {
             if ($request->from_the_api) {
@@ -348,7 +350,7 @@ class VoucherController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
-        $voucher = new Voucher($request->only(['individual_id','biocollection_id','biocollection_type','biocollection_number','number', 'notes', 'project_id']));
+        $voucher = new Voucher($request->only(['individual_id','biocollection_id','biocollection_type','biocollection_number','number', 'notes', 'dataset_id']));
 
         //date and collector only if provided as they may be that of the individual
         if (isset($request->date_month)) {
@@ -416,7 +418,11 @@ class VoucherController extends Controller
     public function update(Request $request, $id)
     {
         $voucher = Voucher::findOrFail($id);
-        $this->authorize('update', $voucher);
+        $dataset= null;
+        if ($request->dataset_id) {
+          $dataset = Dataset::findOrFail($request->dataset_id);
+        }
+        $this->authorize('update',[$voucher,$dataset]);
         $validator = $this->customValidate($request, $voucher);
         if ($validator->fails()) {
             return redirect()->back()
@@ -427,9 +433,9 @@ class VoucherController extends Controller
         //for summary counts
         $oldindividual = $voucher->individual;
         $oldvalues = [
-            'project_id' => $voucher->project_id,
             'location_id' => $oldindividual->locations->last()->id,
-            'taxon_id' => $oldindividual->identification->taxon_id
+            'taxon_id' => $oldindividual->identification->taxon_id,
+            'dataset_id' => $voucher->dataset_id
         ];
 
         //for summary counts
@@ -437,10 +443,10 @@ class VoucherController extends Controller
         $newvalues = [
             'location_id' => $individual->locations->last()->id,
             'taxon_id' => $individual->identification->taxon_id,
-            'project_id' => $request->project_id
+            'dataset_id' => $request->dataset_id
         ];
 
-        $voucher->update($request->only(['individual_id','biocollection_id','biocollection_type','biocollection_number','number', 'notes', 'project_id']));
+        $voucher->update($request->only(['individual_id','biocollection_id','biocollection_type','biocollection_number','number', 'notes', 'dataset_id']));
 
         if ($request->date_year) {
           $voucher->setDate($request->date_month, $request->date_day, $request->date_year);

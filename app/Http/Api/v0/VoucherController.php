@@ -37,7 +37,7 @@ class VoucherController extends Controller
           'vouchers.id',
           'vouchers.number',
           'vouchers.individual_id',
-          'vouchers.project_id',
+          'vouchers.dataset_id',
           'vouchers.date',
           'vouchers.notes',
           'vouchers.biocollection_id',
@@ -104,7 +104,9 @@ class VoucherController extends Controller
 
         if ($request->project) {
             $projects = ODBFunctions::asIdList($request->project, Project::select('id'), 'name');
-            $vouchers->whereIn('project_id', $projects);
+            $vouchers->whereHas('dataset', function($d) use($projects) {
+              $d->whereIn('project_id',$projects);
+            });
         }
 
         if ($request->taxon or $request->taxon_root) {
@@ -132,10 +134,7 @@ class VoucherController extends Controller
 
         if ($request->dataset) {
             $datasets = ODBFunctions::asIdList($request->dataset, Dataset::select('id'), 'name');
-            $vouchers->whereHas('measurements', function($measurement) use($datasets){
-                $measurement->whereIn('dataset_id',$datasets);
-              }
-            );
+            $vouchers->whereIn('dataset_id',$datasets);              
         }
 
 
@@ -155,24 +154,16 @@ class VoucherController extends Controller
         }
         */
         $vouchers = $vouchers->cursor();
-
         $fields = ($request->fields ? $request->fields : 'simple');
-        $simple = ['id','fullname', "individual_id",'individual_fullname', 'biocollection_acronym','is_type','biocollection_number','main_collector','collector_number','all_collectors','collection_date','taxon_name','taxon_name_modifier','taxon_name_with_author','taxon_family','identification_date','identified_by','identification_notes','location_name','location_fullname','longitude','latitude','coordinates_precision','project_name','notes'];
-
-        /* ignore all keyword as they are all inserted in simple
-        if ('all' == $fields) {
-          $keys = array_keys($vouchers->first()->toArray());
-          $fields = implode(',',array_merge($simple,$keys));
+        $possible_fields = config('api-fields.vouchers');
+        $field_sets = array_keys($possible_fields);
+        if (in_array($fields,$field_sets)) {
+            $fields = implode(",",$possible_fields[$fields]);
         }
-        */
-        if ('all' == $fields) {
-          $fields = 'simple';
-        }
-
         if ($fields=="id") {
           $vouchers = $vouchers->pluck('id')->toArray();
         } else {
-          $vouchers = $this->setFields($vouchers, $fields, $simple);
+          $vouchers = $this->setFields($vouchers, $fields, null);
         }
         return $this->wrap_response($vouchers);
     }

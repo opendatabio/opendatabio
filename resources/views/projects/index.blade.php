@@ -52,26 +52,4 @@
 @push ('scripts')
 {!! $dataTable->scripts() !!}
 
-<script>
-$(document).ready(function() {
-
-  var table = $('#dataTableBuilder').DataTable();
-
-  $('tbody').on('click', 'tr',function () {
-      //console.log( table.row( this ).data() );
-      var id =  table.row( this ).data().id;
-      var id = 'description_'+id;
-      if($('#'+id).is(':hidden')) {
-        $('#'+id).show();
-      } else {
-        $('#'+id).hide();
-      }
-  });
-
-
-});
-
-
-</script>
-
 @endpush

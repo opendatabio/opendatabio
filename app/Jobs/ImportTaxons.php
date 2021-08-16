@@ -83,7 +83,7 @@ class ImportTaxons extends AppJob
           $parent_id = $taxon['parent_id'];
           $hadtaxon = Taxon::whereRaw('(odb_txname(name, level, parent_id) LIKE ?) AND parent_id = ?', [$name, $parent_id])->count();
           if ($hadtaxon>0) {
-              $this->appendLog('WARNING: taxon '.$name.' under the parent '.$parent.' is already imported into the database');
+              $this->appendLog('WARNING: taxon '.$name.' under the parent '.$taxon['parent'].' is already imported into the database');
               return false;
           }
         }
@@ -222,8 +222,6 @@ class ImportTaxons extends AppJob
             $condition2 = (!isset($senior_id) and null != $senior);
             $condition3 = isset($gbifkey);
 
-            //$this->appendLog($condition1." ".$condition2." senior:".$senior.serialize($taxon));
-            //return false;
 
             if ($condition3 and ($condition1 or $condition2)) {
                 $related = ExternalAPIs::getGBIFParentPathData($gbifkey,$include_first=false);
@@ -231,6 +229,7 @@ class ImportTaxons extends AppJob
             }
             if (!$condition3 and ($condition1 or $condition2)) {
                 $related_data = null;
+                $related_data2 = null;
                 $level = $taxon['level'];
                 if ($condition1) {
                    $checkname = ['name' => $taxon['parent']];
@@ -238,9 +237,9 @@ class ImportTaxons extends AppJob
                    $request = $request->merge($checkname);
                    $apicheck = app('App\Http\Controllers\TaxonController')->checkapis($request);
                    $apiresults = $apicheck->getData(true);
-                   if (isset($results['apidata'])) {
-                      $gbif = $results['apidata']['gbif'];
-                      $rank = $results['apidata']['rank'];
+                   if (isset($apiresults['apidata'])) {
+                      $gbif = $apiresults['apidata']['gbif'];
+                      $rank = $apiresults['apidata']['rank'];
                       $validlevel = ((isset($level) and $level>$rank) or !isset($level)) ? true : false;
                       if (isset($gbif) and $validlevel) {
                         $related_data = ExternalAPIs::getGBIFParentPathData($gbif,$include_first=true);
@@ -253,20 +252,22 @@ class ImportTaxons extends AppJob
                    $request = $request->merge($checkname);
                    $apicheck = app('App\Http\Controllers\TaxonController')->checkapis($request);
                    $apiresults = $apicheck->getData(true);
-                   if (isset($results['apidata'])) {
-                      $gbif = $results['apidata']['gbif'];
-                      $rank = $results['apidata']['rank'];
+                   if (isset($apiresults['apidata'])) {
+                      $gbif = $apiresults['apidata']['gbif'];
+                      $rank = $apiresults['apidata']['rank'];
                       $validlevel = ((isset($level) and $level>=$rank) or !isset($level)) ? true : false;
                       if (isset($gbif) and $validlevel) {
                         $related_data2 = ExternalAPIs::getGBIFParentPathData($gbif,$include_first=true);
-                        if (isset($related_data)) {
+                        if ($related_data !== null) {
                           $related_data = array_merge($related_data,$related_data2);
+                        } else {
+                          //$related_data = $related_data2;
                         }
                       }
                    }
                 }
                 if (is_array($related_data)) {
-                  $related_data = array_unique($related_data);
+                  $related_data = array_unique($related_data,SORT_REGULAR);
                   ksort($related_data);
                   $taxon['related_to_import'] = $related_data;
                 }
@@ -462,7 +463,7 @@ class ImportTaxons extends AppJob
           $parent = isset($taxon['parent_id']) ? $taxon['parent_id'] : null;
         }
         if (is_null($parent)) {
-          $this->appendLog("ERROR: taxon '$name' could not be imported into the database. Missing parent");
+          $this->appendLog("ERROR: taxon '$name' could not be imported into the database. Missing parent has ".count($related_to_import)." and the key is ".$taxon['gbifkey']." and parent is ".$taxon['parent']);
           return;
         }
         // Is this taxon already imported?

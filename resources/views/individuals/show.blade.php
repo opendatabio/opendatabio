@@ -108,14 +108,25 @@
         </div>
       -->
         @if($individual->locations->count()>1)
-        <div id='locationdatatable' class='panel-collapse collapse' >{!! $dataTable->table([],true) !!}</div>
+         <div id='locationdatatable' class='panel-collapse collapse' >
+          @if (Auth::user())
+            {!! View::make('common.exportdata')->with([
+                  'object' => isset($individual) ? $individual : null,
+                  'object_second' => null,
+                  'export_what' => 'individual-location'
+            ]) !!}
+            <br>
+          @endif
+          {!! $dataTable->table([],true) !!}
+        </div>
         @endif
       <hr>
 
-
-      <p><strong>@lang('messages.project'):</strong>
-        {!! $individual->project->rawLink() !!}
+      @if($individual->dataset)
+      <p><strong>@lang('messages.dataset'):</strong>
+        {!! $individual->dataset->rawLink() !!}
       </p>
+      @endif
 
       @if ($individual->notes)
         <p><strong>@lang('messages.notes'):</strong>
@@ -273,6 +284,13 @@ $("#map_individual").click(function(e) {
 }
 });
 
+// Handle form submission event
+$('#export_sumbit').on('click',function(e){
+  var table =  $('#dataTableBuilder').DataTable();
+  var rows_selected = table.column( 0 ).checkboxes.selected();
+  $('#export_ids').val( rows_selected.join());
+  $("#export_form"). submit();
+});
 </script>
 
 @endpush

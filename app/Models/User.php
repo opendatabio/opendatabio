@@ -88,6 +88,13 @@ class User extends Authenticatable
         return $this->belongsToMany(Dataset::class)->withPivot('access_level');
     }
 
+    public function editableDatasets()
+    {
+        $datasets = Dataset::leftJoin('dataset_user','datasets.id','dataset_id')->leftJoin('project_user','datasets.project_id','project_user.project_id');
+        $datasets = $datasets->whereRaw("(dataset_user.access_level > ".Project::VIEWER." AND dataset_user.user_id=".$this->id.") OR (project_user.access_level >".Project::VIEWER." AND project_user.user_id=".$this->id." AND datasets.privacy=".Dataset::PRIVACY_PROJECT.")");
+        return $datasets;
+    }
+
     public function forms()
     {
         return $this->hasMany(Form::class);
