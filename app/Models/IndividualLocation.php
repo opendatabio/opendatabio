@@ -8,6 +8,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Scopes\IndividualLocationScope;
+
 use App\Models\Location;
 use App\Models\Individual;
 use App\Models\Identification;
@@ -59,6 +61,18 @@ class IndividualLocation extends Model
     {
       return (float) $this->locationWithGeom->decimalLongitude;
     }
+
+
+    /* include individual permissions here */
+    /**
+   * The "booted" method of the model.
+   *
+   * @return void
+   */
+   protected static function booted()
+   {
+      static::addGlobalScope(new IndividualLocationScope);
+   }
 
 
 

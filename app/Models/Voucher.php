@@ -68,14 +68,14 @@ class Voucher extends Model
         static::addGlobalScope('datasetScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->whereRaw('(vouchers.dataset_id IS NULL) OR vouchers.id IN (SELECT p1.id FROM vouchers AS p1 JOIN datasets ON datasets.id = p1.dataset_id WHERE datasets.privacy >='.Dataset::PRIVACY_REGISTERED.')');
+                return $builder->whereRaw('((vouchers.dataset_id IS NULL) OR vouchers.id IN (SELECT p1.id FROM vouchers AS p1 JOIN datasets ON datasets.id = p1.dataset_id WHERE datasets.privacy >='.Dataset::PRIVACY_REGISTERED.'))');
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {
                 return $builder;
             }
             // now the complex case: the regular user
-            return $builder->whereRaw('(vouchers.dataset_id IS NULL) OR vouchers.id IN (SELECT vouchers.id FROM vouchers JOIN datasets ON datasets.id=vouchers.dataset_id JOIN dataset_user ON dataset_user.dataset_id=datasets.id WHERE (datasets.privacy >='.Dataset::PRIVACY_REGISTERED.') OR dataset_user.user_id='.Auth::user()->id.')');
+            return $builder->whereRaw('((vouchers.dataset_id IS NULL) OR vouchers.dataset_id IN (SELECT dts.id FROM datasets as dts JOIN dataset_user as dtu ON dtu.dataset_id=dts.id WHERE (dts.privacy >='.Dataset::PRIVACY_REGISTERED.') OR dtu.user_id='.Auth::user()->id.'))');
           });
     }
 
@@ -109,7 +109,7 @@ class Voucher extends Model
       if ($this->locations->count()==1 or !$valid_date) {
         return $this->locations()->where('first',1);
       }
-      return $this->locations()->orderByRaw(" ABS(DATEDIFF(date_time, '".$date."')), id" )->limit(1);
+      return $this->locations()->orderByRaw(" ABS(DATEDIFF(date_time, '".$this->date."')), id" )->limit(1);
     }
 
     // with access to the location geom field
@@ -237,8 +237,8 @@ class Voucher extends Model
     {
         $searchStr = 'voucher_id":'.$this->id;
         return $this->individual
-        ->media()
-        ->where('custom_properties','like','%'.$searchStr.'%');
+          ->media()
+          ->where('custom_properties','like','%'.$searchStr.'%');
     }
 
 
@@ -418,12 +418,13 @@ class Voucher extends Model
 
     public function getAssociatedMediaAttribute()
     {
+      //return null;
       $media = $this->media;
       if ($media->count()) {
-        $result = $media->cursor()->map(function($v){
-            return url('media/'.$v->id);
-        })->toArray();
-        return implode(" | ",$result);
+      $result = $media->map(function($v){
+                return url('media/'.$v->id);
+      })->toArray();
+      return implode(" | ",$result);
       }
       return null;
     }

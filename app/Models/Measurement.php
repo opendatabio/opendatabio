@@ -281,24 +281,18 @@ class Measurement extends Model
         static::addGlobalScope('datasetScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->join('datasets', 'datasets.id', '=', 'dataset_id')
-                    ->where('datasets.privacy', '=', Dataset::PRIVACY_PUBLIC);
+                return $builder->whereRaw("(measurements.dataset_id IN (SELECT dts.id FROM datasets as dts WHERE dts.privacy>='".Dataset::PRIVACY_REGISTERED."'))");
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {
                 return $builder;
             }
             // now the complex case: the regular user
-            return $builder->whereRaw('measurements.id IN
-(SELECT p1.id FROM measurements AS p1
-JOIN datasets ON (datasets.id = p1.dataset_id)
-WHERE datasets.privacy > 0
-UNION
-SELECT p1.id FROM measurements AS p1
-JOIN datasets ON (datasets.id = p1.dataset_id)
-JOIN dataset_user ON (datasets.id = dataset_user.dataset_id)
-WHERE datasets.privacy = 0 AND dataset_user.user_id = '.Auth::user()->id.'
-)');
+            return $builder->whereRaw("(measurements.dataset_id IN
+(SELECT dts.id FROM datasets as dts WHERE dts.privacy>='".Dataset::PRIVACY_REGISTERED."')
+OR
+measurements.dataset_id IN
+(SELECT dts.id FROM datasets as dts JOIN dataset_user as dtu ON dtu.dataset_id=dts.id WHERE (dts.privacy >='".Dataset::PRIVACY_REGISTERED."') OR dtu.user_id='".Auth::user()->id."'))");
         });
     }
 

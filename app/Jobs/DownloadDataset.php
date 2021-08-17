@@ -235,10 +235,10 @@ class DownloadDataset extends AppJob
 
         //LOG THE FILE FOR USER DOWNLOAD
         $file = "Files for dataset <strong>".$datasetname."</strong> prepared ".$today." ";
-        $tolog = $file."<br><a href='".url('downloads/'.$zipFileName)."' download >".$zipFileName."</a>";
+        $tolog = $file."<br><a href='".url('storage/downloads/'.$zipFileName)."' download >".$zipFileName."</a>";
 
         if (count($media_ids)>0) {
-          $tolog .= "<br><a href='".url('downloads/'.$mediazipfilename)."' download >".$mediazipfilename."</a>";
+          $tolog .= "<br><a href='".url('storage/downloads/'.$mediazipfilename)."' download >".$mediazipfilename."</a>";
         }
 
         $tolog .= "<br>".Lang::get('messages.dataset_download_file_tip');
@@ -269,10 +269,18 @@ class DownloadDataset extends AppJob
           } else {
             $to_name = $to_email;
           }
-          $data = array(
+          $content = Lang::get('messages.dataset_downloaded_message').":<br>".$zipFileName;
+          if (isset($mediazipfilename)) {
+            $content .= "<br>".$mediazipfilename;
+          }
+          $content .= "<br><br>".Lang::get('messages.dataset').":  &nbsp;<strong>".$datasetname."</strong> [".now().",  @ Job Id# ".$this->userjob->id."].";
+          $content .= "<br>URL:&nbsp;<a href='".env('APP_URL')."/userjobs/".$this->userjob->id."'>";
+          $content .= env('APP_URL')."/userjobs/".$this->userjob->id."</a><br>";
+          $content .= "<br>".Lang::get('messages.dataset_download_file_tip');
+          $data = [
             'to_name' => $to_name,
-            'content' => Lang::get('messages.dataset_downloaded_message').":<br><br>".Lang::get('messages.dataset').":  &nbsp;<strong>".$datasetname."</strong> [".$today.",  @ Job Id# ".$this->userjob->id."].<br>URL:&nbsp;<a href='".env('APP_URL')."'>".env('APP_URL')."</a><br><br>".Lang::get('messages.dataset_download_file_tip')
-          );
+            'content' => $content,
+          ];
           try {
             Mail::send('common.email', $data, function($message) use ($to_name, $to_email) {
               $message->to($to_email, $to_name)->subject(Lang::get('messages.dataset_request').' - '.env('APP_NAME'));

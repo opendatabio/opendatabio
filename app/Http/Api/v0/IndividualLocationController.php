@@ -10,6 +10,7 @@ namespace App\Http\Api\v0;
 use App\Models\Individual;
 use App\Models\IndividualLocation;
 use App\Models\ODBFunctions;
+use App\Models\Dataset;
 use App\Jobs\ImportIndividualLocations;
 use Illuminate\Http\Request;
 use Response;
@@ -34,7 +35,6 @@ class IndividualLocationController extends Controller
             'individual_location.first',
             DB::raw('ST_AsText(relative_position) as relativePosition')
         );
-
         if ($request->individual) {
             $indlocations->whereIn('individual_id', explode(',', $request->individual));
         }
@@ -81,7 +81,7 @@ class IndividualLocationController extends Controller
         if ($request->dataset) {
             $datasets = ODBFunctions::asIdList($request->dataset, Dataset::select('id'), 'name');
             $indlocations = $indlocations->whereHas('individual', function($d) use($datasets){
-                $d->whereIn('dataset_id',$datasets);
+                $d->whereIn('individuals.dataset_id',$datasets);
               }
             );
         }

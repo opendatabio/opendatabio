@@ -35,10 +35,7 @@ class Project extends Model implements HasMedia
     const COLLABORATOR = 1;
     const ADMIN = 2;
 
-    protected $fillable =
-    [
-      'name', 'description', 'privacy',
-      'policy','details','license','title'];
+    protected $fillable = ['name', 'description', 'details','title'];
 
 
     //activity log trait

@@ -113,7 +113,9 @@ class IndividualLocationsDataTable extends DataTable
                 'pageLength',
                 'reload',
                 ['extend' => 'colvis',  'columns' => ':gt(0)'],
+                $exportbutton
               ];
+
           } else {
             $buttons = [
                 'pageLength',

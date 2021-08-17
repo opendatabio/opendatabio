@@ -29,7 +29,7 @@ class MeasurementController extends Controller
     {
         $measurements = Measurement::select('*','measurements.date as valueDate');
         if ($request->id) {
-            $measurements = $measurements->whereIn('id', explode(',', $request->id));
+            $measurements = $measurements->whereIn('measurements.id', explode(',', $request->id));
         }
         if ($request->trait) {
             $odbtraits = ODBFunctions::asIdList($request->trait, ODBTrait::select('id'), 'export_name');
@@ -56,8 +56,8 @@ class MeasurementController extends Controller
                     true);
             //asked for descendants
             if ($request->taxon_root) {
-              $taxons = Taxon::whereIn('id',$taxons_ids);
-              $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
+              $taxons = Taxon::whereIn('taxons.id',$taxons_ids);
+              $taxons_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('taxons.id')->toArray();})->toArray());
             }
             $measurements = $measurements->where(function($subquery) use($taxons_ids) {
               $subquery->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($mm) use($taxons_ids) { $mm->whereHas('identification',function($idd) use($taxons_ids)  { $idd->whereIn('taxon_id',$taxons_ids);});})->orWhereRaw('measured_type = "App\Models\Taxon" AND measured_id='.$this->taxon);
@@ -68,7 +68,7 @@ class MeasurementController extends Controller
             $measurements = $measurements->where('measured_type', 'App\Models\Location')->whereIn('measured_id', explode(',', $request->location));
         }
         if ($request->location_root) {
-            $locations_ids = Location::where('id','=',$request->location_root)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
+            $locations_ids = Location::where('locations.id','=',$request->location_root)->first()->getDescendantsAndSelf()->pluck('locations.id')->toArray();
             $measurements = $measurements->where('measured_type', 'App\ModelsLocation')->whereIn('measured_id', $locations_ids);
         }
         if ($request->individual) {
@@ -95,7 +95,7 @@ class MeasurementController extends Controller
 
         $measurements = $measurements->cursor();
         if ($fields=="id") {
-          $measurements = $measurements->pluck('id')->toArray();
+          $measurements = $measurements->pluck('measurements.id')->toArray();
         } else {
           $measurements = $this->setFields($measurements, $fields, null);
         }

@@ -69,7 +69,7 @@
                   <ul>
                     @foreach ($dataset->users()->wherePivot('access_level', '=', App\Models\Project::ADMIN)->get() as $admin)
                       @php
-                      if ($admin->person->fullname) {
+                      if ($admin->person) {
                         $adm = $admin->person->fullname." ".$admin->email;
                       } else {
                         $adm = $admin->email;

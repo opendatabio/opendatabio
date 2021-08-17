@@ -110,6 +110,8 @@ return array (
   'data_download' => 'Baixar dados',
   'dataset_request_nouser' => 'Você precisa estar registrado no portal para poder baixar ou solicitar os dados',
   'dataset_request_hint' => 'Preencha o formulário abaixo para solicitar acesso à este conjunto de dados. Será enviado um email aos administradores com uma cópia para você',
+  'dataset_request' => 'Solicitação Conjunto de Dados',
+  'dataset_name_or_title_duplicated' => 'Nome ou título do Conjunto de Dados já existe!',
   'dataset_request_use' => 'Será usado para',
   'dataset_request_use_exploratory' => 'Análises exploratórias apenas',
   'dataset_request_use_inpublications' => 'Em publicações',

@@ -109,6 +109,8 @@ return array (
   'dataset_request_nouser' => 'Please login. You must register and login to be able to download or to request datasets',
   'dataset_request_hint' => 'To request access to this Dataset, fill de form below and submit. An email will be sent to the Dataset Administrators with a copy to you',
   'project_request_hint' => 'To request access to the records of the Individuals in this Project, fill de form below and submit. An email will be sent to the Project Administrators with a copy to you',
+  'dataset_request' => "Dataset request",
+  'dataset_name_or_title_duplicated' => 'Dataset name or title duplicated. Revise!',
   'dataset_request_use' => 'Will be used for',
   'dataset_request_use_exploratory' => 'Exploratory analyses only',
   'dataset_request_use_inpublications' => 'In publications',

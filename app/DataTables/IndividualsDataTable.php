@@ -84,8 +84,8 @@ class IndividualsDataTable extends DataTable
      */
     public function query()
     {
-        //
-        $query = Individual::query()->with(['dataset', 'locations', 'collectors.person'])->select(['individuals.id','individuals.tag','individuals.dataset_id','individuals.date',DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'),]);
+        //->with(['dataset', 'locations', 'collectors.person'])
+        $query = Individual::query()->select(['individuals.id','individuals.tag','individuals.dataset_id','individuals.date',DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'),]);
             //->withCount('measurements','vouchers');
         // customizes the datatable query
         if ($this->location) {

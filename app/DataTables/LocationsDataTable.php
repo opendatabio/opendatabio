@@ -12,7 +12,8 @@ use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use DB;
-use App\Models\Voucher;
+use App\Models\Dataset;
+use App\Models\Project;
 use Lang;
 use Log;
 use Auth;
@@ -158,34 +159,22 @@ class LocationsDataTable extends DataTable
         )->withCount(['measurements'])->noWorld();
         */
         if ($this->project) {
+          $locations_ids = Project::findOrFail($this->project)->all_locations_ids();
+          $query->whereIn('id',$locations_ids);
           /*
           $query->whereHas('summary_counts',function($count) {
             $count->where('scope_id',"=",$this->project)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
           });
           */
-          $query->whereHas('individuals',function($ind) {
-            $ind->where('project_id',$this->project);
-          });
         }
         if ($this->dataset) {
-          $query->whereHas('individuals',function($ind) {
-            $ind->whereHas('measurements', function($mea) {
-              $mea->where('dataset_id',$this->dataset);});
-          });
-          $query->orWhereHas('vouchers',function($ind) {
-            $ind->whereHas('measurements', function($mea) {
-              $mea->where('dataset_id',$this->dataset);});
-          });
-          $query->orWhereHas('measurements',function($mea) {
-            $mea->where('dataset_id',$this->dataset);
-          });
+          $locations_ids = Dataset::findOrFail($this->dataset)->all_locations_ids();
+          $query->whereIn('id',$locations_ids);
         }
-
         if ($this->location) {
             $location = Location::withoutGeom()->findOrFail($this->location);
             $query = $query->where('lft','>',$location->lft)->where('rgt','<',$location->rgt);
         }
-
         if ($this->request()->has('adm_level')) {
           $adm_level =  (int) $this->request()->get('adm_level');
           if ($adm_level>0) {

@@ -46,6 +46,11 @@ class Dataset extends Model
         return "<a href='".url('datasets/'.$this->id)."' data-toggle='tooltip' rel='tooltip' data-placement='right' title='Dataset details'>".htmlspecialchars($this->name).'</a>';
     }
 
+    public function getFullnameAttribute()
+    {
+      return $this->name;
+    }
+
     //related models
     public function measurements()
     {
@@ -636,7 +641,7 @@ class Dataset extends Model
 
    public function getDownloadsAttribute()
    {
-     return $this->morphMany("Activity", 'subject')->where('description','like','%downloads%')->count();
+     return $this->morphMany("Activity", 'subject')->where('description','like','%download%')->count();
    }
 
    public static function getTableName()

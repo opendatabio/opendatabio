@@ -152,7 +152,7 @@ class DatasetsDataTable extends DataTable
           //['measurements'])->with(['users', 'tags.translations']);
 
         if ($this->project) {
-            $query = $query->whereHas('measurements', function($query) { $query->withoutGlobalScopes()->whereHasMorph('measured',['App\Models\Individual','App\Models\Voucher'],function($q) { $q->withoutGlobalScopes()->where('project_id',$this->project);}); });
+            $query = $query->where('project_id',$this->project);
         }
         if ($this->tag) {
             $query->whereHas('tags',function($tag) { $tag->where('tags.id',$this->tag);});

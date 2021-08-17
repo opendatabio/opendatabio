@@ -132,12 +132,12 @@ class DatasetController extends Controller
 
         /*check for duplicated entries */
         $validator->after(function ($validator) use ($request,  $id) {
-            $query = "name like '".$request->name."'";
+            $query = "datasets.name like '".$request->name."'";
             if ($request->title) {
                 $query = "(".$query."  OR title like '".$request->title."')";
             }
             if (!is_null($id)) {
-              $query .= " AND WHERE id<>".$id;
+              $query .= " AND datasets.id<>".$id;
             }
             $has_similar = Dataset::whereRaw($query)->cursor();
             if ($has_similar->count() > 0) {
@@ -272,7 +272,7 @@ class DatasetController extends Controller
     {
         $dataset = Dataset::findOrFail($id);
         $this->authorize('update', $dataset);
-        $validator = $this->customValidate($request);
+        $validator = $this->customValidate($request,$id);
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
