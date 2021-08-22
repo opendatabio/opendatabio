@@ -255,7 +255,7 @@ class ExternalAPIs
         } // FAILED
         $highertaxa = json_decode($response->getBody());
         $parent = null;
-        if (count($highertaxa)>0) {
+        if (count($highertaxa)>1) {
           $parent_idx = count($highertaxa)-1;
           $parent = $highertaxa[$parent_idx]->ScientificName;
         }

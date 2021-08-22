@@ -263,7 +263,7 @@ class ImportLocations extends AppJob
         /* get the geometry type from the string submitted */
         $geomType = self::geomTypeFromGeom($location['geom']);
         if($geomType == null ) {
-          $this->skipEntry($locationLog, "Invalid geometry type for location $name");
+          $this->skipEntry($locationLog, "Invalid geometry type for location".$location['name']);
           return false;
         }
 

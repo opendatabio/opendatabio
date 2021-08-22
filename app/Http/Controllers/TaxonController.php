@@ -237,7 +237,7 @@ class TaxonController extends Controller
         //no reason why not to allow both
         //if (($request->bibreference_id and $request->bibreference)
           //      or
-        if (!$request->bibreference_id and !$request->bibreference and 'on' != $request->unpublished)
+        if (!$request->bibreference_id and !$request->bibreference and 'on' != $request->unpublished and $request->level != -100)
         {
             $validator->after(function ($validator) {
                 $validator->errors()->add('bibreference_id', Lang::get('messages.taxon_bibref_error'));

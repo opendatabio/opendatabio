@@ -59,6 +59,22 @@ class Taxon extends Node implements HasMedia
         return "<em><a href='".url('taxons/'.$this->id)."'>".htmlspecialchars($this->qualifiedFullname).'</a></em>';
     }
 
+
+
+    public function setFullnameAttribute($value)
+    {
+        // Full names have only the first letter capitalized
+        $value = ucfirst(strtolower($value));
+
+        if ($this->level <= 200) {
+            $this->name = $value;
+        }
+        if ($this->level >= 210) { // sp. or below, strips evertyhing before the last space
+            $this->name = trim(substr($value, strrpos($value, ' ') - strlen($value)));
+        }
+    }
+
+
     /* similarly to Location, this will be the root of the taxon tree */
     public function scopeNoRoot($query)
     {
