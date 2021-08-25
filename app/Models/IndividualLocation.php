@@ -32,6 +32,16 @@ class IndividualLocation extends Model
         return $this->belongsTo(Individual::class);
     }
 
+    public function all_locations_ids()
+    {
+      $related = $this->location()->map(function($l) {
+        $ids = [$l->id];
+        $rids = $l->relatedLocations->pluck('related_id')->toArray();
+        return array_merge($ids,$rids);
+      })->toArray();
+      return array_unique($related);
+    }
+
     public function identification()
     {
       return $this->hasOne(Identification::class, 'object_id', 'identification_id')->where('identifications.object_type',Individual::class);

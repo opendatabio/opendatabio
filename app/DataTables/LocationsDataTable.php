@@ -161,18 +161,13 @@ class LocationsDataTable extends DataTable
         if ($this->project) {
           $locations_ids = Project::findOrFail($this->project)->all_locations_ids();
           $query->whereIn('id',$locations_ids);
-          /*
-          $query->whereHas('summary_counts',function($count) {
-            $count->where('scope_id',"=",$this->project)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
-          });
-          */
         }
         if ($this->dataset) {
           $locations_ids = Dataset::findOrFail($this->dataset)->all_locations_ids();
           $query->whereIn('id',$locations_ids);
         }
         if ($this->location) {
-            $location = Location::withoutGeom()->findOrFail($this->location);
+            $location = Location::select(['id','lft','rgt'])->findOrFail($this->location);
             $query = $query->where('lft','>',$location->lft)->where('rgt','<',$location->rgt);
         }
         if ($this->request()->has('adm_level')) {

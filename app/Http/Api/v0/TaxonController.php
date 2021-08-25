@@ -49,17 +49,31 @@ class TaxonController extends Controller
         }
 
         if ($request->project) {
-            $project_id = $request->project;
-            $taxons = $taxons->whereHas('summary_counts',function($count) use($project_id) {
-                          $count->where('scope_id',"=",$project_id)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
-                        });
+          $project_ids = ODBFunctions::asIdList($request->dataset,Project::select('id'),'name',false);
+          $all_taxons_ids = Project::whereIn('id',$project_ids)->cursor()->map(function($d) {
+            return $d->all_taxons_ids();
+          })->toArray();
+          if (count($all_taxons_ids)) {
+            $taxons = $taxons->whereIn('id',$all_taxons_ids);
+          } else {
+            $request->limit=0;
+            $request->offset=0;
+          }
         }
+
         if ($request->dataset) {
-            $dataset_id = $request->dataset;
-            $taxons = $taxons->whereHas('summary_counts',function($count) use($dataset_id) {
-              $count->where('scope_id',"=",$dataset_id)->where('scope_type',"=","App\Models\Dataset")->where('value',">",0);
-            });
+          $dataset_ids = ODBFunctions::asIdList($request->dataset,Dataset::select('id'),'name',false);
+          $all_taxons_ids = Dataset::whereIn('id',$dataset_ids)->cursor()->map(function($d) {
+            return $d->all_taxons_ids();
+          })->toArray();
+          if (count($all_taxons_ids)) {
+            $taxons = $taxons->whereIn('id',$all_taxons_ids);
+          } else {
+            $request->limit=0;
+            $request->offset=0;
+          }
         }
+
 
 
         if ($request->location_root) {
