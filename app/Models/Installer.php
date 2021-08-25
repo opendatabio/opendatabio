@@ -470,9 +470,13 @@ class Installer
     {
         $config = require dirname(__DIR__).'/config/app.php';
         $myversion = $config['version'];
+        //which version to use?
         foreach (array_keys($array) as $key => $val) {
             if (version_compare($val, $myversion, '>')) {
                 return $array[array_keys($array)[$key - 1]];
+            }
+            if (version_compare($val, $myversion, '=')) {
+                return $array[array_keys($array)[$key]];
             }
         }
 

@@ -19,3 +19,5 @@
 composer.phar
 /data
 docker-install
+*.gz
+*.sql

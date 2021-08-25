@@ -30,7 +30,7 @@ return [
     | "alpha", such as 0.1.0-alpha1.
     */
 
-    'version' => '0.9.0-rc1',
+    'version' => '0.9.1-alpha1',
 
     /*
      * Proxy settings
@@ -184,7 +184,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'pt',
 
     /*
     |--------------------------------------------------------------------------
