@@ -416,6 +416,7 @@ class ImportCollectable extends AppJob
             //if found an exact match retrieve location
             $hadlocation =  $detected_locations->getData()->detectedLocation;
             $newlocation =  $detected_locations->getData()->detectdata;
+            $hadrelated = $detected_locations->getData()->detectrelated;
             //if found nothing, neither parent nor self, then issue error
             if (!array_filter($hadlocation) and !array_filter($newlocation)) {
               $messages[] =  'Location latitude '.$latitude.' and/or location longitude'.$longitude.' are invalid!';
@@ -434,7 +435,8 @@ class ImportCollectable extends AppJob
                   'parent_id' => $newlocation[1],
                   'uc_id' => $newlocation[3],
                   'geom' => $newlocation[4],
-                  'adm_level' => Location::LEVEL_POINT
+                  'adm_level' => Location::LEVEL_POINT,
+                  'related_locations' => $hadrelated,
                 ];
                 $validatelocations[] = $alocation;
             }

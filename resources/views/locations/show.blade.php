@@ -75,13 +75,18 @@
         @endif
         --->
 
-        @if ($location->uc_id)
           <p>
           <strong>
-            @lang('messages.uc')
-            :</strong> {!! $location->uc->rawLink() !!}
-            </p>
-        @endif
+            @lang('messages.location_belongs')
+            :</strong>
+            <br>&nbsp;&nbsp;&nbsp;-&nbsp;{!! $location->parent->rawLink() !!}
+            @if ($location->relatedLocations->count())
+            @foreach($location->relatedLocations as $related)
+              <br>&nbsp;&nbsp;&nbsp;-&nbsp;{!! $related->relatedLocation->rawLink() !!}
+            @endforeach
+            @endif
+          </p>
+
 
   <p>
         <strong>

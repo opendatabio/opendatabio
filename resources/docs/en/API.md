@@ -81,10 +81,10 @@ Most Endpoints accept all the common parameters described below. They may also a
 | [individuals](#endpoint_individuals) | `GET` | Lists registered individuals |`id`, `location`, `taxon`, `tag`,`project`, `dataset`, `limit`, `offset`|
 | [languages](#endpoint_languages) | `GET` | Lists registered languages | |
 | [measurements](#endpoint_measurements) | `GET` | Lists Measurements | `id`, `taxon`,`dataset`,`trait`,`individual`,`voucher`,`location`,`limit`,`offset`|
-| [locations](#endpoint_locations) | `GET` | Lists locations | `root`, `id`, `parent_id`,`adm_level`, `name`, `limit`, `querytype`, `lat`, `long` |
-| [persons](#endpoint_persons) | `GET` | Lists registered people |`id`, `search`, `name`, `abbrev`, `email`, `limit` |
+| [locations](#endpoint_locations) | `GET` | Lists locations | `root`, `id`, `parent_id`,`adm_level`, `name`, `limit`, `querytype`, `lat`, `long`,`project`,`dataset`,`limit`,`offset`|
+| [persons](#endpoint_persons) | `GET` | Lists registered people |`id`, `search`, `name`, `abbrev`, `email`, `limit`,`offset`|
 | [projects](#endpoint_projects) | `GET` | Lists registered projects | `id` only|
-| [taxons](#endpoint_taxons) | `GET` | Lists taxonomic names |`root`, `id`, `name`,`level`, `valid`, `external`, `limit` |
+| [taxons](#endpoint_taxons) | `GET` | Lists taxonomic names |`root`, `id`, `name`,`level`, `valid`, `external`, `project`,`dataset`,`limit`,`offset`  |
 | [traits](#endpoint_traits) | `GET` | Lists variables (traits) list |`id`, `name`,`limit`,`offset`|
 | [vouchers](#endpoint_vouchers) | `GET` | Lists registered voucher specimens | `id`, `number`, `individual`, `location`, `collector`, `taxon`, `project`, `dataset` |
 | [userjobs](#endpoint_jobs) | `GET` | Lists user Jobs | `id`, `status`|
@@ -458,21 +458,25 @@ The `locations` endpoints interact with the [locations](Core-Objects#locations) 
 
 ### GET optional parameters
 - `id=list` return only locations having the id or ids provided (ex `id=1,2,3,10`)
-- `adm_level=number` return only locations for the specified level:
-  - **0** for country; **1** for first division within country (province, state); **2** for second division (e.g. municipality)... up to adm_level 6 as administrative areas;
-  - **99** is the code for Conservation Units;
-  - **100** is the code for plots and subplots;
-  - **999** for 'POINT' locations like GPS waypoints;
-  - **101** for transects
+- `adm_level=number` return only locations for the specified level or type:
+  - **2** for country; **3** for first division within country (province, state); **4** for second division (e.g. municipality)... up to adm_level 10 as administrative areas (Geometry: polygon, MultiPolygon);
+  - **97** is the code for Environmental Layers (Geometry: polygon, multipolygon);
+  - **98** is the code for Indigenous Areas (Geometry: polygon, multipolygon);
+  - **99** is the code for Conservation Units (Geometry: polygon, multipolygon);
+  - **100** is the code for plots and subplots (Geometry: polygon or point);
+  - **101** for transects (Geometry: point or linestring)
+  - **999** for any 'POINT' locations like GPS waypoints (Geometry: point);
 - `name=string` return only locations whose name matches the search string. You may use asterisk as a wildcard. Example: `name=Manaus` or `name=*Ducke*` to find name that has the word Ducke;
 - `parent_id=list` return the locations for which the direct parent is in the list (ex: parent_id=2,3)
-- `root=number` number is the location `id` to search, returns the location for the specified id along with all of its descendants locations; example: find the id for Brazil and use its id as root to get all the locations within Brazil;
+- `root=number` number is the location `id` to search, returns the location for the specified id along with all of its descendants locations; example: find the id for Brazil and use its id as root to get all the locations belonging to Brazil;
 - `querytype` one of "exact", "parent" or "closest" and must be provided with `lat` and `long`:
     - when `querytype=exact` will find a point location that has the exact match of the `lat` and `long`;
     - when `querytype=parent` will find the most inclusive parent location within which the coordinates given by `lat` and `long` fall;
     - when `querytype=closest` will find the closest location to the coordinates given by `lat` and `long`; It will only search for closest locations having `adm_level > 99`, see above.
     - `lat` and `long` must be valid coordinates in decimal degrees (negative for South and West);
-- `fields=list` specify which fields you want to get with your query. The "simple" default option will return fields 'id', 'name', 'levelName', 'geom','distance','parentName','parent_id','x','y','startx','starty','centroid_raw' and 'area'.
+- `fields=list` specify which fields you want to get with your query (see below for field names), or use options 'all' or 'simple', to get full set and the most important columns, respectively
+- `project=mixed` - id or name of project (may be a list) return the locations belonging to one or more Projects
+- `dataset=mixed` - id or name of a dataset (may be a list) return the locations belonging to one or more Datasets
 
 Notice that `id`, `search`, `parent` and `root` should probably not be combined in the same query.
 
@@ -480,43 +484,45 @@ Notice that `id`, `search`, `parent` and `root` should probably not be combined 
 #### Fields obtained
 
   - `id` - the ODB id of the Location in the locations table (a local database id)
-  - `basisOfRecord` [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) - will be always 'location' [dwc location]([DWC](https://dwc.tdwg.org/terms/#location)
+  - `basisOfRecord` [DWC](https://dwc.tdwg.org/terms/#dwc:basisOfRecord) - will always contain 'location' [dwc location]([DWC](https://dwc.tdwg.org/terms/#location)
   - `locationName` - the location name (if country the country name, if state the state name, etc...)
-  - `adm_level` - the numeric value for the ODB administrative level (0 for countries, etc)
+  - `adm_level` - the numeric value for the ODB administrative level (2 for countries, etc)
   - `levelName` - the name of the ODB administrative level
   - `parent_id` - the ODB id of the parent location
   - `parentName` - the immediate parent locationName
-  - `higherGeography` [DWC](https://dwc.tdwg.org/terms/#dwc:higherGeography) - the parent LocationName '|' separated (e.g. Brasil | São Paulo | Sorocaba);
-  - `footprintWKT` [DWC](https://dwc.tdwg.org/terms/#dwc:footprintWKT) - the [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation of the location; if adm_level==100 (plots) or adm_level==101 (transects) and they have been informed as a POINT location, the respective polygon or linestring geometries were generated using the location x and y dimensions.
-  - `x` and `y` - when location is a plot (100 == adm_level) its X and Y dimension in meters
-  - `startx` and `starty` - when location is a subplot (100 == adm_level with parent also adm_level==100), the X and Y start position in relation to the 0,0 coordinate of the parent plot location
-  - `distance` - only when querytype==closest, this value will be present
+  - `higherGeography` [DWC](https://dwc.tdwg.org/terms/#dwc:higherGeography) - the parent LocationName '|' separated (e.g. Brasil | São Paulo | Cananéia);
+  - `footprintWKT` [DWC](https://dwc.tdwg.org/terms/#dwc:footprintWKT) - the [WKT](https://en.wikipedia.org/wiki/Well-known_text) representation of the location; if adm_level==100 (plots) or adm_level==101 (transects) and they have been informed as a POINT location, the respective polygon or linestring geometries, the footprintWKT will be that generated using the location's x and y dimensions.
+  - `x` and `y` - (meters) when location is a plot (100 == adm_level) its X and Y dimensions, if a transect (101 == adm_level), x may be the length and y may be a buffer dimension around the linestring.
+  - `startx` and `starty` - (meters) when location is a subplot (100 == adm_level with parent also adm_level==100), the X and Y start position in relation to the 0,0 coordinate of the parent plot location, which is either a Point, or the first coordinate of a Polygon geometry type;
+  - `distance` - only when querytype==closest, this value will be present, and indicates the distance, in meters, the locations is from your queried coordinates;
   - `locationRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:locationRemarks) - any notes associated with this Location record
-  - `decimalLatitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLatitude) - depends on the adm_level: if adm_level<=99, the latitude of the centroid; if adm_level == 999 (point), its latitude; if adm_level==100 but is POINT geometry, the POINT latitude, else if POLYGON geometry, then the first point of the POLYGON; similarly, if adm_level==101 (transects), the either the POINT latitude or the the first point of the linestring geometry.
+  - `decimalLatitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLatitude) - depends on the adm_level: if adm_level<=99, the latitude of the centroid; if adm_level == 999 (point), its latitude; if adm_level==100 (plot) or 101 (transect), but is a POINT geometry, the POINT latitude, else if POLYGON geometry, then the first point of the POLYGON or the LINESTRING geometry.
   - `decimalLongitude` [DWC](https://dwc.tdwg.org/terms/#dwc:decimalLongitude) - same as for decimalLatitude
-  - `georeferenceRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:georeferenceRemarks) - will contain the explanation of the type of decimalLatitude
+  - `georeferenceRemarks` [DWC](https://dwc.tdwg.org/terms/#dwc:georeferenceRemarks) - will contain the explanation about decimalLatitude
   - `geodeticDatum` -[DWC](https://dwc.tdwg.org/terms/#dwc:geodeticDatum)  the geodeticDatum informed for the geometry (ODB does not treat map projections, assumes data is always is WSG84)
 
 ## POST format
 
-ODB Locations are stored with a parent-child relationship, assuring validations and facilitating queries. Parent will be guessed by the import process using the location geometry. If parent is not informed, the imported location must be completely contained by a registered parent (using postgis [ST_WITHIN](https://postgis.net/docs/ST_Within.html) function to  detect parent). However, if a parent is informed, the importation may also test if the geometry fits a buffered version of the parent geometry, thus ignoring minor geometries overlap. Only countries can be imported without parent specification;
+ODB Locations are stored with a parent-child relationship, assuring validations and facilitating queries. Parents will be guessed using the location geometry. If parent is not informed, the imported location must be completely contained by a registered parent (using sql [ST_WITHIN](https://postgis.net/docs/ST_Within.html) function to  detect parent). However, if a parent is informed, the importation may also test if the geometry fits a buffered version of the parent geometry, thus ignoring minor geometries overlap and shared borders. Countries can be imported without parent relations. Any other location must be registered within at least a country as parent. If the record is marine, and falls outside of a registered country polygon, a 'ismarine' argument must be indicated to accept the non-spatial parent relationship.
+
+Make sure your geometry projection is **EPSG:4326** **WGS84**. Use this standard!
 
 Available POST variables are:
-* `name` -  the location name (parent+name must be unique in the database) - **required**
+* `name` -  the location name  - **required** (parent+name must be unique in the database)
 * `adm_level` - must be numeric, see [above](#locations_get) - **required**
 * geometry use either: **required**
-  * `geom` for a WKT representation of the geometry, POLYGON or POINT allowed;
+  * `geom` for a WKT representation of the geometry, POLYGON, MULTIPOLYGON, POINT OR LINESTRING allowed;
   * `lat` and `long` for latitude and longitude in decimal degrees (use negative numbers for south/west).  
 * `altitude` - in meters
-* `datum` - e.g. WSG84, the default;
-* `parent` - either the id or name of the parent location. The API will detect the parent based on the informed geometry and validate the informed parent. *detected parent has priority* if informed is different. If not given, the importation process will attempt to guess it unless you pass this parameter as 0. If `parent=0` and parent not detected it will be set as null;
-* `uc` - same as parent as Conservations Units are locations that transcends administrative boundaries. *detected UC have priority* if different from UC id informed in this field; If not given, the importation process will attempt to guess it unless you pass this parameter as 0.
-* when location is plot (`amd_level=100`), optional fields are:
-  * dimensions: `x`, `y` for the plot (defines the Cartesian coordinates)
-  * `startx` and `starty` cartesian coordinates within parent plot when subplot;
-* `notes` - any note you whish to add to your location;
+* `datum` - defaults to 'EPSG:4326-WGS 84' and your are strongly encourage of importing only data in this projection. You may inform a different projection here;
+* `parent` - either the id or name of the parent location. The API will detect the parent based on the informed geometry and the *detected parent has priority* if informed is different. However, only when parent is informed, validation will also test whether your location falls within a buffered version of the informed parent, allowing to import locations that have a parent-child relationship but their borders overlap somehow (either shared borders or differences in georeferencing);
+* when location is plot (`adm_level=100`), optional fields are:
+  * `x` and `y` for the plot dimensions in meters(defines the Cartesian coordinates)
+  * `startx` and `starty` for start position of a subplot in relation to its parent plot location;
+* `notes` - any note you wish to add to your location;
+* `ismarine` - to permit the importation of location records that not fall within any register parent location you may add ismarine=1. Note, however, that this allows you to import misplaced locations. Only use if your location is really a marine location that fall outside any Country border;
 
-**alternatively**: you may just submit a single column name `geojson`  containing Feature record, with its geometry and having as 'properties' at least tags `name` and `adm_level` (or admin_level). See [geojson.org](https://geojson.org/).
+**alternatively**: you may just submit a single column named `geojson` containing a Feature record, with its geometry and having as 'properties' at least tags `name` and `adm_level` (or `admin_level`). See [geojson.org](https://geojson.org/). This is usefull, for example, to import country political boundaries (https://osm-boundaries.com/).
 
 
 <a name="endpoint_persons"></a>
@@ -582,6 +588,8 @@ The `taxons` endpoint interact with the [taxons](Core-Objects#taxons)  table. Th
 - `level=number` return only taxons for the specified level.
 - `valid=1` return only valid names
 - `external=1` return the Tropicos, IPNI, MycoBank, ZOOBANK or GBIF reference numbers. You need to specify `externalrefs` in the field list to return them!
+- `project=mixed` - id or name of project (may be a list) return the taxons belonging to one or more Projects
+- `dataset=mixed` - id or name of a dataset (may be a list) return the taxons belonging to one or more Datasets
 - `limit` and `offset` are SQL statements to limit the amount. See [Common endpoints](endpoint_common).
 
 Notice that `id`, `name` and `root` should not be combined.

@@ -61,6 +61,7 @@ Route::get('locations/{id}/activity', 'LocationController@activity');
 Route::get('locations/{id}/project', 'LocationController@indexProjects');
 Route::get('locations/{id}/dataset', 'LocationController@indexDatasets');
 Route::get('locations/autocomplete', 'LocationController@autocomplete');
+Route::get('locations/autocomplete-related', 'LocationController@autocomplete_related');
 Route::get('locations/{id}/map', 'LocationController@mapMe');
 Route::post('locations/autodetect', 'LocationController@autodetect')->name('autodetect');
 Route::post('locations/maprender', 'LocationController@maprender')->name('maprender');

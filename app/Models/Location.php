@@ -27,7 +27,9 @@ class Location extends Node implements HasMedia
     public $table = "locations";
 
     // The "special" adm levels
-    const LEVEL_UC = 99;
+    const LEVEL_UC = 97;
+    const LEVEL_TI = 98;
+    const LEVEL_ENV = 99;
     const LEVEL_PLOT = 100;
     const LEVEL_TRANSECT = 101;
     const LEVEL_POINT = 999;
@@ -35,15 +37,20 @@ class Location extends Node implements HasMedia
       self::LEVEL_UC,
       self::LEVEL_PLOT,
       self::LEVEL_POINT,
+      self::LEVEL_TI,
+      self::LEVEL_ENV,
+      self::LEVEL_TRANSECT,
     ];
     // Valid geometries
     const GEOM_POINT = "Point";
     const GEOM_POLYGON = "Polygon";
     const GEOM_MULTIPOLYGON = "MultiPolygon";
+    const GEOM_LINESTRING = "LineString";
     const VALID_GEOMETRIES = [
       self::GEOM_POINT,
       self::GEOM_POLYGON,
-      self::GEOM_MULTIPOLYGON
+      self::GEOM_MULTIPOLYGON,
+      self::GEOM_LINESTRING
     ];
     // "LineString","MultiLineString", "Polygon", "MultiPolygon"];
 
@@ -60,7 +67,7 @@ class Location extends Node implements HasMedia
     //activity log trait (parent, uc and geometry are logged in controller)
     protected static $logName = 'location';
     protected static $recordEvents = ['updated','deleted'];
-    protected static $ignoreChangedAttributes = ['updated_at','lft','rgt','depth','parent_id','uc_id','geom'];
+    protected static $ignoreChangedAttributes = ['updated_at','lft','rgt','depth','parent_id','geom'];
     protected static $logAttributes = ['name','altitude','adm_level','datum','x','y','startx','starty','notes'];
     protected static $logOnlyDirty = true;
     protected static $submitEmptyLogs = false;
@@ -105,6 +112,8 @@ class Location extends Node implements HasMedia
     {
         return array_merge(config('app.adm_levels'), [
             self::LEVEL_UC,
+            self::LEVEL_TI,
+            self::LEVEL_ENV,
             self::LEVEL_PLOT,
             self::LEVEL_TRANSECT,
             self::LEVEL_POINT,
@@ -247,10 +256,15 @@ class Location extends Node implements HasMedia
         return $query->where('adm_level', self::LEVEL_UC);
     }
 
+    public function scopeRelated($query)
+    {
+        return $query->whereIn('adm_level',[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV]);
+    }
+
     // query scope for all except conservation units
     public function scopeExceptUcs($query)
     {
-        return $query->where('adm_level', '!=', self::LEVEL_UC);
+        return $query->whereNotIn('adm_level',[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV]);
     }
 
     public function getLevelNameAttribute()
@@ -261,37 +275,35 @@ class Location extends Node implements HasMedia
 
     public function getFullNameAttribute()
     {
-        $str = '';
-        foreach ($this->getAncestors() as $ancestor) {
-            if ('-1' != $ancestor->adm_level) {
-                $str .= $ancestor->name.' > ';
-            }
+      $path = $this->getAncestorsWithoutRoot()->pluck('name')->toArray();
+      if (count($path)) {
+        $path[] = $this->name;
+        return implode(" > ",$path);
+      }
+      return $this->name;
+    }
+
+    public function getBelongsToAttribute()
+    {
+        $str = [$this->parent->name];
+        foreach ($this->relatedLocations as $related) {
+            $str[] = $related->relatedLocation->name;
         }
 
-        return $str.$this->name;
+        return implode(" | ",$str);
     }
 
     public function getSearchableNameAttribute()
     {
         $name = $this->name;
-        $parent = $this->getAncestors()->last()->name;
-        if ($this->getAncestorsWithoutRoot()->count()>2) {
-          $str = $name." << ".$parent." << ... << ".$this->getAncestorsWithoutRoot()->first()->name;
-        } else {
-          $str = $name." << ".$parent;
-        }
+        $parent = $this->parent->name;
+        $str = $name." << ".$parent;
         return $str;
     }
 
     public function getParentNameAttribute()
     {
-      $ancestors = $this->getAncestors();
-      if ($ancestors->count()) {
-        $parent = $this->getAncestors()->last();
-        return $parent->name;
-      } else {
-        return null;
-      }
+      return $this->parent->name;
     }
 
     public function setGeomAttribute($value)
@@ -464,8 +476,13 @@ class Location extends Node implements HasMedia
         } else {
             // only looks for NON-UCs with level smaller
             // than informed for location
-            $possibles = $possibles->where('adm_level', '!=', self::LEVEL_UC);
+            $first = $possibles->whereNotIn('adm_level', [self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV]);
             if (!$ignore_level) {
+                $first = $first->where('adm_level', '<', $max_level);
+            }
+            if ($first->count()) {
+                $possibles = $first;
+            } elseif (!$ignore_level) {
                 $possibles = $possibles->where('adm_level', '<', $max_level);
             }
         }
@@ -499,10 +516,6 @@ class Location extends Node implements HasMedia
         return 'POINT('.$long.' '.$lat.')';
     }
 
-    public function uc()
-    {
-        return $this->belongsTo('App\Models\Location', 'uc_id');
-    }
 
 
 
@@ -522,18 +535,27 @@ class Location extends Node implements HasMedia
     }
 
 
+    public function all_individual_ids()
+    {
+      $query = DB::select("SELECT DISTINCT tb.theid FROM ((SELECT DISTINCT individual_location.individual_id as theid FROM individual_location JOIN locations ON locations.id=individual_location.location_id WHERE locations.lft>=".$this->lft." AND rgt=<".$this->rgt.") UNION (SELECT DISTINCT individual_location.individual_id as theid FROM individual_location JOIN location_related ON location_related.location_id=individual_location.location_id JOIN locations ON locations.id=location_related.related_id WHERE locations.lft>='".$this->lft."' AND rgt=<'".$this->rgt."') AS tb)");
+      return collect($query)->map(function($q) { return $q->theid;})->toArray();
+    }
+
     public function getAllIndividuals()
     {
+      return Individual::whereIn('id',$this->all_individual_ids());
+      /*
       return  Individual::whereHas('locations',function($location) {
         $location->where('lft',">",$this->lft)->where('rgt',"<",$this->rgt);
       });
+      */
     }
 
     public function getAllProjects()
     {
       return  Project::whereHas('individuals',function($individual) {
         $individual->whereHas('locations',function($location) {
-          $location->where('lft',">",$this->lft)->where('rgt',"<",$this->rgt);
+          $location->where('lft',">=",$this->lft)->where('rgt',"=<",$this->rgt);
         }); });
     }
 
@@ -646,7 +668,7 @@ class Location extends Node implements HasMedia
     public function scopeWithGeom($query)
     {
         return $query->addSelect(
-            DB::raw('id,name, adm_level, parent_id, x, y,lft,rgt,depth,startx,starty'),
+            DB::raw('id,name, adm_level, parent_id, x, y,lft,rgt,depth,startx,starty,altitude,notes,created_at,updated_at'),
             DB::raw('ST_AsText(geom) as geom'),
             DB::raw("IF(ST_GeometryType(geom) like '%Polygon%',ST_Area(geom), null) as area_raw"),
             DB::raw("ST_AsText(ST_Centroid(geom)) as centroid_raw"),
@@ -704,7 +726,7 @@ class Location extends Node implements HasMedia
       if (IndividualLocation::count()==0) {
         return 0;
       }
-
+      /*
       $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
       if (null !== $scopeId) {
         $query = $query->where('scope_id',"=",$scopeId);
@@ -714,6 +736,7 @@ class Location extends Node implements HasMedia
       if ($query->count()) {
         return $query->first()->value;
       }
+      */
       //get a fresh count
       if ($target=="individuals") {
         return $this->individualsCount($scope,$scopeId);
@@ -1120,20 +1143,35 @@ class Location extends Node implements HasMedia
       return $bearing;
     }
 
-
+    /* generates contents for mapping locations and/or individuals */
     public function generateFeatureCollection($individual_id=null)
     {
         $ids = $this->getAncestorsAndSelf()->pluck('id')->toArray();
+        //add related if any
+        $related_ids = $this->relatedLocations->pluck('related_id')->toArray();
+        if (count($related_ids)) {
+          $ids = array_merge($ids,$related_ids);
+        }
         $string = [ "type" => "FeatureCollection", "features" => []];
-        $locations = self::whereIn("id",$ids)->noWorld()->withGeom()->cursor();
+        $locations = self::whereIn("id",$ids)->noWorld()->withGeom()->orderBy('adm_level')->cursor();
+        $fit_geometry = null;
+        $idx = 0;
         foreach($locations as $location) {
+              if ($location->id == $this->parent_id and !in_array($this->adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+                $fit_geometry = $idx;
+              } elseif ($location->id == $this->id and in_array($this->adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+                $fit_geometry = $idx;
+              }
+              $idx++;
               $properties = [
                 'name' => $location->name,
                 'area' => $location->area,
                 'centroid_raw' => $location->centroid_raw,
                 'adm_level' => $location->adm_level,
                 'location_type' => Lang::get("levels.adm_level.".$location->adm_level),
-                'parent_adm_level' => $location->parent->adm_level];
+                'parent_adm_level' => $location->parent->adm_level,
+                'fit_geometry' => ($location->id==$this->id) ? $fit_geometry : null,
+              ];
               $str = [
                 "type" => "Feature",
                 "geometry" => json_decode($location->geomjson),
@@ -1147,7 +1185,9 @@ class Location extends Node implements HasMedia
                   'centroid_raw' => $location->centroid_raw,
                   'adm_level' => self::LEVEL_POINT,
                   'location_type' => Lang::get("levels.adm_level.".$location->adm_level),
-                  'parent_adm_level' => $location->parent->adm_level];
+                  'parent_adm_level' => $location->parent->adm_level,
+                  'fit_geometry' => ($location->id==$this->id) ? $fit_geometry : null,
+                ];
                 $geom = DB::select("SELECT ST_ASGEOJSON(ST_GeomFromText('".$location->geom."')) as geojson")[0]->geojson;
                 $str = [
                   "type" => "Feature",
@@ -1166,7 +1206,9 @@ class Location extends Node implements HasMedia
               'centroid_raw' => $individual->getGlobalPosition(),
               'adm_level' => 1000,
               'location_type' => Lang::get("messages.individual"),
-              'parent_adm_level' => $this->adm_level];
+              'parent_adm_level' => $this->adm_level,
+              'fit_geometry' => $fit_geometry,
+            ];
             $str = [
               "type" => "Feature",
               "geometry" => json_decode($individual->getGlobalPosition($geojson=1)),
@@ -1187,13 +1229,7 @@ class Location extends Node implements HasMedia
     /* DARWIN CORE mutators */
     public function getHigherGeographyAttribute()
     {
-        $path = [];
-        foreach ($this->getAncestors() as $ancestor) {
-            /* if not world */
-            if ('-1' != $ancestor->adm_level) {
-                $path[] = $ancestor->name;
-            }
-        }
+        $path = $this->getAncestorsWithoutRoot()->pluck('name')->toArray();
         if (count($path)) {
           return implode(" | ",$path);
         }
@@ -1245,5 +1281,80 @@ class Location extends Node implements HasMedia
       return 'Location';
     }
 
+    /* uc replacement for related */
+    public function relatedLocations()
+    {
+        return $this->hasMany('App\Models\LocationRelated', 'location_id');
+    }
+
+    public function uc()
+    {
+        return $this->relatedLocations()->whereHas('relatedLocation',function($l){
+          $l->where('adm_level',self::LEVEL_UC);
+        });
+    }
+
+    public static function detectRelated($geom, $adm_level,$idsOnly=false)
+    {
+        //check only for non administrative levels
+        if (!in_array($adm_level,[Location::LEVEL_PLOT,Location::LEVEL_TRANSECT,Location::LEVEL_POINT])) {
+          return null;
+        }
+        $query = 'ST_Within(ST_GeomFromText(?), geom)';
+          //check which registered polygons (except World) of special cases
+        $validtypes = [Location::LEVEL_UC,Location::LEVEL_TI,Location::LEVEL_ENV];
+        //are possible parents (CONTAIN) of submitted location
+        //order by adm_level to get the most inclusive first
+        $possibles = Location::select(['id','name','adm_level'])->whereRaw($query, [$geom])->whereIn('adm_level',$validtypes)->noWorld()->orderBy('adm_level', 'desc');
+
+        //if found return the greatest adm_level location found
+        if ($possibles->count()) {
+            if ($idsOnly) {
+                return $possibles->cursor()->pluck('id')->toArray();
+            }
+            return $possibles->cursor()->map(function($p) { return ['id'=>$p->id,'name'=>$p->name];})->toArray();
+        }
+        return null;
+    }
+
+    public static function fixPathAndRelated($id)
+    {
+      $location = self::withGeom()->findOrFail($id);
+      $adm_level = $location->adm_level;
+
+      if (in_array($adm_level,[self::LEVEL_PLOT,self::LEVEL_TRANSECT,self::LEVEL_POINT])) {
+        return null;
+      }
+
+      //move sister locations to within if that is the case
+      $others = Location::where('parent_id',$location->parent_id)->where('id','<>',$location->id);
+      if ($others->count() and !in_array($adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+          $query = 'ST_Within(geom,ST_GeomFromText(?))';
+          $others = $others->whereRaw($query,$location->geom);
+          if ($others->count()) {
+            foreach ($others->cursor() as $tofix) {
+              $tofix->parent_id = $location->id;
+              $tofix->save();
+            }
+          }
+      }
+      //special locations are new, is this a new parent for other registered locations
+      //if so establish the relationship
+      if (in_array($adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+        $existing = $location->relatedLocations->pluck('related_id')->toArray();
+        $query = 'ST_Within(geom,ST_GeomFromText(?))';
+        $others = Location::whereRaw($query,$location->geom)->whereIn('adm_level',[self::LEVEL_PLOT,self::LEVEL_TRANSECT,self::LEVEL_POINT]);
+        if (count($existing)) {
+          $others = $others->whereNotIn('id',$existing);
+        }
+        if ($others->count()) {
+          foreach ($others->cursor() as $tocreate) {
+            $related = new LocationRelated(['related_id' => $location->id]);
+            $tocreate->relatedLocations()->save($related);
+          }
+        }
+      }
+      return null;
+    }
 
 }

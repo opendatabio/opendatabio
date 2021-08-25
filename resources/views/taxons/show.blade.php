@@ -277,4 +277,22 @@
 @endsection
 @push ('scripts')
 {!! $dataTable->scripts() !!}
+
+
+<script>
+    const table = $('#dataTableBuilder');
+    table.on('preXhr.dt',function(e,settings,data) {
+      data.level = $("#taxon_level option").filter(':selected').val();
+      data.project = $("input[name='project']").val();
+      data.location = $("input[name='location_root']").val();
+      data.taxon = $("input[name='taxon_root']").val();
+      //console.log(data.level,data.project,data.location,data.taxon);
+    });
+    $('#taxon_level').on('change',function() {
+       table.DataTable().ajax.reload();
+       return false;
+    });
+</script>
+
+
 @endpush

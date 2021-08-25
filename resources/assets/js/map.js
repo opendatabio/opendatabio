@@ -118,6 +118,24 @@ var my_map = {                       // <-- add this line to declare the object
                   color: 'rgb(207,28,144, 0.1)'
               })
           })],
+          '97': [new Style({
+              stroke: new Stroke({
+                  color: 'rgb(75,75,143)',
+                  width: 2
+              }),
+              fill: new Fill({
+                  color: 'rgb(75,75,143, 0.1)'
+              })
+          })],
+          '98': [new Style({
+              stroke: new Stroke({
+                  color: 'rgb(255, 153, 0)',
+                  width: 2
+              }),
+              fill: new Fill({
+                  color: 'rgb(255, 153, 0, 0.1)'
+              })
+          })],
           '102': [new Style({
               stroke: new Stroke({
                   color: 'rgb(249,123,114)',
@@ -252,8 +270,10 @@ var my_map = {                       // <-- add this line to declare the object
         map.addControl(layerSwitcher);
 
         var features = alocation.getFeatures();
+        //get last
         var feature = features[ features.length-1 ];
         //if point focus on parent
+        /*
         var feature_type = feature.get('adm_level');
         if (feature_type == "999") {
           feature = features[ features.length-2 ];
@@ -267,8 +287,13 @@ var my_map = {                       // <-- add this line to declare the object
             feature = parent_feature;
           }
         }
+        alert(feature.getProperties().adm_level + 'must be the adm level!');
+        */
+        //const polygon = feature.getGeometry();
         //alert(feature.getProperties().adm_level + 'must be the adm level!');
-        const polygon = feature.getGeometry();
+        var idx = feature.getProperties().fit_geometry;
+        var focusfeature = features[idx];
+        const polygon = focusfeature.getGeometry();
         let view = map.getView();
         view.fit(polygon, {padding: [100, 100, 100, 100]});
 
@@ -307,12 +332,12 @@ var my_map = {                       // <-- add this line to declare the object
                 var geometry = feature.getGeometry();
                 var coord = getCenterOfExtent(geometry.getExtent());
                 var content = '<b>' + feature.get('name') + '</b>';
-                var area = feature.get('area');
-                if (area != null) {
-                    content = content + '<br>Area: ' + area +' m<sup>2</sup>';
-                }
+                //var area = feature.get('area');
+                //if (area != null) {
+                //    content = content + '<br>Area: ' + area +' m<sup>2</sup>';
+                //}
                 content = content + '<br>Type: ' + feature.get('location_type');
-                content = content + '<br>Centroid: ' + feature.get('centroid_raw');
+                //content = content + '<br>Centroid: ' + feature.get('centroid_raw');
                 content_element.innerHTML = content;
                 overlay.setPosition(coord);
                 console.info(feature.getProperties());
