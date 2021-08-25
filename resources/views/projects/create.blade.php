@@ -25,11 +25,32 @@
     <label for="name" class="col-sm-3 control-label mandatory">
 @lang('messages.name')
 </label>
+    <a data-toggle="collapse" href="#project_name_hint" class="btn btn-default">?</a>
     <div class="col-sm-6">
 	<input type="text" name="name" id="name" class="form-control" value="{{ old('name', isset($project) ? $project->name : null) }}">
     </div>
+    <div class="col-sm-12">
+      <div id="project_name_hint" class="panel-collapse collapse">
+         @lang('messages.project_name_hint')
+       </div>
+     </div>
 </div>
 
+
+<div class="form-group">
+    <label for="title" class="col-sm-3 control-label" id='titlelabel'>
+      @lang('messages.title')
+    </label>
+    <a data-toggle="collapse" href="#project_title_hint" class="btn btn-default">?</a>
+    <div class="col-sm-6">
+      <input type="text" name="title" id="title" class="form-control" value="{{ old('title', isset($project) ? $project->title : null) }}" maxlength="191">
+    </div>
+    <div class="col-sm-12">
+      <div id="project_title_hint" class="panel-collapse collapse">
+         @lang('messages.project_title_hint')
+       </div>
+     </div>
+</div>
 
 <div class="form-group">
     <label for="description" class="col-sm-3 control-label">
@@ -107,157 +128,6 @@
 </div>
 
 
-
-<hr>
-
-<div class="form-group">
-    <label for="privacy" class="col-sm-3 control-label mandatory">
-@lang('messages.privacy')
-</label>
-        <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
-	    <div class="col-sm-6">
-	<?php $selected = old('privacy', isset($project) ? $project->privacy : 0); ?>
-
-	<select name="privacy" id="privacy" class="form-control" >
-	@foreach (App\Models\Project::PRIVACY_LEVELS as $level)
-        <option value="{{$level}}" {{ $level == $selected ? 'selected' : '' }}>
-@lang('levels.privacy.' . $level)
-</option>
-	@endforeach
-	</select>
-            </div>
-  <div class="col-sm-12">
-    <div id="hint1" class="panel-collapse collapse">
-	@lang('messages.project_privacy_hint')
-    </div>
-  </div>
-</div>
-
-
-<!-- license object must be an array with CreativeCommons license codes applied to the model --->
-@php
-  $cc_mandatory = '';
-  $show_project_viewers = '';
-  $privacy = old('privacy', isset($project) ? $project->privacy : 0);
-  if ($privacy!=App\Models\Dataset::PRIVACY_AUTH) {
-    $cc_mandatory = 'mandatory';
-    $show_project_viewers = 'hidden';
-  }
-
-
-@endphp
-<div class="form-group" id='creativecommons'>
-    <label for="license" class="col-sm-3 control-label {{ $cc_mandatory }} " id='licenselabel'>
-      @lang('messages.public_license')
-    </label>
-    <a data-toggle="collapse" href="#creativecommons_licenses_hint" class="btn btn-default">?</a>
-    <div class="col-sm-6">
-      @php
-        $currentlicense = "CC0";
-        $currentversion = config('app.creativecommons_version')[0];
-        if (isset($project)) {
-           if (null != $project->license) {
-             $license = explode(' ',$project->license);
-             $currentlicense = $license[0];
-             $currentversion = $license[1];
-           }
-        }
-        $oldlicense = old('license', $currentlicense);
-        $oldversion = old('version',$currentversion);
-        $readonly = null;
-        if (count(config('app.creativecommons_version'))==1) {
-          $readonly = 'readonly';
-        }
-        $title_mandatory = null;
-        $show_policy = 'hidden';
-        if ($oldlicense != "CC0") {
-          $title_mandatory = 'mandatory';
-          $show_policy = '';
-        }
-
-      @endphp
-      <select name="license" id="license" class="form-control" >
-        @foreach (config('app.creativecommons_licenses') as $level)
-          <option value="{{ $level }}" {{ $level == $oldlicense ? 'selected' : '' }}>
-            {{$level}} - @lang('levels.' . $level)
-          </option>
-        @endforeach
-      </select>
-      <strong>version:</strong>
-      @if (null != $readonly)
-        <input type="hidden" name="license_version" value=" {{ $oldversion }}">
-        {{ $oldversion }}
-      @else
-      <select name="license_version" class="form-control" {{ $readonly }}>
-        @foreach (config('app.creativecommons_version') as $version)
-          <option value="{{ $version }}" {{ $version == $oldversion ? 'selected' : '' }}>
-            {{ $version}}
-          </option>
-        @endforeach
-      </select>
-      @endif
-    </div>
-    <div class="col-sm-12">
-      <div id="creativecommons_licenses_hint" class="panel-collapse collapse">
-        <br>
-        @lang('messages.creativecommons_project_hint')
-      </div>
-    </div>
-</div>
-
-<!-- title is, like for datasets, to generate citations. For occurrence data within projects -->
-<div class="form-group">
-    <label for="title" class="col-sm-3 control-label {{ $title_mandatory }}" id='titlelabel'>
-      @lang('messages.title')
-    </label>
-    <a data-toggle="collapse" href="#project_title_hint" class="btn btn-default">?</a>
-    <div class="col-sm-6">
-      <input type="text" name="title" id="title" class="form-control" value="{{ old('title', isset($project) ? $project->title : null) }}" maxlength="191">
-    </div>
-    <div class="col-sm-12">
-      <div id="project_title_hint" class="panel-collapse collapse">
-         @lang('messages.project_title_hint')
-       </div>
-     </div>
-</div>
-
-
-<!-- title is, like for datasets, to generate citations. For occurrence data within projects -->
-<div class="form-group">
-  <label for="authors" class="col-sm-3 control-label {{ $title_mandatory}}" id='authorslabel'>
-  @lang('messages.authors')
-  </label>
-  <a data-toggle="collapse" href="#authors_hint" class="btn btn-default">?</a>
-  <div class="col-sm-6">
-    {!! Multiselect::autocomplete('authors',
-    $persons->pluck('abbreviation', 'id'),
-    isset($project->authors) ? $project->authors->pluck('person_id') : '',
-    ['class' => 'multiselect form-control'])
-    !!}
-  </div>
-  <div class="col-sm-12">
-    <div id="authors_hint" class="panel-collapse collapse">
-      @lang('messages.project_authors_hint')
-    </div>
-  </div>
-</div>
-
-<!-- following creative commons, filling here implicate the dataset has sui generis database rights, which will be indicated here -->
-<div class="form-group" id='show_policy' {{ $show_policy }}>
-    <label for="policy" class="col-sm-3 control-label">
-      @lang('messages.data_policy')
-    </label>
-    <a data-toggle="collapse" href="#data_policy" class="btn btn-default">?</a>
-    <div class="col-sm-6">
-      <textarea name="policy" id="policy" class="form-control">{{ old('policy', isset($project) ? $project->policy : null) }}</textarea>
-     </div>
-    <div class="col-sm-12">
-    <div id="data_policy" class="panel-collapse collapse">
-      @lang('messages.data_policy_hint')
-    </div>
-  </div>
-</div>
-
 <hr>
 
 <div class="form-group">
@@ -272,7 +142,17 @@
      ['class' => 'multiselect form-control']
 ) !!}
 </div>
-</div><div class="form-group">
+</div>
+<div class="col-sm-12">
+  <div id="hint2" class="panel-collapse collapse">
+     <br>
+     @lang('messages.project_admins_hint')
+     <br>
+   </div>
+
+</div>
+
+<div class="form-group">
 <label for="collabs" class="col-sm-3 control-label">
 @lang('messages.collabs')
 </label>
@@ -285,7 +165,7 @@
 </div>
 </div>
 
-<div class="form-group" id='project_viewers' {{ $show_project_viewers }} >
+<div class="form-group" id='project_viewers'  >
   <label for="collabs" class="col-sm-3 control-label">
     @lang('messages.viewers')
   </label>
@@ -296,11 +176,6 @@
       ['class' => 'multiselect form-control']
       ) !!}
     </div>
-    <div class="col-sm-12">
-      <div id="hint2" class="panel-collapse collapse">
-	       @lang('messages.project_admins_hint')
-       </div>
-     </div>
 </div>
 
 <div class="form-group">

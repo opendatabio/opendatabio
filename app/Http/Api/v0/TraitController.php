@@ -66,50 +66,53 @@ class TraitController extends Controller
 
         //add categories for categorical traits
         //there is probably a more elegant way;
-        foreach ($traits as $thetrait) {
-            $catarr = "";
-            if (in_array(  $thetrait->type,[ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
-                  $cats = $thetrait->categories;
-                  $catarr = array();
-                  foreach($cats as $cat) {
-                    $catarr[] = array('id' => $cat->id,'name' => $cat->translate(0,$lang), 'description' => $cat->translate(1,$lang), 'rank' => $cat->rank);
-                  }
-            }
-            unset($thetrait->categories);
-            $thetrait->categories = $catarr;
+        $fields = ($request->fields ? $request->fields : 'simple');
+        $possible_fields = config('api-fields.odbtraits');
+        $field_sets = array_keys($possible_fields);
+
+        if (in_array($fields,$field_sets)) {
+          $fields = implode(",",$possible_fields[$fields]);
+        }
+        $field_arr = explode(",",$fields);
+        $has_category = in_array('categories',$field_arr);
+        if ($has_category) {
+          $categories = [];
+          foreach ($traits as $thetrait) {
+              $catarr = "";
+              if (in_array($thetrait['type'],[ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
+                    $cats = $thetrait['categories'];
+                    $catarr = [];
+                    foreach($cats as $cat) {
+                      $catarr[] = array('id' => $cat->id,'name' => $cat->translate(0,$lang), 'description' => $cat->translate(1,$lang), 'rank' => $cat->rank);
+                    }
+                    $categories[$thetrait->id] = $catarr;
+              }
+          }
         }
 
-        $fields = ($request->fields ? $request->fields : 'simple');
-        $simple = ['id', 'type', 'typename','export_name','unit', 'range_min', 'range_max', 'link_type','value_length','name','description','objects','categories'];
-        //include here to be able to add mutators and categories
-        if ('all' == $fields) {
-            $keys = array_keys($traits->first()->toArray());
-            $fields = array_merge($simple,$keys);
-            $fields =  implode(',',$fields);
-        }
         if ($request->bibreference) {
-            if ('simple' == $fields) {
-              $simple[] = 'bibreference';
-            } else {
-              $fields .= ",bibreference";
-            }
+           $fields .= ",bibreference";
         }
         if ($fields=="id") {
-          $traits = $traits->pluck('id')->toArray();
+          $final = $traits->pluck('id')->toArray();
         } else {
-          $traits = $this->setFields($traits, $fields, $simple);
-          //this is placed here because otherwise setFields will change to default language
-          if ($request->language) {
-            foreach($traits as $key => $trait) {
+          $traits = $this->setFields($traits, $fields,null);
+          //add translations and transalated categories if the case
+          $final = [];
+          foreach($traits as $key => $trait) {
+            if ($request->language) {
               $trait['name'] = $names[$key]['name'];
               $trait['description'] = $names[$key]['description'];
-              $traits[$key] = $trait;
             }
+            if ($has_category and isset($categories[$trait['id']])) {
+                $trait['categories'] = $categories[$trait['id']];
+            }
+            $final[] = $trait;
           }
         }
 
 
-        return $this->wrap_response($traits);
+        return $this->wrap_response($final);
     }
 
 

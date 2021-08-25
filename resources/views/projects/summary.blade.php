@@ -1,49 +1,39 @@
 @if(isset($project))
+<hr>
 <div class='panel-heading'>
   <h4>
     @lang('messages.project_summary')
   </h4>
 </div>
 <div class='panel-body'>
-  <div class="col-sm-12">
+@php
+  $details = $project->describe_project();
+  $taxonomic_summary = $project->taxonomic_summary();
+  $identification_summary = $project->identification_summary();
+@endphp
+@if(count($details)>0)
   <table class='table table-striped user-table'>
     <thead>
       <th>@lang('messages.object')</th>
       <th>@lang('messages.count')</th>
-      <th>@lang('messages.measurements')</th>
-      <th>@lang('messages.taxons')</th>
     </thead>
     <tbody>
+      @foreach($details as $key => $count)
       <tr>
           <td class='table-text'>
-            @lang('messages.individuals')
+            @lang('messages.'.$key)
           </td>
           <td class='table-text'>
-              {{ $project->individualsCount() }}
-          </td>
-          <td class='table-text'>
-              {{ $project->individuals_measurements_count() }}
-          </td>
-          <td class='table-text'>
-              {{ $project->taxonsCount() }}
+              {{ $count }}
           </td>
       </tr>
-      <tr>
-          <td class='table-text'>
-            @lang('messages.vouchers')
-          </td>
-          <td class='table-text'>
-              {{ $project->vouchersCount() }}
-          </td>
-          <td class='table-text'>
-              {{ $project->vouchers_measurements_count() }}
-          </td>
-          <td class='table-text'>
-
-          </td>
-      </tr>
+      @endforeach
     </tbody>
   </table>
-  </div>
+@endif
+
+{!! View::make('datasets.taxoninfo', ['taxonomic_summary' => $taxonomic_summary, 'identification_summary' => $identification_summary ]) !!}
+
+
 </div>
 @endif

@@ -10,6 +10,8 @@ namespace App\Http\Api\v0;
 use Illuminate\Http\Request;
 use Response;
 use App\Models\Location;
+use App\Models\Project;
+use App\Models\Dataset;
 use App\Models\UserJob;
 use App\Models\ODBFunctions;
 use App\Jobs\ImportLocations;
@@ -58,53 +60,54 @@ class LocationController extends Controller
             }
             if ('closest' == $request->querytype) {
                 $locations = $locations->withDistance($geom)->orderBy('distance', 'ASC');
-                if (!isset($request->limit)) {
-                    $locations->limit($request->limit);
-                }
             }
         }
 
         if ($request->project) {
-            $project_id = $request->project;
-            $locations = $locations->whereHas('summary_counts',function($count) use($project_id) {
-                          $count->where('scope_id',"=",$project_id)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
-                        });
+          $project_ids = ODBFunctions::asIdList($request->dataset,Project::select('id'),'name',false);
+          $all_locations_ids = Project::whereIn('id',$project_ids)->cursor()->map(function($d) {
+            return $d->all_locations_ids();
+          })->toArray();
+          if (count($all_locations_ids)) {
+            $locations = $locations->whereIn('id',$all_locations_ids);
+          } else {
+            $request->limit=0;
+            $request->offset=0;
+          }
         }
+
         if ($request->dataset) {
-            $dataset_id = $request->dataset;
-            $locations = $locations->whereHas('summary_counts',function($count) use($dataset_id) {
-              $count->where('scope_id',"=",$dataset_id)->where('scope_type',"=","App\Models\Dataset")->where('value',">",0);
-            });
+          $dataset_ids = ODBFunctions::asIdList($request->dataset,Dataset::select('id'),'name',false);
+          $all_locations_ids = Dataset::whereIn('id',$dataset_ids)->cursor()->map(function($d) {
+            return $d->all_locations_ids();
+          })->toArray();
+          if (count($all_locations_ids)) {
+            $locations = $locations->whereIn('id',$all_locations_ids);
+          } else {
+            $request->limit=0;
+            $request->offset=0;
+          }
         }
 
-
-        if ($request->limit) {
+        if ($request->limit and $request->offset) {
+            $locations->offset($request->offset)->limit($request->limit);
+        } elseif ($request->limit) {
             $locations->limit($request->limit);
         }
 
-
-        // Hide world id
-        foreach ($locations as $location) {
-            if ('Country' === $location->levelName) {
-                $location->parent_id = null;
-            }
-        }
-
         $fields = ($request->fields ? $request->fields : 'simple');
-        // NOTE that "distance" as a field is only defined for querytype='closest', but it is ignored for other queries
-        $simple =  ['id', 'name', 'levelName', 'geom', 'distance','parentName','parent_id','x','y','startx','starty','centroid_raw','area'];
-        //include here to be able to add mutators and categories
-        if ('all' == $fields) {
-            $keys = array_keys($locations->first()->toArray());
-            $fields = array_merge($simple,$keys);
-            $fields =  implode(',',$fields);
-        }
 
+        // NOTE that "distance" as a field is only defined for querytype='closest', but it is ignored for other queries
+        $possible_fields = config('api-fields.locations');
+        $field_sets = array_keys($possible_fields);
+        if (in_array($fields,$field_sets)) {
+            $fields = implode(",",$possible_fields[$fields]);
+        }
         $locations = $locations->cursor();
         if ($fields=="id") {
           $locations = $locations->pluck('id')->toArray();
         } else {
-          $locations = $this->setFields($locations, $fields, $simple);
+          $locations = $this->setFields($locations, $fields, null);
         }
 
         return $this->wrap_response($locations);

@@ -227,31 +227,21 @@
 
 
 
-<!-- PROJECT -->
+<!-- dataset -->
 <div class="form-group">
-    <label for="project" class="col-sm-3 control-label mandatory">
-      @lang('messages.project')
+    <label for="dataset" class="col-sm-3 control-label ">
+      @lang('messages.dataset')
     </label>
-    <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
+    <a data-toggle="collapse" href="#dataset_hint" class="btn btn-default">?</a>
     <div class="col-sm-6">
-      @if (count($projects))
-	       <?php $selected = old('project_id', isset($individual) ? $individual->project_id : (Auth::user()->defaultProject ? Auth::user()->defaultProject->id : null)); ?>
-	        <select name="project_id" id="project_id" class="form-control" >
-	           @foreach ($projects as $project)
-		             <option value="{{$project->id}}" {{ $project->id == $selected ? 'selected' : '' }}>
-                   {{ $project->name }}
-		             </option>
-	           @endforeach
-	        </select>
-        @else
-          <div class="alert alert-danger">
-            @lang ('messages.no_valid_project')
-          </div>
-        @endif
+      <input type="text" name="dataset_autocomplete" id="dataset_autocomplete" class="form-control autocomplete"
+      value="{{ old('dataset_autocomplete', (isset($individual) and $individual->dataset_id) ? $individual->dataset->name : null) }}">
+      <input type="hidden" name="dataset_id" id="dataset_id"
+      value="{{ old('dataset_id', isset($individual) ? $individual->dataset_id : null) }}">
     </div>
     <div class="col-sm-12">
-      <div id="hint3" class="panel-collapse collapse">
-	       @lang('messages.individual_project_hint')
+      <div id="dataset_hint" class="panel-collapse collapse">
+	       @lang('messages.individual_dataset_hint')
        </div>
      </div>
 </div>
@@ -454,11 +444,7 @@ Can only exists if individual has no vouchers, otherwise must have own id
 
 <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-                <button type="submit" class="btn btn-success" name="submit" value="submit"
-@if(!count($projects))
-disabled
-@endif
->
+                <button type="submit" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.add')
 
@@ -484,7 +470,12 @@ disabled
 
 <script>
 
+
+
 $(document).ready(function() {
+
+  $("#dataset_autocomplete").odbAutocomplete("{{url('datasets/autocomplete')}}","#dataset_id", "@lang('messages.noresults')");
+
 
   $(".identification_self").hide();
   $('.identification_other').hide();
@@ -861,8 +852,6 @@ function setLocationDate() {
   });
 
 
-
-
   //if editing or inserting on a new record, save location
   $('#location_save').on('click',function(e) {
     $.ajaxSetup({ // sends the cross-forgery token!
@@ -892,8 +881,8 @@ function setLocationDate() {
         $('#dataTableBuilder').DataTable().ajax.reload();
         $("#locationModal").modal('hide');
       },
-      error: function(e){
-        alert('error');
+      error: function(xhr, status, error) {
+        alert(xhr.responseText);
       }
     });
   });
@@ -920,6 +909,7 @@ function setLocationDate() {
         }
       });
   });
+
 
 </script>
 

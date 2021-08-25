@@ -27,7 +27,9 @@ class Location extends Node implements HasMedia
     public $table = "locations";
 
     // The "special" adm levels
-    const LEVEL_UC = 99;
+    const LEVEL_UC = 97;
+    const LEVEL_TI = 98;
+    const LEVEL_ENV = 99;
     const LEVEL_PLOT = 100;
     const LEVEL_TRANSECT = 101;
     const LEVEL_POINT = 999;
@@ -35,21 +37,27 @@ class Location extends Node implements HasMedia
       self::LEVEL_UC,
       self::LEVEL_PLOT,
       self::LEVEL_POINT,
+      self::LEVEL_TI,
+      self::LEVEL_ENV,
+      self::LEVEL_TRANSECT,
     ];
     // Valid geometries
     const GEOM_POINT = "Point";
     const GEOM_POLYGON = "Polygon";
     const GEOM_MULTIPOLYGON = "MultiPolygon";
+    const GEOM_LINESTRING = "LineString";
     const VALID_GEOMETRIES = [
       self::GEOM_POINT,
       self::GEOM_POLYGON,
-      self::GEOM_MULTIPOLYGON
+      self::GEOM_MULTIPOLYGON,
+      self::GEOM_LINESTRING
     ];
     // "LineString","MultiLineString", "Polygon", "MultiPolygon"];
 
     protected $fillable = ['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y', 'startx', 'starty', 'parent_id','geojson'];
     protected $lat;
     protected $long;
+    protected $footprintWKT;
     protected $geom_array = [];
     protected $isSimplified = false;
     protected $leftColumnName = 'lft';
@@ -59,7 +67,7 @@ class Location extends Node implements HasMedia
     //activity log trait (parent, uc and geometry are logged in controller)
     protected static $logName = 'location';
     protected static $recordEvents = ['updated','deleted'];
-    protected static $ignoreChangedAttributes = ['updated_at','lft','rgt','depth','parent_id','uc_id','geom'];
+    protected static $ignoreChangedAttributes = ['updated_at','lft','rgt','depth','parent_id','geom'];
     protected static $logAttributes = ['name','altitude','adm_level','datum','x','y','startx','starty','notes'];
     protected static $logOnlyDirty = true;
     protected static $submitEmptyLogs = false;
@@ -104,6 +112,8 @@ class Location extends Node implements HasMedia
     {
         return array_merge(config('app.adm_levels'), [
             self::LEVEL_UC,
+            self::LEVEL_TI,
+            self::LEVEL_ENV,
             self::LEVEL_PLOT,
             self::LEVEL_TRANSECT,
             self::LEVEL_POINT,
@@ -139,20 +149,36 @@ class Location extends Node implements HasMedia
         if ($this->long or $this->lat) {
            return;
         }
-        // for points, extract directly
-        /*
-        if ('POINT' == $this->geomType) {
-            $point = substr($this->geom, 6, -1);
-            $pos = strpos($point, ' ');
-            $this->long = substr($point, 0, $pos);
-            $this->lat = substr($point, $pos + 1);
-
-            return;
+        $adm_level=$this->adm_level;
+        $remarks = [];
+        switch ($adm_level) {
+          case  self::LEVEL_POINT:
+            $remarks[] = "decimal coordinates are POINT locations, ~ GPS precision;";
+            break;
+          case  self::LEVEL_PLOT:
+          case  self::LEVEL_TRANSECT:
+            if ($this->geom_type=="point") {
+              $remarks[] = "decimal coordinates are POINT locations, ~ GPS precision";
+              $remarks[] = "footprintWKT geometry drawn from informed Start Point and location dimensions. A Northern (NE) orientation is assumed.";
+            } else {
+              $remarks[] = "decimal coordinates are the START POINT in footprintWKT geometry";
+            }
+            break;
+          default:
+            $remarks[] = "decimal coordinates are the CENTROID of the footprintWKT geometry";
+            break;
         }
-        */
+
+        if (count($remarks)) {
+          $remarks = implode(" | ",$remarks);
+        } else {
+          $remarks = null;
+        }
+        $this->georeferenceRemarks = $remarks;
+        $coords = self::latlong_from_point($this->geomFirstPoint);
         // all others, extract from centroid
-        $this->long = $this->centroid['x'];
-        $this->lat = $this->centroid['y'];
+        $this->long = $coords[1];
+        $this->lat = $coords[0];
     }
 
     public function getCentroidAttribute()
@@ -166,10 +192,41 @@ class Location extends Node implements HasMedia
 
         return ['x' => substr($point, 0, $pos), 'y' => substr($point, $pos + 1)];
     }
+
     public function getCentroidWKTAttribute()
     {
         return $this->centroid_raw;
     }
+
+    /* function to get first point of plots and transects */
+    public function getGeomFirstPointAttribute()
+    {
+      $adm_level = $this->adm_level;
+      switch ($adm_level) {
+        case self::LEVEL_POINT:
+          return $this->geom;
+          break;
+        case self::LEVEL_TRANSECT:
+          if ($this->geom_type=="point") {
+            return $this->geom;
+          }
+          return $this->start_point;
+          break;
+        case self::LEVEL_PLOT:
+          if ($this->geom_type=="point") {
+            return $this->geom;
+          }
+          $geom = $this->geom;
+          $geom = explode("((|))|,",$geom);
+          return "POINT(".$geom[1].")";
+          break;
+        default:
+          return $this->centroid_raw;
+          break;
+       }
+    }
+
+
 
 
     public function getLatitudeSimpleAttribute()
@@ -199,10 +256,15 @@ class Location extends Node implements HasMedia
         return $query->where('adm_level', self::LEVEL_UC);
     }
 
+    public function scopeRelated($query)
+    {
+        return $query->whereIn('adm_level',[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV]);
+    }
+
     // query scope for all except conservation units
     public function scopeExceptUcs($query)
     {
-        return $query->where('adm_level', '!=', self::LEVEL_UC);
+        return $query->whereNotIn('adm_level',[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV]);
     }
 
     public function getLevelNameAttribute()
@@ -210,39 +272,38 @@ class Location extends Node implements HasMedia
         return Lang::get('levels.adm_level.'.$this->adm_level);
     }
 
+
     public function getFullNameAttribute()
     {
-        $str = '';
-        foreach ($this->getAncestors() as $ancestor) {
-            if ('-1' != $ancestor->adm_level) {
-                $str .= $ancestor->name.' > ';
-            }
+      $path = $this->getAncestorsWithoutRoot()->pluck('name')->toArray();
+      if (count($path)) {
+        $path[] = $this->name;
+        return implode(" > ",$path);
+      }
+      return $this->name;
+    }
+
+    public function getBelongsToAttribute()
+    {
+        $str = [$this->parent->name];
+        foreach ($this->relatedLocations as $related) {
+            $str[] = $related->relatedLocation->name;
         }
 
-        return $str.$this->name;
+        return implode(" | ",$str);
     }
 
     public function getSearchableNameAttribute()
     {
         $name = $this->name;
-        $parent = $this->getAncestors()->last()->name;
-        if ($this->getAncestorsWithoutRoot()->count()>2) {
-          $str = $name." << ".$parent." << ... << ".$this->getAncestorsWithoutRoot()->first()->name;
-        } else {
-          $str = $name." << ".$parent;
-        }
+        $parent = $this->parent->name;
+        $str = $name." << ".$parent;
         return $str;
     }
 
     public function getParentNameAttribute()
     {
-      $ancestors = $this->getAncestors();
-      if ($ancestors->count()) {
-        $parent = $this->getAncestors()->last();
-        return $parent->name;
-      } else {
-        return null;
-      }
+      return $this->parent->name;
     }
 
     public function setGeomAttribute($value)
@@ -267,7 +328,7 @@ class Location extends Node implements HasMedia
         //return $this->isSimplified;
     //}
 
-    //if the location is drawn according to dimensions informed over a POINT location 
+    //if the location is drawn according to dimensions informed over a POINT location
     public function getIsDrawnAttribute()
     {
       $adm_level = $this->adm_level;
@@ -415,8 +476,13 @@ class Location extends Node implements HasMedia
         } else {
             // only looks for NON-UCs with level smaller
             // than informed for location
-            $possibles = $possibles->where('adm_level', '!=', self::LEVEL_UC);
+            $first = $possibles->whereNotIn('adm_level', [self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV]);
             if (!$ignore_level) {
+                $first = $first->where('adm_level', '<', $max_level);
+            }
+            if ($first->count()) {
+                $possibles = $first;
+            } elseif (!$ignore_level) {
                 $possibles = $possibles->where('adm_level', '<', $max_level);
             }
         }
@@ -450,10 +516,6 @@ class Location extends Node implements HasMedia
         return 'POINT('.$long.' '.$lat.')';
     }
 
-    public function uc()
-    {
-        return $this->belongsTo('App\Models\Location', 'uc_id');
-    }
 
 
 
@@ -473,18 +535,27 @@ class Location extends Node implements HasMedia
     }
 
 
+    public function all_individual_ids()
+    {
+      $query = DB::select("SELECT DISTINCT tb.theid FROM ((SELECT DISTINCT individual_location.individual_id as theid FROM individual_location JOIN locations ON locations.id=individual_location.location_id WHERE locations.lft>=".$this->lft." AND rgt=<".$this->rgt.") UNION (SELECT DISTINCT individual_location.individual_id as theid FROM individual_location JOIN location_related ON location_related.location_id=individual_location.location_id JOIN locations ON locations.id=location_related.related_id WHERE locations.lft>='".$this->lft."' AND rgt=<'".$this->rgt."') AS tb)");
+      return collect($query)->map(function($q) { return $q->theid;})->toArray();
+    }
+
     public function getAllIndividuals()
     {
+      return Individual::whereIn('id',$this->all_individual_ids());
+      /*
       return  Individual::whereHas('locations',function($location) {
         $location->where('lft',">",$this->lft)->where('rgt',"<",$this->rgt);
       });
+      */
     }
 
     public function getAllProjects()
     {
       return  Project::whereHas('individuals',function($individual) {
         $individual->whereHas('locations',function($location) {
-          $location->where('lft',">",$this->lft)->where('rgt',"<",$this->rgt);
+          $location->where('lft',">=",$this->lft)->where('rgt',"=<",$this->rgt);
         }); });
     }
 
@@ -597,10 +668,11 @@ class Location extends Node implements HasMedia
     public function scopeWithGeom($query)
     {
         return $query->addSelect(
-            DB::raw('id,name, adm_level, parent_id, x, y,lft,rgt,depth,startx,starty'),
+            DB::raw('id,name, adm_level, parent_id, x, y,lft,rgt,depth,startx,starty,altitude,notes,created_at,updated_at'),
             DB::raw('ST_AsText(geom) as geom'),
             DB::raw("IF(ST_GeometryType(geom) like '%Polygon%',ST_Area(geom), null) as area_raw"),
-            DB::raw("ST_AsText(ST_Centroid(geom)) as centroid_raw")
+            DB::raw("ST_AsText(ST_Centroid(geom)) as centroid_raw"),
+            DB::raw("IF(ST_GeometryType(geom) like '%linestring%',ST_AsText(ST_StartPoint(geom)), null) as start_point"),
         );
     }
 
@@ -649,35 +721,36 @@ class Location extends Node implements HasMedia
     }
 
 
-    public function getCount($scope="all",$scope_id=null,$target='individuals')
+    public function getCount($scope="all",$scopeId=null,$target='individuals')
     {
       if (IndividualLocation::count()==0) {
         return 0;
       }
-
+      /*
       $query = $this->summary_counts()->where('scope_type',"=",$scope)->where('target',"=",$target);
-      if (null !== $scope_id) {
-        $query = $query->where('scope_id',"=",$scope_id);
+      if (null !== $scopeId) {
+        $query = $query->where('scope_id',"=",$scopeId);
       } else {
         $query = $query->whereNull('scope_id');
       }
       if ($query->count()) {
         return $query->first()->value;
       }
+      */
       //get a fresh count
       if ($target=="individuals") {
-        return $this->individualsCount($scope,$scope_id);
+        return $this->individualsCount($scope,$scopeId);
       }
       //get a fresh count
       if ($target=="measurements") {
-        return $this->measurementsCount($scope,$scope_id);
+        return $this->measurementsCount($scope,$scopeId);
       }
       //get a fresh count
       if ($target=="vouchers") {
-        return $this->vouchersCount($scope,$scope_id);
+        return $this->vouchersCount($scope,$scopeId);
       }
       if ($target=="taxons") {
-        return $this->taxonsCount($scope,$scope_id);
+        return $this->taxonsCount($scope,$scopeId);
       }
       if ($target=="media") {
         return $this->all_media_count();
@@ -688,39 +761,83 @@ class Location extends Node implements HasMedia
 
 
     /* functions to generate counts */
-    public function individualsCount($scope='all',$scope_id=null)
+    public function individualsCount($scope='all',$scopeId=null)
     {
-      $sql = "SELECT DISTINCT(individuals.id) FROM individuals,individual_location,locations where  individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt;
-      if ('projects' == $scope and $scope_id>0) {
-        $sql .= " AND individuals.project_id=".$scope_id;
+      $sql = "SELECT DISTINCT(individual_location.individual_id) FROM individual_location,locations where individual_location.location_id=locations.id AND locations.lft>='".$this->lft."' AND locations.lft<='".$this->rgt."'";
+      if ('projects' == $scope and $scopeId>0) {
+        $dataset_ids = Dataset::where('project_id',$scopeId)->cursor()->pluck('datasets.id')->toArray();
+        if (count($dataset_ids)==0) {
+          return 0;
+        }
+        $dataset_ids = implode(",",$dataset_ids);
+        $sql = "SELECT DISTINCT individuals.id FROM individuals,individual_location,locations where
+        (individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND locations.lft>='".$this->lft."' AND locations.lft<='".$this->rgt."')
+        AND (
+          individuals.dataset_id IN ($dataset_ids)
+          OR individuals.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%individual%' AND measurements.dataset_id IN ($dataset_ids))
+          OR individuals.id IN (SELECT media.model_id FROM media WHERE media.model_type LIKE '%individual%' AND media.dataset_id IN ('".$dataset_ids."'))
+          OR individuals.id IN (SELECT vouchers.individual_id FROM vouchers LEFT JOIN measurements as vm ON vm.measured_id=vouchers.id WHERE (vm.measured_type LIKE '%voucher%' AND vm.dataset_id IN ($dataset_ids)) OR vouchers.dataset_id IN ($dataset_ids))
+        )";
       }
-      if ('datasets' == $scope and $scope_id>0) {
-        $sql = "SELECT DISTINCT(measurements.measured_id) FROM individuals,individual_location,locations,measurements where  individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND measurements.measured_type like '%individual%' AND measurements.measured_id=individuals.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt." AND measurements.dataset_id=".$scope_id;
+      if ('datasets' == $scope and $scopeId>0) {
+        $sql = "SELECT DISTINCT individuals.id FROM individuals,individual_location,locations where
+        (individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND locations.lft>='".$this->lft."' AND locations.lft<='".$this->rgt."')
+        AND (
+          individuals.dataset_id='".$scopeId."'
+          OR individuals.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%individual%' AND measurements.dataset_id='".$scopeId."')
+          OR individuals.id IN (SELECT media.model_id FROM media WHERE media.model_type LIKE '%individual%' AND media.dataset_id='".$scopeId."')
+          OR individuals.id IN (SELECT vouchers.individual_id FROM vouchers LEFT JOIN measurements as vm ON vm.measured_id=vouchers.id WHERE (vm.measured_type LIKE '%voucher%' AND vm.dataset_id='".$scopeId."') OR vouchers.dataset_id='".$scopeId."')
+        )";
       }
       $query = DB::select($sql);
       return count($query);
     }
 
-    public function vouchersCount($scope='all',$scope_id=null)
+    //count direct and indirect vouchers
+    public function vouchersCount($scope='all',$scopeId=null)
     {
-        $sql = "SELECT DISTINCT(vouchers.id) FROM vouchers,individuals,individual_location,locations where vouchers.individual_id=individuals.id AND individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt;
-        if ('projects' == $scope and $scope_id>0) {
-          $sql .= " AND individuals.project_id=".$scope_id;
+        $sql = "SELECT DISTINCT(vouchers.id) FROM vouchers,individual_location,locations where vouchers.individual_id=individual_location.individual_id AND individual_location.location_id=locations.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt;
+        if ('projects' == $scope and $scopeId>0) {
+          $dataset_ids = Dataset::where('project_id',$scopeId)->cursor()->pluck('datasets.id')->toArray();
+          if (count($dataset_ids)==0) {
+            return 0;
+          }
+          $dataset_ids = implode(",",$dataset_ids);
+          $sql = "SELECT DISTINCT vouchers.id FROM vouchers,individual_location,locations where
+          (individual_location.individual_id=vouchers.individual_id AND individual_location.location_id=locations.id AND locations.lft>='".$this->lft."' AND locations.lft<='".$this->rgt."')
+          AND (
+            vouchers.dataset_id IN ($dataset_ids)
+            OR vouchers.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%voucher%' AND measurements.dataset_id IN ($dataset_ids))
+            OR vouchers.id IN (SELECT media.model_id FROM media WHERE media.model_type LIKE '%voucher%' AND media.dataset_id IN ($dataset_ids))
+          )";
         }
-        if ('datasets' == $scope and $scope_id>0) {
-          $sql = "SELECT DISTINCT(vouchers.id) FROM vouchers,individuals,individual_location,locations,measurements where vouchers.individual_id=individuals.id AND individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND measurements.measured_type like '%individual%' AND measurements.measured_id=individuals.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt." AND measurements.dataset_id=".$scope_id;
+        if ('datasets' == $scope and $scopeId>0) {
+          $sql = "SELECT DISTINCT vouchers.id FROM vouchers,individual_location,locations where
+          (individual_location.individual_id=vouchers.individual_id AND individual_location.location_id=locations.id AND locations.lft>='".$this->lft."' AND locations.lft<='".$this->rgt."')
+          AND (
+            vouchers.dataset_id='".$scopeId."'
+            OR vouchers.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%voucher%' AND measurements.dataset_id='".$scopeId."')
+            OR vouchers.id IN (SELECT media.model_id FROM media WHERE media.model_type LIKE '%voucher%' AND media.dataset_id='".$scopeId."')
+          )";
         }
         $query = DB::select($sql);
         return count($query);
     }
 
     //measurement should count only LOCATION measurements, including descendants (not like taxon as descendant has not a relationship with parent like phylogenetic relationships), so should not count measurements for individuals and vouchers at locations.
-    //they also have no relationship with project, so project scope makes no sense for locations
-    public function measurementsCount($scope='all',$scope_id=null)
+    public function measurementsCount($scope='all',$scopeId=null)
     {
       $sql = "SELECT DISTINCT(measurements.measured_id) FROM locations,measurements where measurements.measured_type like '%location%' AND measurements.measured_id=locations.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt;
-      if ('datasets' == $scope and $scope_id>0) {
-        $sql .= " AND measurements.dataset_id=".$scope_id;
+      if ('projects' == $scope and $scopeId>0) {
+        $dataset_ids = Dataset::where('project_id',$scopeId)->cursor()->pluck('datasets.id')->toArray();
+        if (count($dataset_ids)==0) {
+          return 0;
+        }
+        $dataset_ids = implode(",",$dataset_ids);
+        $sql .= " AND measurements.dataset_id IN ($dataset_ids)";
+      }
+      if ('datasets' == $scope and $scopeId>0) {
+        $sql .= " AND measurements.dataset_id=".$scopeId;
       }
       $query = DB::select($sql);
       return count($query);
@@ -729,40 +846,60 @@ class Location extends Node implements HasMedia
 
 
 
-    public function taxonsCount($scope=null,$scope_id=null)
+    public function taxonsCount($scope=null,$scopeId=null)
     {
-      $sql = "SELECT DISTINCT(taxon_id) FROM identifications,individuals,taxons,individual_location,locations where
-      identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt;
-      if ('projects' == $scope and $scope_id>0) {
-        $sql .= " AND individuals.project_id=".$scope_id;
+      $sql = "SELECT DISTINCT(taxon_id) FROM identifications,taxons,individual_location,locations where
+      identifications.object_id=individual_location.individual_id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND individual_location.location_id=locations.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt;
+      if ('projects' == $scope and $scopeId>0) {
+        $dataset_ids = Dataset::where('project_id',$scopeId)->cursor()->pluck('datasets.id')->toArray();
+        if (count($dataset_ids)==0) {
+          return 0;
+        }
+        $dataset_ids = implode(",",$dataset_ids);
+        $sql = "SELECT DISTINCT(taxon_id) FROM identifications,taxons,individual_location,locations,individuals where
+        individual_location.individual_id=individuals.id
+        AND  (identifications.object_id=individuals.ID AND (identifications.object_type LIKE '%individual%'))
+        AND (identifications.taxon_id=taxons.id AND individual_location.location_id=locations.id AND locations.lft>='".$this->lft."' AND locations.lft<='".$this->rgt."')
+        AND (
+          individuals.dataset_id IN ($dataset_ids)
+          OR individuals.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%individual%' AND measurements.dataset_id IN ($dataset_ids))
+          OR individuals.id IN (SELECT media.model_id FROM media WHERE media.model_type LIKE '%individual%' AND media.dataset_id IN ($dataset_ids))
+          OR individuals.id IN (SELECT vouchers.individual_id FROM vouchers LEFT JOIN measurements as vm ON vm.measured_id=vouchers.id WHERE (vm.measured_type LIKE '%voucher%' AND vm.dataset_id IN ($dataset_ids)) OR vouchers.dataset_id IN ($dataset_ids))
+        )";
       }
-      if ('datasets' == $scope and $scope_id>0) {
-          $sql = "SELECT DISTINCT(taxon_id) FROM identifications,individuals,taxons,individual_location,locations,measurements where
-      identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND (measurements.measured_type LIKE '%individual%') AND measurements.measured_id=individuals.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt." AND measurements.dataset_id=".$scope_id;
+      if ('datasets' == $scope and $scopeId>0) {
+        $sql = "SELECT DISTINCT(taxon_id) FROM identifications,taxons,individual_location,locations,individuals where
+        individual_location.individual_id=individuals.id
+        AND  (identifications.object_id=individuals.ID AND (identifications.object_type LIKE '%individual%'))
+        AND (identifications.taxon_id=taxons.id AND individual_location.location_id=locations.id AND locations.lft>='".$this->lft."' AND locations.lft<='".$this->rgt."')
+        AND (
+          individuals.dataset_id IN ($scopeId)
+          OR individuals.id IN (SELECT measurements.measured_id FROM measurements WHERE measurements.measured_type LIKE '%individual%' AND measurements.dataset_id IN ($scopeId))
+          OR individuals.id IN (SELECT media.model_id FROM media WHERE media.model_type LIKE '%individual%' AND media.dataset_id IN ($scopeId))
+          OR individuals.id IN (SELECT vouchers.individual_id FROM vouchers LEFT JOIN measurements as vm ON vm.measured_id=vouchers.id WHERE (vm.measured_type LIKE '%voucher%' AND vm.dataset_id IN ($scopeId)) OR vouchers.dataset_id IN ($scopeId))
+        )";
       }
       $query = DB::select($sql);
       return count($query);
     }
 
-    public function taxonsIDS()
-    {
-      $taxons  = $this->getDescendantsAndSelf()->map(function($location) {
-                  $listp = $location->identifications()->with('taxon')->withoutGlobalScopes()->whereHas('taxon',function($taxon) { $taxon->where('level',">=",Taxon::getRank('species'));})->distinct('taxon_id')->pluck('taxon_id')->toArray();
-                  return array_unique($listp);
-                })->toArray();
-      return array_unique(Arr::flatten($taxons));
-    }
 
-    /* this may be a better direct counting relationship
-    public function newtaxonid($value='')
+   public function all_taxons_ids()
     {
         $sql = "SELECT DISTINCT(taxon_id) FROM identifications,individuals,taxons,individual_location,locations where
         identifications.object_id=individuals.id AND (identifications.object_type LIKE '%individual%') AND identifications.taxon_id=taxons.id AND individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt;
-        $query = DB::select($sql);
+        $query = collect(DB::select($sql))->pluck('taxon_id')->toArray();
         return $query;
-
     }
-    */
+
+    public function all_voucher_ids()
+    {
+        $sql = "SELECT DISTINCT(vouchers.id) FROM vouchers,individuals,individual_location,locations where
+        vouchers.individual_id=individuals.id AND individual_location.individual_id=individuals.id AND individual_location.location_id=locations.id AND locations.lft>=".$this->lft." AND locations.lft<=".$this->rgt;
+        $query = collect(DB::select($sql))->pluck('id')->toArray();
+        return $query;
+    }
+
 
     /*  MEDIA RELATED FUNCTIONS */
 
@@ -886,7 +1023,7 @@ class Location extends Node implements HasMedia
         * N oriented
         * point is 0,0 SW corner
       */
-      if ($this->adm_level == self::LEVEL_PLOT and $this->geomType== "point") {
+      if ($this->adm_level == self::LEVEL_PLOT and $this->geom_type== "point") {
         $first_point = $this->geom;
         $second_point = Location::destination_point($first_point,0,$this->y);
         $third_point =  Location::destination_point($second_point,90,$this->x);
@@ -935,6 +1072,9 @@ class Location extends Node implements HasMedia
     /* map individuals in plots having a geometry */
     public static function individual_in_plot($geom,$x,$y)
     {
+      if ($x==null or $y==null) {
+        return $geom;
+      }
       $array = explode(',', substr($geom, 9, -2));
       $first_point = "POINT(".$array[0].")";
       $last_point = "POINT(".$array[count($array)-2].")";
@@ -1003,20 +1143,35 @@ class Location extends Node implements HasMedia
       return $bearing;
     }
 
-
+    /* generates contents for mapping locations and/or individuals */
     public function generateFeatureCollection($individual_id=null)
     {
         $ids = $this->getAncestorsAndSelf()->pluck('id')->toArray();
+        //add related if any
+        $related_ids = $this->relatedLocations->pluck('related_id')->toArray();
+        if (count($related_ids)) {
+          $ids = array_merge($ids,$related_ids);
+        }
         $string = [ "type" => "FeatureCollection", "features" => []];
-        $locations = self::whereIn("id",$ids)->noWorld()->withGeom()->cursor();
+        $locations = self::whereIn("id",$ids)->noWorld()->withGeom()->orderBy('adm_level')->cursor();
+        $fit_geometry = null;
+        $idx = 0;
         foreach($locations as $location) {
+              if ($location->id == $this->parent_id and !in_array($this->adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+                $fit_geometry = $idx;
+              } elseif ($location->id == $this->id and in_array($this->adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+                $fit_geometry = $idx;
+              }
+              $idx++;
               $properties = [
                 'name' => $location->name,
                 'area' => $location->area,
                 'centroid_raw' => $location->centroid_raw,
                 'adm_level' => $location->adm_level,
                 'location_type' => Lang::get("levels.adm_level.".$location->adm_level),
-                'parent_adm_level' => $location->parent->adm_level];
+                'parent_adm_level' => $location->parent->adm_level,
+                'fit_geometry' => ($location->id==$this->id) ? $fit_geometry : null,
+              ];
               $str = [
                 "type" => "Feature",
                 "geometry" => json_decode($location->geomjson),
@@ -1030,7 +1185,9 @@ class Location extends Node implements HasMedia
                   'centroid_raw' => $location->centroid_raw,
                   'adm_level' => self::LEVEL_POINT,
                   'location_type' => Lang::get("levels.adm_level.".$location->adm_level),
-                  'parent_adm_level' => $location->parent->adm_level];
+                  'parent_adm_level' => $location->parent->adm_level,
+                  'fit_geometry' => ($location->id==$this->id) ? $fit_geometry : null,
+                ];
                 $geom = DB::select("SELECT ST_ASGEOJSON(ST_GeomFromText('".$location->geom."')) as geojson")[0]->geojson;
                 $str = [
                   "type" => "Feature",
@@ -1049,7 +1206,9 @@ class Location extends Node implements HasMedia
               'centroid_raw' => $individual->getGlobalPosition(),
               'adm_level' => 1000,
               'location_type' => Lang::get("messages.individual"),
-              'parent_adm_level' => $this->adm_level];
+              'parent_adm_level' => $this->adm_level,
+              'fit_geometry' => $fit_geometry,
+            ];
             $str = [
               "type" => "Feature",
               "geometry" => json_decode($individual->getGlobalPosition($geojson=1)),
@@ -1063,5 +1222,139 @@ class Location extends Node implements HasMedia
     }
 
 
+
+
+
+
+    /* DARWIN CORE mutators */
+    public function getHigherGeographyAttribute()
+    {
+        $path = $this->getAncestorsWithoutRoot()->pluck('name')->toArray();
+        if (count($path)) {
+          return implode(" | ",$path);
+        }
+        return null;
+    }
+
+
+    public function getFootprintWKTAttribute()
+    {
+      $adm_level = $this->adm_level;
+      $this->getLatLong();
+      if ($adm_level==self::LEVEL_PLOT) {
+        return $this->plot_geometry;
+      }
+      if ($adm_level==self::LEVEL_TRANSECT) {
+        return $this->transect_geometry;
+      }
+      return $this->geom;
+    }
+
+    public function getDecimalLatitudeAttribute()
+    {
+      $this->getLatLong();
+      return $this->lat;
+    }
+    public function getDecimalLongitudeAttribute()
+    {
+      $this->getLatLong();
+      return $this->long;
+    }
+
+    public function getLocationRemarksAttribute()
+    {
+      return $this->notes;
+    }
+    public function getGeodeticDatumAttribute()
+    {
+      return $this->datum;
+    }
+
+    /* this is not in dwc only, location there but for different purpose */
+    public function getLocationNameAttribute()
+    {
+      return $this->name;
+    }
+
+    public function getBasisOfRecordAttribute()
+    {
+      return 'Location';
+    }
+
+    /* uc replacement for related */
+    public function relatedLocations()
+    {
+        return $this->hasMany('App\Models\LocationRelated', 'location_id');
+    }
+
+    public function uc()
+    {
+        return $this->relatedLocations()->whereHas('relatedLocation',function($l){
+          $l->where('adm_level',self::LEVEL_UC);
+        });
+    }
+
+    public static function detectRelated($geom, $adm_level,$idsOnly=false)
+    {
+        //check only for non administrative levels
+        if (!in_array($adm_level,[Location::LEVEL_PLOT,Location::LEVEL_TRANSECT,Location::LEVEL_POINT])) {
+          return null;
+        }
+        $query = 'ST_Within(ST_GeomFromText(?), geom)';
+          //check which registered polygons (except World) of special cases
+        $validtypes = [Location::LEVEL_UC,Location::LEVEL_TI,Location::LEVEL_ENV];
+        //are possible parents (CONTAIN) of submitted location
+        //order by adm_level to get the most inclusive first
+        $possibles = Location::select(['id','name','adm_level'])->whereRaw($query, [$geom])->whereIn('adm_level',$validtypes)->noWorld()->orderBy('adm_level', 'desc');
+
+        //if found return the greatest adm_level location found
+        if ($possibles->count()) {
+            if ($idsOnly) {
+                return $possibles->cursor()->pluck('id')->toArray();
+            }
+            return $possibles->cursor()->map(function($p) { return ['id'=>$p->id,'name'=>$p->name];})->toArray();
+        }
+        return null;
+    }
+
+    public static function fixPathAndRelated($id)
+    {
+      $location = self::withGeom()->findOrFail($id);
+      $adm_level = $location->adm_level;
+
+      if (in_array($adm_level,[self::LEVEL_PLOT,self::LEVEL_TRANSECT,self::LEVEL_POINT])) {
+        return null;
+      }
+
+      //move sister locations to within if that is the case
+      $others = Location::where('parent_id',$location->parent_id)->where('id','<>',$location->id);
+      if ($others->count() and !in_array($adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+          $query = 'ST_Within(geom,ST_GeomFromText(?))';
+          $others = $others->whereRaw($query,$location->geom);
+          if ($others->count()) {
+            foreach ($others->cursor() as $tofix) {
+              $tofix->parent_id = $location->id;
+              $tofix->save();
+            }
+          }
+      }
+      //special locations are new, is this a new parent for other registered locations
+      //if so establish the relationship
+      if (in_array($adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+        $existing = $location->relatedLocations->pluck('related_id')->toArray();
+        $query = 'ST_Within(geom,ST_GeomFromText(?))';
+        $others = Location::whereRaw($query,$location->geom)->whereIn('adm_level',[self::LEVEL_PLOT,self::LEVEL_TRANSECT,self::LEVEL_POINT]);
+        if (count($existing)) {
+          $others = $others->whereNotIn('id',$existing);
+        }
+        if ($others->count()) {
+          foreach ($others->cursor() as $tocreate) {
+            $related = new LocationRelated(['related_id' => $location->id]);
+            $tocreate->relatedLocations()->save($related);
+          }
+        }
+      }
+      return null;
+    }
 
 }

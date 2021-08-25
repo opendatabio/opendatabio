@@ -75,13 +75,18 @@
         @endif
         --->
 
-        @if ($location->uc_id)
           <p>
           <strong>
-            @lang('messages.uc')
-            :</strong> {!! $location->uc->rawLink() !!}
-            </p>
-        @endif
+            @lang('messages.location_belongs')
+            :</strong>
+            <br>&nbsp;&nbsp;&nbsp;-&nbsp;{!! $location->parent->rawLink() !!}
+            @if ($location->relatedLocations->count())
+            @foreach($location->relatedLocations as $related)
+              <br>&nbsp;&nbsp;&nbsp;-&nbsp;{!! $related->relatedLocation->rawLink() !!}
+            @endforeach
+            @endif
+          </p>
+
 
   <p>
         <strong>
@@ -179,15 +184,13 @@
         @endcan
         <!-- this will show only if no media as media are shown below -->
         @can ('create', App\Models\Media::class)
-          @if (null == $media)
-        <a href="{{ url('locations/'. $location->id. '/media-create')  }}" class="btn btn-success">
+          <a href="{{ url('locations/'. $location->id. '/media-create')  }}" class="btn btn-success">
               <i class="fa fa-btn fa-plus"></i>
               <i class="fas fa-photo-video"></i>
               <i class="fas fa-headphones-alt"></i>
               @lang('messages.create_media')
-            </a>
-            &nbsp;&nbsp;
-          @endif
+          </a>
+          &nbsp;&nbsp;
         @endcan
         <input type="hidden" name="map-route-url" value="{{ route('maprender') }}">
         &nbsp;
@@ -254,6 +257,8 @@
   </div>
 </div>
 @endif
+
+
 
 <!--- MEDIA BLOCK -->
 @if (null != $media)

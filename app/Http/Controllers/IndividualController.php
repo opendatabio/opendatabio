@@ -21,6 +21,7 @@ use App\Models\Identification;
 use DB;
 use App\Models\IndividualLocation;
 use App\DataTables\IndividualsDataTable;
+use Carbon\Carbon;
 
 use App\Models\Dataset;
 use App\Models\Summary;
@@ -45,7 +46,7 @@ class IndividualController extends Controller
     public function autocomplete(Request $request)
     {
 
-      $individuals = Individual::select(DB::raw('id as data, odb_ind_fullname(id,tag) as value'))->where('tag','like',$request->input('query')."%")->take(30)->get();
+      $individuals = Individual::select(DB::raw('id as data, odb_ind_fullname(individuals.id,individuals.tag) as value'))->where('tag','like',"%".$request->input('query')."%")->take(10)->get();
 
       /*
       $individuals = Individual::selectRaw("individuals.id as data, tag as value")
@@ -114,6 +115,17 @@ class IndividualController extends Controller
         return $dataTable->with(['location' => $ids[0],'dataset' => $ids[1]])->render('individuals.index', compact('object','object_second'));
     }
 
+    public function indexIndividualLocationsDataset($id, IndividualLocationsDataTable $dataTable)
+    {
+      $dataset = Dataset::findOrFail($id);
+      return $dataTable->with(['dataset' => $id, 'noaction' => 1])->render('individuals.index-locations', compact('dataset'));
+
+    }
+
+
+
+
+
     public function indexTaxons($id, IndividualsDataTable $dataTable)
     {
         $object = Taxon::findOrFail($id);
@@ -177,12 +189,10 @@ class IndividualController extends Controller
         }
         $biocollections = Biocollection::all();
         $persons = Person::all();
-        $projects = Auth::user()->projects;
-
-        return $dataTable->with('individual_id',1)->render('individuals.create', compact('persons', 'projects', 'biocollections', 'location'));
+        return $dataTable->with('noexport',1)->render('individuals.create', compact('persons', 'biocollections', 'location'));
     }
 
-    // Route for quicly creating an individual from a Location page
+    // Route for quickly creating an individual from a Location page
     public function createLocations($id, IndividualLocationsDataTable $dataTable)
     {
         $location = Location::withoutGeom()->findOrFail($id);
@@ -208,7 +218,7 @@ class IndividualController extends Controller
         }
         $location = Location::withGeom()->find($locationid);
         $rules = array_merge((array) $rules, (array) [
-            'project_id' => 'required|integer',
+            'dataset_id' => 'nullable|integer',
             'collector' => "required|array",
             'tag' => [ // tag / location must be unique
                 'required',
@@ -333,8 +343,11 @@ class IndividualController extends Controller
      */
     public function store(Request $request)
     {
-        $project = Project::findOrFail($request->project_id);
-        $this->authorize('create', [Individual::class, $project]);
+        $dataset= null;
+        if ($request->dataset_id) {
+          $dataset = Dataset::findOrFail($request->dataset_id);
+        }
+        $this->authorize('create', [Individual::class, $dataset]);
         $validator = $this->customValidate($request);
         if ($validator->fails()) {
           if ($request->from_the_api) {
@@ -344,7 +357,7 @@ class IndividualController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
-        $individual = new Individual($request->only(['tag', 'project_id', 'notes']));
+        $individual = new Individual($request->only(['tag', 'dataset_id', 'notes']));
 
         //set incomplete date
         if (isset($request->date_month)) {
@@ -419,13 +432,13 @@ class IndividualController extends Controller
         $newvalues =  [
              "taxon_id" => $newtaxon_id,
              "location_id" => $request->location_id,
-             "project_id" => $request->project_id
+             "dataset_id" => $request->dataset_id
         ];
 
         $oldvalues =  [
             "taxon_id" => null,
             "location_id" => null,
-            "project_id" => null,
+            "dataset_id" => null,
         ];
 
         $target = 'individuals';
@@ -479,8 +492,9 @@ class IndividualController extends Controller
         }
         $biocollections = Biocollection::all();
         $persons = Person::all();
-        $projects = Auth::user()->projects;
-        return $dataTable->with('individual', $id)->render('individuals.create', compact('individual', 'persons', 'projects', 'biocollections'));
+        //$datasets = Auth::user()->datasets;
+        $params = ['individual'=>$id,'noexport' => 1];
+        return $dataTable->with($params)->render('individuals.create', compact('individual', 'persons', 'biocollections'));
     }
 
     /**
@@ -494,7 +508,11 @@ class IndividualController extends Controller
     public function update(Request $request, $id)
     {
         $individual = Individual::findOrFail($id);
-        $this->authorize('update', $individual);
+        $dataset= null;
+        if ($request->dataset_id) {
+          $dataset = Dataset::findOrFail($request->dataset_id);
+        }
+        $this->authorize('update', [$individual,$dataset]);
         $validator = $this->customValidate($request, $individual);
         if ($validator->fails()) {
             return redirect()->back()
@@ -509,12 +527,12 @@ class IndividualController extends Controller
         }
         $oldvalues =  [
             "taxon_id"  =>  $oldtaxon_id,
-            "project_id" => $individual->project_id,
+            "dataset_id" => $individual->dataset_id,
             "location_id" => $request->oldlocation_id,
         ];
 
 
-        $individual->update($request->only(['tag', 'project_id', 'notes']));
+        $individual->update($request->only(['tag', 'dataset_id', 'notes']));
         $individual->setDate($request->date_month, $request->date_day, $request->date_year);
         $individual->save();
 
@@ -602,7 +620,7 @@ class IndividualController extends Controller
         /* UPDATE SUMMARY COUNTS */
         $newvalues =  [
              "taxon_id" => $newtaxon_id,
-             "project_id" => $request->project_id,
+             "dataset_id" => $request->dataset_id,
              "location_id" => $individual->locations->last()->id,
         ];
         $target = 'individuals';
@@ -632,7 +650,12 @@ class IndividualController extends Controller
         return $dataTable->with('individual', $id)->render('common.activity',compact('object'));
     }
 
-    public function importJob(Request $request)
+    public function importLocationsJob(Request $request)
+    {
+      return $this->importJob($request,true);
+    }
+
+    public function importJob(Request $request,$locationonly=false)
     {
       $this->authorize('create', Individual::class);
       $this->authorize('create', UserJob::class);
@@ -646,13 +669,18 @@ class IndividualController extends Controller
         } else {
           $filename = uniqid().".".$ext;
           $request->file('data_file')->storeAs("public/tmp",$filename);
-          UserJob::dispatch(ImportIndividuals::class,[
+          $data = [
             'data' => [
                 'data' => null,
                 'filename' => $filename,
                 'filetype' => $ext,
               ],
-          ]);
+          ];
+          if (!$locationonly) {
+            UserJob::dispatch(ImportIndividuals::class,$data);
+          } else {
+            UserJob::dispatch(ImportIndividualLocations::class,$data);
+          }
           $message = Lang::get('messages.dispatched');
         }
       }
@@ -689,19 +717,28 @@ class IndividualController extends Controller
         ]);
     }
 
+    public function validateDateTime($date) {
+        $dt = explode(" ",$date);
+        if ($date == null or count($dt)==1) {
+          return false;
+        }
+        $valid = DB::select("SELECT STR_TO_DATE('".$date."','%Y-%m-%d %H:%i:%s') as valid");
+        if (!$valid[0]->valid or $valid[0]->valid!=$date) {
+          return false;
+        }
+        return $valid[0]->valid;
+    }
 
     public function validateIndividualLocation(Request $request)
     {
       $rules = [
         'location_id' => 'required|integer',
         'altitude' => 'integer|nullable',
-        'date_time' => 'date_format:Y-m-d H:i:s|nullable',
       ];
       $validator = Validator::make($request->all(), $rules);
       $location = Location::withGeom()->find($request->location_id);
       $validator->after(function ($validator) use ($request, $location) {
         if ($request->distance or $request->x) {
-          // validates xy / angdist
           // validates xy / angdist
           if (Location::LEVEL_POINT == $location->adm_level) {
             if ($request->distance < 0 or $request->angle < 0 or $request->angle > 360 or null == self::validateRelativePosition($request->angle,$request->distance,$location->adm_level)) {
@@ -716,6 +753,25 @@ class IndividualController extends Controller
                 $validator->errors()->add('x', Lang::get('messages.individual_xy_error'));
             }
           }
+       }
+       if($request->date_time) {
+         $valid = $this->validateDateTime($request->date_time);
+         if (!$valid) {
+           $validator->errors()->add('date_time', Lang::get('messages.invalid_date_error'));
+         }
+       }
+       //if there is already a location for the same date_time and individual
+       if ($request->individual_id and $request->date_time) {
+         $dateTime = $this->validateDateTime($request->date_time);
+         $has = IndividualLocation::where('individual_id',$request->individual_id)->whereRaw("date_time=STR_TO_DATE('".$dateTime."','%Y-%m-%d %H:%i:%s')")->count();
+         if ($has>0) {
+           $validator->errors()->add('date_time', Lang::get('messages.individual_duplicated_location'));
+         }
+       } else {
+         $has = IndividualLocation::where('individual_id',$request->individual_id)->where("location_id",$request->location_id)->whereNull("date_time")->count();
+         if ($has>0) {
+           $validator->errors()->add('location_id', Lang::get('messages.individual_duplicated_location'));
+         }
        }
       });
       return $validator;
@@ -746,7 +802,7 @@ class IndividualController extends Controller
           if ($request->id) {
             $indloc = IndividualLocation::findOrFail($request->id);
             $indloc->location_id = $request->location_id;
-            $indloc->date_time = $request->date_time;
+            $indloc->date_time = $this->validateDateTime($request->date_time);
             $indloc->altitude = $request->altitude;
             $indloc->notes = $request->notes;
             $indloc->relative_position = $relative_position;
@@ -754,7 +810,7 @@ class IndividualController extends Controller
           } else {
             //this is a new location for the individual add
             $values = [
-              'date_time' => $request->date_time,
+              'date_time' => $this->validateDateTime($request->date_time),
               'altitude' => $request->altitude,
               'notes' => $request->notes,
               'relative_position' => $relative_position
@@ -782,7 +838,7 @@ class IndividualController extends Controller
           $indloc->first = 1;
           $indloc->save();
         }
-        return Response::json(['deleted' => Lang::get('messages.individual_location_deleted')]);
+        return Response::json(['deleted' => Lang::get('messages.removed')]);
       } else {
         return Response::json(['deleted' => Lang::get('messages.individual_location_cannotdelete')]);
       }
@@ -792,17 +848,23 @@ class IndividualController extends Controller
     public function getIndividualForVoucher(Request $request)
     {
       $individual = Individual::findOrFail($request->id);
-      if ($individual->identification) {
-        $taxonname = $individual->identification->taxon->full_name;
+      $taxonname = $individual->scientificName;
+      $collectors = $individual->recordedBy;
+      $colldate = $individual->recordedDate;
+      $dataset_id = $individual->dataset_id;
+      $dataset_name= $individual->datasetName;
+      $dataset_users = Auth::user()->editabledatasets()->pluck('datasets.id')->toArray();
+      if (!in_array($dataset_id,$dataset_users)) {
+        $dataset_id = null;
+        $dataset_name = null;
       }
-      $collectors = implode(" | ",$individual->collectors->map(function($q) { return $q->person->abbreviation;})->toArray());
-      $colldate = $individual->date;
       $result = [
           $taxonname,
           $collectors,
-          $individual->date,
-          $individual->tag,
-          $individual->project_id,
+          $colldate,
+          $individual->recordNumber,
+          $dataset_id,
+          $dataset_name,
       ];
       return Response::json(
       [

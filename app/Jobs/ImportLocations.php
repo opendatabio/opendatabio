@@ -175,7 +175,7 @@ class ImportLocations extends AppJob
         if (!$this->validateParent($location)) {
             return false;
         }
-        if (!$this->validateUC($location)) {
+        if (!$this->validateOtherParents($location)) {
             return false;
         }
         if (!$this->adjustAdmLevel($location)) {
@@ -238,6 +238,9 @@ class ImportLocations extends AppJob
       if ('multipolygon' == substr($strGeom, 0, 12)) {
         return Location::GEOM_MULTIPOLYGON;
       }
+      if ('linestring' == substr($strGeom, 0, 10)) {
+        return Location::GEOM_LINESTRING;
+      }
       return null;
     }
 
@@ -263,121 +266,146 @@ class ImportLocations extends AppJob
         /* get the geometry type from the string submitted */
         $geomType = self::geomTypeFromGeom($location['geom']);
         if($geomType == null ) {
-          $this->skipEntry($locationLog, "Invalid geometry type for location $name");
+          $this->skipEntry($locationLog, "Invalid geometry type for location ".$location['name']);
           return false;
         }
 
         //check if geometry is valid
         //Understand https://dev.mysql.com/doc/refman/8.0/en/geometry-well-formedness-validity.html
         //but mariadb does not have st_valid of mysql, so we can evaluate some of these issues only //
-        /* 1. geometry conversion from text should pass is valid*/
+
+        /* 1. If geometry conversion from text pass, then is valid*/
         try {
           $validGeom = DB::statement("SELECT ST_GeomFromText('".$geom."')");
         } catch (\Exception $e) {
           $this->skipEntry($locationLog,Lang::get('messages.geometry_invalid'));
           return false;
         }
-        /* 2 validate by calculating the area and the centroid if polygon */
+        // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
+        $invalid = DB::select("SELECT ST_IsEmpty(ST_GeomFromText('$geom')) as val");
+        $invalid = count($invalid) ? $invalid[0]->val : 1;
+        if ($invalid) {
+          $this->skipEntry($locationLog,Lang::get('messages.geometry_invalid'));
+          return false;
+        }
+
+        /* 2 validate by calculating the area and the centroid if polygon or multipolygon*/
         /* because these are included in the queries */
         if (in_array($geomType,['polygon','multipolygon'])) {
           /* this functions should work for these geometries otherwise is an error */
           /* area */
-          try {
-            $area  = DB::statement("SELECT ST_Area(ST_GeomFromText('".$geom."'))");
-          } catch (\Exception $e) {
-            $this->skipEntry($locationLog,"Could not calculate area of the informed polygon");
+          $area  = DB::select("SELECT ST_Area(ST_GeomFromText('".$geom."')) as area");
+          $area = count($area) ? $area[0]->area : null;
+          if ($area) {
+            $this->skipEntry($locationLog,"Could not calculate ST_Area of the informed polygon");
             return false;
           }
           /*centroid */
-          try {
-            $centroid  = DB::statement("SELECT ST_Centroid(ST_GeomFromText('".$geom."'))");
-          } catch (\Exception $e) {
-            $this->skipEntry($locationLog,"Could not calculate the centroid for the informed polygon");
+          $centroid  = DB::select("SELECT ST_AsText(ST_Centroid(ST_GeomFromText('".$geom."'))) as centroid");
+          $centroid = count($centroid) ? $centroid[0]->centroid : null;
+          if ($centroid) {
+            $this->skipEntry($locationLog,"Could not calculate the ST_Centroid for the informed geometry");
+            return false;
+          }
+        }
+        // TODO: implemente validation for linestrings (transects)
+        if (in_array($geomType,['linestring'])) {
+          $start_point  = DB::statement("SELECT ST_AsText(ST_StartPoint(ST_GeomFromText('".$geom."'))) as start_point");
+          $start_point = count($start_point) ? $start_point[0]->start_point : null;
+          if ($start_point) {
+            $this->skipEntry($locationLog,"Could not calculate the ST_StartPoint for the informed geometry");
             return false;
           }
         }
 
-        // TODO: implemente validation for linestrings (transects)
-
         // finally check if this exact geometry is already registered
-        $alreadyPresent= Location::noWorld()->whereRaw("ST_AsText(geom) LIKE '".$geom."'")->count();
+        //$alreadyPresent= Location::noWorld()->whereRaw("ST_AsText(geom) LIKE '".$geom."'")->count();
+        $alreadyPresent = Location::whereRaw("ST_Equals(geom,ST_GeomFromText('$geom')) > 0")->count();
         if ($alreadyPresent>0) {
             $this->skipEntry($locationLog,Lang::get('messages.geom_duplicate'));
             return false;
         }
-
         return true;
-
-
     }
 
     protected function validateParent(&$location)
     {
         $parent = isset($location['parent']) ? $location['parent'] : (isset($location['parent_id']) ? $location['parent_id'] : null );
         $location['parent'] = $parent;
-        if ($this->validateRelatedLocation($location, 'parent')) {
-            return true;
-        }
-
-        return false;
-    }
-
-    protected function validateUC(&$location)
-    {
-
-        if ($this->validateRelatedLocation($location, 'uc')) {
-            return true;
-        } else {
-            $locationLog = $location;
-            $locationLog['geom'] = substr($locationLog['geom'],0,20);
-            $this->skipEntry($locationLog, 'Conservation unit for location '.$location['name'].' is listed as '.$location['uc'].', but this was not found in the database or is not a valid UC for the location.');
+        if (!$this->validateParentValues($location)) {
             return false;
         }
+        $parent = $location['parent'];
+        $sameName = Location::where('name', 'like', $location['name'])->where('parent_id', '=', $parent)->count() ;
+        if ($sameName > 0) {
+          $locationLog = $location;
+          $locationLog['geom'] = substr($locationLog['geom'],0,20);
+          $this->skipEntry($locationLog, 'location '.$location['name'].' already exists in database at same parent location. Must be unique within parent');
+          return false;
+        }
+        return true;
     }
 
-    protected function validateRelatedLocation(&$location, $field)
+
+    protected function validateOtherParents(&$location)
+    {
+      if (!isset($location['related_locations'])) {
+        $related = Location::detectRelated($location['geom'],$location['adm_level'],true);
+        $location['related_locations'] = $related;
+        return true;
+      }
+      $related = explode(",",$location['related_locations']);
+      $ids = [];
+      foreach($related as $loc) {
+          $valid = ODBFunctions::validRegistry(Location::select('id'), $loc, ['id', 'name']);
+          if (null === $valid) {
+              $this->skipEntry($location,'Informed other parent <strong>'.$loc.'</strong>not found');
+              break;
+          }
+          $query = "ST_Within(ST_GeomFromText('".$location['geom']."'),geom) as inparent";
+          $inparent = Location::selectRaw($query)->where('id',$valid->id)->get();
+          /* validate geometry now */
+          if ($isparent[0]->inparent) {
+            $ids[] = $valid->id;
+          } else {
+            $this->skipEntry($location,'Location does not fall within informed <strong>'.$loc.'</strong>');
+            break;
+          }
+      }
+      if (count($ids)!=count($related)) {
+         return false;
+      }
+      $location['related_locations'] = $ids;
+      return true;
+    }
+
+    protected function validateParentValues(&$location)
     {
          /* do not check uc if location is country */
-         if ($field == "uc" and $location['adm_level'] == config('app.adm_levels')[0]) {
-           $location[$field] = null;
+         if ($location['adm_level'] == config('app.adm_levels')[0]) {
+           $location['parent'] = Location::world()->id;
            return true;
          }
 
-         /* return World if location is county */
-         if ($field == "parent" and $location['adm_level'] == config('app.adm_levels')[0]) {
-           $location[$field] = Location::world()->id;
-           return true;
-         }
-
-         /* if parent or uc are not defined, set them to null */
-         if (!isset($location[$field])) {
-           $location[$field] = null;
-         }
-         /*if not null, then an informed related exists */
-         $hasRelated = (null != $location[$field]) ? $location[$field] : null;
-
-         /* validate related if exists
-         * uc or parent must have either a numeric or string value
+         $parent = $location['parent'];
+         /* validate parent if exists
          * if valid, then check whether it contains the geometry of the location
          */
          $informedRelated = null;
-         if (null != $hasRelated) {
+         if (null != $parent) {
            /* if interger, then must be the id */
-           if (((int) $hasRelated) >0) {
-             $informedRelated = Location::where('id',$hasRelated);
+           if (((int) $parent) >0) {
+             $informedRelated = Location::where('id',$parent);
            } else {
-             $informedRelated = Location::where('name','like',$hasRelated)->withoutGeom();
+             $informedRelated = Location::where('name','like',$parent)->withoutGeom();
            }
-           if ($field != "uc") {
-             $maxadmin = $location['adm_level'];
-             if ($location['adm_level']==Location::LEVEL_PLOT) {
+           $maxadmin = $location['adm_level'];
+           if ($location['adm_level']==Location::LEVEL_PLOT) {
                $maxadmin = $maxadmin+1;
-             }
-             $informedRelated = $informedRelated->where('adm_level','<',$maxadmin);
-           } else {
-             $informedRelated = $informedRelated->where('adm_level',Location::LEVEL_UC);
            }
-           if ($informedRelated->count()) {
+           $informedRelated = $informedRelated->where('adm_level','<',$maxadmin);
+
+           if ($informedRelated->count()==1) {
                $informedRelated = $informedRelated->first();
                $parent_dim = !is_null($informedRelated->x) ? (($informedRelated->x >= $informedRelated->y) ? $informedRelated->x : $informedRelated->y) : null;
                if (!is_null($parent_dim)) {
@@ -404,88 +432,87 @@ class ImportLocations extends AppJob
               $query = "ST_Within(ST_GeomFromText('".$location['geom']."'),geom) as isparent";
               $isparent = Location::selectRaw($query)->where('id',$informedRelated->id)->get();
               if ($isparent[0]->isparent) {
-                $location[$field] = $informedRelated->id;
+                $location['parent'] = $informedRelated->id;
                 return true ;
-              } else {
-                $query = "ST_Within(ST_GeomFromText('".$location['geom']."'),".$query_buffer.") as isparent";
-                $isparent = Location::selectRaw($query)->where('id',$informedRelated->id)->get();
-                if ($isparent[0]->isparent) {
-                  $location[$field] = $informedRelated->id;
-                  return true ;
-                } else {
-                  $locationLog = $location;
-                  $locationLog['geom'] = substr($locationLog['geom'],0,20);
-                  $this->skipEntry($locationLog,"Location $field is not a valid parent for this location. Not even with considering a buffer around it.");
-                  return false;
-                }
               }
-           }
 
-           $this->appendLog("Informed ".$field." for location ".$location['name']." was not found in the database.[value ".$hasRelated."]");
+              //test with buffered parent
+              //if still not fall within buffered parent, then accept only if ismarine informed
+              $query = "ST_Within(ST_GeomFromText('".$location['geom']."'),".$query_buffer.") as isparent";
+              $ismarine = isset($location['ismarine']) ? ($location['ismarine'] != null) : false;
+              $isparent = Location::selectRaw($query)->where('id',$informedRelated->id)->get();
+              if ($isparent[0]->isparent) {
+                $location['parent'] = $informedRelated->id;
+                return true ;
+              }
+
+              if ($ismarine and in_array($location['adm_level'], Location::LEVEL_SPECIAL)) {
+                $this->appendLog("WARNING: Location ".$location['name']." does not fall within parent ".$parent." but the relation was established because you informed to be a marine location.");
+                $location['parent'] = $informedRelated->id;
+                return true;
+              }
+              //else informed parent is invalid
+              $locationLog = $location;
+              $locationLog['geom'] = substr($locationLog['geom'],0,20);
+              $this->skipEntry($locationLog,"Location parent ".$parent." is not a valid parent for this location. Not even with considering a buffer around it.");
+              return false;
+           }
+           $this->appendLog("ERROR: Informed Parent for location ".$location['name']." was not found in the database [value: ".$parent."].");
            return false;
         }
-
-
-         /* if related was not informed try to guess */
-         $guessedParent = $this->guessParent($location['geom'], $location['adm_level'], 'uc' === $field);
-
-         //$parentIgnore = isset($location['parentIgnore']) ? (int) $location['parentIgnore'] : 0;
-
-         /* if not found and not informed failed if got here unless filed is uc or parentIgnore has been selected*/
-         if (null == $guessedParent) {
-           if ($field != 'uc') {
-             $locationLog = $location;
-             $locationLog['geom'] = substr($locationLog['geom'],0,20);
-             $this->skipEntry($locationLog,"Location $field was not detected nor informed. Only adm_level ".config('app.adm_levels')[0]." can be imported without $field assignment.");
-             return false;
-           }
-           /* ucs are not mandatory */
-           $location[$field] = null;
-           return true;
+        /* if related was not informed try to guess */
+        $guessedParent = $this->guessParent($location['geom'], $location['adm_level']);
+        /* if still not guessed, then it cannot be imported and nothing to do*/
+        if (null == $guessedParent) {
+          $locationLog = $location;
+          $locationLog['geom'] = substr($locationLog['geom'],0,20);
+          $this->skipEntry($locationLog,"Location parent was not detected nor informed. Only adm_level ".config('app.adm_levels')[0]." and can be imported without parent assignment.");
+          return false;
         }
 
-        $location[$field] = $guessedParent;
+        $location['parent'] = $guessedParent;
         return true;
-
     }
 
-    protected function guessParent($geom, $adm_level, $parent_uc, $maxdim=0)
+    protected function guessParent($geom, $adm_level,$maxdim=0)
     {
         if (config('app.adm_levels')[0] == $adm_level) {
-            return $parent_uc ? null : Location::world()->id;
+            return Location::world()->id;
         }
         //DETECT ST_WITHIN parent
-        $parent = Location::detectParent($geom, $adm_level, $parent_uc, $ignore_level=false,$parent_buffer=0);
+        $parent = Location::detectParent($geom, $adm_level, null, $ignore_level=false,$parent_buffer=0);
         if ($parent) {
-            return $parent->id;
+          return $parent->id;
         }
         // IF NOT FOUND TRY WITH ST_BUFFER on parent
-
         //define buffer, for plots uses plot dimension, else default
+        /* MAKES NO SENSO WHILE GUESSING TO ADD BUFFER, ONLY WHEN INFORMED (TO RESTRICT ERRORS)
         $buffer_dd = config("app.location_parent_buffer");
         if ($adm_level == Location::LEVEL_PLOT and $maxdim>0) {
            $buffer_dd = (($maxdim*0.00001)/1.11);
         }
-
         if ($adm_level != Location::LEVEL_POINT) {
-            $parent = Location::detectParent($geom, $adm_level, $parent_uc, $ignore_level=false,$parent_buffer=$buffer_dd);
+            $parent = Location::detectParent($geom, $adm_level, null, $ignore_level=false,$parent_buffer=$buffer_dd);
             if ($parent) {
               return $parent->id;
             }
         }
-        // IF STILL NOT FOUN TRY IGNORING ADMIN LEVEL
-        $parent = Location::detectParent($geom, $adm_level, $parent_uc, $ignore_level=1,$parent_buffer=0);
+        */
+        // IF STILL NOT FOUND TRY IGNORING ADMIN LEVEL
+        $parent = Location::detectParent($geom, $adm_level, null, $ignore_level=1,$parent_buffer=0);
         if ($parent) {
-            //$this->appendLog("Parent detected but of different adm_level than expected");
+            $this->appendLog("Parent detected but of different adm_level than expected");
             return $parent->id;
         }
 
         // IF STILL NOT FOUN TRY IGNORING ADMIN LEVEL AND ADDING BUFFER
-        $parent = Location::detectParent($geom, $adm_level, $parent_uc, $ignore_level=1,$parent_buffer=$buffer_dd);
+        /*
+        $parent = Location::detectParent($geom, $adm_level, null, $ignore_level=1,$parent_buffer=$buffer_dd);
         if ($parent) {
             //$this->appendLog("WARNING: Parent detected but of different adm_level than expected.");
             return $parent->id;
         }
+        */
 
         return null;
     }
@@ -497,8 +524,8 @@ class ImportLocations extends AppJob
         $adm_level = $location['adm_level'];
         $geom = $location['geom'];
         $parent = $location['parent'];
-        $uc = $location['uc'];
-
+        //$uc = $location['uc'];
+        $related_locations = isset($location["related_locations"]) ? $location['related_locations'] : null;
         $altitude = null;
         if (isset($location['altitude']) and !empty($location['altitude'])) {
           $altitude = $location['altitude'];
@@ -538,27 +565,6 @@ class ImportLocations extends AppJob
           $geojson = $location['geojson'];
         }
 
-        // TODO: several other validation checks
-        // Is this location already imported?
-        if ($parent) {
-          $sameName = Location::where('name', 'like', $name)->where('parent_id', '=', $parent)->count() ;
-          if ($sameName> 0) {
-            $locationLog = $location;
-            $locationLog['geom'] = substr($locationLog['geom'],0,20);
-            $this->skipEntry($locationLog, 'location '.$name.' already exists in database at same parent location. Must be unique within parent');
-            return;
-          }
-        }
-        //this is important to prevent duplicated values (redundand?)
-        $smallGeom = substr($geom, 0,1000);
-        $sameGeometry = Location::whereRaw("ST_Equals(geom,ST_GeomFromText('$geom')) > 0")->count();
-        if ($sameGeometry>0) {
-          $locationLog = $location;
-          $locationLog['geom'] = substr($locationLog['geom'],0,20);
-          $this->skipEntry($locationLog, 'location '.$name.' identical geometry already exists in database');
-          return;
-        }
-
         $location = new Location([
             'name' => $name,
             'adm_level' => $adm_level,
@@ -570,14 +576,19 @@ class ImportLocations extends AppJob
             'x' => $x,
             'y' => $y,
             'parent_id' => $parent,
-            'uc_id' => $uc,
             'geojson' => $geojson,
         ]);
         $location->geom = $geom;
         $location->save();
-
+        if ($related_locations) {
+            foreach ($related_locations as $related_id) {
+                $related = new LocationRelated(['related_id' => $related_id]);
+                $location->relatedLocations()->save($related);
+            }
+        }
         $this->affectedId($location->id);
 
+        $fixed = Location::fixPathAndRelated($location->id);
         return;
     }
 

@@ -12,7 +12,9 @@ use App\Models\ODBFunctions;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Activity;
 use App\Models\ActivityFunctions;
-//use Spatie\Activitylog\Traits\LogsActivity;
+
+
+//UPDATES INDIVIDUAL IDENTIFICATIONS ONLY
 
 class BatchUpdateIndividuals extends ImportCollectable
 {

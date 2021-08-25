@@ -1,12 +1,4 @@
-@php
-  $identification_summary = $dataset->identification_summary();
-  $taxonomic_summary = $dataset->taxonomic_summary();
-@endphp
-<div class='panel-heading'>
-  <h4>
-    @lang('messages.identifications_summary')
-  </h4>
-</div>
+<hr>
 @if(!is_null($taxonomic_summary) or !is_null($identification_summary))
   <div class='panel-body'>
   @if(!is_null($taxonomic_summary))
@@ -25,6 +17,7 @@
   @endif
 
   @if(!is_null($identification_summary))
+   @if(count($identification_summary)>0)
     <br>
     <strong>@lang('messages.identification_level')</strong>:
     <p>
@@ -55,26 +48,10 @@
       </tbody>
     </table>
     </p>
+    @endif
   @endif
   </div>
 
 @else
-<div class="panel-body">
-  <strong>@lang('messages.dataset_hasNoTaxons')</strong>!
-  <br>
-  <strong>@lang('messages.measured_types')</strong>
-  @php
-    $objs = $dataset->measured_classes_counts()->toArray();
-  @endphp
-    <ul>
-    @foreach($objs as $object)
-      <li>
-        <strong>{{ $object->measured_type }}</strong>
-        :
-        {{ $object->count }}
-      </li>
-     @endforeach
-    </ul>
-</div>
-
+<div class="panel-body"><strong>@lang('messages.dataset_hasNoTaxons')</strong>!</div>
 @endif

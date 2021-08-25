@@ -73,20 +73,7 @@ class Measurement extends Model
       return NULL;
     }
 
-    public function getMeasuredFullnameAttribute()
-    {
-      return $this->measured->fullname;
-    }
 
-    public function getMeasuredTaxonNameAttribute()
-    {
-      return $this->measured->taxonName;
-    }
-
-    public function getMeasuredTaxonFamilyAttribute()
-    {
-      return $this->measured->taxonFamily;
-    }
 
     public function getMeasuredProjectAttribute()
     {
@@ -156,15 +143,6 @@ class Measurement extends Model
         return $this->hasMany(MeasurementCategory::class);
     }
 
-    public function getTraitNameAttribute()
-    {
-        return $this->odbtrait->export_name;
-    }
-
-    public function getTraitUnitAttribute()
-    {
-        return $this->odbtrait->unit;
-    }
 
     //ge value for display in pages and tables
     public function getValueDisplayAttribute()
@@ -303,24 +281,18 @@ class Measurement extends Model
         static::addGlobalScope('datasetScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->join('datasets', 'datasets.id', '=', 'dataset_id')
-                    ->where('datasets.privacy', '=', Dataset::PRIVACY_PUBLIC);
+                return $builder->whereRaw("(measurements.dataset_id IN (SELECT dts.id FROM datasets as dts WHERE dts.privacy>='".Dataset::PRIVACY_REGISTERED."'))");
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {
                 return $builder;
             }
             // now the complex case: the regular user
-            return $builder->whereRaw('measurements.id IN
-(SELECT p1.id FROM measurements AS p1
-JOIN datasets ON (datasets.id = p1.dataset_id)
-WHERE datasets.privacy > 0
-UNION
-SELECT p1.id FROM measurements AS p1
-JOIN datasets ON (datasets.id = p1.dataset_id)
-JOIN dataset_user ON (datasets.id = dataset_user.dataset_id)
-WHERE datasets.privacy = 0 AND dataset_user.user_id = '.Auth::user()->id.'
-)');
+            return $builder->whereRaw("(measurements.dataset_id IN
+(SELECT dts.id FROM datasets as dts WHERE dts.privacy>='".Dataset::PRIVACY_REGISTERED."')
+OR
+measurements.dataset_id IN
+(SELECT dts.id FROM datasets as dts JOIN dataset_user as dtu ON dtu.dataset_id=dts.id WHERE (dts.privacy >='".Dataset::PRIVACY_REGISTERED."') OR dtu.user_id='".Auth::user()->id."'))");
         });
     }
 
@@ -341,5 +313,104 @@ WHERE datasets.privacy = 0 AND dataset_user.user_id = '.Auth::user()->id.'
             'measurements.value_a',
             'measurements.notes'
         );
+    }
+
+    /* dwc terms */
+    public function getMeasurementTypeAttribute()
+    {
+        return $this->odbtrait->export_name;
+    }
+    public function getMeasurementUnitAttribute()
+    {
+        return $this->odbtrait->unit;
+    }
+    public function getMeasurementValueAttribute()
+    {
+      return $this->valueActual;
+    }
+    public function getMeasurementRemarksAttribute()
+    {
+      return $this->notes;
+    }
+
+    public function getMeasurementDeterminedByAttribute()
+    {
+      return $this->person->abbreviation;
+    }
+    public function getMeasurementDeterminedDateAttribute()
+    {
+      return $this->formatDate;
+    }
+    public function getResourceRelationshipAttribute()
+    {
+      $measured_type = str_replace("App\\Models\\","", $this->measured_type);
+      switch ($measured_type) {
+          case Individual::class:
+            $type = 'organism';
+            break;
+          case Voucher::class:
+            $type = 'preservedSpecimen';
+            break;
+          case Taxon::class:
+            $type = 'taxon';
+            break;
+          case Location::class:
+            $type = 'location';
+            break;
+        default:
+          $type=null;
+          break;
+      }
+      return $type;
+    }
+
+    public function getResourceRelationshipIDAttribute()
+    {
+      return $this->measured->fullname;
+    }
+
+    public function getRelationshipOfResourceAttribute()
+    {
+      return "measurement of";
+    }
+
+    public function getScientificNameAttribute()
+    {
+      if(in_array($this->measured_type,[Individual::class,Voucher::class,Taxon::class,Media::class])) {
+        return $this->measured->scientificName;
+      }
+      return null;
+    }
+    public function getFamilyAttribute()
+    {
+      if(in_array($this->measured_type,[Individual::class,Voucher::class,Taxon::class,Media::class])) {
+        return $this->measured->family;
+      }
+      return null;
+    }
+    public function getAccessRightsAttribute()
+    {
+      return $this->dataset->accessRights;
+    }
+    public function getBibliographicCitationAttribute()
+    {
+      return $this->dataset->bibliographicCitation;
+    }
+    /* will be returned in english */
+    public function getMeasurementMethodAttribute()
+    {
+        return $this->odbtrait->measurementMethod;
+    }
+    public function getModifiedAttribute()
+    {
+      return $this->updated_at->toJson();
+    }
+    public function getBasisOfRecordAttribute()
+    {
+      return 'MeasurementsOrFact';
+    }
+    public function getLicenseAttribute()
+    {
+      return $this->dataset->dwcLicense;
     }
 }

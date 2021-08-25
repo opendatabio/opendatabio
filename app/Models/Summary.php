@@ -49,13 +49,13 @@ class Summary extends Model
         $oldvalues =  [
              "taxon_id" => null,
              "location_id" => null,
-             "project_id" => null
+             "dataset_id" => null
         ];
         }
       /* what changed or is new*/
       $taxonchanged = ($newvalues['taxon_id'] != $oldvalues['taxon_id'] and null != $oldvalues['taxon_id']) ? true : false;
       $locationchanged = ($newvalues['location_id'] != $oldvalues['location_id'] and null != $oldvalues['location_id']) ? true : false;
-      $projectchanged = ($newvalues['project_id'] != $oldvalues['project_id'] and null != $oldvalues['project_id']) ? true : false;
+      $datasetchanged = ($newvalues['dataset_id'] != $oldvalues['dataset_id'] and null != $oldvalues['dataset_id']) ? true : false;
 
       //get taxon chain
       $taxonsnew = Taxon::findOrFail($newvalues['taxon_id'])->getAncestorsAndSelf()->pluck('id')->toArray();
@@ -135,27 +135,27 @@ class Summary extends Model
         }
 
         /* for project scopes */
-        if ($projectchanged or null == $oldvalues['project_id']) {
-          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+        if ($datasetchanged or null == $oldvalues['dataset_id']) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target',$target)->where('scope_id',$newvalues['dataset_id']);
           $current->update(['value'=> DB::raw( 'value + 1' )]);
           if ($measurements_count>0) {
-            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target','measurements')->where('scope_id',$newvalues['project_id']);
+            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target','measurements')->where('scope_id',$newvalues['dataset_id']);
             $current->update(['value'=> DB::raw( 'value + '.$measurements_count )]);
           }
 
         }
-        if (!$projectchanged and $taxonchanged) {
-          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+        if (!$datasetchanged and $taxonchanged) {
+          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target',$target)->where('scope_id',$newvalues['dataset_id']);
           $current->update(['value'=> DB::raw( 'value - 1' )]);
           if ($measurements_count>0) {
-            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target','measurements')->where('scope_id',$newvalues['project_id']);
+            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target','measurements')->where('scope_id',$newvalues['dataset_id']);
             $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
           }
-        } elseif ($taxonchanged and $projectchanged) {
-          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target',$target)->where('scope_id',$oldvalues['project_id']);
+        } elseif ($taxonchanged and $datasetchanged) {
+          $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target',$target)->where('scope_id',$oldvalues['dataset_id']);
           $current->update(['value'=> DB::raw( 'value - 1' )]);
           if ($measurements_count>0) {
-            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target','measurements')->where('scope_id',$oldvalues['project_id']);
+            $current = Summary::whereIn('object_id',$taxonsold)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target','measurements')->where('scope_id',$oldvalues['dataset_id']);
             $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
           }
         }
@@ -181,17 +181,17 @@ class Summary extends Model
           }
         }
       } else {
-        if ($projectchanged) {
-          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target',$target)->where('scope_id',$oldvalues['project_id']);
+        if ($datasetchanged) {
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target',$target)->where('scope_id',$oldvalues['dataset_id']);
           $current->update(['value'=> DB::raw( 'value - 1' )]);
           if ($measurements_count>0) {
-            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target','measurements')->where('scope_id',$oldvalues['project_id']);
+            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target','measurements')->where('scope_id',$oldvalues['dataset_id']);
             $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
           }
-          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+          $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target',$target)->where('scope_id',$newvalues['dataset_id']);
           $current->update(['value'=> DB::raw( 'value + 1' )]);
           if ($measurements_count>0) {
-            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Project')->where('target','measurements')->where('scope_id',$newvalues['project_id']);
+            $current = Summary::whereIn('object_id',$taxonsnew)->where('object_type',"App\Models\Taxon")->where('scope_type','App\Models\Dataset')->where('target','measurements')->where('scope_id',$newvalues['dataset_id']);
             $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
           }
         }
@@ -207,7 +207,7 @@ class Summary extends Model
           $loctoinsert = [];
           foreach ($arenot as $location_id) {
             $loctoinsert[] = ['object_id' => $location_id, 'object_type' => 'App\Models\Location', 'scope_type' => 'all', 'target' => $target, 'value' => 0,'scope_id' => null, 'created_at' => now(), 'updated_at' => now()];
-            $loctoinsert[] = ['object_id' => $location_id, 'object_type' => 'App\Models\Location', 'scope_type' => 'App\Models\Project', 'target' => $target, 'value' => 0, 'scope_id' => $newvalues['project_id'],'created_at' => now(), 'updated_at' => now()];
+            $loctoinsert[] = ['object_id' => $location_id, 'object_type' => 'App\Models\Location', 'scope_type' => 'App\Models\Dataset', 'target' => $target, 'value' => 0, 'scope_id' => $newvalues['dataset_id'],'created_at' => now(), 'updated_at' => now()];
             if (null != $datasets) {
               foreach ($datasets as $dataset_id) {
                 $loctoinsert[] = ['object_id' => $location_id, 'object_type' => 'App\Models\Location', 'scope_type' => 'App\Models\Dataset', 'target' => $target, 'value' => 0, 'scope_id' => $dataset_id,'created_at' => now(), 'updated_at' => now()];
@@ -244,39 +244,39 @@ class Summary extends Model
           }
         }
       } else {
-        if ($projectchanged) {
-          $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Models\Location")->where('scope_type','App\Models\Project')->where('target',$target)->where('scope_id',$oldvalues['project_id']);
+        if ($datasetchanged) {
+          $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Models\Location")->where('scope_type','App\Models\Dataset')->where('target',$target)->where('scope_id',$oldvalues['dataset_id']);
           $current->update(['value'=> DB::raw( 'value - 1' )]);
 
-          $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Models\Location")->where('scope_type','App\Models\Project')->where('target',$target)->where('scope_id',$newvalues['project_id']);
+          $current = Summary::whereIn('object_id',$locationsnew)->where('object_type',"App\Models\Location")->where('scope_type','App\Models\Dataset')->where('target',$target)->where('scope_id',$newvalues['dataset_id']);
           $current->update(['value'=> DB::raw( 'value + 1' )]);
         }
       }
 
-      if ($projectchanged or $oldvalues['project_id']==null) {
-        $current = Summary::where('object_id',$newvalues['project_id'])->where('object_type',"App\Models\Project")->where('scope_type','all')->where('target',$target);
+      if ($datasetchanged or $oldvalues['dataset_id']==null) {
+        $current = Summary::where('object_id',$newvalues['dataset_id'])->where('object_type',"App\Models\Dataset")->where('scope_type','all')->where('target',$target);
         if ($current->count()) {
           $current->update(['value'=> DB::raw( 'value + 1' )]);
         } else {
-          $record = ['object_id' => $newvalues['project_id'], 'object_type' => 'App\Models\Project', 'scope_type' => 'all', 'target' => $target, 'value' => 1,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
+          $record = ['object_id' => $newvalues['dataset_id'], 'object_type' => 'App\Models\Dataset', 'scope_type' => 'all', 'target' => $target, 'value' => 1,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
           Summary::insertOrIgnore($record);
         }
 
         if ($measurements_count>0) {
-          $current = Summary::where('object_id',$newvalues['project_id'])->where('object_type',"App\Models\Project")->where('scope_type','all')->where('target','measurements');
+          $current = Summary::where('object_id',$newvalues['dataset_id'])->where('object_type',"App\Models\Dataset")->where('scope_type','all')->where('target','measurements');
           if ($current->count()) {
             $current->update(['value'=> DB::raw( 'value + '.$measurements_count )]);
           } else {
-            $record = ['object_id' => $newvalues['project_id'], 'object_type' => 'App\Models\Project', 'scope_type' => 'all', 'target' => 'measurements', 'value' => $measurements_count,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
+            $record = ['object_id' => $newvalues['dataset_id'], 'object_type' => 'App\Models\Dataset', 'scope_type' => 'all', 'target' => 'measurements', 'value' => $measurements_count,'scope_id' => null,'created_at' => now(), 'updated_at' => now()];
             Summary::insertOrIgnore($record);
           }
         }
 
-        if ($oldvalues['project_id'] != null) {
-          $current = Summary::where('object_id',$oldvalues['project_id'])->where('object_type',"App\Models\Project")->where('scope_type','all')->where('target',$target);
+        if ($oldvalues['dataset_id'] != null) {
+          $current = Summary::where('object_id',$oldvalues['dataset_id'])->where('object_type',"App\Models\Dataset")->where('scope_type','all')->where('target',$target);
           $current->update(['value'=> DB::raw( 'value - 1' )]);
           if ($measurements_count>0) {
-            $current = Summary::where('object_id',$oldvalues['project_id'])->where('object_type',"App\Models\Project")->where('scope_type','all')->where('target','measurements');
+            $current = Summary::where('object_id',$oldvalues['dataset_id'])->where('object_type',"App\Models\Dataset")->where('scope_type','all')->where('target','measurements');
             $current->update(['value'=> DB::raw( 'value - '.$measurements_count )]);
           }
         }

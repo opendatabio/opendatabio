@@ -101,7 +101,7 @@ class ExportData extends AppJob
          }
 
 
-
+         //$this->appendLog("ATENCAO>".implode("|",$export_ids));
          if (count($export_ids)>0) {
            //chunk the records and get the response for the respective api
            $chunks = array_chunk($export_ids,500);
@@ -118,6 +118,7 @@ class ExportData extends AppJob
 
            //for each chunk get data from the api
            $counter = 1;
+           $categories = [];
            foreach($chunks as $ids) {
               //if user cancels job
               if ($this->isCancelled()) {
@@ -151,7 +152,19 @@ class ExportData extends AppJob
               //get response and save to file
               if (null !== $response) {
                 $answer = json_decode($response->getBody(),true)['data'];
-                $writer->addRows($answer);
+                if ($endpoint=='traits') {
+                  $newvalues = [];
+                  foreach ($answer as $key => $value) {
+                     if (!empty($value['categories'])) {
+                       $categories[$value['export_name']] = $value['categories'];
+                     }
+                     unset($value['categories']);
+                     $newvalues[] = $value;
+                  }
+                  $writer->addRows($newvalues);
+                } else {
+                  $writer->addRows($answer);
+                }
               }
 
               //limit the number of requests per minute (rest for a minute if greater than 60)
@@ -167,8 +180,21 @@ class ExportData extends AppJob
            //LOG THE FILE FOR USER DOWNLOAD
            $today = now();
            $file = "This file contains your requested export for <strong>".$object_type."</strong> prepared ".$today." ";
-           $tolog = $file."<br><a href='".url('storage/downloads/'.$filename)."' download >".$filename."</a>";
-           $this->appendLog($tolog);
+           $tolog = $file."<br> <a href='".url('storage/downloads/'.$filename)."' download >".$filename."</a>";
+
+           if (count($categories)) {
+             $filename2 = "job-".$jobid."_".uniqid()."_Categories.".$data['filetype'];
+             $path2 = 'app/public/downloads/'.$filename2;
+             $writer2 = SimpleExcelWriter::create(storage_path($path2));
+             foreach($categories as $export_name => $cats) {
+               foreach($cats as $cat) {
+                  $cat = array_merge(['export_name'=>$export_name],$cat);
+                  $writer2->addRow($cat);
+               }
+             }
+             $tolog = $tolog."<br>This file contains the categories for included traits: <a href='".url('storage/downloads/'.$filename2)."' download >".$filename2."</a>";
+          }
+          $this->appendLog($tolog);
 
 
         } else {

@@ -8,7 +8,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Scopes\IndividualLocationScope;
+
 use App\Models\Location;
+use App\Models\Individual;
+use App\Models\Identification;
 use DB;
 
 class IndividualLocation extends Model
@@ -23,39 +27,62 @@ class IndividualLocation extends Model
         return $this->belongsTo(Location::class);
     }
 
+    public function individual()
+    {
+        return $this->belongsTo(Individual::class);
+    }
 
-    public function getLocationWithGeomAttribute()
+    public function all_locations_ids()
+    {
+      $related = $this->location()->map(function($l) {
+        $ids = [$l->id];
+        $rids = $l->relatedLocations->pluck('related_id')->toArray();
+        return array_merge($ids,$rids);
+      })->toArray();
+      return array_unique($related);
+    }
+
+    public function identification()
+    {
+      return $this->hasOne(Identification::class, 'object_id', 'identification_id')->where('identifications.object_type',Individual::class);
+    }
+
+    public function getlocationWithGeomAttribute()
     {
       return $this->location()->withGeom()->first();
     }
 
     public function getLocationNameAttribute()
     {
-      return $this->location()->first()->name;
+      return $this->locationWithGeom->name;
     }
 
     public function getLocationFullnameAttribute()
     {
-      return $this->location()->first()->fullname;
+      return $this->locationWithGeom->higherGeography;
     }
 
     public function getLatitudeAttribute()
     {
-      $centroid = $this->locationwithgeom->centroid_raw;
-      $point = substr($centroid, 6, -1);
-      $pos = strpos($point, ' ');
-      $lat = substr($point, $pos + 1);
-      return (float) $lat;
+      return (float) $this->locationWithGeom->decimalLatitude;
     }
 
     public function getLongitudeAttribute()
     {
-      $centroid = $this->locationwithgeom->centroid_raw;
-      $point = substr($centroid, 6, -1);
-      $pos = strpos($point, ' ');
-      $long = substr($point, 0, $pos);
-      return (float) $long;
+      return (float) $this->locationWithGeom->decimalLongitude;
     }
+
+
+    /* include individual permissions here */
+    /**
+   * The "booted" method of the model.
+   *
+   * @return void
+   */
+   protected static function booted()
+   {
+      static::addGlobalScope(new IndividualLocationScope);
+   }
 
 
 
@@ -66,6 +93,7 @@ class IndividualLocation extends Model
         return parent::newQuery($excludeDeleted)->select(
             'individual_location.id',
             'individual_location.location_id',
+            'individual_location.individual_id',
             'individual_location.date_time',
             'individual_location.notes',
             'individual_location.altitude',
@@ -122,5 +150,75 @@ class IndividualLocation extends Model
         return round($distance,2);
     }
 
+    /* dwc terms */
+    public function getOrganismIDAttribute()
+    {
+      return $this->individual->fullname;
+    }
+    public function getRecordedDateAttribute()
+    {
+      return $this->date_time;
+    }
+    public function getDecimalLatitudeAttribute()
+    {
+      return (float) $this->locationWithGeom->decimalLatitude;
+    }
 
+    public function getDecimalLongitudeAttribute()
+    {
+      return (float) $this->locationWithGeom->decimalLongitude;
+    }
+    public function getHigherGeographyAttribute()
+    {
+      return $this->locationWithGeom->higherGeography;
+    }
+    public function getGeoreferenceRemarksAttribute()
+    {
+      return $this->locationWithGeom->georeferenceRemarks;
+    }
+    public function getOccurrenceRemarksAttribute()
+    {
+      return $this->notes;
+    }
+    public function getOrganismRemarksAttribute()
+    {
+      return $this->individual->organismRemarks;
+    }
+    public function getMinimumElevationAttribute()
+    {
+      return $this->altitude;
+    }
+    public function getDatasetNameAttribute()
+    {
+      return $this->individual->datasetName;
+    }
+    public function getBibliographicCitationAttribute()
+    {
+      return $this->individual->bibliographicCitation;
+    }
+    public function getAccessRightsAttribute()
+    {
+      return $this->individual->accessRights;
+    }
+
+    public function getBasisOfRecordAttribute()
+    {
+      return 'Occurrence';
+    }
+    public function getScientificNameAttribute()
+    {
+      return $this->individual->scientificName;
+    }
+    public function getFamilyAttribute()
+    {
+      return $this->individual->family;
+    }
+    public function getOccurrenceIDAttribute()
+    {
+      return $this->individual->tag.":".$this->individual->normalizedAbbreviation.":".strtotime($this->date_time);
+    }
+    public function getLicenseAttribute()
+    {
+      return $this->individual->license;
+    }
 }

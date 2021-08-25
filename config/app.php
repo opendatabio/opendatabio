@@ -30,7 +30,7 @@ return [
     | "alpha", such as 0.1.0-alpha1.
     */
 
-    'version' => '0.9.0-rc1',
+    'version' => '0.9.1-alpha1',
 
     /*
      * Proxy settings
@@ -153,6 +153,7 @@ return [
     | shall be made avaliable for Datasets, Pictures and Occurrence data in Projects.
     | The version is informed separately
     | Name for popus are defined in lang/levels
+    | most restrictive last in array (least first)
     */
     'creativecommons_licenses' => env('CREATIVECOMMONS_LICENSES', ['CC0','CC-BY','CC-BY-SA','CC-BY-ND','CC-BY-NC','CC-BY-NC-SA','CC-BY-NC-ND']),
     'creativecommons_version' => env('CREATIVECOMMONS_VERSIONS',['4.0']),
@@ -183,7 +184,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'pt',
 
     /*
     |--------------------------------------------------------------------------

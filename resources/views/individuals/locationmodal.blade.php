@@ -136,9 +136,9 @@
 
 <div class="form-group location-extra" hidden>
   <label for="modal_date" class="col-sm-3 control-label">@lang('messages.datetime')</label>
-  <div class="col-sm-6">
+  <div class="col-sm-7">
     <input type="date" name="modal_date" value="{{ old('location_date',isset($modal_date) ? $modal_date : null) }}" >
-    <input type="time" name="modal_time" value="{{ old('location_time', isset($modal_time) ? $modal_time : null) }}" >
+    <input type="time" name="modal_time" value="{{ old('location_time', isset($modal_time) ? $modal_time : '00:00:00') }}" step="5" >
   </div>
 </div>
 

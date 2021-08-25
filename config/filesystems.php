@@ -88,7 +88,7 @@ return [
         'downloads' => [
             'driver' => 'local',
             'root'   => storage_path('app/public/downloads'),
-            'url' => env("APP_URL")."/downloads",
+            'url' => env("APP_URL")."/storage/downloads",
             'permissions' => [
                 'file' => [
                     'public' => 0664,

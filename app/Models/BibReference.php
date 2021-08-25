@@ -265,6 +265,18 @@ class BibReference extends Model implements HasMedia
         );
     }
 
+    public function getBibreferenceSimpleAttribute($value='')
+    {
+      $result = [
+        $this->first_author,$this->year,$this->title,(($this->doi!='') ? $this->doi : $this->url)
+      ];
+      $result = array_filter($result, function($r) { $r!='';});
+      if (count($result)==0) {
+        return null;
+      }
+      return implode(". ",$result).".";
+    }
+
 
 
 

@@ -44,14 +44,11 @@ class PersonController extends Controller
         }
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $simple = ['id', 'full_name', 'abbreviation', 'email', 'institution','notes'];
-        //include here to be able to add mutators and categories
-        if ('all' == $fields) {
-            $keys = array_keys($persons->first()->toArray());
-            $fields = array_merge($simple,$keys);
-            $fields =  implode(',',$fields);
+        $possible_fields = config('api-fields.persons');
+        $field_sets = array_keys($possible_fields);
+        if (in_array($fields,$field_sets)) {
+            $fields = implode(",",$possible_fields[$fields]);
         }
-
         $persons = $persons->cursor();
         if ($fields=="id") {
           $persons = $persons->pluck('id')->toArray();

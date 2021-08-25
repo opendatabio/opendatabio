@@ -155,7 +155,6 @@ class AppJob implements ShouldQueue
         foreach ($requiredKeys as $key) {
             if (!array_key_exists($key, $entry) or (null === $entry[$key])) {
                 $this->skipEntry($entry, 'entry needs a '.$key);
-
                 return false;
             }
         }

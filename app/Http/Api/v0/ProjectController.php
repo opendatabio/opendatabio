@@ -20,13 +20,12 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $projects = Project::withCount(['individuals', 'vouchers']);
+        $projects = Project::withCount(['datasets','measurements']);
         if ($request->id) {
             $projects->whereIn('id', explode(',', $request->id));
         }
-
         $fields = ($request->fields ? $request->fields : 'simple');
-        $simple = ['id', 'fullname', 'notes', 'privacyLevel','contactEmail','individuals_count','vouchers_count'];
+        $simple = ['id', 'fullname', 'notes','description','contactEmail','datasets_count','individuals_count','vouchers_count','locations_count','measurements_count','taxons_count','media_count','species_count'];
         //include here to be able to add mutators and categories
         if ('all' == $fields) {
             $keys = array_keys($persons->first()->toArray());

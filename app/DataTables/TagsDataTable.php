@@ -65,7 +65,7 @@ class TagsDataTable extends DataTable
                 'description' => ['title' => Lang::get('messages.description'), 'searchable' => false, 'orderable' => false],
                 'datasets' => ['title' => Lang::get('messages.datasets'), 'searchable' => false, 'orderable' => false],
                 'projects' => ['title' => Lang::get('messages.projects'), 'searchable' => false, 'orderable' => false],
-                'media' => ['title' => Lang::get('messages.media'), 'searchable' => false, 'orderable' => false],
+                'media' => ['title' => Lang::get('messages.media_files'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',

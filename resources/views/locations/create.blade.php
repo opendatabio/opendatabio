@@ -146,24 +146,40 @@
     </div>
 </div>
 
+
 <div class="form-group parent_id">
     <label for="parent_id" class="col-sm-3 control-label mandatory">
-@lang('messages.location_parent')
-</label>
-        <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
-	    <div class="col-sm-6">
-    <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control autocomplete"
-    value="{{ old('parent_autocomplete', (isset($location) and $location->parent) ? $location->parent->fullname : null) }}">
-    <input type="hidden" name="parent_id" id="parent_id"
-    value="{{ old('parent_id', isset($location) ? $location->parent_id : null) }}">
-    <input type="hidden" name="parent_type" id="parent_type" value="{{old('parent_type', (isset($location) and $location->parent) ? $location->parent->adm_level : '')}}">
-            </div>
-  <div class="col-sm-12">
-    <div id="hint2" class="panel-collapse collapse">
-	@lang('messages.location_parent_hint')
+      @lang('messages.location_parent')
+    </label>
+    <a data-toggle="collapse" href="#hint2" class="btn btn-default">?</a>
+	   <div class="col-sm-6">
+        <input type="text" name="parent_autocomplete" id="parent_autocomplete" class="form-control autocomplete"
+        value="{{ old('parent_autocomplete', (isset($location) and $location->parent) ? $location->parent->fullname : null) }}">
+        <input type="hidden" name="parent_id" id="parent_id"
+        value="{{ old('parent_id', isset($location) ? $location->parent_id : null) }}">
+        <input type="hidden" name="parent_type" id="parent_type" value="{{old('parent_type', (isset($location) and $location->parent) ? $location->parent->adm_level : '')}}">
+      </div>
+    <div class="col-sm-12">
+      <div id="hint2" class="panel-collapse collapse">
+  	   @lang('messages.location_parent_hint')
+      </div>
     </div>
-  </div>
 </div>
+
+<!--
+<div class="form-group parent_id">
+      <label for="ismarine" class="col-sm-3 control-label">
+        @lang('messages.location_ismarine')
+      </label>
+      <a data-toggle="collapse" href="#ismarine_hint" class="btn btn-default">?</a>
+      <div class="col-sm-6">
+      <input type="checkbox" name="ismarine" id="ismarine" value="1">
+     </div>
+      <div id="ismarine_hint" class="col-sm-12 panel-collapse collapse">
+        @lang('messages.location_ismarine_hint')
+      </div>
+</div>
+-->
 
 <div class="form-group super-start">
     <label for="startx" class="col-sm-3 control-label mandatory">
@@ -175,23 +191,31 @@
         </div>
 </div>
 
+
+
+<!-- collector -->
 <div class="form-group" id="super-uc">
-    <label for="uc_id" class="col-sm-3 control-label">
-@lang('messages.location_uc')
-</label>
-        <a data-toggle="collapse" href="#hint4" class="btn btn-default">?</a>
-	    <div class="col-sm-6">
-    <input type="text" name="uc_autocomplete" id="uc_autocomplete" class="form-control autocomplete"
-    value="{{ old('uc_autocomplete', (isset($location) and $location->uc) ? $location->uc->fullname : null) }}">
-    <input type="hidden" name="uc_id" id="uc_id"
-    value="{{ old('uc_id', isset($location) ? $location->uc_id : null) }}">
-            </div>
-  <div class="col-sm-12">
-    <div id="hint4" class="panel-collapse collapse">
-	@lang('messages.location_uc_hint')
+    <label for="related_locations" class="col-sm-3 control-label">
+      @lang('messages.other_parents')
+    </label>
+    <a data-toggle="collapse" href="#other_parents" class="btn btn-default">?</a>
+	  <div class="col-sm-6">
+      {!! Multiselect::autocomplete('related_locations',
+        $related_locations->pluck('name', 'id'),
+        isset($location) ? $location->relatedLocations->pluck('related_id') :
+        '',
+        ['class' => 'multiselect form-control'])
+      !!}
     </div>
-  </div>
+    <div class="col-sm-12">
+      <div id="other_parents" class="panel-collapse collapse">
+	       @lang('messages.other_parent_location_hint')
+       </div>
+     </div>
 </div>
+
+
+
 <div class="form-group">
     <label for="altitude" class="col-sm-3 control-label">
 @lang('messages.altitude')
@@ -268,7 +292,9 @@ $(document).ready(function() {
             $("#parent_type").val(suggestion.adm_level);
             setLocationFields(400);
         });
+    /*
     $("#uc_autocomplete").odbAutocomplete("{{url('locations/autocomplete')}}","#uc_id", "@lang('messages.noresults')", undefined, {'scope':  'ucs'});
+    */
 });
 
   function toogleGeometryLatLong(vel)  {
@@ -300,14 +326,20 @@ $(document).ready(function() {
 		}
 		switch (adm) {
 			case "999": // point
-          //$("#super-buffer").hide(vel);
-  				$("#super-geometry").hide(vel);
-  				$("#super-points").show(vel);
+          switch(geomtype) {
+          case "point":
+              $("#super-geometry").hide(vel);
+              $("#super-points").show(vel);
+              break;
+          default:
+              $("#super-geometry").show(vel);
+              $("#super-points").hide(vel);
+          }
   				$("#super-x").hide(vel);
   				$("#super-uc").show(vel);
           $(".parent_id").show(vel);
           $(".autodetect").show(vel);
-          $(".super-button").hide(vel);
+          $(".super-button").show(vel);
           $(".super-start").hide(vel);
 				break;
 			case "100": // plot
@@ -359,7 +391,7 @@ $(document).ready(function() {
 
 
             break;
-      case "0": // country
+      case "2": // country
     				$("#super-geometry").show(vel);
     				$("#super-points").hide(vel);
     				$("#super-x").hide(vel);
@@ -429,8 +461,20 @@ $(document).ready(function() {
 					$( "#ajax-error" ).collapse("hide");
 					$("#parent_autocomplete").val(data.detectdata[0]);
 					$("#parent_id").val(data.detectdata[1]);
-					$("#uc_autocomplete").val(data.detectdata[2]);
-					$("#uc_id").val(data.detectdata[3]);
+          //alert(data.detectrelated[0]['id']);
+          //alert(data.detectrelated[0]['name']);
+          var related = data.detectrelated;
+          if (related) {
+            let text = "";
+            for (let i = 0; i < related.length; i++) {
+              text += '<span class="multiselector" onclick="$(this).remove();" ><input type="hidden" name="related_locations[]" value="'+related[i]['id']+'">'+related[i]['name']+'</span>';
+            }
+            $("#related_locations-span").html(text);
+          } else {
+            $("#related_locations-span").html("");
+          }
+					//$("#uc_autocomplete").val(data.detectdata[2]);
+					//$("#uc_id").val(data.detectdata[3]);
 				}
 			},
 			error: function(e){
@@ -441,4 +485,7 @@ $(document).ready(function() {
 		})
 	});
 </script>
+
+{!! Multiselect::scripts('related_locations', url('locations/autocomplete-related'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
+
 @endpush

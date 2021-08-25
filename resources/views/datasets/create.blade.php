@@ -44,7 +44,7 @@
          </label>
                  <a data-toggle="collapse" href="#hint1" class="btn btn-default">?</a>
          	    <div class="col-sm-6">
-         	<?php $selected = old('privacy', isset($dataset) ? $dataset->privacy : 0); ?>
+         	<?php $selected = old('privacy', isset($dataset) ? $dataset->privacy : 2); ?>
 
          	<select name="privacy" id="privacy" class="form-control" >
          	@foreach (App\Models\Dataset::PRIVACY_LEVELS as $level)
@@ -65,11 +65,7 @@
          @php
            $show_dataset_viewers = '';
            $license_mandatory = "";
-           $privacy = old('privacy', isset($dataset) ? $dataset->privacy : 0);
-           if ($privacy != App\Models\Dataset::PRIVACY_AUTH) {
-             $show_dataset_viewers = 'hidden';
-             $license_mandatory = 'mandatory';
-           }
+
            $currentlicense = "CC-BY";
            $currentversion = config('app.creativecommons_version')[0];
            if (isset($dataset)) {
@@ -85,19 +81,9 @@
            if (count(config('app.creativecommons_version'))==1) {
              $version_readonly = 'readonly';
            }
-
-           /* title and author must be mandatory for BY licenses */
-           $title_mandatory = null;
-           $show_policy = 'hidden';
-           if ($oldlicense != "CC0") {
-             $title_mandatory = 'mandatory';
-             $show_policy = '';
-           }
-
-
          @endphp
          <div class="form-group" id='creativecommons' >
-             <label for="license" class="col-sm-3 control-label {{ $license_mandatory }}">
+             <label for="license" class="col-sm-3 control-label" id='licenselabel'>
                @lang('messages.public_license')
              </label>
              <a data-toggle="collapse" href="#creativecommons_licenses_hint" class="btn btn-default">?</a>
@@ -132,7 +118,7 @@
          </div>
 
          <!-- following creative commons, filling here implicate the dataset has sui generis database rights, which will be indicated here -->
-         <div class="form-group" id='show_policy' {{ $show_policy }}>
+         <div class="form-group" id='show_policy' >
              <label for="policy" class="col-sm-3 control-label">
                @lang('messages.data_policy')
              </label>
@@ -149,7 +135,7 @@
 
 
        <div class="form-group">
-           <label for="title" class="col-sm-3 control-label {{ $title_mandatory }}" id='titlelabel'>
+           <label for="title" class="col-sm-3 control-label" id='titlelabel'>
              @lang('messages.title')
            </label>
            <a data-toggle="collapse" href="#dataset_title_hint" class="btn btn-default">?</a>
@@ -165,7 +151,7 @@
 
       <!-- collector -->
       <div class="form-group">
-          <label for="authors" class="col-sm-3 control-label {{ $title_mandatory }}" id='authorslabel'>
+          <label for="authors" class="col-sm-3 control-label" id='authorslabel'>
             @lang('messages.authors')
           </label>
           <a data-toggle="collapse" href="#authors_hint" class="btn btn-default">?</a>
@@ -184,6 +170,26 @@
            </div>
       </div>
 
+<!-- PROJECT -->
+<div class="form-group">
+    <label for="project" class="col-sm-3 control-label" id='projectlabel'>
+      @lang('messages.project')
+    </label>
+    <a data-toggle="collapse" href="#hint3" class="btn btn-default">?</a>
+    <div class="col-sm-6">
+      <input type="text" name="project_autocomplete" id="project_autocomplete" class="form-control autocomplete"
+      value="{{ old('project_autocomplete', (isset($dataset) and $dataset->project_id) ? $dataset->project->name : null) }}">
+      <input type="hidden" name="project_id" id="project_id"
+      value="{{ old('project_id', isset($dataset) ? $dataset->project_id : null) }}">
+    </div>
+    <div class="col-sm-12">
+      <div id="hint3" class="panel-collapse collapse">
+	       @lang('messages.dataset_project_hint')
+       </div>
+     </div>
+</div>
+
+
 <hr>
 
 <div class="form-group">
@@ -201,6 +207,7 @@
 </div>
 </div>
 
+<!-- TAGS or KEYWORDS -->
 <div class="form-group">
 <label for="tags" class="col-sm-3 control-label">
 @lang('messages.tags')
@@ -220,13 +227,9 @@
 </div>
 </div>
 
+
+<!-- DATASET METADATA -->
 <hr>
-
-
-
-
-<hr>
-
 <div class="form-group">
   <label for="metadata" class="col-sm-3 control-label">
     @lang('messages.dataset_metadata')
@@ -243,13 +246,8 @@
 </div>
 
 
-
-
-
+<!-- DATASET BIBLIOGRAPHIC REFERENCES -->
 <hr>
-
-
-
 <div class="form-group">
 <label for="references" class="col-sm-3 control-label">
 @lang('messages.dataset_bibreferences_mandatory')
@@ -288,9 +286,15 @@
 </div>
 </div>
 
-<hr>
 
-<div class="form-group">
+
+
+
+
+
+<!-- DATASET USER BOX - ONLY AVAILABLE IF Privacy NOT CONTROLLED BY PROJECT-->
+<hr>
+<div class="form-group userbox">
 <label for="admins" class="col-sm-3 control-label mandatory">
 @lang('messages.admins')
 </label>
@@ -302,7 +306,8 @@
      ['class' => 'multiselect form-control']
 ) !!}
 </div>
-</div><div class="form-group">
+</div>
+<div class="form-group userbox">
 <label for="collabs" class="col-sm-3 control-label">
 @lang('messages.collabs')
 </label>
@@ -316,8 +321,8 @@
 </div>
 
 <!-- viewers are only meaning_full if the dataset is not of public access -->
-<div class="form-group" id='dataset_viewers' {{ $show_dataset_viewers }}>
-<label for="collabs" class="col-sm-3 control-label">
+<div class="form-group userbox" id='dataset_viewers' {{ $show_dataset_viewers }}>
+<label for="viewers" class="col-sm-3 control-label">
 @lang('messages.viewers')
 </label>
 <div class="col-sm-6">
@@ -327,13 +332,14 @@
      ['class' => 'multiselect form-control']
 ) !!}
 </div>
-<div class="col-sm-12">
+</div>
+<div class="col-sm-12 userbox">
     <div id="hint2" class="panel-collapse collapse">
 	@lang('messages.dataset_admins_hint')
     </div>
 </div>
-</div>
-		        <div class="form-group">
+
+            <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
 				<button type="submit" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>
@@ -345,43 +351,103 @@
 				</a>
 			    </div>
 			</div>
-		    </form>
+
+
+
+        </form>
         </div>
     </div>
+
+
 @endsection
 @push ('scripts')
 <script>
 $(document).ready(function() {
-    /*$("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");*/
+/*$("#bibreference_autocomplete").odbAutocomplete("{{url('references/autocomplete')}}","#bibreference_id", "@lang('messages.noresults')");*/
+$("#project_autocomplete").odbAutocomplete("{{url('projects/autocomplete')}}","#project_id", "@lang('messages.noresults')");
 
-    $('#license').on('change',function() {
-      var license = $('#license option:selected').val();
-      if (license == 'CC0') {
-        $('#policy').val(null);
-        $('#show_policy').hide();
-      } else {
-        $('#show_policy').show();
+/* DEFINE LICENSE FIELDS */
+function licenseOptions() {
+  var privacy = $('#privacy option:selected').val();
+  var license = $('#license option:selected').val();
+  if ("undefined" === typeof privacy) {
+    return; // nothing to do here...
+  }
+  var options = <?php
+      $values = config('app.creativecommons_licenses');
+      $results = [];
+      foreach($values as $val) {
+        $results[] = [$val,$val." ".Lang::get("levels.".$val)];
       }
-    })
+      echo json_encode($results);
+  ?>;
+  switch (privacy) {
+    case "{{ App\Models\Dataset::PRIVACY_AUTH}}": //dataset users
+    case "{{ App\Models\Dataset::PRIVACY_PROJECT }}": //project users
+      options = <?php
+          $values = array_values(preg_grep("/ND/",config('app.creativecommons_licenses')));
+          $results = [];
+          foreach($values as $val) {
+            $results[] = [$val,$val." ".Lang::get("levels.".$val)];
+          }
+          echo json_encode($results);
+      ?>;
+    case "{{ App\Models\Dataset::PRIVACY_REGISTERED }}": //open access registered users
+    default: // other
+  }
+  $('#license').empty();
+  var selected = "";
+  options.forEach(function(item, index) {
+    //select old if possible
+    if (item[0] == license | (null == license & item[0]==options[1][0])) {
+      selected = "selected";
+    } else {
+      selected = "";
+    }
+    $('#license').append("<option "+selected+" value='"+item[0]+"'>"+item[1]+"</option>");
+  });
+}
+
+/* Define other form fields */
+function setFormFields(vel) {
+  var privacy = $('#privacy option:selected').val();
+  if ("undefined" === typeof privacy) {
+    return; // nothing to do here...
+  }
+  switch (privacy) {
+    case "{{ App\Models\Dataset::PRIVACY_AUTH}}": //dataset users
+      $(".userbox").show(vel);
+      $('#authorslabel').removeClass('mandatory');
+      $('#titlelabel').removeClass('mandatory');
+      $('#projectlabel').removeClass('mandatory');
+      break;
+    case "{{ App\Models\Dataset::PRIVACY_PROJECT }}": //project users
+      $(".userbox").hide(vel); //hide users definitions, as inherit from Project
+      $('#authorslabel').removeClass('mandatory');
+      $('#titlelabel').removeClass('mandatory');
+      $('#projectlabel').addClass('mandatory');
+      break;
+    case "{{ App\Models\Dataset::PRIVACY_REGISTERED }}": //open access registered users
+    default: // other
+      $(".userbox").show(vel);
+      $('#licenselabel').addClass('mandatory');
+      $('#authorslabel').addClass('mandatory');
+      $('#titlelabel').addClass('mandatory');
+      $('#projectlabel').removeClass('mandatory');
+      $('#dataset_viewers').hide();
+    }
+}
+
 
     /* show or hide elements depending on type of privacy */
     $('#privacy').on('change',function() {
-        var privacy = $('#privacy option:selected').val();
-        if (privacy == {{ App\Models\Dataset::PRIVACY_PUBLIC}}) {
-            $('#creativecommons').show();
-            $('#authorslabel').addClass('mandatory');
-            $('#titlelabel').addClass('mandatory');
-        } else {
-            $('#creativecommons').hide();
-            $('#authorslabel').removeClass('mandatory');
-            $('#titlelabel').removeClass('mandatory');
-        }
-        if (privacy == {{ App\Models\Dataset::PRIVACY_PUBLIC}} | privacy == {{ App\Models\Dataset::PRIVACY_REGISTERED}}) {
-            $('#dataset_viewers').hide();
-        } else {
-            $('#dataset_viewers').show();
-        }
+        setFormFields(400);
+        licenseOptions();
     });
+
+    /* set fields on page load */
+    setFormFields(0);
+    licenseOptions();
 });
 
 </script>

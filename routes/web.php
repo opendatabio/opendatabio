@@ -27,6 +27,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 /* IMPORT ROUTES */
 Route::post('import-locations', 'LocationController@importJob');
 Route::post('import-individuals', 'IndividualController@importJob');
+Route::post('import-individuallocations', 'IndividualController@importLocationsJob');
 Route::post('import-taxons', 'TaxonController@importJob');
 Route::post('import-vouchers', 'VoucherController@importJob');
 Route::post('import-traits', 'TraitController@importJob');
@@ -45,6 +46,7 @@ Route::resource('persons', 'PersonController');
 
 Route::post('userjobs/{userjob}/retry', 'UserJobController@retry');
 Route::post('userjobs/{userjob}/cancel', 'UserJobController@cancel');
+Route::post('userjobs/purge', 'UserJobController@purgeall');
 Route::resource('userjobs', 'UserJobController', ['only' => ['index', 'show', 'destroy']]);
 
 Route::get('references/{id}/history', 'BibReferenceController@activity');
@@ -59,6 +61,7 @@ Route::get('locations/{id}/activity', 'LocationController@activity');
 Route::get('locations/{id}/project', 'LocationController@indexProjects');
 Route::get('locations/{id}/dataset', 'LocationController@indexDatasets');
 Route::get('locations/autocomplete', 'LocationController@autocomplete');
+Route::get('locations/autocomplete-related', 'LocationController@autocomplete_related');
 Route::get('locations/{id}/map', 'LocationController@mapMe');
 Route::post('locations/autodetect', 'LocationController@autodetect')->name('autodetect');
 Route::post('locations/maprender', 'LocationController@maprender')->name('maprender');
@@ -85,6 +88,7 @@ Route::resource('taxons', 'TaxonController');
 
 
 Route::get('projects/{id}/activity', 'ProjectController@activity');
+Route::get('projects/autocomplete', 'ProjectController@autocomplete');
 Route::post('projects/{id}/summary', 'ProjectController@summarize_project')->name('project_summary');
 Route::post('projects/{id}/identifications-summary', 'ProjectController@summarize_identifications')->name('project_identification_summary');
 Route::get('projects/{id}/tags','ProjectController@indexTags');
@@ -96,12 +100,14 @@ Route::resource('projects', 'ProjectController');
 
 
 Route::get('datasets/{id}/project', 'DatasetController@indexProjects');
+Route::get('datasets/autocomplete', 'DatasetController@autocomplete');
 Route::get('datasets/{id}/download', 'DatasetController@prepDownloadFile');
 Route::get('datasets/{id}/request', 'DatasetController@datasetRequestForm');
 Route::get('datasets/{id}/activity','DatasetController@activity');
 Route::get('datasets/{id}/tags','DatasetController@indexTags');
 Route::post('datasets/{id}/emailrequest', 'DatasetController@sendEmail');
-Route::post('datasets/{id}/identifications_summary','DatasetController@summarize_identifications')->name('datasetTaxonInfo');
+Route::post('datasets/{id}/identifications-summary','DatasetController@summarize_identifications')->name('dataset_identification_summary');
+Route::post('datasets/{id}/summary','DatasetController@summarize_contents')->name('dataset_summary');
 Route::resource('datasets', 'DatasetController');
 
 
@@ -109,10 +115,11 @@ Route::post('references/findbibtexfromdoi', 'BibReferenceController@findBibtexFr
 
 Route::post('individuals/location-save', 'IndividualController@saveIndividualLocation')->name('saveIndividualLocation');
 Route::get('individuals/location-show', 'IndividualController@getIndividualLocation')->name('getIndividualLocation');
+Route::get('individuals/{id}/location-dataset', 'IndividualController@indexIndividualLocationsDataset');
 Route::get('individuals/location-delete', 'IndividualController@deleteIndividualLocation')->name('deleteIndividualLocation');
 Route::get('individuals/for-voucher', 'IndividualController@getIndividualForVoucher')->name('getIndividualForVoucher');
 Route::get('individuals/autocomplete', 'IndividualController@autocomplete');
-Route::get('individuals/{id}/datasets', 'IndividualController@indexDatasets');
+Route::get('individuals/{id}/dataset', 'IndividualController@indexDatasets');
 Route::get('individuals/{id}/activity', 'IndividualController@activity');
 
 Route::post('individuals/batchidentify', 'IndividualController@batchidentifications');
@@ -212,6 +219,8 @@ Route::get('media/{id}/taxons', 'MediaController@indexTaxons');
 Route::get('media/{id}/locations', 'MediaController@indexLocations');
 Route::get('media/{id}/individuals', 'MediaController@indexIndividuals');
 Route::get('media/{id}/vouchers', 'MediaController@indexVouchers');
+Route::get('media/{id}/datasets', 'MediaController@indexDatasets');
+
 Route::resource('media', 'MediaController',['only' => ['show', 'edit', 'update', 'destroy','store']]);
 
 

@@ -229,7 +229,7 @@ class ExternalAPIs
            }
         }
 
-        //get synonyms is is the case
+        //get synonyms if is the case
         $senior = null;
         if (!in_array($answer[0]->NomenclatureStatusName, ['Legitimate', 'No opinion', 'nom. cons.'])) {
             //# STEP TWO, look for valid synonyms
@@ -246,12 +246,25 @@ class ExternalAPIs
                 $senior = $synonym[0]->AcceptedName->ScientificName;
             }
         }
+
+        //get higher to get parent
+        $response = $client->request('GET','Name/'.$answer[0]->NameId."/HigherTaxa?apikey=$apikey&format=json"
+        );
+        if (200 != $response->getStatusCode()) {
+            return null;
+        } // FAILED
+        $highertaxa = json_decode($response->getBody());
+        $parent = null;
+        if (count($highertaxa)>1) {
+          $parent_idx = count($highertaxa)-1;
+          $parent = $highertaxa[$parent_idx]->ScientificName;
+        }
         return [$flags,
                 'rank' => $answer[0]->RankAbbreviation,
                 'author' => $answer[0]->Author,
                 'valid' => $answer[0]->NomenclatureStatusName,
                 'reference' => $answer[0]->DisplayReference.', '.$answer[0]->DisplayDate,
-                'parent' => $answer[0]->Family,
+                'parent' => $parent,
                 'key' => $answer[0]->NameId,
                 'senior' => $senior,
         ];
@@ -553,16 +566,51 @@ class ExternalAPIs
         if (is_null($firstrecord) or (is_array($firstrecord) and count($firstrecord)==0)) {
           return [];
         }
-        $running_key = isset($firstrecord['parentKey']) ? $firstrecord['parentKey'] : null;
+        $idx = 0;
+        $data_array = [];
         if ($include_first) {
-          $data_array[$gbifnubkey] = $firstrecord;
-        } else {
-          $data_array = [];
+          $data_array[$idx] = $firstrecord;
+          $idx++;
         }
+        //loop from record up to parent root until find registered in ODB
+        $running_key = isset($firstrecord['parentKey']) ? $firstrecord['parentKey'] : null;
         if (isset($running_key)) {
             $stop =0;
             while($stop == 0) {
                 $get_string = "v1/species/".$running_key;
+                $gbifdata = self::makeRequest($base_uri,$get_string);
+                if (is_null($gbifdata) or (is_array($gbifdata) and count($gbifdata)==0) or !isset($gbifdata['canonicalName'])) {
+                  $stop = 1;
+                  break;
+                }
+                $rank = Taxon::getRank($gbifdata['rank']);
+                $name = isset($gbifdata["canonicalName"]) ? $gbifdata['canonicalName'] : null;
+                $is_registered = Taxon::whereRaw('(odb_txname(name, level, parent_id) LIKE "'.$name.'") AND level='.$rank)->get();
+                if ($is_registered->count()>0) {
+                  //add this registered parent to previous record
+                  if (count($data_array)>0) {
+                    $data_array[($idx-1)]['parent_id'] = $is_registered->first()->id;
+                  }
+                  $stop =1;
+                  break;
+                }
+                $data_array[$idx] = $gbifdata;
+                $running_key = isset($gbifdata['parentKey']) ? $gbifdata['parentKey'] : null;
+                if ($rank === 0 or !isset($running_key)) {
+                  $stop =1;
+                  break;
+                }
+                $idx++;
+            }
+        }
+        //if a synonym has an accepted key as well, so get senior path data if this is the case
+        $senior_data = [];
+        $idxs = 0;
+        $accepted_key = isset($firstrecord['acceptedKey']) ? $firstrecord['acceptedKey'] : null;
+        if ($accepted_key !== null) {
+            $stop=0;
+            while($stop == 0) {
+                $get_string = "v1/species/".$accepted_key;
                 $gbifdata = self::makeRequest($base_uri,$get_string);
                 if (is_null($gbifdata) or (is_array($gbifdata) and count($gbifdata)==0)) {
                   $stop = 1;
@@ -573,62 +621,32 @@ class ExternalAPIs
                 $is_registered = Taxon::whereRaw('(odb_txname(name, level, parent_id) LIKE "'.$name.'") AND level='.$rank)->get();
                 if ($is_registered->count()>0) {
                   //add this registered parent to record
-                  $data_array[$nubKey]['parent_id'] = $is_registered->first()->id;
+                  if ($idxs==0 and $include_first) { //this will be the senior_id of the first record only, and may break
+                    $data_array[0]['senior_id'] = $is_registered->first()->id;
+                  } elseif ($idxs>0) {
+                    //add to previous record parent_id
+                    $senior_data[($idxs-1)]['parent_id'] = $is_registered->first()->id;
+                  }
                   $stop =1;
                   break;
                 }
-                $running_key = isset($gbifdata['parentKey']) ? $gbifdata['parentKey'] : null;
-                $nubKey =  isset($gbifdata["nubKey"]) ? $gbifdata['nubKey'] : null;
-                if (isset($nubKey)) {
-                  $data_array[$nubKey] = $gbifdata;
-                } else {
-                  $data_array[] = $gbifdata;
+                if ($idxs==0 and $include_first) {
+                  $data_array[0]['senior'] = $gbifdata['canonicalName'];
                 }
-                if ($rank === 0 or !isset($running_key)) {
-                  $stop =1;
-                  break;
-                }
-            }
-        }
-        //if a synonym has an accepted key as well
-        $accepted_key = isset($firstrecord['acceptedKey']) ? $firstrecord['acceptedKey'] : null;
-        if (isset($accepted_key)) {
-            $stop =0;
-            while($stop == 0) {
-                if (array_key_exists($accepted_key,$data_array)) {
-                  $stop=1;
-                  break;
-                }
-                $get_string = "v1/species/".$accepted_key;
-                $gbifdata = self::makeRequest($base_uri,$get_string);
-                if (is_null($gbifdata) or ($isarray and count($gbifdata)==0)) {
-                  $stop = 1;
-                  break;
-                }
-                $rank = Taxon::getRank($gbifdata['rank']);
-                $name = $gbifdata['canonicalName'];
-                $is_registered = Taxon::whereRaw('(odb_txname(name, level, parent_id) LIKE "'.$name.'") AND level='.$rank)->get();
-                if ($is_registered->count()>0) {
-                  //add this registered parent to record
-                  $data_array[$nubKey]['parent_id'] = $is_registered->first()->id;
-                  $stop =1;
-                  break;
-                }
-                $nubKey =  isset($gbifdata["nubKey"]) ? $gbifdata['nubKey'] : null;
-                if (isset($nubKey)) {
-                  $data_array[$nubKey] = $gbifdata;
-                } else {
-                  $data_array[] = $gbifdata;
-                }
+                $senior_data[$idxs] = $gbifdata;
                 $accepted_key = isset($gbifdata['parentKey']) ? $gbifdata['parentKey'] : null;
-                if ($rank === 0 or !isset($running_key)) {
+                if ($rank === 0 or !isset($accepted_key)) {
                   $stop =1;
                   break;
                 }
+                $idxs++;
             }
         }
+        $data_array = array_merge($senior_data,$data_array);
+        $data_array = array_unique($data_array,SORT_REGULAR);
         $final_data = [];
         if (count($data_array)>0) {
+            $incr = 1;
             foreach($data_array as $gbif_record) {
                   if (!is_null($gbif_record)) {
                       $taxonID = (isset($gbif_record['taxonID']) and $gbif_record['taxonID'] != "") ? $gbif_record['taxonID'] : null;
@@ -646,15 +664,19 @@ class ExternalAPIs
                           $publishedin = (null != $publishedin) ? $publishedin : $mobotdata['reference'];
                         }
                       }
-
+                      $isvalid = isset($gbif_record["taxonomicStatus"]) ? in_array($gbif_record['taxonomicStatus'],["DOUBTFUL","ACCEPTED"]) : 1;
+                      $hasenior = isset($gbif_record["senior_id"]) ? $gbif_record['senior_id'] : (isset($gbif_record["senior"]) ? $gbif_record['senior'] : null);
+                      if ($isvalid and null != $hasenior) {
+                        $isvalid = 0;
+                      }
                       $data = [
                         "name"  => isset($gbif_record["canonicalName"]) ? $gbif_record['canonicalName'] : null,
                         "rank" => $rank,
                         "author" => $author,
-                        "valid" => isset($gbif_record["taxonomicStatus"]) ? $gbif_record['taxonomicStatus']=="ACCEPTED" : 0,
+                        "valid" => $isvalid,
                         "reference" => $publishedin,
                         "parent" => isset($gbif_record["parent"]) ? $gbif_record['parent'] : null,
-                        "senior" => null,
+                        "senior" => $hasenior,
                         "mobot" => $tropicos,
                         "ipni" => $ipni,
                         'mycobank' => null,
@@ -662,12 +684,16 @@ class ExternalAPIs
                         'zoobank' => null,
                         'parent_id' => isset($gbif_record["parent_id"]) ? $gbif_record['parent_id'] : ($rank===0 ? 1 : null),
                     ];
+                    //echo $data['name']." included <br>";
+                    if (isset($final_data[$rank])) {
+                      $rank = $rank+$incr;
+                      $incr++;
+                    }
                     $final_data[$rank] = $data;
                   }
             }
             ksort($final_data);
         }
-
         return $final_data;
     }
 
@@ -860,4 +886,218 @@ class ExternalAPIs
                 'senior' => $senior,
         ];
     }
+
+
+
+    public static function getMobotParentPath($searchstring,$include_first=false)
+    {
+        // replaces . in "var." or "subsp."
+        $searchstring = str_replace('.', '%2e', $searchstring);
+        $flags = 0;
+        $apikey = config('app.mobot_api_key');
+        if (!$apikey) {
+            return [self::NOT_FOUND];
+        }
+
+        $base_uri = 'https://services.tropicos.org/';
+        $client = new Guzzle(['base_uri' => $base_uri]); //, 'proxy' => $this->proxystring]);
+        //# STEP ONE, search for name summary
+        try {
+            $response = $client->request('GET',"Name/Search?name=$searchstring&type=exact&apikey=$apikey&format=json");
+        } catch (\ClientException $e) {
+            return null; //FAILED
+        } catch (\Exception $e) {
+            return null; //FAILED
+        }
+        if (200 != $response->getStatusCode()) {
+            return null;
+        } // FAILED
+        $answer = json_decode($response->getBody());
+        if (isset($answer[0]->Error)) {
+            return [self::NOT_FOUND];
+        }
+
+        if ($answer[0]->TotalRows > 1) {
+          //get only valid records
+          $newanswer = [];
+          foreach($answer as $record) {
+              if (in_array($record->NomenclatureStatusName, ['Legitimate', 'No opinion', 'nom. cons.'])) {
+                $newanswer[] = $record;
+              }
+           }
+           if (count($newanswer)>1) {
+             $flags = $flags | self::MULTIPLE_HITS;
+           } elseif (count($newanswer)==1) {
+             $answer = $newanswer;
+           }
+        }
+
+        //get synonyms if is the case
+        $senior = null;
+        $senior_path = [];
+        if (!in_array($answer[0]->NomenclatureStatusName, ['Legitimate', 'No opinion', 'nom. cons.'])) {
+            //# STEP TWO, look for valid synonyms
+            $response = $client->request('GET',
+                        'Name/'.$answer[0]->NameId."/AcceptedNames?apikey=$apikey&format=json"
+                );
+            if (200 != $response->getStatusCode()) {
+                return null;
+            } // FAILED
+            $synonym = json_decode($response->getBody());
+            if (isset($synonym[0]->Error)) {
+                $flags = $flags | self::NONE_SYNONYM;
+            } else {
+                $senior = $synonym[0]->AcceptedName->ScientificName;
+                //get higher to get parent
+                $response = $client->request('GET','Name/'.$synonym[0]->AcceptedName->NameId."/HigherTaxa?apikey=$apikey&format=json"
+                );
+                if (200 == $response->getStatusCode()) {
+                    $senior_path = json_decode($response->getBody());
+                }
+            }
+        }
+        //define first records
+        $rank = Taxon::getRank($answer[0]->RankAbbreviation);
+        $firstrecord = [
+              'name' => $answer[0]->ScientificName,
+              'rank' => $rank,
+              'author' => $answer[0]->Author,
+              'valid' => in_array($answer[0]->NomenclatureStatusName, ['Legitimate', 'No opinion', 'nom. cons.','']),
+              'reference' => $answer[0]->DisplayReference.', '.$answer[0]->DisplayDate,
+              'mobot' => $answer[0]->NameId,
+        ];
+
+
+
+        //get higher to get parent
+        $response = $client->request('GET','Name/'.$answer[0]->NameId."/HigherTaxa?apikey=$apikey&format=json"
+        );
+        if (200 != $response->getStatusCode()) {
+            return null;
+        } // FAILED
+        $highertaxa = array_reverse(json_decode($response->getBody()));
+        $finaldata = [];
+        $previous = null;
+        $idx = 0;
+        foreach($highertaxa as $parent) {
+          $rank = Taxon::getRank($parent->RankAbbreviation);
+          $name = $parent->ScientificName;
+          if ($idx>0) {
+            $finaldata[$idx-1]['parent'] = $name;
+          } else {
+            $firstrecord['parent'] = $name;
+          }
+          // Is this taxon already imported?
+          $hadtaxon = Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND level = ?', [$name, $rank])->get();
+          if ($hadtaxon->count()==1) {
+            if ($idx>0) {
+              $finaldata[$idx-1]['parent_id'] = $hadtaxon[0]->id;
+            } else {
+              $firstrecord['parent_id'] = $hadtaxon[0]->id;
+            }
+            break;
+          }
+          $data = [
+                'name' => $parent->ScientificName,
+                'rank' => $rank,
+                'author' => $parent->Author,
+                'valid' => in_array($parent->NomenclatureStatusName, ['Legitimate', 'No opinion', 'nom. cons.','']),
+                'reference' => $parent->DisplayReference.', '.$parent->DisplayDate,
+                'parent' => $previous,
+                'mobot' => $parent->NameId,
+          ];
+          $finaldata[$idx] = $data;
+          $previous = $parent->ScientificName;
+          $idx++;
+        }
+
+        $final_senior = [];
+        $previous = null;
+        $idx = 0;
+        foreach($senior_path as $record) {
+          $rank = Taxon::getRank($record->RankAbbreviation);
+          $name = $record->ScientificName;
+          if ($idx>0) {
+            $final_senior[$idx-1]['parent'] = $name;
+          }
+          // Is this taxon already imported?
+          $hadtaxon = Taxon::whereRaw('odb_txname(name, level, parent_id) = ? AND level = ?', [$name, $rank])->get();
+          if ($hadtaxon->count()==1) {
+            $final_senior[$idx-1]['parent_id'] = $hadtaxon[0]->id;
+            break;
+          }
+          $data = [
+                'name' => $record->ScientificName,
+                'rank' => $rank,
+                'author' => $record->Author,
+                'valid' => in_array($record->NomenclatureStatusName, ['Legitimate', 'No opinion', 'nom. cons.','']),
+                'reference' => $record->DisplayReference.', '.$record->DisplayDate,
+                'parent' => $previous,
+                'mobot' => $record->NameId,
+          ];
+          $final_senior[$idx] = $data;
+          $previous = $record->ScientificName;
+          $idx++;
+        }
+        $finaldata = array_merge($finaldata,$final_senior);
+        $finaldata = array_unique($finaldata,SORT_REGULAR);
+        $final = [];
+        $rx = 1;
+        foreach($finaldata as $data) {
+          $rank = $data[ 'rank'];
+          if (isset($final[$rank])) {
+            $rank = $rank+$rx;
+            $rx++;
+          }
+          $final[$rank] = $data;
+        }
+        if ($include_first) {
+          $rank = Taxon::getRank($answer[0]->RankAbbreviation);
+          if (isset($final[$rank])) {
+            $rank = $rank+1000;
+          }
+          $final[$rank] = $firstrecord;
+        }
+        ksort($final);
+        return $final;
+    }
+
+    /* to get country iso code */
+    public static function getWorldBankCountry()
+    {
+      $base_uri = 'http://api.worldbank.org/';
+      $client = new Guzzle(['base_uri' => $base_uri]); //, 'proxy' => $this->proxystring]);
+      //# STEP ONE, search for name summary
+      try {
+          $response = $client->request('GET',"v2/country?format=json&per_page=310");
+      } catch (\ClientException $e) {
+          return null; //FAILED
+      } catch (\Exception $e) {
+          return null; //FAILED
+      }
+      if (200 != $response->getStatusCode()) {
+          return null;
+      } // FAILED
+      $answer = json_decode($response->getBody());
+      return $answer[1];
+    }
+
+    public static function getCountryISOCode($country)
+    {
+      $countries = self::getWorldBankCountry();
+      $filtered = array_filter($countries,function($f) use($country) {
+          $name = $f->name;
+          if (mb_strtolower($name)==mb_strtolower($country)) {
+            return true;
+          }
+          return false;
+      });
+      if (count($filtered)==1) {
+        $filtered = array_values($filtered)[0];
+        return isset($filtered->iso2Code) ? $filtered->iso2Code : null;
+      }
+      return null;
+    }
+
+
 }

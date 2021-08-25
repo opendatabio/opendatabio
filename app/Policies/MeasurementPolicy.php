@@ -33,39 +33,51 @@ class MeasurementPolicy
         if (User::ADMIN == $user->access_level) {
             return true;
         }
-        // this policy called with null project probably means that we're checking a @can
         if (is_null($dataset)) {
             return User::USER == $user->access_level;
         }
-        // for regular users, when actually creating a measurement
-        return User::USER == $user->access_level and
-            ($dataset->admins->contains($user) or $dataset->users->contains($user));
-
-        return true;
+        $privacy = $dataset->privacy;
+        if ($privacy==Dataset::PRIVACY_PROJECT) {
+          return User::USER == $user->access_level and
+              ($dataset->project->admins->contains($user) or $dataset->project->collabs->contains($user));
+        }
+        return User::USER == $user->access_level and ($dataset->admins->contains($user) or $dataset->collabs->contains($user));
     }
 
     /**
      * Determine whether the user can update a measurement.
      */
-    public function update(User $user, Measurement $measurement)
+    public function update(User $user, Measurement $measurement, Dataset $dataset = null)
     {
         if (User::ADMIN == $user->access_level) {
             return true;
         }
         // for regular users
-        $dataset = $measurement->dataset;
-
-        return User::USER == $user->access_level and
-            ($dataset->admins->contains($user) or $dataset->users->contains($user));
-
-        return true;
+        if (is_null($dataset)) {
+            $dataset = $measurement->$dataset;
+        }
+        $privacy = $dataset->privacy;
+        if ($privacy==Dataset::PRIVACY_PROJECT) {
+          return User::USER == $user->access_level and
+              ($dataset->project->admins->contains($user) or $dataset->project->collabs->contains($user));
+        }
+        return User::USER == $user->access_level and ($dataset->admins->contains($user) or $dataset->collabs->contains($user));
     }
 
     /**
-     * Determine whether the user can delete the person.
+     * Determine whether the user can delete the measurement.
      */
     public function delete(User $user, Measurement $measurement)
     {
-        return false;
+        if (User::ADMIN == $user->access_level) {
+            return true;
+        }
+        $dataset = $measurement->$dataset;
+        $privacy = $dataset->privacy;
+        if ($privacy==Dataset::PRIVACY_PROJECT) {
+          return User::USER == $user->access_level and
+              ($dataset->project->admins->contains($user) or $dataset->project->collabs->contains($user));
+        }
+        return User::USER == $user->access_level and ($dataset->admins->contains($user) or $dataset->collabs->contains($user));
     }
 }

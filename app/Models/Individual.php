@@ -5,7 +5,7 @@
  */
 
 namespace App\Models;
-
+use App\Models\Dataset;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use CodeInc\StripAccents\StripAccents;
@@ -26,15 +26,19 @@ class Individual extends Model implements HasMedia
     // NOTICE regarding attributes!! relative_position is the name of the database column, so this should be called when writing to database
     // (ie, setRelativePosition), but this is read as position, so this should be called on read context
 
-    protected $fillable = ['tag', 'date', 'notes','project_id','identification_individual_id'];
+    protected $fillable = ['tag', 'date', 'notes','dataset_id','identification_individual_id'];
 
-    protected $appends = ['format_date','location_parent','taxon_name','taxon_family','project_name'];
+    //protected $appends = ['format_date','location_parentname','taxon_name','taxon_family','dataset_name'];
+    protected $decimalLatitude;
+    protected $decimalLongitude;
+    protected $georeferenceRemarks;
+    protected $appends = ['format_date'];
 
     //activity log trait
     protected static $logName = 'individual';
     protected static $recordEvents = ['updated','deleted'];
     protected static $ignoreChangedAttributes = ['updated_at','notes'];
-    protected static $logAttributes = ['tag', 'project_id','date','identification_individual_id'];
+    protected static $logAttributes = ['tag', 'dataset_id','date','identification_individual_id'];
     protected static $logOnlyDirty = true;
     protected static $submitEmptyLogs = false;
     //protected $casts = ['identification' => 'collection' ];// casting the JSON database column
@@ -62,35 +66,20 @@ class Individual extends Model implements HasMedia
     protected static function boot()
     {
         parent::boot();
-        static::addGlobalScope('projectScope', function (Builder $builder) {
+        static::addGlobalScope('datasetScope', function (Builder $builder) {
             // first, the easy cases. No logged in user? can access only public (privacy 2)
             if (is_null(Auth::user())) {
-                return $builder->whereRaw('individuals.project_id IN (SELECT id FROM projects WHERE projects.privacy = 2)');
+                return $builder->whereRaw('((individuals.dataset_id IS NULL) OR individuals.dataset_id IN (SELECT id FROM datasets WHERE datasets.privacy >='.Dataset::PRIVACY_REGISTERED.'))');
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {
                 return $builder;
             }
             // now the complex case: the regular user see any registered or public or those having specific authorization
-            return $builder->whereRaw('individuals.id IN (SELECT individuals.id FROM individuals JOIN projects ON projects.id=individuals.project_id JOIN project_user ON project_user.project_id=projects.id WHERE projects.privacy>0 OR project_user.user_id='.Auth::user()->id.')');
+            return $builder->whereRaw('( (individuals.dataset_id IS NULL) OR individuals.id IN (SELECT individuals.id FROM individuals JOIN datasets ON datasets.id=individuals.dataset_id JOIN dataset_user ON dataset_user.dataset_id=datasets.id WHERE (datasets.privacy >='.Dataset::PRIVACY_REGISTERED.') OR dataset_user.user_id='.Auth::user()->id.'))');
         });
     }
 
-    /* FULLNAME THIS SHOULD BE CONVERTED TO A mysql procedure, facilitation queries */
-    /*
-    //converted
-    public function getFullnameAttribute()
-    {
-        $collector = preg_replace('[,| |\\.|-|_]','',StripAccents::strip( (string) $this->collector_main->first()->person->abbreviation ));
-        //$collector = $this->collector_main->first()->person->abbreviation;
-        if ($this->locations->count()) {
-            return $this->tag.' - '.$collector." - ".$this->locations->first()->name;
-        }
-        return 'Unknown location-'.$this->tag;
-    }
-    */
-
-    /* LOCATIONS */
     public function locations()
     {
       return $this->belongsToMany(Location::class)->withPivot(['date_time','notes','altitude','relative_position','first'])->withTimestamps();
@@ -126,17 +115,20 @@ class Individual extends Model implements HasMedia
         return 'Unknown location';
     }
 
-    public function getLocationParentAttribute()
+    public function getLocationParentNameAttribute()
     {
         if ($this->locations->count()) {
           return $this->locations->last()->parentName;
         }
-        return 'Unknown parent location';
+        return 'Unknown location';
     }
 
-    public function getLocationFullnameAttribute()
+    public function getHigherGeographyAttribute()
     {
-      return $this->locations->last()->fullname;
+      if ($this->locations->count()) {
+        return $this->locations->last()->higherGeography;
+      }
+      return 'Unknown location';
     }
 
 
@@ -245,7 +237,7 @@ class Individual extends Model implements HasMedia
         return round($distance,2);
     }
 
-    public function getXInParentLocationAttribute()
+    public function getGxAttribute()
     {
        $location = $this->locations->last();
        if ($location->adm_level == Location::LEVEL_PLOT) {
@@ -256,7 +248,7 @@ class Individual extends Model implements HasMedia
        return null;
     }
 
-    public function getYInParentLocationAttribute()
+    public function getGyAttribute()
     {
       $location = $this->locations->last();
       if ($location->adm_level == Location::LEVEL_PLOT) {
@@ -266,15 +258,40 @@ class Individual extends Model implements HasMedia
       return null;
     }
 
+    public function getOrganismRemarksAttribute()
+    {
+      return $this->notes;
+    }
 
-    public function getLocationLongitudeAttribute()
+    public function getDecimalLatitudeAttribute()
     {
-      return (float) $this->locationWithGeom->centroid["x"];
+      $this->getLatLong();
+      return $this->decimalLatitude;
     }
-    public function getLocationLatitudeAttribute( )
+    public function getDecimalLongitudeAttribute()
     {
-      return (float) $this->locationWithGeom->centroid["y"];
+      $this->getLatLong();
+      return $this->decimalLongitude;
     }
+    public function getGeoreferenceRemarksAttribute()
+    {
+      $this->getLatLong();
+      return $this->georeferenceRemarks;
+    }
+
+    public function getLatLong()
+    {
+        // if the "cached" values are already set, do nothing
+        if ($this->decimalLongitude or $this->decimalLatitude) {
+           return;
+        }
+        $coords = $this->getGlobalPosition();
+        $coords = Location::latlong_from_point($coords);
+        // all others, extract from centroid
+        $this->decimalLongitude = $coords[1];
+        $this->decimalLatitude = $coords[0];
+    }
+
     public function getCoordinatesPrecisionAttribute()
     {
       return strip_tags($this->locations->last()->precision);
@@ -284,41 +301,62 @@ class Individual extends Model implements HasMedia
     public function getGlobalPosition($geojson=false)
     {
       //if location is POINT
+      $remarks = [];
+      if ($this->locations->count()>1) {
+        $remarks[] = "This individual has multiple locations. Coordinates refer to the last.";
+      }
       $geomtype = $this->locationWithGeom->geomType;
       $bearing = null;
       $distance = null;
       $start_point = $this->locationWithGeom->geom;
+      $individual_point = $this->locationWithGeom->centroid_raw;
       if ($this->locationWithGeom->adm_level == Location::LEVEL_POINT and $this->angle and $this->distance) {
          //map with bearing and distance (destination point)
+        $remarks[] = "Decimal coordinates were calculated from POINT location using angle and distance attributes. They refer to destinationPoints";
         $bearing = $this->angle;
         $distance = $this->distance;
         $individual_point = Location::destination_point($start_point,$bearing,$distance);
       }
       //if location is PLOT
-      if ($this->locationWithGeom->adm_level == Location::LEVEL_PLOT) {
+      if ($this->locationWithGeom->adm_level == Location::LEVEL_PLOT and $this->x and $this->y) {
         if ($geomtype == 'polygon') {
             $geom = $this->locationWithGeom->geom;
         } else {
             $geom = $this->locationWithGeom->plot_geometry;
         }
         $individual_point = Location::individual_in_plot($geom,$this->x,$this->y);
+        $remarks[] = "Decimal coordinates were calculated using Plot geometry and the X and Y attributes (i.e. the relativePosition)";
       }
       //linestrings mapping
-      if ($this->locationWithGeom->adm_level == Location::LEVEL_TRANSECT) {
+      if ($this->locationWithGeom->adm_level == Location::LEVEL_TRANSECT and $this->x) {
           if ($geomtype == 'linestring') {
             $start_point = Location::interpolate_on_transect($this->locationWithGeom->id,$this->x);
-            $bearing = Location::bearing_at_postion_for_destination($this->locationWithGeom->id,$this->x,$this->y);
+            if ($this->y) {
+              $bearing = Location::bearing_at_postion_for_destination($this->locationWithGeom->id,$this->x,$this->y);
+              $remarks[] = "Decimal coordinates were calculated using the X and Y attribute, the X interpolated on linestring from start, the Y at 90dgs (positive right; negative left-side) along the lineString at the X position from the first point";
+            } else {
+              $remarks[] = "Decimal coordinates were calculated using the X attribute, interpolated along the linestring from start.";
+            }
           } else {
             //then location is a transect but defined as point (the start point)
             $start_point = Location::destination_point($this->locationWithGeom->geom,0,$this->x);
             if ($this->y < 0) {
+              $remarks[] = "Decimal coordinates were calculated using the X and Y attributes, the X interpolated along the Transect (N oriented), the negative Y at 270dgs from interpolated X";
               $bearing = 270;
             } else {
+              $remarks[] = "Decimal coordinates were calculated using the X and Y attributes, the X interpolated along the Transect (N oriented), the positive Y at 90dgs from interpolated X";
               $bearing = 90;
             }
           }
-          $distance = abs($this->y);
-          $individual_point = Location::destination_point($start_point,$bearing,$distance);
+          if ($this->y) {
+            $distance = abs($this->y);
+            $individual_point = Location::destination_point($start_point,$bearing,$distance);
+          } else {
+            $individual_point = $start_point;
+          }
+      }
+      if (count($remarks)) {
+        $this->georeferenceRemarks = implode(' | ',$remarks);
       }
       if ($geojson) {
         $individual_point = DB::select("SELECT ST_ASGEOJSON(ST_GeomFromText('".$individual_point."')) as geojson")[0]->geojson;
@@ -331,17 +369,17 @@ class Individual extends Model implements HasMedia
     /* END INDIVIDUAL LOCATION */
 
 
-    /* PROJECT */
-    public function project()
+    /* DATASET */
+    public function dataset()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Dataset::class);
     }
-    public function getProjectNameAttribute()
+    public function getDatasetNameAttribute()
     {
-        if ($this->project) {
-            return $this->project->name;
+        if ($this->dataset) {
+            return $this->dataset->name;
         }
-        return 'Unknown project';
+        return 'Unknown dataset';
     }
 
 
@@ -372,17 +410,7 @@ class Individual extends Model implements HasMedia
         return $this->collectors()->where('main',1);
     }
 
-    public function getMainCollectorAttribute()
-    {
-      return $this->collector_main()->first()->person->abbreviation;
-    }
 
-    public function getAllCollectorsAttribute()
-    {
-        $persons = $this->collectors->map(function($person) { return $person->person->abbreviation;})->toArray();
-        $persons = implode(' | ',$persons);
-        return $persons;
-    }
 
     public function newQuery($excludeDeleted = true)
     {
@@ -391,7 +419,7 @@ class Individual extends Model implements HasMedia
         return parent::newQuery($excludeDeleted)->select(
             'individuals.id',
             'individuals.tag',
-            'individuals.project_id',
+            'individuals.dataset_id',
             'individuals.date',
             'individuals.notes',
             'individuals.identification_individual_id',
@@ -414,69 +442,6 @@ class Individual extends Model implements HasMedia
         return $this->morphOne(Identification::class,'identification_individual_id', 'object_type','object_id');
     }
 
-    public function getTaxonNameAttribute()
-    {
-        if ($this->identification and $this->identification->taxon) {
-            return $this->identification->taxon->fullname;
-        }
-        return Lang::get('messages.unidentified');
-    }
-    public function getTaxonFamilyAttribute()
-    {
-        if ($this->identification) {
-            return $this->identification->taxon->family;
-        }
-        return Lang::get('messages.unidentified');
-    }
-
-    public function getTaxonNameWithAuthorAttribute()
-    {
-        if ($this->identification) {
-            return $this->identification->taxon->getFullnameWithAuthor();
-        }
-        return Lang::get('messages.unidentified');
-    }
-
-    public function getIdentificationDateAttribute()
-    {
-      if ($this->identification) {
-          return $this->identification->date;
-      }
-      return null;
-    }
-
-    public function getIdentifiedByAttribute()
-    {
-      if ($this->identification) {
-          return $this->identification->person->abbreviation;
-      }
-      return Lang::get('messages.unidentified');
-    }
-
-    public function getIdentificationNotesAttribute()
-    {
-      if ($this->identification) {
-          $text = "";
-          if ($this->identification->biocollection_id) {
-            $text = Lang::get('messages.identification_based_on')." ".Lang::get('messages.voucher')." #".$this->identification->biocollection_reference." @".$this->identification->biocollection->acronym.". ";
-          }
-          return $text.$this->identification->notes;
-      }
-      return "";
-    }
-
-    public function getTaxonNameModifierAttribute()
-    {
-      $modifier = null;
-      if ($this->identification) {
-        $modifier = $this->identification->modifier;
-        if ($modifier>0) {
-          $modifier = Lang::get('levels.modifier.'.$modifier);
-          $modifier = " (".$modifier.")";
-        }
-      }
-      return $modifier;
-    }
 
 
 
@@ -501,7 +466,191 @@ class Individual extends Model implements HasMedia
         return (new self())->getTable();
     }
 
+    /* dwc terms */
+    public function getOrganismIDAttribute()
+    {
+      return $this->fullname;
+    }
+
+    public function getRecordedByMainAttribute()
+    {
+      return $this->collector_main->first()->person->abbreviation;
+    }
+
+    public function getNormalizedAbbreviationAttribute()
+    {
+      return $this->collector_main->first()->person->normalizedAbbreviation;
+    }
+
+    public function getRecordedByAttribute()
+    {
+      $persons = $this->collectors->map(function($person) { return $person->person->abbreviation;})->toArray();
+      $persons = implode(' | ',$persons);
+      return $persons;
+    }
+
+    public function getRecordNumberAttribute()
+    {
+      return $this->tag;
+    }
+    public function getRecordedDateAttribute()
+    {
+      return $this->formatDate;
+    }
 
 
+    public function getScientificNameAttribute()
+    {
+        if ($this->identification and $this->identification->taxon) {
+            return $this->identification->taxon->fullname;
+        }
+        return Lang::get('messages.unidentified');
+    }
+    public function getFamilyAttribute()
+    {
+        if ($this->identification) {
+            return $this->identification->taxon->family;
+        }
+        return Lang::get('messages.unidentified');
+    }
+    public function getGenusAttribute()
+    {
+        if ($this->identification) {
+            return $this->identification->taxon->genus;
+        }
+        return Lang::get('messages.unidentified');
+    }
+    public function getScientificNameAuthorshipAttribute()
+    {
+        if ($this->identification) {
+            return $this->identification->taxon->scientificNameAuthorship;
+        }
+        return Lang::get('messages.unidentified');
+    }
+    public function getDateIdentifiedAttribute()
+    {
+      if ($this->identification) {
+          return $this->identification->date;
+      }
+      return null;
+    }
+    public function getIdentifiedByAttribute()
+    {
+      if ($this->identification) {
+          return $this->identification->person->abbreviation;
+      }
+      return Lang::get('messages.unidentified');
+    }
+
+    public function getIdentificationRemarksAttribute()
+    {
+      if ($this->identification) {
+          $text = "";
+          if ($this->identification->biocollection_id) {
+            $text = Lang::get('messages.identification_based_on')." ".Lang::get('messages.voucher')." #".$this->identification->biocollection_reference." @".$this->identification->biocollection->acronym.". ";
+          }
+          return $text.$this->identification->notes;
+      }
+      return "";
+    }
+    public function getIdentificationQualifierAttribute()
+    {
+      $modifier = null;
+      if ($this->identification) {
+        $modifier = $this->identification->modifier;
+        if ($modifier>0) {
+          $modifier = Lang::get('levels.modifier.'.$modifier);
+          //$modifier = " (".$modifier.")";
+        }
+      }
+      return $modifier;
+    }
+
+    public function getTypeStatusAttribute()
+    {
+      $vouchers = $this->vouchers()->where('biocollection_type','>',0);
+      if ($vouchers->count()) {
+        $result = $vouchers->cursor()->map(function($v){
+            $acronym = $v->biocollection->acronym;
+            $reference = isset($v->biocollection_number) ? " #".$v->biocollection_number : null;
+            $type = Lang::get('levels.vouchertype.'.$v->biocollection_type);
+            return $type." @ ".$acronym.$reference;
+        })->toArray();
+        return implode(" | ",$result);
+      }
+      return null;
+    }
+
+    public function getAssociatedMediaAttribute()
+    {
+      $media = $this->media;
+      if ($media->count()) {
+        $result = $media->map(function($v){
+            return url('media/'.$v->id);
+        })->toArray();
+        return implode(" | ",$result);
+      }
+      return null;
+    }
+
+    public function getAccessRightsAttribute()
+    {
+      if ($this->dataset) {
+        return $this->dataset->accessRights;
+      }
+      return "Open access";
+    }
+    public function getBibliographicCitationAttribute()
+    {
+      if ($this->dataset) {
+        return $this->dataset->bibliographicCitation;
+      }
+      return null;
+    }
+
+    // TODO: NOT FINISHED
+    public function getPreviousIdentificationsAttribute()
+    {
+      /* list of concatenated previous name + identifer + date */
+      return null;
+
+      $query = Activity::select([
+          'id',
+          'log_name',
+          'description',
+          'properties',
+          'subject_type',
+          'subject_id',
+          'causer_id',
+          'created_at',
+      ])->where('subject_type',self::class)->where('subject_id',$this->id)->where('description','like','identification updated');
+      if ($query->count()) {
+        $activities = $query->orderBy("created_at","DESC")->cursor();
+        $activities->map(function($det){
+          $old = $det->properties->old;
+          $new = $det->properties->attributes;
+          if ($old != null) {
+              $taxon_id = $old['taxon_id'];
+              if ($new['taxon_id']!=$taxon_id) {
+
+              }
+          }
+        });
+
+      }
+
+      return null;
+    }
+    public function getBasisOfRecordAttribute()
+    {
+      return 'Organism';
+    }
+    public function getLicenseAttribute()
+    {
+      if ($this->dataset) {
+        return $this->dataset->dwcLicense;
+      }
+      return null;
+    }
 
 }

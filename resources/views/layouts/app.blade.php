@@ -147,6 +147,9 @@
               <li><a href="{{ url('import/individuals') }}">
                 @lang('messages.individuals')
               </a></li>
+              <li><a href="{{ url('import/individuallocations') }}">
+                @lang('messages.individuallocations')
+              </a></li>
               <li><a href="{{ url('import/locations') }}">
                 @lang('messages.locations')
               </a></li>
@@ -197,9 +200,20 @@
         @else
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                {{ Auth::user()->email }} <span class="caret"></span>
+                <i class="fas fa-user-cog fa-lg"></i><span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
+              <li>
+                <a href="{{ route('selfedit') }}">
+                  <i class="fas fa-user-tag"></i>
+                  @if (Auth::user()->person)
+                  {{ Auth::user()->person->full_name }}
+                  <br>
+                  @else
+                    {{ Auth::user()->email }}
+                  @endif
+                </a>
+              </li>
               <li>
                 <a href="{{ route('selfedit') }}">
                   @lang('messages.edit_profile')
@@ -235,20 +249,13 @@
 
         <li class="dropdown">
           <a href="{{ url('docs')}}">
-            @lang('messages.help')
+            <i class="fas fa-question-circle fa-lg"></i>
           </a>
         </li>
 
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-              @php
-                if (Session::has('applocale')) {
-                  $flag_class = "flag-icon flag-icon-".Config::get('languages_flags')[Session::get('applocale')];
-                } else {
-                  $flag_class = "flag-icon flag-icon-".array_values(Config::get('languages_flags'))[0];
-                }
-              @endphp
-              <span class="{{$flag_class}}"></span>
+              <i class="fas fa-language fa-lg"></i>
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
@@ -260,25 +267,14 @@
                   @else
                     <a href="{{ url('welcome/'.$lang) }}">
                   @endif
-                    <span class="flag-icon flag-icon-{{ Config::get('languages_flags')[$lang]}}"></span>
                     {{ $language }}</a></li>
                 @endif
               @endforeach
             </ul>
           </li>
-
-
         </ul>
-
-
-
       </div>
     </div>
-
-
-
-
-
   </nav>
   @if (session('status'))
     <div class="col-sm-5 col-sm-offset-3 alert alert-success"><!-- TODO: positioning! -->

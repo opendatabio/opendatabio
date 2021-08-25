@@ -12,7 +12,8 @@ use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
 use DB;
-use App\Models\Voucher;
+use App\Models\Dataset;
+use App\Models\Project;
 use Lang;
 use Log;
 use Auth;
@@ -98,8 +99,8 @@ class LocationsDataTable extends DataTable
           $urlShowAllMedia = "media/".$location->id."/locations";
           return '<a href="'.url($urlShowAllMedia).'">'.$mediaCount.'</a>';
         })
-        ->addColumn('latitude', function ($location) {return $location->latitudeSimple; })
-        ->addColumn('longitude', function ($location) {return $location->longitudeSimple; })
+        //->addColumn('latitude', function ($location) {return $location->latitudeSimple; })
+        //->addColumn('longitude', function ($location) {return $location->longitudeSimple; })
         ->addColumn('parent', function ($location) {
             if (null != $location->parent_id) {
               if ($this->project) {
@@ -117,7 +118,16 @@ class LocationsDataTable extends DataTable
         ->addColumn('select_locations',  function ($location) {
             return $location->id;
         })
-        ->rawColumns(['name', 'media', 'individuals','vouchers', 'measurements','latitude','longitude','taxons','parent']);
+        ->addColumn('dimensions',  function ($location) {
+            if ($location->x and $location->y) {
+              if ($location->startx and $location->starty) {
+                  return $location->x." x ".$location->y." [".Lang::get('messages.start').": X: ".$location->startx." Y: ".$location->starty."]";
+              }
+              return $location->x." x ".$location->y;
+            }
+            return null;
+        })
+        ->rawColumns(['name', 'media', 'individuals','vouchers', 'measurements','taxons','parent']);
     }
 
     /**
@@ -140,37 +150,26 @@ class LocationsDataTable extends DataTable
             'locations.y',
             'locations.startx',
             'locations.starty',
-        ])->withCount(['measurements'])->noWorld();
-
+        ])->noWorld();
+        /*->addSelect(
+            DB::raw('ST_AsText(geom) as geom'),
+            DB::raw("IF(ST_GeometryType(geom) like '%Polygon%',ST_Area(geom), null) as area_raw"),
+            DB::raw("ST_AsText(ST_Centroid(geom)) as centroid_raw"),
+            DB::raw("IF(ST_GeometryType(geom) like '%linestring%',ST_AsText(ST_StartPoint(geom)), null) as start_point"),
+        )->withCount(['measurements'])->noWorld();
+        */
         if ($this->project) {
-          /*
-          $query->whereHas('summary_counts',function($count) {
-            $count->where('scope_id',"=",$this->project)->where('scope_type',"=","App\Models\Project")->where('value',">",0);
-          });
-          */
-          $query->whereHas('individuals',function($ind) {
-            $ind->where('project_id',$this->project);
-          });
+          $locations_ids = Project::findOrFail($this->project)->all_locations_ids();
+          $query->whereIn('id',$locations_ids);
         }
         if ($this->dataset) {
-          $query->whereHas('individuals',function($ind) {
-            $ind->whereHas('measurements', function($mea) {
-              $mea->where('dataset_id',$this->dataset);});
-          });
-          $query->orWhereHas('vouchers',function($ind) {
-            $ind->whereHas('measurements', function($mea) {
-              $mea->where('dataset_id',$this->dataset);});
-          });
-          $query->orWhereHas('measurements',function($mea) {
-            $mea->where('dataset_id',$this->dataset);
-          });
+          $locations_ids = Dataset::findOrFail($this->dataset)->all_locations_ids();
+          $query->whereIn('id',$locations_ids);
         }
-
         if ($this->location) {
-            $location = Location::withoutGeom()->findOrFail($this->location);
+            $location = Location::select(['id','lft','rgt'])->findOrFail($this->location);
             $query = $query->where('lft','>',$location->lft)->where('rgt','<',$location->rgt);
         }
-
         if ($this->request()->has('adm_level')) {
           $adm_level =  (int) $this->request()->get('adm_level');
           if ($adm_level>0) {
@@ -200,7 +199,7 @@ class LocationsDataTable extends DataTable
           $title_level  .= '</select>';
         }
         if (Auth::user()) {
-          $hidcol = [1,4,10,11,12,13,14,15,16];
+          $hidcol = [1,4,10];
           $buttons = [
               'pageLength',
               'reload',
@@ -242,7 +241,7 @@ class LocationsDataTable extends DataTable
               ],
           ];
         } else {
-          $hidcol = [0,1,4,10,11,12,13,14,15,16];
+          $hidcol = [0,1,4,10];
           $buttons = [
               'pageLength',
               'reload',
@@ -253,7 +252,7 @@ class LocationsDataTable extends DataTable
         return $this->builder()
             ->columns([
                 'select_locations' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
-                'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
+                'id' => ['title' => Lang::get('messages.id'), 'searchable' => true, 'orderable' => true],
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
                 'adm_level' => ['title' => $title_level, 'searchable' => false, 'orderable' => true],
                 'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
@@ -262,13 +261,10 @@ class LocationsDataTable extends DataTable
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
                 'taxons' => ['title' => Lang::get('messages.taxons'), 'searchable' => false, 'orderable' => false],
                 'media' => ['title' => Lang::get('messages.media_files'), 'searchable' => false, 'orderable' => false],
-                'latitude' => ['title' => Lang::get('messages.latitude'), 'searchable' => false, 'orderable' => false],
-                'longitude' => ['title' => Lang::get('messages.longitude'), 'searchable' => false, 'orderable' => false],
-                'altitude' => ['title' => Lang::get('messages.altitude'), 'searchable' => false, 'orderable' => false],
-                'x' => ['title' => Lang::get('messages.dimensions').' X', 'searchable' => false, 'orderable' => false],
-                'y' => ['title' => Lang::get('messages.dimensions').' Y', 'searchable' => false, 'orderable' => false],
-                'startx' => ['title' => Lang::get('messages.start').' X', 'searchable' => false, 'orderable' => false],
-                'starty' => ['title' => Lang::get('messages.start').' Y', 'searchable' => false, 'orderable' => false],
+                //'latitude' => ['title' => Lang::get('messages.latitude'), 'searchable' => false, 'orderable' => false],
+                //'longitude' => ['title' => Lang::get('messages.longitude'), 'searchable' => false, 'orderable' => false],
+                //'altitude' => ['title' => Lang::get('messages.altitude'), 'searchable' => false, 'orderable' => false],
+                'dimensions' => ['title' => Lang::get('messages.dimensions'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',
@@ -285,7 +281,7 @@ class LocationsDataTable extends DataTable
                   ],
                   [
                   "width" => "20%",
-                  "targets" => [1]
+                  "targets" => [2]
                   ],
                   [
                     'targets' => 0,

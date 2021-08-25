@@ -49,10 +49,10 @@ class IndividualsDataTable extends DataTable
               $query->whereRaw($sql);
             }
         })
-        ->addColumn('project', function ($individual) { return $individual->project->name; })
+        ->addColumn('dataset', function ($individual) { return $individual->dataset_name; })
         ->addColumn('identification', function ($individual) {
-            return $individual->taxonName == Lang::get('messages.unidentified') ?
-                   $individual->taxonName : '<em>'.htmlspecialchars($individual->taxonName).'</em>';
+            return $individual->scientificName == Lang::get('messages.unidentified') ?
+                   $individual->scientificName : '<em>'.htmlspecialchars($individual->scientificName).'</em>';
         })
         ->addColumn('collectors', function ($individual) {
             $col = $individual->collectors;
@@ -84,16 +84,8 @@ class IndividualsDataTable extends DataTable
      */
     public function query()
     {
-        //
-        $query = Individual::query()->with(['project', 'locations', 'collectors.person'])
-            ->select([
-                'individuals.id',
-                'individuals.tag',
-                'individuals.project_id',
-                'individuals.date',
-                DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),
-                DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'),
-            ]);
+        //->with(['dataset', 'locations', 'collectors.person'])
+        $query = Individual::query()->select(['individuals.id','individuals.tag','individuals.dataset_id','individuals.date',DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'),]);
             //->withCount('measurements','vouchers');
         // customizes the datatable query
         if ($this->location) {
@@ -103,21 +95,27 @@ class IndividualsDataTable extends DataTable
               $q->whereIn('location_id',$locationsids);
             });
         }
-        if ($this->project) {
-            $query = $query->where('project_id', '=', $this->project);
+        if ($this->dataset) {
+            $dataset = $this->dataset;
+            $query = $query->where(function($u) use($dataset) {
+              $u->where('dataset_id', '=', $dataset)->orWhereHas('measurements', function ($q) use ($dataset) {$q->where('dataset_id', '=', $dataset); });
+            });
         }
         if ($this->taxon) {
             $taxons = Taxon::where('id',$this->taxon)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-            $query = $query->whereHas('identification', function ($q) use ($taxons) {$q->whereIn('taxon_id',$taxons); });
+            $query = $query->whereHas('identification', function ($q) use ($taxons) {$q->whereIn('identifications.taxon_id',$taxons); });
         }
         if ($this->person) {
             $person = $this->person;
             $query = $query->whereHas('collectors', function ($q) use ($person) {$q->where('person_id', '=', $person); });
         }
-        if ($this->dataset) {
-            $dataset  = $this->dataset;
-            $query = $query->whereHas('measurements', function ($q) use ($dataset) {$q->where('dataset_id', '=', $dataset); });
-
+        if ($this->project) {
+            $project  = $this->project;
+            $query = $query->whereHas('dataset', function ($q) use ($project) {$q->where('project_id', '=', $project); })->orWhereHas('measurements', function ($q) use ($project) {
+              $q->whereHas('dataset',function($dt) use ($project) {
+                $dt->where('project_id', '=', $project);
+              });
+            });
         }
 
         return $this->applyScopes($query);
@@ -168,7 +166,7 @@ class IndividualsDataTable extends DataTable
                 'date' => ['title' => Lang::get('messages.date'), 'searchable' => false, 'orderable' => true],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => true],
                 'vouchers' => ['title' => Lang::get('messages.voucher'), 'searchable' => false, 'orderable' => false],
-                'project' => ['title' => Lang::get('messages.project'), 'searchable' => false, 'orderable' => false],
+                'dataset' => ['title' => Lang::get('messages.dataset'), 'searchable' => false, 'orderable' => false],
             ])
             ->parameters([
                 'dom' => 'Bfrtip',

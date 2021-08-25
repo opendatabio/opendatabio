@@ -9,6 +9,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use Response;
+
 use App\DataTables\ProjectsDataTable;
 use App\Models\Project;
 use App\Models\Dataset;
@@ -29,6 +31,20 @@ use App\DataTables\ActivityDataTable;
 
 class ProjectController extends Controller
 {
+
+
+    // Functions for autocompleting project
+    // filter by those the user is an admin or collabs
+    public function autocomplete(Request $request)
+    {
+        $projects = Auth::user()->projects()->where('name', 'LIKE', ['%'.$request->input('query').'%'])
+            ->wherePivot('access_level',">",Project::VIEWER)
+            ->selectRaw('projects.id as data, name as value')
+            ->orderBy('name', 'ASC')
+            ->get();
+        return Response::json(['suggestions' => $projects]);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -82,46 +98,27 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-
-
         $message = "";
         $this->authorize('create', Project::class);
         $fullusers = User::where('access_level', '=', User::USER)
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
-        $licenses = implode(',',config('app.creativecommons_licenses'));
         $mimes = 'mimes:gif,jpeg,png';
         $this->validate($request, [
             'name' => 'required|string|max:191',
-            'privacy' => 'required|integer',
             'admins' => 'required|array|min:1',
             'admins.*' => 'numeric|in:'.$fullusers,
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:'.$fullusers,
             'url' => 'nullable|regex:/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/',
             'title' => 'nullable|string|max:191',
-            'license' => 'nullable|string|max:191|in:'.$licenses,
             'logo' => 'file|nullable|'.$mimes,
         ]);
-        //add version to license field
-        $license = null;
-        if (isset($request->license)) {
-          if ($request->license != "CC0") {
-              //THEN TITLE AND AUTHORS ARE required
-              if (!isset($request->title) or !isset($request->authors)) {
-                $message .= Lang::get('messages.missing_project_title_author');
-                return redirect('projects/'.$project->id)->withStatus(Lang::get('messages.stored')." ".$message);
-              }
-          }
-          $version = (null != $request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
-          $license = $request->license." ".$version;
-        }
         if (filter_var($request->url, FILTER_VALIDATE_URL) !== false) {
           $request->url = null;
           $message .= Lang::get('messages.invalid_url');
         }
-        $data = $request->only(['name', 'description', 'privacy','details', 'url','license','title','policy']);
-        $data['license'] = $license;
+        $data = $request->only(['name', 'description', 'details', 'url','title']);
         $project = new Project($data);
         $project->save(); // needed to generate an id?
         $project->setusers($request->viewers, $request->collabs, $request->admins);
@@ -149,7 +146,7 @@ class ProjectController extends Controller
               $dataset->authors()->save($theauthor);
               $first = false;
           }
-          }
+        }
         return redirect('projects/'.$project->id)->withStatus(Lang::get('messages.stored')." ".$message);
     }
 
@@ -215,49 +212,27 @@ class ProjectController extends Controller
      */
     public function update(Request $request, $id)
     {
-
-
-
         $project = Project::findOrFail($id);
         $this->authorize('update', $project);
         $fullusers = User::where('access_level', '=', User::USER)
             ->orWhere('access_level', '=', User::ADMIN)->get()->pluck('id');
         $fullusers = implode(',', $fullusers->all());
         $message = "";
-        $licenses = implode(',',config('app.creativecommons_licenses'));
         $mimes = 'mimes:gif,jpeg,png';
         $this->validate($request, [
             'name' => 'required|string|max:191',
-            'privacy' => 'required|integer',
             'admins' => 'required|array|min:1',
             'admins.*' => 'numeric|in:'.$fullusers,
             'collabs' => 'nullable|array',
             'collabs.*' => 'numeric|in:'.$fullusers,
             'title' => 'nullable|string|max:191',
-            'license' => 'nullable|string|max:191|in:'.$licenses,
             'logo' => 'file|nullable|'.$mimes,
         ]);
-        /*
         if (filter_var($request->url, FILTER_VALIDATE_URL) !== false) {
           $request->url = null;
           $message .= Lang::get('messages.invalid_url');
         }
-        */
-        //add version to license field
-        $license = null;
-        if (isset($request->license)) {
-          if ($request->license != "CC0") {
-              //THEN TITLE AND AUTHORS ARE required
-              if (!isset($request->title) or !isset($request->authors)) {
-                $message .= Lang::get('messages.missing_project_title_author');
-                return redirect('projects/'.$id)->withStatus(Lang::get('messages.stored')." ".$message);
-              }
-          }
-          $version = isset($request->license_version) ? (string) $request->license_version : config('app.creativecommons_version')[0];
-          $license = $request->license." ".$version;
-        }
-        $data = $request->only(['name', 'description', 'privacy','details','url','title','license','policy']);
-        $data['license'] = $license;
+        $data = $request->only(['name', 'description', 'details','url','title']);
         $project->update($data);
         $project->setusers($request->viewers, $request->collabs, $request->admins);
         $project->tags()->sync($request->tags);

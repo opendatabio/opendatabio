@@ -10,7 +10,8 @@ namespace App\DataTables;
 use App\Models\ODBTrait;
 use App\Models\UserTranslation;
 use Lang;
-
+use DB;
+use Auth;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
@@ -43,6 +44,9 @@ class TraitsDataTable extends DataTable
             //$translations = UserTranslation::where('translation', 'like', '%'.$keyword.'%')->where('translatable_type','like','%ODBTrait%')->get()->pluck('translatable_id')->toArray();
             //$query->whereIn('id', $translations);
         })
+        ->addColumn('select',  function ($odbtrait) {
+            return $odbtrait->id;
+        })
         ->rawColumns(['name','measurements']);
 
     }
@@ -56,6 +60,13 @@ class TraitsDataTable extends DataTable
     {
       $query = ODBTrait::query()->with(['translations','categories.translations'])->withCount("measurements");
       //->orderBy('export_name', 'asc');
+
+      if ($this->request()->has('type')) {
+        $type =  (int) $this->request()->get('type');
+        if ($type>0) {
+          $query = $query->where('type',$type);
+        }
+      }
       return $this->applyScopes($query);
     }
 
@@ -66,12 +77,51 @@ class TraitsDataTable extends DataTable
      */
     public function html()
     {
+
+        $trait_types =  DB::table('traits')->selectRaw('DISTINCT type')->cursor()->pluck('type')->toArray();
+        $title_type = Lang::get('messages.type');
+        if (count($trait_types)) {
+          $title_type  = Lang::get('messages.type').'<select name="type" id="trait_type" ><option value="">'.Lang::get('messages.all').'</option>';
+          foreach ($trait_types as $type) {
+                 $title_type  .= '<option value="'.$type.'" >'.Lang::get('levels.traittype.' . $type).'</option>';
+          }
+          $title_type  .= '</select>';
+        }
+
+        if (Auth::user()) {
+          $hidcol = [1,2,5];
+          $buttons = [
+              'pageLength',
+              'reload',
+              ['extend' => 'colvis',  'columns' => ':gt(0)'],
+              [
+                'text' => Lang::get('datatables.export'),
+                'action' => "function () {
+                  var isvisible = document.getElementById('export_pannel').style.display;
+                  if (isvisible == 'none') {
+                    document.getElementById('export_pannel').style.display = 'block';
+                  } else {
+                      document.getElementById('export_pannel').style.display = 'none';
+                  }
+                }",
+              ],
+            ];
+
+        } else {
+          $hidcol = [0,1,2,5];
+          $buttons = [
+              'pageLength',
+              'reload',
+              ['extend' => 'colvis',  'columns' => ':gt(0)'],
+            ];
+        }
         return $this->builder()
             ->columns([
+                'select' => ['title' => '', 'searchable' => false, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'export_name' => ['title' => Lang::get('messages.export_name'), 'searchable' => false, 'orderable' => true],
                 'name' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => false],
-                'type' => ['title' => Lang::get('messages.type'), 'searchable' => false, 'orderable' => true],
+                'type' => ['title' => $title_type, 'searchable' => false, 'orderable' => true],
                 'details' => ['title' => Lang::get('messages.details'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],
             ])
@@ -79,17 +129,22 @@ class TraitsDataTable extends DataTable
                 'dom' => 'Bfrtip',
                 'language' => DataTableTranslator::language(),
                 'order' => [[0, 'asc']],
-                'buttons' => [
-                    'csv',
-                    'excel',
-                    'print',
-                    'reload',
-                    ['extend' => 'colvis'],
-                ],
-                'columnDefs' => [[
-                    'targets' => [0,1],
+                'buttons' =>   $buttons,
+                'columnDefs' => [
+                  [
+                    'targets' => $hidcol,
                     'visible' => false,
-                ]],
+                  ],
+                  [
+                    'targets' => 0,
+                    'checkboxes' => [
+                    'selectRow' => true
+                    ]
+                  ],
+              ],
+              'select' => [
+                    'style' => 'multi',
+              ]
             ]);
     }
 

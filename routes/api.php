@@ -30,6 +30,11 @@ $v0api = function () {
     Route::get('individuals', '\App\Http\Api\v0\IndividualController@index');
     Route::post('individuals', '\App\Http\Api\v0\IndividualController@store');
 
+    Route::get('individual-locations', '\App\Http\Api\v0\IndividualLocationController@index');
+    Route::post('individual-locations', '\App\Http\Api\v0\IndividualLocationController@store');
+
+    Route::get('media', '\App\Http\Api\v0\MediaController@index');
+
     Route::get('jobs', '\App\Http\Api\v0\UserJobController@index');
 
     Route::get('languages', '\App\Http\Api\v0\LanguageController@index');

@@ -220,39 +220,24 @@
 </div>
 
 
-<!-- PROJECT -->
+<!-- dataset -->
 <div class="form-group">
-    <label for="project" class="col-sm-3 control-label">
-      @lang('messages.project')
+    <label for="dataset" class="col-sm-3 control-label ">
+      @lang('messages.dataset')
     </label>
-    <a data-toggle="collapse" href="#project_hint" class="btn btn-default">?</a>
+    <a data-toggle="collapse" href="#dataset_hint" class="btn btn-default">?</a>
     <div class="col-sm-6">
-       @if (count($projects))
-         @php
-         $selected = old('project_id', isset($media) ? $media->project_id : (Auth::user()->defaultProject ? Auth::user()->defaultProject->id : null));
-         @endphp
-	        <select name="project_id" id="project_id" class="form-control" >
-            <option value="">@lang('messages.select')</option>
-	           @foreach ($projects as $project)
-		             <option value="{{$project->id}}" {{ $project->id == $selected ? 'selected' : '' }}>
-                   {{ $project->name }}
-		             </option>
-	           @endforeach
-	        </select>
-        @else
-          <div class="alert alert-warning">
-            @lang ('messages.no_registered_projects')
-          </div>
-        @endif
+      <input type="text" name="dataset_autocomplete" id="dataset_autocomplete" class="form-control autocomplete"
+      value="{{ old('dataset_autocomplete', (isset($media) and $media->dataset_id) ? $media->dataset->name : null) }}">
+      <input type="hidden" name="dataset_id" id="dataset_id"
+      value="{{ old('dataset_id', isset($media) ? $media->dataset_id : null) }}">
     </div>
     <div class="col-sm-12">
-      <div id="project_hint" class="panel-collapse collapse">
-	       @lang('messages.media_project_hint')
+      <div id="dataset_hint" class="panel-collapse collapse">
+	       @lang('messages.media_dataset_hint')
        </div>
      </div>
 </div>
-
-
 
 <div class="form-group" >
   <label for="date" class="col-sm-3 control-label">@lang('messages.date')</label>
@@ -312,6 +297,9 @@
 {!! Multiselect::scripts('collector', url('persons/autocomplete'), ['noSuggestionNotice' => Lang::get('messages.noresults')]) !!}
 <script>
 $(document).ready(function() {
+
+$("#dataset_autocomplete").odbAutocomplete("{{url('datasets/autocomplete')}}","#dataset_id", "@lang('messages.noresults')");
+
 /* if license is different than public domain, title and authors must be informed */
 /* and sui generis database policies may be included */
 $('#license').on('change',function() {

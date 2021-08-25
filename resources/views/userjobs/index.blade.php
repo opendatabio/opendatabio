@@ -22,6 +22,21 @@
                 <div class="panel panel-default">
                     <div class="panel-heading">
 			@lang('messages.registered_userjobs')
+      @if(count($jobs)>0)
+      &nbsp;&nbsp;
+      <div style='float:right;'>
+          <form action="{{ url('userjobs/purge') }}" method="POST">
+          {{ csrf_field() }}
+          <button type="submit" class="btn btn-danger">
+            <i class="glyphicon glyphicon-trash unstyle"></i> @lang ('messages.remove_all')
+          </button>
+          </form>
+     </div>
+     <br>
+     <br>
+     @endif
+
+
                     </div>
 
                     <div class="panel-body">
@@ -84,7 +99,7 @@
                                 @endforeach
                             </tbody>
                         </table>
-			 {{ $jobs->links() }} 
+			 {{ $jobs->links() }}
                     </div>
                 </div>
         </div>

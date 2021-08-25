@@ -12,6 +12,7 @@ use App\Models\Location;
 use App\Models\Measurement;
 use Baum\Node;
 use App\Models\Project;
+use App\Models\Dataset;
 use Yajra\DataTables\Services\DataTable;
 use Yajra\DataTables\EloquentDataTable;
 use Yajra\DataTables\DataTables;
@@ -35,11 +36,8 @@ class TaxonsDataTable extends DataTable
         ->filterColumn('fullname', function ($query, $keyword) {
             $query->whereRaw('odb_txname(name, level, parent_id) like ?', ["%".$keyword."%"]);
         })
-        ->editColumn('level', function ($taxon) { return $taxon->levelName; })
-        ->addColumn('authorSimple', function ($taxon) { return $taxon->authorSimple; })
-        //->filterColumn('authorSimple', function ($query, $keyword) {
-            //$query->where('persons.full_name', 'like', ["%{$keyword}%"])->orWhere('author', 'like', ["%{$keyword}%"]);
-        //})
+        ->editColumn('taxonRank', function ($taxon) { return $taxon->taxonRank; })
+        ->addColumn('scientificNameAuthorship', function ($taxon) { return $taxon->scientificNameAuthorship; })
         ->addColumn('individuals', function ($taxon) {
           if ($this->project) {
             $individual_count = $taxon->getCount('App\Models\Project',$this->project,'individuals');
@@ -116,19 +114,19 @@ class TaxonsDataTable extends DataTable
         ->addColumn('external', function ($taxon) {
             $ret = '';
             if ($taxon->mobot) {
-                $ret .= '<a href="http://tropicos.org/Name/'.$taxon->mobot.'"  data-toggle="tooltip" rel="tooltip" data-placement="right" title="MOBOT-Tropicos.org" target="_blank"><img src="'.asset('images/TropicosLogo.gif').'"  height="24px"></a>&nbsp;"';
+                $ret .= '<a href="'.config("external-apis.tropicos.linkto").$taxon->mobot.'"  data-toggle="tooltip" rel="tooltip" data-placement="right" title="MOBOT-Tropicos.org" target="_blank"><img src="'.asset('images/TropicosLogo.gif').'"  height="24px"></a>&nbsp;"';
             }
             if ($taxon->ipni) {
-                $ret .= '<a href="http://www.ipni.org/ipni/idPlantNameSearch.do?id='.$taxon->ipni.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="International Plant Names Index - IPNI" target="_blank"><img src="'.asset('images/IpniLogo.png').'" height="24px"></a>&nbsp;';
+                $ret .= '<a href="'.config("external-apis.ipni.linkto").$taxon->ipni.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="International Plant Names Index - IPNI" target="_blank"><img src="'.asset('images/IpniLogo.png').'" height="24px"></a>&nbsp;';
             }
             if ($taxon->mycobank) {
-                $ret .= '<a href="http://www.mycobank.org/Biolomics.aspx?Table=Mycobank&Rec='.$taxon->mycobank.'&Fields=All" data-toggle="tooltip" rel="tooltip" data-placement="right" title="MycoBank.org" target="_blank"><img src="'.asset('images/MBLogo.png').'" height="24px"></a>&nbsp;';
+                $ret .= '<a href="'.config("external-apis.mycobank.linkto").$taxon->mycobank.'&Fields=All" data-toggle="tooltip" rel="tooltip" data-placement="right" title="MycoBank.org" target="_blank"><img src="'.asset('images/MBLogo.png').'" height="24px"></a>&nbsp;';
             }
             if ($taxon->zoobank) {
-                $ret .= '<a href="http://zoobank.org/NomenclaturalActs/'.$taxon->zoobank.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="ZooBank.org" target="_blank"><img src="'.asset('images/zoobank.png').'" height="24px"></a>&nbsp;';
+                $ret .= '<a href="'.config("external-apis.zoobank.linkto").$taxon->zoobank.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="ZooBank.org" target="_blank"><img src="'.asset('images/zoobank.png').'" height="24px"></a>&nbsp;';
             }
             if ($taxon->gbif) {
-                $ret .= '<a href="https://www.gbif.org/species/'.$taxon->gbif.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="GBIF.org" target="_blank"><img src="'.asset('images/GBIF-2015-mark.png').'" height="24px"></a>&nbsp;';
+                $ret .= '<a href="'.config("external-apis.gbif.linkto").$taxon->gbif.'" data-toggle="tooltip" rel="tooltip" data-placement="right" title="GBIF.org" target="_blank"><img src="'.asset('images/GBIF-2015-mark.png').'" height="24px"></a>&nbsp;';
             }
             return $ret;
         })
@@ -157,24 +155,24 @@ class TaxonsDataTable extends DataTable
                 'level',
                 'valid',
             ])
-            ->addSelect(DB::raw('odb_txname(name, level, parent_id) as fullname'))->noRoot();
+            ->addSelect(
+              DB::raw('odb_txname(name, level, parent_id) as fullname'),
+              DB::raw('odb_txparent(taxons.lft,120) as family')
+            )->noRoot();
 
         if ($this->project) {
-            $query->whereHas('identifications',function($object) { $object->whereHasMorph('object',["App\Models\Individual"],function($query) { $query->withoutGlobalScopes()->where('project_id',$this->project);});});
+            $project = Project::findOrFail($this->project);
+            $taxon_ids = $project->all_taxons_ids();
+            if (count($taxon_ids)>0) {
+              $query->whereIn('id',$taxon_ids);
+            }
         }
         if ($this->dataset) {
-              $query->whereHas('vouchers',function($voucher) {
-                  $voucher->withoutGlobalScopes()->whereHas('measurements',
-                      function($measurement) {
-                        $measurement->withoutGlobalScopes()->where('dataset_id',$this->dataset);
-                      });
-                    })->orWhereHas('individuals', function($individual) {
-                        $individual->withoutGlobalScopes()->whereHas('measurements',
-                            function($measurement) {
-                              $measurement->withoutGlobalScopes()->where('dataset_id',$this->dataset);
-                            });
-                          });
-
+          $dataset = Dataset::findOrFail($this->dataset);
+          $taxon_ids = $dataset->all_taxons_ids();
+          if (count($taxon_ids)>0) {
+            $query->whereIn('id',$taxon_ids);
+          }
         }
         if ($this->taxon) {
             $taxon = Taxon::where('id',$this->taxon)->cursor();
@@ -187,20 +185,9 @@ class TaxonsDataTable extends DataTable
             $query = $query->where('level',$level);
           }
         }
-
-
         if ($this->location) {
-            $locations_ids = Location::noWorld()->where('id',$this->location)->first()->getDescendantsAndSelf()->pluck('id')->toArray();
-            if (count($locations_ids)>1) {
-              $query->whereHas('summary_counts',function($count) use($locations_ids) {
-                $count->whereIn('scope_id',$locations_ids)->where('scope_type',"App\Models\Location");
-              });
-            } else {
-              //this will be used for leave locations
-              $taxon_ids = Location::where('id',$this->location)->first()->taxonsIDS();
-              $query = $query->whereIn('id',$taxon_ids);
-            }
-
+            $taxon_ids = Location::where('id',$this->location)->first()->all_taxons_ids();
+            $query = $query->whereIn('id',$taxon_ids);
         }
         return $this->applyScopes($query);
     }
@@ -259,10 +246,10 @@ class TaxonsDataTable extends DataTable
                 'select_taxons' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => false],
                 'id' => ['title' => Lang::get('messages.id'), 'searchable' => false, 'orderable' => true],
                 'fullname' => ['title' => Lang::get('messages.name'), 'searchable' => true, 'orderable' => true],
-                'level' => ['title' => $title_level,'searchable' => false, 'orderable' => false],
+                'taxonRank' => ['title' => $title_level,'searchable' => false, 'orderable' => false],
                 'parent' => ['title' => Lang::get('messages.parent'), 'searchable' => false, 'orderable' => false],
                 'family' => ['title' => Lang::get('messages.family'), 'searchable' => false, 'orderable' => false],
-                'authorSimple' => ['title' => Lang::get('messages.author'), 'searchable' => false, 'orderable' => false],
+                'scientificNameAuthorship' => ['title' => Lang::get('messages.author'), 'searchable' => false, 'orderable' => false],
                 'individuals' => ['title' => Lang::get('messages.individuals'), 'searchable' => false, 'orderable' => false],
                 'vouchers' => ['title' => Lang::get('messages.vouchers'), 'searchable' => false, 'orderable' => false],
                 'measurements' => ['title' => Lang::get('messages.measurements'), 'searchable' => false, 'orderable' => false],

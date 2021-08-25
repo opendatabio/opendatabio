@@ -9,7 +9,7 @@ namespace App\Jobs;
 
 use App\Models\Individual;
 use App\Models\Location;
-use App\Models\Project;
+use App\Models\Dataset;
 use App\Models\ODBFunctions;
 use Illuminate\Http\Request;
 
@@ -49,7 +49,7 @@ class ImportIndividuals extends ImportCollectable
 
       //if these fields are provided in header, remove from there
       $this->requiredKeys = $this->removeHeaderSuppliedKeys(['tag','collector','date']);
-      //if collector and/or project  are supplied in header, they will be validated here
+      //if collector and/or dataset  are supplied in header, they will be validated here
       $this->validateHeader('collector');
 
       foreach ($data as $individual) {
@@ -74,8 +74,9 @@ class ImportIndividuals extends ImportCollectable
         if (!$this->hasRequiredKeys($this->requiredKeys, $individual)) {
             return false;
         }
-        //project must be informed
-        if (!$this->validateProject($individual)) {
+        //dataset may have been informed, will fail only if informed not FOUND
+        //else will place individual in its own default dataset
+        if (!$this->validateDataset($individual)) {
             return false;
         }
 
@@ -165,7 +166,7 @@ class ImportIndividuals extends ImportCollectable
         /*fields have already been validate */
         $store_request = [
           'from_the_api' => 1,  /* this to prevents the controller from redirecting */
-          'project_id' => $individual['project'],
+          'dataset_id' => $individual['dataset'],
           'tag' => (string) $individual['tag'],
           'notes' => array_key_exists('notes', $individual) ? $individual['notes'] : null,
           'date' => $individual['date'],
@@ -205,7 +206,7 @@ class ImportIndividuals extends ImportCollectable
         if (isset($individual['biocollections'])) {
             foreach ($individual['biocollections'] as $voucher) {
               $voucher['individual_id'] = $savedindividual->id;
-              $voucher['project_id'] = $savedindividual->project_id;
+              $voucher['dataset_id'] = $savedindividual->dataset_id;
               $voucher['from_the_api'] = 1;
               //transform info in a request
               $newvoucher = new Request;

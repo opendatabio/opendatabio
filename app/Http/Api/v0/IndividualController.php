@@ -31,11 +31,7 @@ class IndividualController extends Controller
     public function index(Request $request)
     {
       $individuals = Individual::select(
-          'individuals.id',
-          'individuals.tag as individual_tagnumber',
-          'individuals.project_id',
-          'individuals.date as individual_date',
-          'individuals.notes',
+          'individuals.*',
           DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),
           DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'));
         if ($request->id) {
@@ -52,8 +48,8 @@ class IndividualController extends Controller
               $locations = Location::whereIn('id',$locations_ids);
               $locations_ids = Arr::flatten($locations->cursor()->map(function($location) { return $location->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
             }
-            $individuals = $individuals->whereHas('location_first',function($q) use($locations_ids) {
-                $q->whereIn('location_id',$locations_ids);
+            $individuals = $individuals->whereHas('locations',function($q) use($locations_ids) {
+                $q->whereIn('locations.id',$locations_ids);
             });
         }
         if ($request->tag) {
@@ -75,7 +71,7 @@ class IndividualController extends Controller
               $taxon_ids = Arr::flatten($taxons->cursor()->map(function($taxon) { return $taxon->getDescendantsAndSelf()->pluck('id')->toArray();})->toArray());
             }
             //the individual identification is directly linked to their vouchers
-            $individuals - $individuals->whereHas('identification', function ($q) use ($taxon_ids) {
+            $individuals = $individuals->whereHas('identification', function ($q) use ($taxon_ids) {
               $q->whereIn('taxon_id',$taxon_ids);
             });
         }
@@ -109,19 +105,11 @@ class IndividualController extends Controller
         }
 
         $fields = ($request->fields ? $request->fields : 'simple');
-        $simple = ['id','fullname','all_collectors','individual_tagnumber','individual_date','taxon_name','taxon_name_modifier','taxon_family','location_longitude','location_latitude','coordinates_precision','location_name','location_parent','x','y','project_name','notes'];
-
-        $all = ['id','fullname','main_collector','individual_tagnumber','all_collectors','individual_date','taxon_name','taxon_name_modifier','taxon_name_with_author','taxon_family','identification_date','identified_by','identification_notes','location_name','location_fullname','location_parent','location_longitude','location_latitude','coordinates_precision','project_name','notes','x_in_parent_location','y_in_parent_location','relativePosition','x','y','angle','distance'];
-
-
-        //include here to be able to add mutators and categories
-        if ('all' == $fields) {
-          //  $keys = array_keys($individuals->first()->toArray());
-            //$fields = array_merge($all,$keys);
-            //$fields =  implode(',',$fields);
-            $fields =  implode(',',$all);
+        $possible_fields = config('api-fields.individuals');
+        $field_sets = array_keys($possible_fields);
+        if (in_array($fields,$field_sets)) {
+            $fields = implode(",",$possible_fields[$fields]);
         }
-
         if($request->with_locations) {
           $fields = $fields.",locations";
         }
@@ -133,7 +121,7 @@ class IndividualController extends Controller
           $individuals = $individuals->cursor()->pluck('id')->toArray();
         } else {
           $individuals = $individuals->cursor();
-          $individuals = $this->setFields($individuals, $fields, $simple);
+          $individuals = $this->setFields($individuals, $fields, null);
         }
         return $this->wrap_response($individuals);
     }

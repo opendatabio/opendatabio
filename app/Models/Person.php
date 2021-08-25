@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use FuzzyWuzzy\Fuzz;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\Traits\LogsActivity;
+use CodeInc\StripAccents\StripAccents;
 
 class Person extends Model
 {
@@ -60,6 +61,16 @@ class Person extends Model
 
         return join(' ', $tarr);
     }
+
+
+    public function getNormalizedAbbreviationAttribute()
+    {
+      $normalized_abbreviation = trim(mb_strtoupper($this->abbreviation));
+      $normalized_abbreviation = StripAccents::strip( (string) $normalized_abbreviation);
+      $normalized_abbreviation = preg_replace('/[^a-zA-Z0-9]/', '', $normalized_abbreviation);
+      return $normalized_abbreviation;
+    }
+
 
     // Looks for possible duplication of persons. Returns a collection of possible dupes
     // perhaps instead of such complicated test, just compare the first letters of each word

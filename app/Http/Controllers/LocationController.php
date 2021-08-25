@@ -12,6 +12,7 @@ use Illuminate\Validation\Rule;
 use App\Models\Location;
 use App\Models\Project;
 use App\Models\Dataset;
+use App\Models\LocationRelated;
 use App\DataTables\LocationsDataTable;
 use Validator;
 use DB;
@@ -44,6 +45,9 @@ class LocationController extends Controller
             case 'ucs':
                 $locations = $locations->ucs();
                 break;
+            case 'related':
+                $locations = $locations->related();
+                break;
             case 'exceptucs':
                 $locations = $locations->exceptUcs();
                 break;
@@ -60,6 +64,12 @@ class LocationController extends Controller
         });
 
         return Response::json(['suggestions' => $locations]);
+    }
+
+    public function autocomplete_related(Request $request)
+    {
+      $request->scope = 'related';
+      return $this->autocomplete($request);
     }
 
     public function autodetect(Request $request)
@@ -80,6 +90,7 @@ false,0);
             return Response::json(['error' => Lang::get('messages.autodetect_error')]);
         }
 
+        /*
         $uc_ac = null;
         $uc_id = null;
         if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_POINT == $request->adm_level) {
@@ -89,6 +100,9 @@ false,0);
                 $uc_id = $uc->id;
             }
         }
+        */
+        //detect whether de the location is within a UC, TI, ENV location type
+        $related_locations = Location::detectRelated($geom,$request->adm_level);
 
         //does an exact match exists
         $loc_id =null;
@@ -106,10 +120,11 @@ false,0);
           }
         }
 
-
+        //$uc_ac, $uc_id,
         return Response::json(
         [
-          'detectdata' => [$parent->fullname, $parent->id, $uc_ac, $uc_id,$return_geom],
+          'detectdata' => [$parent->fullname, $parent->id,$return_geom],
+          'detectrelated' => $related_locations,
           'detectedLocation' => [$loc_id,$loc_name,$loc_level],
         ]);
     }
@@ -156,9 +171,9 @@ false,0);
     {
         //$locations = Location::noWorld()->get();
         //$uc_list = Location::ucs()->get();
-
+        $related_locations = Location::select(['id','name'])->related();
         //return view('locations.create', compact('locations', 'uc_list'));
-        return view('locations.create');
+        return view('locations.create',compact('related_locations'));
     }
 
     // Validates the user input for CREATE or UPDATE requests
@@ -306,25 +321,21 @@ false,0);
             }
 
             //4. uc validation
-            if ($request->uc_id > 1)
+            if ($request->related_locations)
             {
-              $uc_parent = Location::withGeom()->findOrFail($request->uc_id);
-              /* config buffer */
-              $buffer_dd = config('app.location_parent_buffer');
-
-              //test without buffer
-              $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->uc_id]);
-
-              //if not valid, test with buffer
-              if (1 != $valid[0]->valid) {
-                  $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), ST_BUFFER(geom,?)) as valid FROM locations where id = ?', [$geom, $buffer_dd, $request->uc_id]);
+              $valid_related = [];
+              foreach($request->related_locations as $related)
+              {
+                $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $related]);
+                if ($valid[0]->valid) {
+                  $valid_related[] = $related;
+                }
               }
-              if (1 != $valid[0]->valid) {
-                $validator->errors()->add('geom', Lang::get('messages.geom_uc_error'));
+              if (count($valid_related) < count($request->related_locations)) {
+                $validator->errors()->add('related_locations', Lang::get('messages.geom_other_parents_error'));
                 return;
               }
             }
-
         });
 
 
@@ -348,10 +359,10 @@ false,0);
                 ->withInput();
         }
         // checks for duplicates, except if the request is already confirmed
-        if ($request->adm_level > Location::LEVEL_UC and !$request->confirm and 'point' == $request->geom_type) {
+        if (!$request->confirm and 'point' == $request->geom_type) {
             $dupes = Location::withDistance(Location::geomFromParts($request))->get()
                 ->filter(function ($obj) {
-                    return $obj->distance < 0.001;
+                    return $obj->distance < 0.001 and $obj->geom_type=='point';
                 });
             if (sizeof($dupes)) {
                 $request->flash();
@@ -380,23 +391,31 @@ false,0);
                     'lat1', 'lat2', 'lat3', 'latO',
                     'long1', 'long2', 'long3', 'longO',
                 ]));
-            } else { // others
+            } else { // all others
                 $newloc->geom = $request->geom;
             }
         }
-
         if ($request->parent_id) {
             $newloc->parent_id = $request->parent_id;
         }
-        if (0 === $request->adm_level) {
+        if (2 === $request->adm_level) {
             $world = Location::world();
             $newloc->parent_id = $world->id;
         }
-        if ($request->uc_id and $request->adm_level > Location::LEVEL_UC) {
-            $newloc->uc_id = $request->uc_id;
-        }
         $newloc->save();
+        if (!$request->related_locations) {
+          $related_locations = Location::detectRelated($request->geom,$request->adm_level);
+        } else {
+          $related_locations = $request->related_locations;
+        }
 
+        if ($related_locations) {
+            foreach ($related_locations as $related_id) {
+                $related = new LocationRelated(['related_id' => $related_id]);
+                $newloc->relatedLocations()->save($related);
+            }
+        }
+        $fixed = Location::fixPathAndRelated($newloc->id);
         return redirect('locations/'.$newloc->id)->withStatus(Lang::get('messages.stored'));
     }
 
@@ -417,11 +436,11 @@ false,0);
       {
               if ($request->location_id) {
                 $location = Location::withGeom()->findOrFail($request->location_id);
-                if ($request->individual_id) {
+                //if ($request->individual_id) {
+                    //$location_features = $location->generateFeatureCollection($request->individual_id);
+                //} else {
                     $location_features = $location->generateFeatureCollection($request->individual_id);
-                } else {
-                    $location_features = $location->generateFeatureCollection($request->individual_id);
-                }
+                //}
                 return Response::json(
                 [
                   'features' => $location_features,
@@ -454,8 +473,8 @@ false,0);
         //} else {
         //  $parent = null;
         //}
-        //$media = $location->mediaDescendantsAndSelf();
-        $media = collect([]);
+        $media = $location->mediaDescendantsAndSelf();
+        //$media = collect([]);
         if ($media->count()) {
           $media = $media->paginate(3);
         } else {
@@ -514,9 +533,9 @@ false,0);
         //$locations = Location::all();
         //locations
         //$uc_list = Location::ucs()->ge();
-        $location = Location::select('*')->withGeom()->findOrFail($id);
-
-        return view('locations.create', compact('location'));
+        $related_locations = Location::select(['id','name'])->related();
+        $location = Location::withGeom()->findOrFail($id);
+        return view('locations.create', compact('location','related_locations'));
     }
 
     /**
@@ -607,14 +626,36 @@ false,0);
 
         $location->save();
 
-        //log geometry changes if any
         $newlocation = Location::noWorld()->withGeom()->findOrFail($id);
+        if (!$request->related_locations) {
+          $related_locations = Location::detectRelated($newlocation->geom,$newlocation->adm_level);
+        } else {
+          $related_locations = $request->related_locations;
+        }
+
+        $current = $newlocation->relatedLocations->pluck('related_id');
+        $detach = $current->diff($related_locations)->all();
+        $attach = collect($related_locations)->diff($current)->all();
+        if (count($detach) or count($attach)) {
+            //delete old
+            $newlocation->relatedLocations()->delete();
+            //save new
+            foreach ($related_locations as $related_id) {
+                $related = new LocationRelated(['related_id' => $related_id]);
+                $newlocation->relatedLocations()->save($related);
+            }
+        }
+
+
+        //log geometry changes if any
         if ($newlocation->geom !== $oldlocation->geom) {
+          $fixed = Location::fixPathAndRelated($newlocation->id);
           $tolog = array('attributes' => ['geom' => $newlocation->geom], 'old' => ['geom' => $oldlocation->geom]);
           activity('location')
             ->performedOn($location)
             ->withProperties($tolog)
             ->log('geometry changed');
+
         }
 
         return redirect('locations/'.$id)->withStatus(Lang::get('messages.stored'));
@@ -675,7 +716,12 @@ false,0);
         }
         $newloc->geom = $request->geom;
         $newloc->save();
-
+        if ($request->related_locations) {
+            foreach ($request->related_locations as $related_id) {
+                $related = new LocationRelated(['related_id' => $related_id]);
+                $newloc->relatedLocations()->save($related);
+            }
+        }
         return Response::json(
         [
           'savedLocation' => [$newloc->id,$newloc->searchablename,$newloc->adm_level],

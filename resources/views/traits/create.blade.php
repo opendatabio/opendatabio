@@ -6,23 +6,16 @@
   <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-        <a data-toggle="collapse" href="#help" class="btn btn-default">
-@lang('messages.help')
-</a>
+        @lang('messages.new_trait')
+        &nbsp;&nbsp;
+        <a data-toggle="collapse" href="#help" class="btn btn-default">?</a>
       </h4>
-    </div>
     <div id="help" class="panel-collapse collapse">
-      <div class="panel-body">
-@lang('messages.hint_trait_create')
-      </div>
+      <hr>
+      @lang('messages.hint_trait_create')
     </div>
   </div>
-            <div class="panel panel-default">
-                <div class="panel-heading">
-		@lang('messages.new_trait')
-                </div>
-
-                <div class="panel-body">
+     <div class="panel-body">
                     <!-- Display Validation Errors -->
 		    @include('common.errors')
 
@@ -432,32 +425,32 @@ $(document).ready(function() {
 		switch (adm) {
 			case "0": // numeric
 			case "1": // numeric FALL THROUGH
-				$(".trait-number").show(vel);
 				$(".trait-category").hide(vel);
 				$(".trait-link").hide(vel);
         $(".trait-spectral").hide(vel);
+        $(".trait-number").show(vel);
 				break;
 			case "2": // categories
 			case "3": // categories FALL THROUGH
 				$(".trait-number").hide(vel);
-				$(".trait-category").show(vel);
 				$(".table-ordinal").hide(vel);
 				$(".trait-link").hide(vel);
         $(".trait-spectral").hide(vel);
+        $(".trait-category").show(vel);
 				break;
 			case "4": // ordinal
 				$(".trait-number").hide(vel);
-				$(".trait-category").show(vel);
-				$(".table-ordinal").show(vel);
 				$(".trait-link").hide(vel);
         $(".trait-spectral").hide(vel);
+        $(".trait-category").show(vel);
+				$(".table-ordinal").show(vel);
 				break;
       case "7": // link
 				$(".trait-number").hide(vel);
 				$(".trait-category").hide(vel);
 				$(".table-ordinal").hide(vel);
-				$(".trait-link").show(vel);
         $(".trait-spectral").hide(vel);
+        $(".trait-link").show(vel);
         break;
       case "8": // spectral
         $(".trait-number").hide(vel);

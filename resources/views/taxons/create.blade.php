@@ -70,6 +70,9 @@
                         <i class="fa fa-btn fa-plus"></i>
                         @lang('messages.checkapis')
                       </button>
+                      &nbsp;
+                      <input type="checkbox" name="importparents" id="importparents" >&nbsp;@lang('messages.import_parents')?
+                      &nbsp;
                       <div class="spinner" id="spinner"> </div>
                     </div>
                   </div>
@@ -393,6 +396,11 @@ setFields(0);
 /** Ajax handling for registering taxons */
 $("#checkapis").click(function(e) {
     $( "#spinner" ).css('display', 'inline-block');
+    var parents = $('#importparents').prop("checked");
+    var importparents = 0;
+    if (parents) {
+      importparents = 1;
+    }
     $.ajaxSetup({ // sends the cross-forgery token!
     headers: {
       'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -403,7 +411,10 @@ $("#checkapis").click(function(e) {
         type: "POST",
         url: $('input[name="route-url"]').val(),
         dataType: 'json',
-        data: {'name': $('input[name="name"]').val()},
+        data: {
+          'name': $('input[name="name"]').val(),
+          'importparents': importparents,
+        },
         success: function (data) {
             //alert(data.apidata['author']);
             //console.log(data)
@@ -436,8 +447,13 @@ $("#checkapis").click(function(e) {
                 }
                 $("#bibreference").val(data.apidata["reference"]);
                 if (data.apidata["parent"]) {
-                    $("#parent_id").val(data.apidata["parent"][0]);
-                    $("#parent_autocomplete").val(data.apidata["parent"][1]);
+                    if (data.apidata["parent"][0]) {
+                      $("#parent_id").val(data.apidata["parent"][0]);
+                      $("#parent_autocomplete").val(data.apidata["parent"][1]);
+                    } else {
+                      $("#parent_id").val("");
+                      $("#parent_autocomplete").val("");
+                    }
                 } else {
                     $("#parent_id").val("");
                     $("#parent_autocomplete").val("");

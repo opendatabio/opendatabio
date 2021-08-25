@@ -15,6 +15,7 @@ use App\Models\MeasurementCategory;
 use App\Models\TraitCategory;
 use App\Models\ActivityFunctions;
 use Spatie\Activitylog\Traits\LogsActivity;
+use CodeInc\StripAccents\StripAccents;
 
 
 // class name needs to be different as Trait is a PHP reserved word
@@ -103,7 +104,20 @@ class ODBTrait extends Model
     }
 
 
-
+    public static function validateExportName(&$request)
+    {
+      if (!isset($request->export_name)) {
+        return false;
+      }
+      $export_name = str_replace(" ","",$request->export_name);
+      $export_name = StripAccents::strip( (string) $export_name);
+      preg_match('/^([a-zA-Z0-9]{1}?[a-z0-9|-|_|.]+)*$/', $export_name, $output_array);
+      if ($output_array[0]== $export_name) {
+        $request->export_name = $export_name;
+        return true;
+      }
+      return false;
+    }
 
     // for input validation
     public static function rules($id = null, $merge = [])
@@ -400,5 +414,30 @@ class ODBTrait extends Model
     {
         return $this->belongsTo('App\Models\BibReference', 'bibreference_id');
     }
+
+    public function getMeasurementTypeAttribute()
+    {
+      return $this->export_name;
+    }
+    public function getMeasurementUnitAttribute()
+    {
+      return $this->export_name;
+    }
+    public function getMeasurementMethodAttribute()
+    {
+      /* should be returned in english if present */
+      $lang = 1;
+      $odbtrait_name = $this->translate(0,$lang);
+      $odbtrait_description = $this->translate(1,$lang);
+      if ($this->categories()->count()==0) {
+        return "Name: ".$odbtrait_name." | Definition:".$odbtrait_description;
+      }
+      $categories = $this->categories()->cursor()->map(function($cat) use ($lang){
+        return "CategoryName: ".$cat->translate(0,$lang)." | Definition:".$cat->translate(1,$lang);
+      })->toArray();
+      $categories = implode(" | ",$categories);
+      return "Name: ".$odbtrait_name." | Definition:".$odbtrait_description." | Categories: ".$categories;
+    }
+
 
 }
