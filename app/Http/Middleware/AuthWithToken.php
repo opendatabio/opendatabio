@@ -28,13 +28,13 @@ class AuthWithToken
     public function handle(Request $request, Closure $next)
     {
         $token = $request->header('Authorization');
-        if ($token) {
+        if (!in_array($token,[null,'Bearer token_here'])) {
             $users = User::where('api_token', '=', $token)->get();
             if ($users->count()) {
                 Auth::loginUsingId($users->first()->id);
             } else {
                 return Response::json(
-                    ['error' => 'Authentication failed (token provided is incorrect or expired)'],
+                    ['error' => 'Authentication failed (token '.$token.'] provided is incorrect or expired)'],
                     403);
             }
         } // if no token, proceed anonymously

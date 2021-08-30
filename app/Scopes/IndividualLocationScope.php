@@ -22,7 +22,7 @@ class IndividualLocationScope implements Scope
     {
       // first, the easy cases. No logged in user? can access only public (privacy 2)
       if (is_null(Auth::user())) {
-          return $builder->whereRaw('(individual_location.individual_id IN (SELECT inds.id FROM individuals as inds WHERE inds.dataset_id IS NULL) OR individual_location.individual_id IN (SELECT indvs.id FROM individuals as indvs JOIN datasets as dts ON dts.id=indvs.dataset_id WHERE dts.privacy >='.Dataset::PRIVACY_REGISTERED.'))');
+          return $builder->whereRaw('(individual_location.individual_id IN (SELECT inds.id FROM individuals as inds WHERE inds.dataset_id IS NULL) OR individual_location.individual_id IN (SELECT indvs.id FROM individuals as indvs JOIN datasets as dts ON dts.id=indvs.dataset_id WHERE dts.privacy >='.Dataset::PRIVACY_PUBLIC.'))');
       }
       // superadmins see everything
       if (User::ADMIN == Auth::user()->access_level) {

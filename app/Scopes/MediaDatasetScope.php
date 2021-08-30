@@ -22,7 +22,7 @@ class MediaDatasetScope implements Scope
     {
         // first, the easy cases. No logged in user? can access only public (privacy 2)
         if (is_null(Auth::user())) {
-            return $builder->whereRaw('((media.dataset_id IS NULL) OR media.dataset_id IN (SELECT id FROM datasets WHERE datasets.privacy >='.Dataset::PRIVACY_REGISTERED.'))');
+            return $builder->whereRaw('((media.dataset_id IS NULL) OR media.dataset_id IN (SELECT id FROM datasets WHERE datasets.privacy >='.Dataset::PRIVACY_PUBLIC.'))');
         }
         // superadmins see everything
         if (User::ADMIN == Auth::user()->access_level) {

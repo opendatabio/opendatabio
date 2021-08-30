@@ -53,7 +53,7 @@ class PersonController extends Controller
         if ($fields=="id") {
           $persons = $persons->pluck('id')->toArray();
         } else {
-          $persons = $this->setFields($persons, $fields, $simple);
+          $persons = $this->setFields($persons, $fields, null);
         }
 
         return $this->wrap_response($persons);

@@ -68,7 +68,7 @@ class Voucher extends Model
         static::addGlobalScope('datasetScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->whereRaw('((vouchers.dataset_id IS NULL) OR vouchers.id IN (SELECT p1.id FROM vouchers AS p1 JOIN datasets ON datasets.id = p1.dataset_id WHERE datasets.privacy >='.Dataset::PRIVACY_REGISTERED.'))');
+                return $builder->whereRaw('((vouchers.dataset_id IS NULL) OR vouchers.id IN (SELECT p1.id FROM vouchers AS p1 JOIN datasets ON datasets.id = p1.dataset_id WHERE datasets.privacy >='.Dataset::PRIVACY_PUBLIC.'))');
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {

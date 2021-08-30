@@ -281,7 +281,7 @@ class Measurement extends Model
         static::addGlobalScope('datasetScope', function (Builder $builder) {
             // first, the easy cases. No logged in user?
             if (is_null(Auth::user())) {
-                return $builder->whereRaw("(measurements.dataset_id IN (SELECT dts.id FROM datasets as dts WHERE dts.privacy>='".Dataset::PRIVACY_REGISTERED."'))");
+                return $builder->whereRaw("(measurements.dataset_id IN (SELECT dts.id FROM datasets as dts WHERE dts.privacy>='".Dataset::PRIVACY_PUBLIC."'))");
             }
             // superadmins see everything
             if (User::ADMIN == Auth::user()->access_level) {
