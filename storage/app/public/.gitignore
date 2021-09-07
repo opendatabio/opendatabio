@@ -1,2 +1,5 @@
 *
+!downloads/
+!media/
+!dev-imgs/
 !.gitignore

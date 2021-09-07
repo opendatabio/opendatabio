@@ -1,27 +1,33 @@
-# OpenDataBio Documentação
+# Documentação OpenDataBio
 
-<a href="https://github.com/opendatabio/opendatabio/wiki/home-pt" target="__blank" >
-  <i class="fab fa-github"></i> Documentação disponível no GitHub
-</a>
+> {primary}  Este espaço é reservado para administradores definirem documentação e diretivas personalizadas para usuários de uma instalação específica do OpenDataBio. Por exemplo, este é um espaço para adicionar um **código de conduta** para os usuários, quem contatar para se tornar um usuário pleno, etc.
 
+O <a href="https://opendatabio.github.io" target="__blank" >OpenDataBio site</a>  contém a documentação do software onde você pode encontrar ajuda no uso e instalação do OpenDataBio.
 
-<a name="api_tester"></a>
+Para personalizar os documentos de instalação:
 
-### Testar a API
-
-@if(Auth::user())
-
-Use o formulário abaixo para testar e entender como funciona o acesso aos dados deste repositório usando a GET API, que pode ser usada diretamente no R através do pacote do [OpenDataBio-R](https://github.com/opendatabio/opendatabio-r).
+1. Estes documentos são renderizados usando o pacote laravel [LaRecipe](https://github.com/saleem-hadad/larecipe)
+1. Os arquivos são salvos em `resources/docs/{lang}` e podem ser multi-idiomas
+1. Você pode criar quantos arquivos markdown `*.md` e criar um índice para eles.
+1. Verifique o [LaRecipe](https://github.com/saleem-hadad/larecipe) para obter mais informações sobre como personalizar seus arquivos markdown
 
 
-Aqui você digita o `endpoint` desejado, o seu `token` e algum parametro de busca para o endpoint. Veja <a href="https://github.com/opendatabio/opendatabio/wiki/home-pt" target="__blank" >a documentação </a> para entender o que é isso.
+<a name="api_tester"> </a>
+### Teste a API
 
-> {warning} Use sempre `limit=5` ou menor para ver a resposta. O objetivo aqui é apenas entender, não baixar dados. Para isso, use os caminhos implementados.
+Se você for um usuário logado, verá abaixo um testador para a [GET API](https://opendatabio.github.io/docs/api) desta instalação.
 
-<larecipe-swagger base-url="{{ env('APP_URL') }}" endpoint="/api/v0/"  default-method='get' name='voucher_endpoint' id='vouchers_apitest' has-auth-header=1 ></larecipe-swagger>
+@if(Auth::user ())
+
+Use o formulário abaixo para testar a API GET e ver os resultados.
+Você precisa adicionar o `endpoint` desejado, especificar os parâmetros do endpoint e informar seu` token`. Ver [GET API docs](https://opendatabio.github.io/docs/api/quick-reference)
+
+> {warning} Sempre use `limit = 5` ou outro valor pequeno para ver a resposta. Use para entender apenas.
+
+<larecipe-swagger base-url="{{env('APP_URL')}}" endpoint="/api/v0/" default-method='get' has-auth- header = 1> </larecipe-swagger>
 
 @else
 
-> {warning} Você precisa estar logado para poder testar a API aqui!
+> {warning} Deve ser registrado para usar o testador de API!
 
 @endif

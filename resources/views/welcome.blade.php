@@ -171,7 +171,7 @@
                   <a href="{{ route('home') }}">
                     @lang ('messages.home')
                   </a>
-                  <a href="{{ url('docs') }}" target="_blank">
+                  <a href="{{ config('app.documentation_site_url').'docs/overview' }}" target="_blank">
                     @lang('messages.docs')
                   </a>
                   <a href="https://github.com/opendatabio/opendatabio/tree/version.0.9.0-rc1" target="_blank">GitHub</a>

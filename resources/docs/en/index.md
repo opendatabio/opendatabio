@@ -1,6 +1,6 @@
 * ## [Home](Home)
   * [API Tester](Home#api_tester)
-  * [Documentation](https://github.com/opendatabio/opendatabio/wiki/home)
+  * <a href="https://opendatabio.github.io" target="__blank" >OpenDataBio site</a>
 <br>
 <br>
 <br>

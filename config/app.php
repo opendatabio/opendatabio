@@ -94,6 +94,8 @@ return [
     'import_file_size' => env('MEDIA_MAX_FILE_SIZE', '209715200'),
 
 
+    'documentation_site_url' => 'https://opendatabio.github.io/',
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
