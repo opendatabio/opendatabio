@@ -78,14 +78,20 @@ class IndividualController extends Controller
 
         if ($request->project) {
             $projects = ODBFunctions::asIdList($request->project, Project::select('id'), 'name');
-            $individuals = $individuals->whereIn('project_id', $projects);
+            $individuals->whereHas('dataset', function($d) use($projects) {
+              $d->whereIn('project_id',$projects);
+            });
         }
+
         if ($request->dataset) {
             $datasets = ODBFunctions::asIdList($request->dataset, Dataset::select('id'), 'name');
-            $individuals = $individuals->whereHas('measurements', function($measurement) use($datasets){
-                $measurement->whereIn('dataset_id',$datasets);
-              }
-            );
+            $individuals = $individuals->whereIn('dataset_id',$datasets)->orWhere(function($q) use($datasets){
+                $q->whereHas('measurements',function($m)use($datasets){
+                  $m->whereIn('dataset_id',$datasets);
+                })->orWhereHas('media',function($media) use($datasets) {
+                  $m->whereIn('dataset_id',$datasets);
+                });
+            });
         }
 
         if($request->with_locations) {

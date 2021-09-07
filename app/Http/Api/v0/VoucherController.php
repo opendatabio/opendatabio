@@ -134,7 +134,13 @@ class VoucherController extends Controller
 
         if ($request->dataset) {
             $datasets = ODBFunctions::asIdList($request->dataset, Dataset::select('id'), 'name');
-            $vouchers->whereIn('dataset_id',$datasets);              
+            $vouchers->whereIn('dataset_id',$datasets)->orWhere(function($q) use($datasets){
+                $q->whereHas('measurements',function($m)use($datasets){
+                  $m->whereIn('dataset_id',$datasets);
+                })->orWhereHas('media',function($media) use($datasets) {
+                  $m->whereIn('dataset_id',$datasets);
+                });
+            });
         }
 
 
