@@ -33,6 +33,7 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
       cron \
       sudo \
       libzip-dev \
+      graphviz \
     && docker-php-ext-configure pdo_mysql --with-pdo-mysql=mysqlnd \
     && docker-php-ext-configure intl \
     && docker-php-ext-configure exif \

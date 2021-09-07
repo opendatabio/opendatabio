@@ -3,20 +3,14 @@
 return array (
   'directories' => 
   array (
-    0 => '/home/odbserver/opendatabio/app/Models',
+    0 => '/var/www/html/app/Models',
   ),
   'ignore' => 
   array (
   ),
   'whitelist' => 
   array (
-    0 => 'App\\Models\\Person',
-    1 => 'App\\Models\\Collector',
-    2 => 'App\\Models\\Voucher',
-    3 => 'App\\Models\\Measurement',
-    4 => 'App\\Models\\Identification',
-    5 => 'App\\Models\\Taxon',
-    6 => 'App\\Models\\User',
+    0 => 'App\\Models\\ActivityLog',
   ),
   'recursive' => false,
   'use_db_schema' => true,
@@ -39,12 +33,13 @@ return array (
     'concentrate' => false,
     'splines' => 'spline',
     'overlap' => false,
-    'rankdir' => 'LR',
-    'ranksep' => 1.5,
-    'nodesep' => 0.5,
+    'rankdir' => 'RL',
+    'ranksep' => 2,
+    'nodesep' => 2,
     'esep' => false,
     'rotate' => 0,
     'fontname' => 'Helvetica Neue',
+    'dpi' => 150,
   ),
   'node' => 
   array (

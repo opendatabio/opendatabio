@@ -67,9 +67,11 @@ class GenerateOdbErds extends Command
           $fp = fopen($path,'w');
           fwrite($fp,$text);
           fclose($fp);
-          $topath = public_path("images/docs/".$filename);
+          //$topath =  public_path("dev-imgs/".$filename);
+          //$topath = "./".$filename;
+          $topath =  storage_path("app/public/dev-imgs/".$filename);
           exec('php artisan generate:erd '.$topath, $result, $status);
-          echo $model." concluded \n\n";
+          echo $filename." concluded \n\n";
         }
         return ;
     }

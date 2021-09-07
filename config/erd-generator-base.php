@@ -30,7 +30,7 @@ return [
      *
      * Note: that if this array is filled, the 'ignore' array will not be used.
     */
-    'whitelist' => [        
+    'whitelist' => [
         /* model_coreobjects.png */
           App\Models\Voucher::class,
           App\Models\Location::class,
@@ -101,6 +101,7 @@ return [
         'esep' => false,
         'rotate' => 0,
         'fontname' => 'Helvetica Neue',
+        'dpi' => 150,
     ],
 
     'node' => [
