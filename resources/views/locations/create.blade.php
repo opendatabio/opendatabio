@@ -113,6 +113,21 @@
 </div>
 </div>
 
+<!-- PLOT OR TRANSECTS  -->
+<div class="form-group" id="angle-box">
+    <label for="x" class="col-sm-3 control-label mandatory">
+      @lang('messages.plot_transect_azimuth')
+    </label>
+    <a data-toggle="collapse" href="#plot_transect_azimuth_hint" class="btn btn-default">?</a>
+	  <div class="col-sm-6">
+      <input type="text"  name="angle" id="angle" class="form-control latlongpicker" value="{{ old('angle', 360) }}"><span style="font-size: 250%">&#176;</span>
+    </div>
+  <div class="col-sm-12">
+    <div id="plot_transect_azimuth_hint" class="panel-collapse collapse">
+	@lang('messages.plot_transect_azimuth_hint')
+    </div>
+  </div>
+</div>
 
 
 <!-- PLOT OR SUBPLOT DIMENSIONS -->
@@ -230,7 +245,7 @@
 @lang('messages.datum')
 </label>
 	    <div class="col-sm-6">
-	<input type="text" name="datum" id="datum" class="form-control" value="{{ old('datum', isset($location) ? $location->datum : null) }}">
+	<input type="text" name="datum" id="datum" class="form-control" value="{{ old('datum', isset($location) ? $location->datum : 'WGS84') }}">
     </div>
   <div class="col-sm-12">
     <div id="hint3" class="panel-collapse collapse">
@@ -298,6 +313,7 @@ $(document).ready(function() {
 });
 
   function toogleGeometryLatLong(vel)  {
+      var adm = $('#adm_level option:selected').val();
       var geomtype = $("#geom_type").val();
       switch(geomtype) {
         case "point":
@@ -305,8 +321,12 @@ $(document).ready(function() {
           $("#super-geometry").show(vel);
           $("#super-points").hide(vel);
           $("#toggle_geom").html("Inform coordinates");
+          $("#angle-box").hide(vel);
           break;
       default:
+          if (adm=="100" | adm=="101") {
+            $("#angle-box").show(vel);
+          }
           $("#geom_type").val('point');
           $("#super-geometry").hide(vel);
           $("#super-points").show(vel);
@@ -335,6 +355,7 @@ $(document).ready(function() {
               $("#super-geometry").show(vel);
               $("#super-points").hide(vel);
           }
+          $("#angle-box").hide(vel);
   				$("#super-x").hide(vel);
   				$("#super-uc").show(vel);
           $(".parent_id").show(vel);
@@ -347,10 +368,12 @@ $(document).ready(function() {
             case "point":
                 $("#super-geometry").hide(vel);
                 $("#super-points").show(vel);
+                $("#angle-box").show(vel);
                 break;
             default:
                 $("#super-geometry").show(vel);
                 $("#super-points").hide(vel);
+                $("#angle-box").hide(vel);
             }
             $(".super-button").show(vel);
     				$("#super-x").show(vel);
@@ -374,10 +397,12 @@ $(document).ready(function() {
               case "point":
                 $("#super-geometry").hide(vel);
                 $("#super-points").show(vel);
+                $("#angle-box").show(vel);
                 break;
               default:
                 $("#super-geometry").show(vel);
                 $("#super-points").hide(vel);
+                $("#angle-box").hide(vel);
             }
             $(".super-button").show(vel);
             $("#super-x").show(vel);
@@ -400,6 +425,7 @@ $(document).ready(function() {
             $(".autodetect").hide(vel);
             $(".super-button").hide(vel);
             $(".super-start").hide(vel);
+            $("#angle-box").hide(vel);
             //$("#super-buffer").hide(vel);
 
             break;
@@ -413,7 +439,7 @@ $(document).ready(function() {
             $(".super-button").hide(vel);
             $(".super-start").hide(vel);
             $("#super-buffer").hide(vel);
-
+            $("#angle-box").hide(vel);
       }
 
   }

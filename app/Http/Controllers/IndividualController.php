@@ -195,7 +195,7 @@ class IndividualController extends Controller
     // Route for quickly creating an individual from a Location page
     public function createLocations($id, IndividualLocationsDataTable $dataTable)
     {
-        $location = Location::withoutGeom()->findOrFail($id);
+        $location = Location::withGeom()->findOrFail($id);
         return $this->create($location, $dataTable);
     }
 

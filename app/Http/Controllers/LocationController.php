@@ -19,6 +19,7 @@ use DB;
 use Lang;
 use Response;
 use Storage;
+use Log;
 use App\Models\UserJob;
 use App\Jobs\ImportLocations;
 use App\Jobs\DeleteMany;
@@ -195,8 +196,17 @@ false,0);
             'altitude' => 'integer|nullable',
             'parent_id' => 'required_unless:adm_level,'.config('app.adm_levels')[0],
         ];
+        /* validate geometry */
         if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_TRANSECT == $request->adm_level) { // PLOT
-            if ('point' == $request->geom_type) {
+            $parent = Location::withGeom()->findOrFail($request->parent_id);
+            if (Location::LEVEL_PLOT==$parent->adm_level) { // location is a subplot
+                //should this be kept mandatory, only when geometry is not informed?
+                $rules = array_merge($rules, [
+                    'startx' => 'required|numeric|min:0|max:'.$parent->x,
+                    'starty' => 'required|numeric|min:0|max:'.$parent->y,
+                ]);
+            }
+            if ('point' == $request->geom_type and !$parent->adm_level==Location::LEVEL_PLOT) {
                 $rules = array_merge($rules, [
                     'lat1' => 'required|numeric|min:0',
                     'long1' => 'required|numeric|min:0',
@@ -204,30 +214,22 @@ false,0);
                     'long2' => 'numeric|nullable|min:0',
                     'lat3' => 'numeric|nullable|min:0',
                     'long3' => 'numeric|nullable|min:0',
-                    'x' => 'required|numeric',
-                    'y' => 'required|numeric',
                 ]);
-            } else {
+            } elseif (!$parent->adm_level==Location::LEVEL_PLOT)  {
+                /* geometry is not required only if this is a subplot */
                 $rules = array_merge($rules, [
                     'geom' => 'required|string',
                 ]);
-                if (Location::LEVEL_PLOT == $request->adm_level) {
-                  $rules = array_merge($rules, [
-                    'x' => 'required|numeric',
-                    'y' => 'required|numeric',
-                  ]);
-                } else { //this will be a transect
-                  $rules = array_merge($rules, [
-                    'y' => 'required|numeric',
-                  ]);
-                }
             }
-            if (Location::LEVEL_PLOT == $request->parent_type) { // location is a subplot
-                $parent = Location::findOrFail($request->parent_id);
-                $rules = array_merge($rules, [
-                    'startx' => 'required|numeric|min:0|max:'.$parent->x,
-                    'starty' => 'required|numeric|min:0|max:'.$parent->y,
-                ]);
+            if (Location::LEVEL_PLOT == $request->adm_level) {
+              $rules = array_merge($rules, [
+                'x' => 'required|numeric',
+                'y' => 'required|numeric',
+              ]);
+            } else { //this will be a transect
+              $rules = array_merge($rules, [
+                'y' => 'required|numeric',
+              ]);
             }
         } elseif (Location::LEVEL_POINT == $request->adm_level and !isset($request->geom)) { //POINT
             $rules = array_merge($rules, [
@@ -256,14 +258,28 @@ false,0);
                (Location::LEVEL_TRANSECT == $request->adm_level and 'point' == $request->geom_type)
                )
             {
-                if (!isset($request->geom)) {
-                  $geom = Location::geomFromParts($request);
-                } else {
-                  $geom = $request->geom;
-                }
-            } else {
+              if (!isset($request->geom) and isset($request->lat1)) {
+                $geom = Location::geomFromParts($request);
+              } else {
                 $geom = $request->geom;
+              }
+            } else {
+              $geom = $request->geom;
             }
+            if(isset($request->parent_id) and $geom == null and ($request->adm_level==Location::LEVEL_PLOT or $request->adm_level==Location::LEVEL_TRANSECT)) {
+              $parent = Location::withGeom()->findOrFail($request->parent_id);
+              if (Location::LEVEL_PLOT==$parent->adm_level) {
+                $geom = Location::individual_in_plot($parent->footprintWKT,$request->startx,$request->starty);
+              }
+            }
+            $geomtype =   mb_strtolower(trim(preg_split('/\\(/', $geom)[0]));
+            $angle = self::angleFromParent($request);
+            if ($geomtype=='point' and $request->adm_level==Location::LEVEL_PLOT) {
+                $geom = Location::generate_plot_geometry($geom,$request->x,$request->y,$angle);
+            } elseif ($geomtype=='point' and $request->adm_level==Location::LEVEL_TRANSECT) {
+                $geom = Location::generate_transect_geometry($geom,$request->x,$angle);
+            }
+
             //1. check the geometry is valid
             #$valid = DB::select('SELECT ST_IsValid(ST_GeomFromText(?)) as valid', [$geom]);
             // MariaDB returns 1 for invalid geoms from ST_IsEmpty ref: https://mariadb.com/kb/en/mariadb/st_isempty/
@@ -276,9 +292,9 @@ false,0);
             //2. check if this exact geometry is already registered (only if not editing)
             if (!is_null($id)) {
              $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->where('id','<>',$id)->cursor();
-           } else {
+            } else {
              $exact = Location::whereRaw("geom=ST_GeomFromText('$geom')")->cursor();
-           }
+            }
             if ($exact->count() > 0) {
                $validator->errors()->add('geom', Lang::get('messages.geom_duplicate'));
                return;
@@ -292,9 +308,14 @@ false,0);
               //define a buffer size depending on the parent type
               if (Location::LEVEL_PLOT == $parent->adm_level) { // location is a subplot
                 $parent_dim = !is_null($parent->x) ? (($parent->x >= $parent->y) ? $parent->x : $parent->y) : null;
+                if (($request->startx+$request->x)>$parent->x or ($request->starty+$request->y)>$parent->y) {
+                  $validator->errors()->add('startx', 'invalid subplot dimensions: startx+x > parent->x OR starty+y > parent->x');
+                  return;
+                }
               } elseif (Location::LEVEL_TRANSECT == $parent->adm_level) {
                 $parent_dim = !is_null($parent->y) ? $parent->y : null;
               }
+              $parent_geom = $parent->footprintWKT;
               if (!is_null($parent_dim)) {
                 /* add a buffer to parent point in the ~ size of its dimension if set */
                 $buffer_dd = (($parent_dim*0.00001)/1.11);
@@ -304,14 +325,16 @@ false,0);
               }
               //if parent is point location has to consider a buffer
               //this will only happen if geometry is plot and within parent
-              if ('point' == $parent->geomType) {
-                  $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), ST_BUFFER(geom,?)) as valid FROM locations where id = ?', [$geom, $buffer_dd, $request->parent_id]);
+              if ($parent->adm_level == Location::LEVEL_POINT) {
+                  //$valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), ST_BUFFER(geom,?)) as valid FROM locations where id = ?', [$geom, $buffer_dd, $request->parent_id]);
+                  $valid = DB::select("SELECT ST_Within(ST_GeomFromText('".$geom."'), ST_BUFFER(ST_GeomFromText('".$parent_geom."'),".$parent_geom.")) as valid");
               } else {
                   //test without buffer
-                  $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), geom) as valid FROM locations where id = ?', [$geom, $request->parent_id]);
+                  $valid = DB::select("SELECT ST_Within(ST_GeomFromText('".$geom."'),ST_GeomFromText('".$parent_geom."')) as valid");
                   //if not valid, test with buffer
                   if (1 != $valid[0]->valid) {
-                    $valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), ST_BUFFER(geom,?)) as valid FROM locations where id = ?', [$geom, $buffer_dd, $request->parent_id]);
+                    $valid = DB::select("SELECT ST_Within(ST_GeomFromText('".$geom."'), ST_BUFFER(ST_GeomFromText('".$parent_geom."'),".$parent_geom.")) as valid");
+                    //$valid = DB::select('SELECT ST_Within(ST_GeomFromText(?), ST_BUFFER(geom,?)) as valid FROM locations where id = ?', [$geom, $buffer_dd, $request->parent_id]);
                   }
               }
               if (1 != $valid[0]->valid) {
@@ -336,6 +359,14 @@ false,0);
                 return;
               }
             }
+            if (Location::LEVEL_PLOT==$parent->adm_level and $request->adm_level==Location::LEVEL_PLOT) {
+              $valid_dim = (($request->startx+$request->x)>$parent->x or ($request->starty+$request->y)>$parent->y) ? false : true;
+              if (!$valid_dim) {
+                $validator->errors()->add('dimensions', Lang::get('messages.subplot_dimensions_invalid'));
+                return;
+              }
+            }
+
         });
 
 
@@ -369,20 +400,31 @@ false,0);
                 return view('locations.confirm', compact('dupes'));
             }
         }
+        $geom = $request->geom;
         if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_TRANSECT == $request->adm_level) { // plot
             $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y']));
+            $geom = $request->geom;
             if (Location::LEVEL_PLOT == $request->parent_type) { // see issue #40
                 $newloc->startx = $request->startx;
                 $newloc->starty = $request->starty;
+                /* may have to generate subplot first point if geometry is missing */
+                if (!isset($request->geom) and !isset($request->lat1) and isset($request->parent_id)) {
+                  $parent = Location::withGeom()->findOrFail($request->parent_id);
+                  $geom = Location::individual_in_plot($parent->plot_geometry,$request->startx,$request->starty);
+                  $request->geom_type = 'nonpoint';
+                }
             }
             if ('point' == $request->geom_type) {
-                $newloc->setGeomFromParts($request->only([
-                    'lat1', 'lat2', 'lat3', 'latO',
-                    'long1', 'long2', 'long3', 'longO',
-                ]));
-            } else {
-                $newloc->geom = $request->geom;
+                $geom = Location::geomFromParts($request);
             }
+            $geomtype =   mb_strtolower(trim(preg_split('/\\(/', $geom)[0]));
+            $angle = self::angleFromParent($request);
+            if ($geomtype=='point' and $request->adm_level==Location::LEVEL_PLOT) {
+                $geom = Location::generate_plot_geometry($geom,$request->x,$request->y,$angle);
+            } elseif ($geomtype=='point' and $request->adm_level==Location::LEVEL_TRANSECT) {
+                $geom = Location::generate_transect_geometry($geom,$request->x,$angle);
+            }
+            $newloc->geom = $geom;
         } else {
             // discard x, y data from locations that are not PLOTs
             $newloc = new Location($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
@@ -398,25 +440,49 @@ false,0);
         if ($request->parent_id) {
             $newloc->parent_id = $request->parent_id;
         }
-        if (2 === $request->adm_level) {
+        if (config('app.adm_levels')[0] === $request->adm_level) {
             $world = Location::world();
             $newloc->parent_id = $world->id;
         }
         $newloc->save();
-        if (!$request->related_locations) {
-          $related_locations = Location::detectRelated($request->geom,$request->adm_level);
+        if ($request->related_locations) {
+          $related_locations  = $request->related_locations;
         } else {
-          $related_locations = $request->related_locations;
+          $related_locations = Location::detectRelated($geom,$request->adm_level);
+          $related_locations = collect($related_locations)->pluck('id');
         }
-
         if ($related_locations) {
-            foreach ($related_locations as $related_id) {
-                $related = new LocationRelated(['related_id' => $related_id]);
-                $newloc->relatedLocations()->save($related);
-            }
+          foreach ($related_locations as $related_id) {
+              $related = new LocationRelated(['related_id' => $related_id]);
+              $newloc->relatedLocations()->save($related);
+          }
         }
         $fixed = Location::fixPathAndRelated($newloc->id);
         return redirect('locations/'.$newloc->id)->withStatus(Lang::get('messages.stored'));
+    }
+
+    public static function angleFromParent($request)
+    {
+      $angle = isset($request->angle) ? $request->angle : 0;
+      if(isset($request->parent_id)) {
+        $parent = Location::withGeom()->findOrFail($request->parent_id);
+        /* if subplot angle must fit parent geometry and is retrieved from there */
+        if (Location::LEVEL_PLOT==$parent->adm_level) {
+          if ($parent->adm_level==Location::LEVEL_PLOT) {
+            $parent_wkt = $parent->footprintWKT;
+            $pattern = '/\\(|\\)|POLYGON|\\n/i';
+            $coordinates = preg_replace($pattern, '', $parent_wkt);
+            $coordinates = explode(",",$coordinates);
+            $coordA = "POINT(".$coordinates[0].")";
+            $coordB = "POINT(".$coordinates[1].")";
+            $geotools = new \League\Geotools\Geotools();
+            $coordA   = new \League\Geotools\Coordinate\Coordinate(Location::latlong_from_point($coordA));
+            $coordB   = new \League\Geotools\Coordinate\Coordinate(Location::latlong_from_point($coordB));
+            $angle    =  $geotools->vertex()->setFrom($coordA)->setTo($coordB)->initialBearing();
+          }
+        }
+      }
+      return $angle;
     }
 
 
@@ -561,21 +627,31 @@ false,0);
         }
         if (Location::LEVEL_PLOT == $request->adm_level or Location::LEVEL_TRANSECT == $request->adm_level) {
             $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes', 'x', 'y']));
+            $geom = $request->geom;
             if (Location::LEVEL_PLOT == $request->parent_type) { // see issue #40
                 $location->startx = $request->startx;
                 $location->starty = $request->starty;
+                /* may have to generate subplot first point if geometry is missing */
+                if (!isset($request->geom) and !isset($request->lat1) and isset($request->parent_id)) {
+                  $parent = Location::withGeom()->findOrFail($request->parent_id);
+                  $geom = Location::individual_in_plot($parent->footprintWKT,$request->startx,$request->starty);
+                  $request->geom_type = 'nonpoint';
+                }
             } else {
                 $location->startx = null;
                 $location->starty = null;
             }
             if ('point' == $request->geom_type) {
-                $location->setGeomFromParts($request->only([
-                    'lat1', 'lat2', 'lat3', 'latO',
-                    'long1', 'long2', 'long3', 'longO',
-                ]));
-            } else {
-                $location->geom = $request->geom;
+                $geom = Location::geomFromParts($request);
             }
+            $geomtype =   mb_strtolower(trim(preg_split('/\\(/', $geom)[0]));
+            $angle = self::angleFromParent($request);
+            if ($geomtype=='point' and $request->adm_level==Location::LEVEL_PLOT) {
+                $geom = Location::generate_plot_geometry($geom,$request->x,$request->y,$angle);
+            } elseif ($geomtype=='point' and $request->adm_level==Location::LEVEL_TRANSECT) {
+                $geom = Location::generate_transect_geometry($geom,$request->x,$angle);
+            }
+            $location->geom = $geom;
         } else {
             // discard x, y data from locations that are not PLOTs
             $location->update($request->only(['name', 'altitude', 'datum', 'adm_level', 'notes']));
@@ -588,7 +664,7 @@ false,0);
                 $location->geom = $request->geom;
             }
         }
-
+        /*
         if ($request->uc_id and $request->adm_level > Location::LEVEL_UC) {
             if ($location->uc_id and $location->uc_id !== $request->uc_id) {
             $tolog = array('attributes' => ['uc_id' => $request->uc_id], 'old' => ['uc_id' => $location->uc_id]);
@@ -599,6 +675,7 @@ false,0);
             }
             $location->uc_id = $request->uc_id;
         }
+        */
 
         // sets the parent_id in the request, to be picked up by the next try-catch:
         //if adm is lowest defined, set world as parent
@@ -627,15 +704,16 @@ false,0);
         $location->save();
 
         $newlocation = Location::noWorld()->withGeom()->findOrFail($id);
-        if (!$request->related_locations) {
-          $related_locations = Location::detectRelated($newlocation->geom,$newlocation->adm_level);
+        $geom = $newlocation->geom;
+        if ($request->related_locations) {
+          $related_locations  = $request->related_locations;
         } else {
-          $related_locations = $request->related_locations;
+          $related_locations = Location::detectRelated($geom,$request->adm_level);
+          $related_locations = collect($related_locations)->pluck('id');
         }
-
         $current = $newlocation->relatedLocations->pluck('related_id');
         $detach = $current->diff($related_locations)->all();
-        $attach = collect($related_locations)->diff($current)->all();
+        $attach = $related_locations->diff($current)->all();
         if (count($detach) or count($attach)) {
             //delete old
             $newlocation->relatedLocations()->delete();

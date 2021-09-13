@@ -198,36 +198,6 @@ class Location extends Node implements HasMedia
         return $this->centroid_raw;
     }
 
-    /* function to get first point of plots and transects */
-    public function getGeomFirstPointAttribute()
-    {
-      $adm_level = $this->adm_level;
-      switch ($adm_level) {
-        case self::LEVEL_POINT:
-          return $this->geom;
-          break;
-        case self::LEVEL_TRANSECT:
-          if ($this->geom_type=="point") {
-            return $this->geom;
-          }
-          return $this->start_point;
-          break;
-        case self::LEVEL_PLOT:
-          if ($this->geom_type=="point") {
-            return $this->geom;
-          }
-          $geom = $this->geom;
-          $geom = explode("((|))|,",$geom);
-          return "POINT(".$geom[1].")";
-          break;
-        default:
-          return $this->centroid_raw;
-          break;
-       }
-    }
-
-
-
 
     public function getLatitudeSimpleAttribute()
     {
@@ -935,6 +905,42 @@ class Location extends Node implements HasMedia
         return (new self())->getTable();
     }
 
+
+
+    /* function to get first point of plots and transects */
+    public function getGeomFirstPointAttribute()
+    {
+      $adm_level = $this->adm_level;
+      switch ($adm_level) {
+        case self::LEVEL_POINT:
+          return $this->geom;
+          break;
+        case self::LEVEL_TRANSECT:
+          if ($this->geom_type=="point") {
+            return $this->geom;
+          }
+          return $this->start_point;
+          break;
+        case self::LEVEL_PLOT:
+          if ($this->geom_type=="point") {
+            return $this->geom;
+          }
+          $geom = $this->geom;
+          $pattern = '/\\(|\\)|POLYGON|\\n/i';
+          $coordinates = preg_replace($pattern, '', $geom);
+          $coordinates = explode(",",$coordinates);
+          return "POINT(".$coordinates[0].")";
+          break;
+        default:
+          return $this->centroid_raw;
+          break;
+       }
+    }
+
+
+
+
+
     public function getTransectLengthAttribute()
     {
       if ($this->adm_level != self::LEVEL_TRANSECT) {
@@ -988,6 +994,22 @@ class Location extends Node implements HasMedia
       return null;
     }
 
+    /* function  to define a geometry for a subplot being imported
+    *  without a geometry specification
+    *  to be used only when parent plot is defined as point
+    *  or as polygon with four vertices and 0,0 being SW corner,
+    *  and then the other coordinates clock wise.
+    */
+    public static function subplot_geometry($parent_id,$start_x,$start_y)
+    {
+      $parent = self::withGeom()->findOrFail($parent_id)->first();
+      if (!$parent) {
+        return null;
+      }
+      /* get the 0,0 coordinates for a subplot given the x and y dimensions */
+      $subplot_origin = self::individual_in_plot($parent->plot_geometry,$start_x,$start_y);
+      return $subplot_origin;
+    }
 
     /* function to calculate a destination point having:
     * $point = wkt POINT geometry in Latitude and Longitude degrees
@@ -996,7 +1018,7 @@ class Location extends Node implements HasMedia
     */
      public static function destination_point($point, $brng, $meters) {
           $start = preg_split('/\\(|\\)/', $point)[1];
-          $start = explode(" ",$start);
+          $start = explode(" ",trim($start));
           $lat = $start[1];
           $long = $start[0];
           $geotools = new \League\Geotools\Geotools();
@@ -1013,8 +1035,25 @@ class Location extends Node implements HasMedia
     public static function latlong_from_point($point)
     {
       $coords = preg_split('[\\(|\\)]',$point)[1];
-      $coords = explode(" ",$coords);
+      $coords = explode(" ",trim($coords));
       return [(float) $coords[1], (float) $coords[0]];
+    }
+
+
+    public static function generate_plot_geometry($first_point,$dim_x,$dim_y,$azimuth)
+    {
+      $angle1 = ($azimuth>=360 or $azimuth<0) ? 0 : $azimuth;
+      $angle2 = $angle1+90;
+      $angle2 = ($angle2>=360) ? ($angle2-360) : $angle2;
+      $second_point = Location::destination_point($first_point,$angle1,$dim_y);
+      $third_point =  Location::destination_point($second_point,$angle2,$dim_x);
+      $fourth_point = Location::destination_point($first_point,$angle2,$dim_x);
+      $first_point = self::latlong_from_point($first_point);
+      $second_point = self::latlong_from_point($second_point);
+      $third_point = self::latlong_from_point($third_point);
+      $fourth_point = self::latlong_from_point($fourth_point);
+      $geom = "POLYGON((".$first_point[1]." ".$first_point[0].",".$second_point[1]." ".$second_point[0].",".$third_point[1]." ".$third_point[0].",".$fourth_point[1]." ".$fourth_point[0].",".$first_point[1]." ".$first_point[0]."))";
+      return $geom;
     }
 
     public function getPlotGeometryAttribute()
@@ -1024,18 +1063,18 @@ class Location extends Node implements HasMedia
         * point is 0,0 SW corner
       */
       if ($this->adm_level == self::LEVEL_PLOT and $this->geom_type== "point") {
-        $first_point = $this->geom;
-        $second_point = Location::destination_point($first_point,0,$this->y);
-        $third_point =  Location::destination_point($second_point,90,$this->x);
-        $fourth_point = Location::destination_point($first_point,90,$this->x);
-        $first_point = self::latlong_from_point($first_point);
-        $second_point = self::latlong_from_point($second_point);
-        $third_point = self::latlong_from_point($third_point);
-        $fourth_point = self::latlong_from_point($fourth_point);
-        $geom = "POLYGON((".$first_point[1]." ".$first_point[0].",".$second_point[1]." ".$second_point[0].",".$third_point[1]." ".$third_point[0].",".$fourth_point[1]." ".$fourth_point[0].",".$first_point[1]." ".$first_point[0]."))";
-        return $geom;
+        return self::generate_plot_geometry($this->geom,$this->x,$this->y,0);
       }
       return $this->geom;
+    }
+
+    public static function generate_transect_geometry($first_point,$dim_x,$azimuth)
+    {
+      $azimuth = ($azimuth>=360 or $azimuth<0) ? 0 : $azimuth;
+      $second_point = Location::destination_point($first_point,$azimuth,$dim_x);
+      $first_point = self::latlong_from_point($first_point);
+      $second_point = self::latlong_from_point($second_point);
+      return "LineString(".$first_point[1]." ".$first_point[0].",".$second_point[1]." ".$second_point[0].")";
     }
 
     public function getTransectGeometryAttribute()
@@ -1045,12 +1084,7 @@ class Location extends Node implements HasMedia
         * point is 0,0 SW corner
       */
       if ($this->adm_level == self::LEVEL_TRANSECT and $this->geomType== "point") {
-        $first_point = $this->geom;
-        $second_point = Location::destination_point($first_point,0,$this->x);
-        $first_point = self::latlong_from_point($first_point);
-        $second_point = self::latlong_from_point($second_point);
-        $geom = "LineString(".$first_point[1]." ".$first_point[0].",".$second_point[1]." ".$second_point[0].")";
-        return $geom;
+        return self::generate_transect_geometry($this->geom,$this->x,0);
       }
       return $this->geom;
     }
@@ -1072,17 +1106,19 @@ class Location extends Node implements HasMedia
     /* map individuals in plots having a geometry */
     public static function individual_in_plot($geom,$x,$y)
     {
-      if ($x==null or $y==null) {
+      if ($x===null or $y===null) {
         return $geom;
       }
-      $array = explode(',', substr($geom, 9, -2));
+      $pattern = '/\\(|\\)|POLYGON|\\n/i';
+      $coordinates = preg_replace($pattern, '', $geom);
+      $array = explode(",",trim($coordinates));
       $first_point = "POINT(".$array[0].")";
       $last_point = "POINT(".$array[count($array)-2].")";
       $secont_point = "POINT(".$array[1].")";
       $geotools = new \League\Geotools\Geotools();
-      $coordA   = new \League\Geotools\Coordinate\Coordinate(self::latlong_from_point($first_point));
-      $coordB   = new \League\Geotools\Coordinate\Coordinate(self::latlong_from_point($secont_point));
-      $coordC   = new \League\Geotools\Coordinate\Coordinate(self::latlong_from_point($last_point));
+      $coordA   = new \League\Geotools\Coordinate\Coordinate(Location::latlong_from_point($first_point));
+      $coordB   = new \League\Geotools\Coordinate\Coordinate(Location::latlong_from_point($secont_point));
+      $coordC   = new \League\Geotools\Coordinate\Coordinate(Location::latlong_from_point($last_point));
 
       $bearingY    =  $geotools->vertex()->setFrom($coordA)->setTo($coordB)->initialBearing();
       $bearingX    =  $geotools->vertex()->setFrom($coordA)->setTo($coordC)->initialBearing();
@@ -1157,9 +1193,11 @@ class Location extends Node implements HasMedia
         $fit_geometry = null;
         $idx = 0;
         foreach($locations as $location) {
-              if ($location->id == $this->parent_id and !in_array($this->adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+              $issubplot = ($this->adm_level==self::LEVEL_PLOT and $this->parent->adm_level==self::LEVEL_PLOT);
+              $isplot_or_trans = (($this->adm_level==self::LEVEL_PLOT or $this->adm_level==self::LEVEL_TRANSECT) and $this->parent->adm_level!=self::LEVEL_PLOT);
+              if ($location->id == $this->parent_id and (!in_array($this->adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV]) or $issubplot) and !$isplot_or_trans) {
                 $fit_geometry = $idx;
-              } elseif ($location->id == $this->id and in_array($this->adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV])) {
+              } elseif ($location->id == $this->id and in_array($this->adm_level,[self::LEVEL_UC,self::LEVEL_TI,self::LEVEL_ENV]) or $isplot_or_trans) {
                 $fit_geometry = $idx;
               }
               $idx++;
@@ -1179,7 +1217,7 @@ class Location extends Node implements HasMedia
               ];
               $string['features'][] = $str;
               //add starting point if polygon as drawn
-              if (($location->adm_level==self::LEVEL_PLOT or $location->adm_level==self::LEVEL_TRANSECT) and $location->geomType=='point') {
+              if (($location->adm_level==self::LEVEL_PLOT or $location->adm_level==self::LEVEL_TRANSECT)) {
                 $properties = [
                   'name' => $location->name." [0,0]",
                   'centroid_raw' => $location->centroid_raw,
@@ -1188,7 +1226,7 @@ class Location extends Node implements HasMedia
                   'parent_adm_level' => $location->parent->adm_level,
                   'fit_geometry' => ($location->id==$this->id) ? $fit_geometry : null,
                 ];
-                $geom = DB::select("SELECT ST_ASGEOJSON(ST_GeomFromText('".$location->geom."')) as geojson")[0]->geojson;
+                $geom = DB::select("SELECT ST_ASGEOJSON(ST_GeomFromText('".$location->geomFirstPoint."')) as geojson")[0]->geojson;
                 $str = [
                   "type" => "Feature",
                   "geometry" => json_decode($geom),
