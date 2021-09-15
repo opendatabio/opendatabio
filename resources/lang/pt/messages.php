@@ -403,7 +403,7 @@ return array (
   'parent_options' => 'Localidade pai',
   'location_parent_ignore' => 'Ignorar localidade pai',
   'location_parent_ignore_hint' => 'Se selecionado, o registro será importado mesmo quando houver uma falha de detecção da localidade pai. É o mesmo que informar <code> parent = 0 </code> para cada registro. Informar aqui só aplicará a regra a todos os registros no arquivo. A detecção ou validação da localidade pai falhará se um polígono não estiver totalmente contido pelo polígono pai.',
-  'parent_not_registered' => 'As APIs indicam que o nome deste pai deveria ser :name, mas ele não está registrado no banco de dados.',
+  'parent_not_registered' => 'As APIs indicam que o nome deste pai deveria ser :name, mas ele não está registrado no banco de dados. Selecione a opção  "Importar taxons pais" para importar os pais necessários, e cheque novamente a API.',
   'parent' => 'Precursor (Pai)',
   'password_change_hint' => 'Use esse campo para forçar a mudança da senha deste usuário. Deixe-o em branco se não deseja alterá-lo.',
   'password_hint' => 'Use este campo para mudar sua senha. Deixe-o em branco se não deseja alterá-lo.',

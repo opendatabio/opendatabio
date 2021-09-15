@@ -438,6 +438,7 @@ $("#checkapis").click(function(e) {
                     });
                     $( "#ajax-error" ).append(newul);
                 }
+                $("#name").val(data.apidata['name']);
                 $("#level").val(data.apidata["rank"]);
                 $("#author").val(data.apidata["author"]);
                 if (data.apidata["valid"]) {

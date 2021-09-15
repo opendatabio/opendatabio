@@ -408,7 +408,7 @@ return array (
   'parent_options' => 'Parent options',
   'location_parent_ignore' => 'Ignore parent failure',
   'location_parent_ignore_hint' => 'If checked, location parent detection failure will not prevent the record from being imported. Same as <code>parent=0</code> within each record. Informing here will only apply the rule to all records in file. Parent detection or validation will fail if a polygon is not fully contained by the parent polygon.',
-  'parent_not_registered' => 'APIs indicate that this name parent should be :name, but this is not registered in the database',
+  'parent_not_registered' => 'APIs indicate that this name parent should be :name, but this is not registered in the database. Select the "Import higher taxa" option to also import the needed parents, and then check again the API.',
   'parent' => 'Parent',
   'password_change_hint' => 'Use this field to force the password for this user to be changed. Leave it blank if you don\'t want to edit it.',
   'password_hint' => 'Use this field to change your password. Leave it blank if you don\'t want to edit it.',

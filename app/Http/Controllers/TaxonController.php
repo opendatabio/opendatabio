@@ -484,9 +484,12 @@ class TaxonController extends Controller
         if (!isset($request->name)) {
             return Response::json(['error' => Lang::get('messages.name_error')]);
         }
-        $apis = new ExternalAPIs();
         //check first GBIF which may have already tropicos and ipni
-        $gbifsearch = $apis->getGBIF($request->name);
+
+        $name = ucfirst(mb_strtolower($request->name));
+
+        $apis = new ExternalAPIs();
+        $gbifsearch = $apis->getGBIF($name);
 
         $finaldata = [];
 
@@ -495,6 +498,7 @@ class TaxonController extends Controller
           $gbif_senior = $gbifsearch['gbif_senior'];
           $externalkeys = $gbifsearch['keys'];
           $finaldata = [
+              "name" => $gbif_record["canonicalName"],
               "rank" => isset($gbif_record["rank"]) ? mb_strtolower($gbif_record['rank']) : null,
               "author" => isset($gbif_record["authorship"]) ? $gbif_record['authorship'] : null,
               "valid" => isset($gbif_record["taxonomicStatus"]) ? $gbif_record['taxonomicStatus'] : null,
@@ -507,11 +511,12 @@ class TaxonController extends Controller
               'gbif' => isset($gbif_record["nubKey"]) ? $gbif_record['nubKey'] : null,
               'zoobank' => null,
           ];
+          $name = $gbif_record["scientificName"];
         }
         $mobotdata = null;
         $ipnidata = null;
         if (count($finaldata)==0 or is_null($finaldata['mobot'])) {
-            $mobotdata = $apis->getMobot($request->name);
+            $mobotdata = $apis->getMobot($name );
             if (count($finaldata)>0 and $mobotdata[0]!=ExternalAPIs::NOT_FOUND) {
               $finaldata['mobot'] = $mobotdata['key'];
             }
@@ -547,7 +552,7 @@ class TaxonController extends Controller
         $zoobankdata = [ExternalAPIs::NOT_FOUND];
 
         if ($mobotdata[0] == ExternalAPIs::NOT_FOUND and $ipnidata[0] == ExternalAPIs::NOT_FOUND and $mycobankdata[0] == ExternalAPIs::NOT_FOUND) {
-          $zoobankdata = $apis->getZOOBANK($request->name);
+          $zoobankdata = $apis->getZOOBANK($name);
           if (is_null($zoobankdata)) {
             $zoobankdata = [ExternalAPIs::NOT_FOUND];
           } elseif (count($finaldata)>0) {
@@ -563,7 +568,9 @@ class TaxonController extends Controller
             $keystoget = ["rank","author","valid","reference","parent","senior"];
             foreach($keystoget as $key) {
                 $value = self::filterSearchData($alldata,$key);
-                $finaldata[$key] = $value;
+                if ($value) {
+                  $finaldata[$key] = $value;
+                }
             }
             //get external ids if they exist
             if (count($finaldata)>0) {
@@ -585,12 +592,29 @@ class TaxonController extends Controller
         //is parent registered?
         $parent = $finaldata['parent'];
         if (!is_null($parent)) {
+
             $finalparent = $finaldata['parent'];
+
+            //gbif may report accepted taxon as parent for a synonym
+            $nwords = explode(" ",$name);
+            if (count($nwords)>1 and $parent != null) {
+              $pattern = "/".$parent."/i";
+              $is_parent = preg_match($pattern, $name);
+              //if it is not the parent in this cases get correct parent
+              if (!$is_parent) {
+                if (count($nwords)>=3) {
+                  $finalparent = $nwords[0]." ".$nwords[1];
+                } else {
+                  $finalparent = $nwords[0];
+                }
+              }
+            }
+
             if (is_numeric($parent)) {
                 $finalparent = null;
                 $hasParent = Taxon::where('id',$parent)->get();
             } else {
-                $hasParent = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$parent])->get();
+                $hasParent = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$finalparent])->get();
             }
             if ($hasParent->count()==1) {
                 $finaldata['parent'] =  [$hasParent->first()->id, $hasParent->first()->fullname];
@@ -600,7 +624,7 @@ class TaxonController extends Controller
                 if ($request->importparents==1) {
                     $gbifsearch = $apis->getGBIF($finalparent);
                     if (!is_null($gbifsearch)) {
-                      $gbifkey = isset($gbifsearch['gbif_record']['nubKey']) ? $gbifsearch['gbif_record']['nubKey'] : null;
+                        $gbifkey = isset($gbifsearch['gbif_record']['nubKey']) ? $gbifsearch['gbif_record']['nubKey'] : $gbifsearch['gbif_record']['key'] ;
                       if (null != $gbifkey) {
                           $related_data = ExternalAPIs::getGBIFParentPathData($gbifkey,$include_first=true);
                           $parent_id = self::importParents($related_data);
@@ -634,8 +658,31 @@ class TaxonController extends Controller
             if ($hasSenior->count()==1) {
                 $finaldata['senior'] =  [$hasSenior->first()->id, $hasSenior->first()->fullname];
             } else {
-                $finaldata['senior'] =[null,$finalsenior];
-                $bag->add('e2', Lang::get('messages.senior_not_registered', ['name' => $senior]));
+                /* need to store senior and return relationship */
+                $senior_id = null;
+                //should import parent path?
+                if ($request->importparents==1) {
+                    $gbifsearch = $apis->getGBIF($finalsenior);
+                    if (!is_null($gbifsearch)) {
+                      $gbifkey = isset($gbifsearch['gbif_record']['nubKey']) ? $gbifsearch['gbif_record']['nubKey'] : $gbifsearch['gbif_record']['key'] ;
+                      if (null != $gbifkey) {
+                          $related_data = ExternalAPIs::getGBIFParentPathData($gbifkey,$include_first=true);
+                          $senior_id = self::importParents($related_data);
+                      } else {
+                        $related_data = ExternalAPIs::getMobotParentPath($finalsenior,$include_first=true);
+                        if (count($related_data)>0) {
+                          $senior_id = self::importParents($related_data);
+                        } else {
+                          $bag->add('e2', Lang::get('messages.senior_not_registered', ['name' => $finalsenior]));
+                        }
+                      }
+                    } else {
+                      $bag->add('e2', Lang::get('messages.senior_not_registered', ['name' => $finalsenior]));
+                    }
+                } else {
+                  $bag->add('e2', Lang::get('messages.senior_not_registered', ['name' => $finalsenior]));
+                }
+                $finaldata['senior'] =[$senior_id,$finalsenior];
             }
         }
 
@@ -692,8 +739,16 @@ class TaxonController extends Controller
     {
       $previous_id = null;
       foreach($parents_array as $related) {
-            if (!isset($previous_id)) {
+            if ($related['parent_id']) {
               $previous_id = $related['parent_id'];
+            } else {
+              $parent = $related['parent'];
+              if ($parent) {
+                $hadtaxon = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$parent]);
+                if ($hadtaxon->count()) {
+                  $previous_id = $hadtaxon->first()->id;
+                }
+              }
             }
             $values = [
                 'level' => $related['rank'],

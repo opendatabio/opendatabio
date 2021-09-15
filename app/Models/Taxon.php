@@ -67,10 +67,10 @@ class Taxon extends Node implements HasMedia
         $value = ucfirst(strtolower($value));
 
         if ($this->level <= 200) {
-            $this->name = $value;
+            $this->name = ucfirst(mb_strtolower($value));
         }
         if ($this->level >= 210) { // sp. or below, strips evertyhing before the last space
-            $this->name = trim(substr($value, strrpos($value, ' ') - strlen($value)));
+            $this->name = mb_strtolower(trim(substr($value, strrpos($value, ' ') - strlen($value))));
         }
     }
 
@@ -138,8 +138,7 @@ class Taxon extends Node implements HasMedia
 
     public function getTaxonRankAttribute()
     {
-        return Lang::get('levels.tax.'.$this->level).
-            ($this->author_person ? ' ('.Lang::get('messages.unpublished').')' : '');
+        return Lang::get('levels.tax.'.$this->level,[],'en');
     }
 
     public function getQualifiedFullnameAttribute()

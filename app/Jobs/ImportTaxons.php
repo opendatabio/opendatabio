@@ -154,6 +154,7 @@ class ImportTaxons extends AppJob
         //if level and author the api has found something by the name informed
         //if this is the case all fields that could be retrieved by the api are informed
         if (isset($apidata['rank'])) {
+          $taxon['name'] = $apidata['name']; //this will fix the name in case of misspells
           $info_level = isset($taxon['level']) ? Taxon::getRank($taxon['level']) : null;
           if (is_null($info_level)) {
             $taxon['level'] = $apidata['rank'];
@@ -170,7 +171,7 @@ class ImportTaxons extends AppJob
               $taxon['parent_id'] =  $apidata['parent'][0];
             }
             //if this true, the informed parent exists and was validated (requires the validationParent to be executed before validateAPIs)
-            if (isset($taxon['parent_id']) and $taxon['parent_id'] != $apidata['parent'][0]) {
+            if ($taxon['parent_id'] != $apidata['parent'][0]) {
                 $this->appendLog('WARNING: the parent '.$taxon['parent'].'  informed for taxon '.$taxon['name'].' is different from the one found by the API: '.$apidata['parent'][1].'. The Informed parent was used for the record.');
             } else {
                 //just add the api detected parent as the parent, regardless of whether it is registered or not in odb
@@ -455,15 +456,21 @@ class ImportTaxons extends AppJob
     public function import($taxon)
     {
         $name = $taxon['name'];
+
+
         $parent = isset($taxon['parent_id']) ? $taxon['parent_id'] : null;
         $related_to_import = isset($taxon['related_to_import']) ? $taxon['related_to_import'] : [];
         //import related taxa as needed retrieving last parent
-        if (is_null($parent) and count($related_to_import)>0) {
+        if (count($related_to_import)>0) {
           self::importRelated($taxon);
           $parent = isset($taxon['parent_id']) ? $taxon['parent_id'] : null;
         }
+
+        //$this->skipEntry($taxon, 'taxon '.$name.' ARRIVED  here to be save');
+        //return;
+
         if (is_null($parent)) {
-          $this->appendLog("ERROR: taxon '$name' could not be imported into the database. Missing parent has ".count($related_to_import)." and the key is ".$taxon['gbifkey']." and parent is ".$taxon['parent']);
+          $this->appendLog("ERROR: taxon '$name' could not be imported into the database. Missing parent has ".json_encode($related_to_import)." and the key is ".$taxon['gbifkey']." and parent is ".$taxon['parent']);
           return;
         }
         // Is this taxon already imported?
@@ -473,6 +480,8 @@ class ImportTaxons extends AppJob
             $this->appendLog("ERROR: taxon '$name' under parent '$parentname' is already imported into the database");
             return;
         }
+
+
 
         $level = $taxon['level'];
         $valid = $taxon['valid'];
@@ -498,8 +507,7 @@ class ImportTaxons extends AppJob
             'bibreference_id' => array_key_exists('bibkey', $taxon) ? $taxon['bibkey'] : null,
             'notes' => $notes,
         ];
-        //$this->skipEntry($taxon, 'taxon '.$name.' ARRIVED  here to be save');
-        //return;
+
 
         $newtaxon = new Taxon($values);
         $newtaxon->fullname = $name;
@@ -538,8 +546,16 @@ class ImportTaxons extends AppJob
       //return false;
       $finalid = null;
       foreach($related_to_import as $related) {
-            if (!isset($previous_id)) {
+            if ($related['parent_id']) {
               $previous_id = $related['parent_id'];
+            } else {
+              $thisparent = $related['parent'];
+              if ($thisparent) {
+                $hadtaxon = Taxon::whereRaw('odb_txname(name, level, parent_id) = ?', [$thisparent]);
+                if ($hadtaxon->count()) {
+                  $previous_id = $hadtaxon->first()->id;
+                }
+              }
             }
             $values = [
                 'level' => $related['rank'],

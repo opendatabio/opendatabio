@@ -501,32 +501,58 @@ class ExternalAPIs
         $base_uri = 'https://api.gbif.org/';
         //search locale_canonicalName exact match
         $get_string = "v1/species?name=".$searchstring;
-        $results = self::makeRequest($base_uri,$get_string);
+        $results = ExternalAPIs::makeRequest($base_uri,$get_string);
         $isarray = is_array($results);
 
         $matchtype = "EXACT";
         //try a fuzzy match if not found
         if (is_null($results) or ($isarray and count($results)==0)) {
           $get_string = "v1/species/match?name=".$searchstring;
-          $results = self::makeRequest($base_uri,$get_string);
+          $results = ExternalAPIs::makeRequest($base_uri,$get_string);
           if ($results['matchType']=="NONE") {
             return null;
           }
           $matchtype = $results['matchType'];
           $searchstring =$results["canonicalName"];
           $get_string = "v1/species?name=".$searchstring;
-          $results = self::makeRequest($base_uri,$get_string);
+          $results = ExternalAPIs::makeRequest($base_uri,$get_string);
         }
-        $result = [];
+
         $keys = [];
         $nubkeys = [];
+        $years = [];
         foreach($results as $values) {
           $canonicalName = $values['canonicalName'];
+          $rank = (isset($values['rank']) and $values['rank'] != "") ? $values['rank'] : null;
           $nubkey = (isset($values['nubKey']) and $values['nubKey'] != "") ? $values['nubKey'] : null;
           $taxonID = (isset($values['taxonID']) and $values['taxonID'] != "") ? $values['taxonID'] : null;
           $is_ipni = preg_match("/lsid:ipni.org/i", $taxonID);
           $is_tropicos = (mb_strtolower(substr($taxonID,0,4))=="tro-" or preg_match("/tropicos/i", $taxonID));
-          if($canonicalName==$searchstring) {
+
+          $publishedIn = (isset($values['publishedIn']) and $values['publishedIn'] != "") ? $values['publishedIn'] : null;
+          $year = 99999;
+          if ($publishedIn) {
+            $year_pattern = '~\b\d{4}\b\*?~';
+            if (preg_match_all($year_pattern, $publishedIn, $matches)) {
+               $matches = array_unique($matches[0]);
+               if (count($matches)==1) {
+                 $match = $matches[0];
+                  if ($match>1500 and $match<(today()->format("Y"))) {
+                    $year = $match;
+                  }
+               }
+            }
+          }
+          $years[] = $year;
+          $parent = (isset($values['parent']) and $values['parent'] != "") ? $values['parent'] : null;
+          $nw = explode(" ",$searchstring);
+          if (count($nw)>1 and $parent != null) {
+            $pattern = "/".$parent."/i";
+            $is_parent = preg_match($pattern, $searchstring);
+          } else {
+            $is_parent = true;
+          }
+          if($canonicalName==$searchstring and $is_parent) {
               if ($is_ipni) {
                 $keys['ipni'] = $taxonID;
               }
@@ -542,13 +568,29 @@ class ExternalAPIs
 
 
         //get record
-        $nubkeys = array_unique($nubkeys);
-        if (count($nubkeys)==1) {
+        if (count(array_unique($nubkeys))>1) {
+          $oldest = (min($years)!=99999) ? min($years) : null;
+          if ($oldest) {
+            $ykeys = array_keys($years,$oldest);
+            $nbk = array_intersect_key($nubkeys,$ykeys);
+            if (count(array_unique($nbk))==1) {
+              $nubkeys = array_unique($nbk);
+            }
+          } else {
+            $nbkcount = array_count_values($nubkeys);
+            $ykeys = array_keys($nbkcount, max($nbkcount));
+            if (count($ykeys)==1) {
+              $nubkeys = $ykeys;
+            }
+          }
+        }
+
+        if (count(array_unique($nubkeys))==1) {
             $get_string = "v1/species/".$nubkeys[0];
-            $gbif_record = self::makeRequest($base_uri,$get_string);
+            $gbif_record = ExternalAPIs::makeRequest($base_uri,$get_string);
             if ($gbif_record['synonym']) {
               $get_string = "v1/species/".$gbif_record['acceptedKey'];
-              $gbif_senior = self::makeRequest($base_uri,$get_string);
+              $gbif_senior = ExternalAPIs::makeRequest($base_uri,$get_string);
             }
             return ['keys' => $keys, 'gbif_record'=>$gbif_record, 'match_type' => $matchtype, 'gbif_senior' => $gbif_senior ];
         }
@@ -562,7 +604,7 @@ class ExternalAPIs
         }
         $base_uri = 'https://api.gbif.org/';
         $get_string = "v1/species/".$gbifnubkey;
-        $firstrecord = self::makeRequest($base_uri,$get_string);
+        $firstrecord = ExternalAPIs::makeRequest($base_uri,$get_string);
         if (is_null($firstrecord) or (is_array($firstrecord) and count($firstrecord)==0)) {
           return [];
         }
@@ -573,12 +615,40 @@ class ExternalAPIs
           $idx++;
         }
         //loop from record up to parent root until find registered in ODB
+        //$running_key = isset($firstrecord['parentKey']) ? $firstrecord['parentKey'] : null;
+
         $running_key = isset($firstrecord['parentKey']) ? $firstrecord['parentKey'] : null;
+
         if (isset($running_key)) {
+
+            /* this is for cases in which the parent is the accepted key */
+            $parent = isset($firstrecord['parent']) ? $firstrecord['parent'] : null;
+            $name = isset($firstrecord['canonicalName']) ? $firstrecord['canonicalName'] : null;
             $stop =0;
             while($stop == 0) {
-                $get_string = "v1/species/".$running_key;
-                $gbifdata = self::makeRequest($base_uri,$get_string);
+                $nw = explode(" ",$name);
+                if (count($nw)>1 and $parent != null) {
+                  $pattern = "/".$parent."/i";
+                  $is_parent = preg_match($pattern, $name);
+                  //gbif may report accepted taxon as parent for a synonym
+                  if (!$is_parent) {
+                    if (count($nw)>=3) {
+                      $finalparent = $nw[0]." ".$nw[1];
+                    } else {
+                      $finalparent = $nw[0];
+                    }
+                  }
+                } else {
+                  $is_parent = true;
+                }
+                if ($is_parent) {
+                  $get_string = "v1/species/".$running_key;
+                  $gbifdata = ExternalAPIs::makeRequest($base_uri,$get_string);
+                } else {
+                  $apis = new ExternalAPIs();
+                  $gbifdata = $apis->getGBIF($finalparent);
+                  $gbifdata = isset($gbifdata['gbif_record']) ? $gbifdata['gbif_record'] : null;
+                }
                 if (is_null($gbifdata) or (is_array($gbifdata) and count($gbifdata)==0) or !isset($gbifdata['canonicalName'])) {
                   $stop = 1;
                   break;
@@ -596,6 +666,8 @@ class ExternalAPIs
                 }
                 $data_array[$idx] = $gbifdata;
                 $running_key = isset($gbifdata['parentKey']) ? $gbifdata['parentKey'] : null;
+                $parent = isset($gbifdata['parent']) ? $gbifdata['parent'] : null;
+                $name = isset($gbifdata['canonicalName']) ? $gbifdata['canonicalName'] : null;
                 if ($rank === 0 or !isset($running_key)) {
                   $stop =1;
                   break;
@@ -669,18 +741,41 @@ class ExternalAPIs
                       if ($isvalid and null != $hasenior) {
                         $isvalid = 0;
                       }
+                      $parent = isset($gbif_record["parent"]) ? $gbif_record['parent'] : null;
+                      $name = isset($gbif_record["canonicalName"]) ? $gbif_record['canonicalName'] : null;
+                      //gbif may report accepted taxon as parent for a synonym
+                      $finalparent = $parent;
+                      $finalsenior = $hasenior;
+                      if ($parent) {
+                        $nw = explode(" ",$name);
+                        $senior = ($hasenior) ? explode(" ",$hasenior) : [];
+                        if (count($nw)>1 and $parent != null) {
+                          $pattern = "/".$parent."/i";
+                          $is_parent = preg_match($pattern, $name);
+                          if (!$is_parent) {
+                            if (count($nw)>=3) {
+                              $finalparent = $nw[0]." ".$nw[1];
+                              $finalsenior = ($hasenior) ? $senior[0]." ".$senior[1]." ".$senior[2] : null;
+                            } else {
+                              $finalparent = $nw[0];
+                              $finalsenior = ($hasenior) ? $senior[0]." ".$senior[1] : null;
+                            }
+                          }
+                        }
+                      }
+
                       $data = [
-                        "name"  => isset($gbif_record["canonicalName"]) ? $gbif_record['canonicalName'] : null,
+                        "name"  => $name,
                         "rank" => $rank,
                         "author" => $author,
                         "valid" => $isvalid,
                         "reference" => $publishedin,
-                        "parent" => isset($gbif_record["parent"]) ? $gbif_record['parent'] : null,
-                        "senior" => $hasenior,
+                        "parent" => $finalparent,
+                        "senior" => $finalsenior,
                         "mobot" => $tropicos,
                         "ipni" => $ipni,
                         'mycobank' => null,
-                        'gbif' => isset($gbif_record["nubKey"]) ? $gbif_record['nubKey'] : null,
+                        'gbif' => isset($gbif_record["nubKey"]) ? $gbif_record['nubKey'] : $gbif_record['key'],
                         'zoobank' => null,
                         'parent_id' => isset($gbif_record["parent_id"]) ? $gbif_record['parent_id'] : ($rank===0 ? 1 : null),
                     ];
@@ -701,7 +796,7 @@ class ExternalAPIs
     {
       $client = new Guzzle(['base_uri' => $base_uri]);// 'proxy' => $this->proxystring]);
       try {
-          $response = $client->request('GET',$get_string);
+          $response = $client->request('GET',$get_string, ['read_timeout' => 10]);
       } catch (\ClientException $e) {
           return null; //FAILED
       } catch (\Exception $e) {
