@@ -239,7 +239,7 @@ class Location extends Node implements HasMedia
 
     public function getLevelNameAttribute()
     {
-        return Lang::get('levels.adm_level.'.$this->adm_level);
+        return Lang::get('levels.adm_level.'.$this->adm_level,[],'en');
     }
 
 
