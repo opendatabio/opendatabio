@@ -398,9 +398,9 @@ class ImportLocations extends AppJob
         }
         // TODO: implemente validation for linestrings (transects)
         if (in_array($geomType,['linestring'])) {
-          $start_point  = DB::statement("SELECT ST_AsText(ST_StartPoint(ST_GeomFromText('".$geom."'))) as start_point");
+          $start_point  = DB::select("SELECT ST_AsText(ST_StartPoint(ST_GeomFromText('".$geom."'))) as start_point");
           $start_point = count($start_point) ? $start_point[0]->start_point : null;
-          if ($start_point) {
+          if ($start_point==null) {
             $this->skipEntry($locationLog,"Could not calculate the ST_StartPoint for the informed geometry");
             return false;
           }
