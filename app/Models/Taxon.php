@@ -524,9 +524,9 @@ class Taxon extends Node implements HasMedia
         if ($this->author) {
             return $this->author;
         }
-        if ($this->author_person) {
+        if ($this->author_person()->count()) {
             $person = $this->author_person;
-            isset($person->full_name) ? $person->full_name." - ".$person->abbreviation : $person->abbreviation;
+            return isset($person->full_name) ? $person->full_name." - ".$person->abbreviation : $person->abbreviation;
         }
     }
     //here without authors

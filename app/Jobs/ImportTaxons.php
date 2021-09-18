@@ -10,6 +10,8 @@ namespace App\Jobs;
 use App\Models\Taxon;
 use App\Models\ExternalAPIs;
 use App\Models\Person;
+use App\Models\ODBFunctions;
+
 use Lang;
 use Illuminate\Http\Request as therequest;
 
@@ -74,8 +76,18 @@ class ImportTaxons extends AppJob
           }
         }
 
-        //VALIDATE MOBOT, IPNI, MYCOBANK, GBIF AND ZOOBANK apis
-        $this->validateAPIs($taxon);
+        //of person or author id was informed, then this is a morphotype
+        $person = isset($taxon['person']) ? $taxon['person'] : (isset($taxon['author_id']) ? $taxon['author_id'] : null);
+        if ($person==null) {
+          //VALIDATE MOBOT, IPNI, MYCOBANK, GBIF AND ZOOBANK apis
+          $this->validateAPIs($taxon);
+        } elseif (!isset($taxon['parent_id']) or $taxon['parent_id']==null) {
+          $this->appendLog('WARNING: taxon '.$name.' is unpublished you must inform a parent and level');
+          return false;
+        } elseif (!isset($taxon['level'])) {
+          $this->appendLog('WARNING: taxon '.$name.' is unpublished you must inform a parent and level');
+          return false;
+        }
 
         //check if registered if parent is registered
         if (isset($taxon['parent_id'])) {
@@ -351,7 +363,7 @@ class ImportTaxons extends AppJob
         return true;
     }
 
-    //must be used after validateAPIs or will always fail
+    //must be used after validateAPIs to be used for morphotypes
     protected function validateParent(&$taxon)
     {
         $parent = isset($taxon['parent_name']) ? $taxon['parent_name'] : (isset($taxon['parent']) ? $taxon['parent'] : (isset($taxon['parent_id']) ? $taxon['parent_id'] : null ));
@@ -368,7 +380,7 @@ class ImportTaxons extends AppJob
               return true;
           }
         }
-        return true;
+        return false;
     }
 
     /*
@@ -480,9 +492,6 @@ class ImportTaxons extends AppJob
             $this->appendLog("ERROR: taxon '$name' under parent '$parentname' is already imported into the database");
             return;
         }
-
-
-
         $level = $taxon['level'];
         $valid = $taxon['valid'];
         $bibreference = array_key_exists('bibreference', $taxon) ? $taxon['bibreference'] : null;
@@ -510,7 +519,18 @@ class ImportTaxons extends AppJob
 
 
         $newtaxon = new Taxon($values);
-        $newtaxon->fullname = $name;
+
+        /* if it is a morphotype and parent is not in name */
+        if (!is_null($parent) and !is_null($values['author_id'])) {
+          $parent = Taxon::findOrFail($parent);
+          $pattern = "/".$parent."/i";
+          $is_parent = preg_match($pattern, $name);
+          if ($is_parent) {
+            $newtaxon->fullname = $name;
+          } else {
+            $newtaxon->name = $name;
+          }
+        }
         $newtaxon->save();
         //sleep(2);
         if (!is_null($mobot)) {

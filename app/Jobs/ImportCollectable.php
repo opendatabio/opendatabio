@@ -82,8 +82,13 @@ class ImportCollectable extends AppJob
             $registry['dataset'] = $valid->id;
             return true;
         }
-        $registry['dataset'] = Auth::user()->defaultDataset->id;
-        return true;
+        if (Auth::user()->defaultDataset) {
+          $registry['dataset'] = Auth::user()->defaultDataset->id;
+          return true;
+        }
+        $this->skipEntry($registry, 'dataset not informed and you do not have a default dataset defined');
+        return false;
+
     }
 
 
@@ -236,7 +241,7 @@ class ImportCollectable extends AppJob
               $date = explode("-",$date);
               $date = [$date[1],$date[2],$date[0]];
           }
-        } elseif (!is_array($date)) {
+        } elseif (!is_array($date) and $date!=null) {
           if (get_class($date)==="DateTime") {
              $year = $date->format('Y');
              $day = $date->format('d');
@@ -417,6 +422,12 @@ class ImportCollectable extends AppJob
             $hadlocation =  $detected_locations->getData()->detectedLocation;
             $newlocation =  $detected_locations->getData()->detectdata;
             $hadrelated = $detected_locations->getData()->detectrelated;
+            if ($hadrelated) {
+              $related = [];
+              foreach ($hadrelated as $value) {
+                $related[] = $value->id;
+              }
+            }
             //if found nothing, neither parent nor self, then issue error
             if (!array_filter($hadlocation) and !array_filter($newlocation)) {
               $messages[] =  'Location latitude '.$latitude.' and/or location longitude'.$longitude.' are invalid!';
@@ -431,12 +442,11 @@ class ImportCollectable extends AppJob
                 $alocation['latitude'] = null;
                 $alocation['longitude'] = null;
                 $alocation['location_tosave']  = [
-                  'name' => config('app.unnamedPoint_basename')."_".preg_replace("/[A-Z\(\)-\.\s]/","",$newlocation[4]),
+                  'name' => config('app.unnamedPoint_basename')."_".preg_replace("/[A-Z\(\)-\.\s]/","",$newlocation[2]),
                   'parent_id' => $newlocation[1],
-                  'uc_id' => $newlocation[3],
-                  'geom' => $newlocation[4],
+                  'geom' => $newlocation[2],
                   'adm_level' => Location::LEVEL_POINT,
-                  'related_locations' => $hadrelated,
+                  'related_locations' => $related,
                 ];
                 $validatelocations[] = $alocation;
             }
@@ -461,6 +471,7 @@ class ImportCollectable extends AppJob
             $saverequest = new Request;
             $saverequest->merge($individual_location['location_tosave']);
             $savedlocation = app('App\Http\Controllers\LocationController')->saveForIndividual($saverequest);
+            $savedlocation = json_decode($savedlocation);
             if (isset($savedlocation['error'])) {
                 $validatedlocation_messages [] = 'Could not save detected location: '.implode('|',$individual_location);
             } else {
@@ -561,12 +572,12 @@ class ImportCollectable extends AppJob
               }
             }
             if (is_array($value)) {
-                $biocollection_id = !isset($value['biocollection_code']) ? (isset($value[0]) ? $value[0] : null) : $value['biocollection_code'];
+                $biocollection_id = isset($value['biocollection_code']) ? $value['biocollection_code'] :
+                (isset($value['biocollection']) ? $value[ 'biocollection'] : null);
                 $biocollection_number = !isset($value['biocollection_number']) ? (isset($value[1]) ? $value[1] : null) : $value['biocollection_number'];
             } else {
                $biocollection_id = $value;
             }
-
             $query = Biocollection::select(['id', 'acronym', 'name', 'irn']);
             $fields = ['id', 'acronym', 'name', 'irn'];
             $valid = ODBFunctions::validRegistry($query, $biocollection_id, $fields);

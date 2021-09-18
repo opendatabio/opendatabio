@@ -17,6 +17,7 @@ use App\Models\Project;
 use App\Models\Dataset;
 use App\Models\UserJob;
 use App\Models\ODBFunctions;
+use App\Jobs\ImportIndividuals;
 use Response;
 use DB;
 //use App\Models\Jobs\ImportIndividuals;
@@ -30,7 +31,7 @@ class IndividualController extends Controller
      */
     public function index(Request $request)
     {
-      $individuals = Individual::select(
+        $individuals = Individual::select(
           'individuals.*',
           DB::raw('odb_ind_relativePosition(individuals.id) as relativePosition'),
           DB::raw('odb_ind_fullname(individuals.id,individuals.tag) as fullname'));
@@ -53,7 +54,7 @@ class IndividualController extends Controller
             });
         }
         if ($request->tag) {
-            ODBFunctions::advancedWhereIn($individual, 'tag', $request->tag);
+            ODBFunctions::advancedWhereIn($individuals, 'tag', $request->tag);
         }
 
         if ($request->taxon or $request->taxon_root) {

@@ -64,7 +64,50 @@
                       </div>
                   </div>
 
+                  @php
+                  $unpublished = "";
+                  if (empty(old())) { // no "old" value, we're just arriving
+                      if (isset($taxon)) {
+                          if ($taxon->author_id) {
+                              $unpublished = 'checked';
+                          }
+                          if ($taxon->valid) {
+                              $isvalid = 'checked';
+                          }
+                      } else {
+                        $isvalid = "checked";
+                      }
+                  } else { // "old" value is available, work with it
+                      if (!empty(old('unpublished'))) {
+                          $unpublished = 'checked';
+                      }
+                      if (!empty(old('valid'))) {
+                        $isvalid = 'checked';
+                      } else {
+                        $isvalid = "";
+                      }
+                  }
+                  @endphp
+
                   <div class="form-group">
+                    <div class="col-md-6 col-md-offset-3">
+                      <div class="checkbox">
+                         <label class="super-valid">
+                            <input type="checkbox" name="valid" id="valid" {{ $isvalid }} >
+                            @lang('messages.valid')?
+                            &nbsp;
+                            &nbsp;
+                         </label>
+                          <label>
+                              <input type="checkbox" name="unpublished" id="unpublished" {{ $unpublished }} >
+                              @lang('messages.unpublished')?
+                          </label>
+
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group super-apicheck">
                     <div class="col-sm-offset-3 col-sm-6">
                       <button type="submit" class="btn btn-primary" id="checkapis">
                         <i class="fa fa-btn fa-plus"></i>
@@ -118,57 +161,6 @@
                   	@lang('messages.taxon_parent_hint')
                       </div>
                     </div>
-                  </div>
-
-                  <div class="form-group">
-                      <div class="col-md-6 col-md-offset-3">
-                          <div class="checkbox">
-                              <label>
-                                  <input type="checkbox" name="unpublished" id="unpublished"
-                  @php
-                  if (empty(old())) { // no "old" value, we're just arriving
-                      if (isset($taxon)) {
-                          if ($taxon->author_id)
-                              echo 'checked';
-                      }
-                  } else { // "old" value is available, work with it
-                      if (!empty(old('unpublished'))) {
-                          echo 'checked';
-                      }
-                  }
-                  @endphp
-                  >
-                  @lang('messages.unpublished')?
-                              </label>
-                          </div>
-                      </div>
-                  </div>
-
-                  <!-- senior & is valid -->
-                  <div class="form-group super-valid">
-                      <div class="col-md-6 col-md-offset-3">
-                          <div class="checkbox">
-                              <label>
-                                  <input type="checkbox" name="valid" id="valid"
-                  @php
-                  if (empty(old())) { // no "old" value, we're just arriving
-                      if (isset($taxon)) {
-                          if ($taxon->valid)
-                              echo 'checked';
-                      } else {
-                          echo 'checked';
-                      }
-                  } else { // "old" value is available, work with it
-                      if (!empty(old('valid'))) {
-                          echo 'checked';
-                      }
-                  }
-                  @endphp
-                  >
-                  @lang('messages.valid')?
-                              </label>
-                          </div>
-                      </div>
                   </div>
 
                   <div class="form-group" id="super-senior">
@@ -365,6 +357,7 @@ function setFields(vel) {
         $('.super-author').hide(vel);
         $('.super-reference').hide(vel);
         $('.super-external').hide(vel);
+        $('.super-apicheck').hide(vel);
         $('.super-author_id').show(vel);
         return null; // so these instructions will not be overriden by "valid" below
         break;
@@ -374,6 +367,8 @@ function setFields(vel) {
         $('.super-reference').show(vel);
         $('.super-external').show(vel);
         $('.super-author_id').hide(vel);
+        $('.super-apicheck').show(vel);
+
         break;
     }
 

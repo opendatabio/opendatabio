@@ -14,7 +14,7 @@ use App\Models\UserJob;
 use App\Models\Location;
 use App\Models\ODBFunctions;
 use Response;
-
+use Log;
 class TaxonController extends Controller
 {
     /**
@@ -26,8 +26,27 @@ class TaxonController extends Controller
     {
         $taxons = Taxon::query()->with(['author_person', 'reference']);
         if ($request->root) {
-            $root_tx = Taxon::select('lft', 'rgt')->where('id', $request->root)->get()->first();
-            $taxons->where('lft', '>=', $root_tx['lft'])->where('rgt', '<=', $root_tx['rgt'])->orderBy('lft');
+            $roots = explode(',',$request->root);
+            $whereraw = [];
+            foreach ($roots as $root) {
+              if (is_numeric($root)) {
+                $root_tx = Taxon::select('lft', 'rgt')->where('id', $root);
+              } else {
+                $root_tx = Taxon::select('lft', 'rgt')->whereRaw('odb_txname(name, level, parent_id)="'.$root.'"');
+              }
+              if ($root_tx->count()) {
+                $root_tx = $root_tx->first();
+                $whereraw[] = '(lft>='.$root_tx['lft'].' AND rgt<='.$root_tx['rgt'].')';
+              }
+            }
+            if (count($whereraw)) {
+              $taxons->whereRaw(implode(' OR ',$whereraw));
+            } else {
+              //nothing registered must return null
+              //Log::info("I GOT HERE");
+              $request->limit=0;
+              $request->offset=0;
+            }
         }
         if ($request->id) {
             $taxons->whereIn('id', explode(',', $request->id));
@@ -82,10 +101,10 @@ class TaxonController extends Controller
         }
 
 
-        if ($request->limit && $request->offset) {
+        if (isset($request->limit) && isset($request->offset)) {
             $taxons->offset($request->offset)->limit($request->limit);
         } else {
-          if ($request->limit) {
+          if (isset($request->limit)) {
             $taxons->limit($request->limit);
           }
         }

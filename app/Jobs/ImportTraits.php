@@ -108,6 +108,13 @@ class ImportTraits extends AppJob
         if (!$this->hasRequiredKeys(['export_name','name','description','type','objects'], $odbtrait)) {
             return false;
         }
+
+        if (!ODBTrait::validateExportName($odbtrait["export_name"])) {
+          $this->appendLog('ERROR: export_name '.$odbtrait['export_name'].' does not conform to camelCase, PascalCase, nor snake_case, or have accents');
+          return false;
+        }
+
+
         //validate name and translations
         if (!$this->validateNameTranslations($odbtrait)) {
             return false;
@@ -231,12 +238,12 @@ class ImportTraits extends AppJob
         return false;
       }
       //if name is not array and keys do not matck registered languages
-      if (!is_array($odbtrait['name']) || null === Self::validateLanguageKeys($odbtrait['name'])) {
+      if (!is_array($odbtrait['name']) || null === self::validateLanguageKeys($odbtrait['name'])) {
         $this->skipEntry($odbtrait, 'Variable '.$odbtrait['export_name']." requires 'name' to be an array with keys corresponding to registered language ids, codes or names");
         return false;
       }
       //if name is not array and keys do not matck registered languages
-      if (!is_array($odbtrait['description']) || null === Self::validateLanguageKeys($odbtrait['description'])) {
+      if (!is_array($odbtrait['description']) || null === self::validateLanguageKeys($odbtrait['description'])) {
         $this->skipEntry($odbtrait, 'Variable '.$odbtrait['export_name']." requires 'description' to be an array with keys corresponding to registered language ids, codes or names");
         return false;
       }

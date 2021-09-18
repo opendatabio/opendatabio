@@ -104,7 +104,8 @@ class Voucher extends Model
       if ($this->locations->count()==0) {
         return null; //this should not exists;
       }
-      $date = explode("-",$this->date);
+      $date = isset($this->date) ? $this->date : $this->individual->date;
+      $date = explode("-",$date);
       $valid_date = checkdate($date[1],$date[2],$date[0]);
       if ($this->locations->count()==1 or !$valid_date) {
         return $this->locations()->where('first',1);
@@ -259,7 +260,7 @@ class Voucher extends Model
     /*dwc terms */
     public function getOccurrenceIDAttribute()
     {
-      $this->fullname;
+      return $this->fullname;
     }
 
     public function getCollectionCodeAttribute()

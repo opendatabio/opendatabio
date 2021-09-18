@@ -18,12 +18,15 @@ return [
     'models' => [
       App\Models\Dataset::class,
       App\Models\Measurement::class,
+      App\Models\Individual::class,
+      App\Models\Voucher::class,
+      App\Models\Media::class,
       App\Models\User::class,
       App\Models\Project::class,
     ],
-    'rankdir' => 'TB',
-    'ranksep' => 0.5,
-    'nodesep' => 2,
+    'rankdir' => 'LR',
+    'ranksep' => 2,
+    'nodesep' => 1,
   ],
 
 

@@ -301,7 +301,14 @@ class TaxonController extends Controller
             $request['valid'] = true;
             $taxon = new Taxon($request->only(['level', 'valid', 'parent_id',
                     'author_id', 'notes', ]));
-            $taxon->fullname = $request['name'];
+            $parent = Taxon::findOrFail($request['parent_id']);
+            $pattern = "/".$parent."/i";
+            $is_parent = preg_match($pattern, $request['name']);
+            if ($is_parent) {
+                $taxon->fullname = $request['name'];
+            } else {
+                $taxon->name = $request['name'];
+            }
             $taxon->save(); // we need to save it here to have an id to use on the next methods
         } else {
             $taxon = new Taxon($request->only(['level', 'valid', 'parent_id', 'senior_id', 'author',
@@ -419,7 +426,15 @@ class TaxonController extends Controller
             $request['senior_id'] = null;
             $taxon->update($request->only(['level', 'valid', 'parent_id', 'author', 'senior_id',
                         'author_id', 'bibreference', 'bibreference_id', 'notes', ]));
-            $taxon->fullname = $request['name'];
+
+            $parent = Taxon::findOrFail($request['parent_id']);
+            $pattern = "/".$parent."/i";
+            $is_parent = preg_match($pattern, $request['name']);
+            if ($is_parent) {
+                $taxon->fullname = $request['name'];
+            } else {
+                $taxon->name = $request['name'];
+            }
             // update external keys
             $taxon->externalrefs()->delete();
             $taxon->save();

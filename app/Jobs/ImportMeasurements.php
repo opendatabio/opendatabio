@@ -17,6 +17,8 @@ use App\Models\ODBFunctions;
 use App\Models\ODBTrait;
 use App\Models\BibReference;
 use App\Models\Summary;
+use App\Models\Dataset;
+
 use Auth;
 use Lang;
 use Spatie\SimpleExcel\SimpleExcelReader;
@@ -78,9 +80,6 @@ class ImportMeasurements extends AppJob
               return false;
         }
         if (array_key_exists('dataset',$this->header) and !$this->validateDataset($this->header['dataset'])) {
-              return false;
-        }
-        if (array_key_exists('object_type',$this->header) and !$this->validateObjetType($this->header['object_type'])) {
               return false;
         }
         if (array_key_exists('bibreference',$this->header)  and !$this->validateBibReference($this->header['bibreference'])) {
@@ -151,32 +150,42 @@ class ImportMeasurements extends AppJob
     public function validateDatasetPolicies($measurement)
     {
         //measurements must have a dataset, although measured object need not..
-        $object_type = array_key_exists('object_type', $measurement['object_type']);
-        $object = app('App\Models\\'.$object_type)::where('id', $measurement['object_id']);
+        $object = app($measurement['object_type'])::where('id', $measurement['object_id']);
         $parent_dataset = isset($object->dataset) ? $object->dataset->id : null;
-        if (null == $parent_dataset) {
+        if (null == $parent_dataset)
+        {
+          // and in_array($measurement['object_type'],[Location::class,Taxon::class])) {
            //locations and taxons objects should not have datasets defined.
            return true;
         }
+
         $parent = Dataset::findOrFail($parent_dataset);
         $current = Dataset::findOrFail($measurement['dataset']);
         $parent_privacy = $parent->privacy;
         $current_privacy = $current->privacy;
         if ($current_privacy>=Dataset::PRIVACY_REGISTERED and $parent_license<Dataset::PRIVACY_REGISTERED) {
-          $this->appendLog('Error: Privacy for the dataset '.$parent->name.' to which belongs the measured object has restricted access privacy, while the dataset of the measurement is open access. Therefore, the access is not complete and this must be prevented. In this case both should be open acess. Else, restrict the privacy of dataset '.$current->name);
+          $this->skipEntry($measurement,'Privacy for the dataset '.$parent->name.' to which belongs the measured object has restricted access privacy, while the dataset of the measurement is open access. Therefore, the access is not complete and this must be prevented. In this case both should be open acess. Else, restrict the privacy of dataset '.$current->name);
           return false;
         }
         return true;
     }
 
 
-    protected function validateObjetType($object_type)
+    protected function validateObjectType(&$measurement)
     {
-        $res =  in_array($object_type,["Individual","Voucher","Location","Taxon"]);
-        if (!$res) {
-          $this->appendLog('object_type '.$object_type.' not found in ['.implode(";",["Individual","Voucher","Location","Taxon"]).']');
+        $types =  ODBTrait::OBJECT_TYPES;
+        $simple_types = preg_replace("/App\\\Models\\\/","",$types);
+        $object_type = isset($measurement['object_type']) ? $measurement['object_type'] : (isset($this->header['object_type']) ? $this->header['object_type'] : null);
+        if (in_array($object_type,$types)) {
+          return true;
         }
-        return $res;
+        $object_type = trim(ucfirst(mb_strtolower($object_type)));
+        if (in_array($object_type,$simple_types)) {
+          $key = array_search($object_type,$simple_types);
+          $measurement['object_type'] = $types[$key];
+          return true;
+        }
+        return false;
     }
 
     protected function validateData(&$measurement)
@@ -189,9 +198,6 @@ class ImportMeasurements extends AppJob
             return false;
         }
         if (array_key_exists('person',$measurement) and !$this->validatePerson($measurement['person'])) {
-              return false;
-        }
-        if (array_key_exists('object_type',$measurement) and !$this->validateObjetType($measurement['object_type'])) {
               return false;
         }
         if (!$this->validateObject($measurement)) {
@@ -217,13 +223,17 @@ class ImportMeasurements extends AppJob
 
     protected function validateObject(&$measurement)
     {
-        $object_type = array_key_exists('object_type', $this->header) ? $this->header['object_type'] : $measurement['object_type'];
-        $valid = app('App\Models\\'.$object_type)::where('id', $measurement['object_id']);
-        if ($valid->count()) {
-            $measurements['object_type'] = $object_type;
+        if (!$this->validateObjectType($measurement)) {
+            $this->skipEntry($measurement, "Invalid object_type");
+            return false;
+        }
+
+        $object_type = $measurement['object_type'];
+        $valid = app($object_type)::where('id', $measurement['object_id']);
+        if ($valid->count()==1) {
             return true;
         } else {
-            $this->appendLog('WARNING: Object '.$object_type.' - '.$measurement['object_id'].' not found. Measurement ignored.');
+            $this->skipEntry($measurement, "The informed Measured object was not found in the database");
             return false;
         }
     }
@@ -325,10 +335,10 @@ class ImportMeasurements extends AppJob
         foreach ($value as $key => $cat) {
           if (null != $cat) {
             $thetrait = clone $odbtrait;
-            if (is_string($cat)) {
-              $valid = $thetrait->categories()->whereHas('translations',function($tr) use($cat){ $tr->where('translation','like',$cat);});
+            if (is_numeric($cat)) {
+               $valid = $thetrait->categories()->where('id',$cat);
             } else {
-              $valid = $thetrait->categories()->where('id',$cat);
+              $valid = $thetrait->categories()->whereHas('translations',function($tr) use($cat){ $tr->where('translation','like',$cat);});
             }
             if ($valid->count() == 1) {
               $cats[] = $valid->first()->id;
@@ -456,80 +466,83 @@ class ImportMeasurements extends AppJob
 
 
 
-    public function import($measurements)
+    public function import($measurement)
     {
-        //$measured_id = $measurements['object_id'];
-        //unset($measurements['object_id']);
-        //foreach ($measurements as $key => $value) {
-        $object_type = array_key_exists('object_type', $this->header) ? $this->header['object_type'] : $measurements['object_type'];
-        $measurement = new Measurement([
-                'trait_id' => $measurements['trait_id'],
-                'measured_id' => $measurements['object_id'],
-                'measured_type' => $this->getObjectTypeClass($object_type),
-                'dataset_id' => array_key_exists('dataset', $this->header) ? $this->header['dataset'] : $measurements['dataset'],
-                'person_id' => array_key_exists('person', $this->header) ? $this->header['person'] : $measurements['person'],
-                'bibreference_id' => array_key_exists('bibreference', $measurements) ? $measurements['bibreference'] : null,
-                'notes' => array_key_exists('notes', $measurements) ? $measurements['notes'] : null,
+        //$measured_id = $measurement['object_id'];
+        //unset($measurement['object_id']);
+        //foreach ($measurement as $key => $value) {
+        $new_measurement= new Measurement([
+                'trait_id' => $measurement['trait_id'],
+                'measured_id' => $measurement['object_id'],
+                'measured_type' => $measurement['object_type'],
+                'dataset_id' => array_key_exists('dataset', $this->header) ? $this->header['dataset'] : $measurement['dataset'],
+                'person_id' => array_key_exists('person', $this->header) ? $this->header['person'] : $measurement['person'],
+                'bibreference_id' => array_key_exists('bibreference', $measurement) ? $measurement['bibreference'] : null,
+                'notes' => array_key_exists('notes', $measurement) ? $measurement['notes'] : null,
         ]);
-        $date = $this->extractDate($measurements);
+        $date = $this->extractDate($measurement);
         if (!Measurement::checkDate($date)) {
             $this->skipEntry($date, Lang::get('messages.invalid_date_error'));
         } else {
-            $measurement->setDate($date);
+            $new_measurement->setDate($date);
         }
         //prevent duplications unless specified
-        $allowDuplication = array_key_exists('duplicated', $measurements) ? $measurements['duplicated'] : 0;
-        if (!$this->checkDuplicateMeasurement($measurement,$measurements) && $allowDuplication==0) {
-          $this->skipEntry($measurements, "Duplicated measurement. To allow duplicated values for the same date and object include a 'duplicated' with 1 value in your record");
+        $allowDuplication = isset($measurement['duplicated']) ? $measurement['duplicated'] : 0;
+        if (!$this->checkDuplicateMeasurement($new_measurement,$measurement) && $allowDuplication==0) {
+          $this->skipEntry($measurement, "Duplicated measurement. To allow duplicated values for the same date and object include a 'duplicated' with 1 value in your record");
         } else {
           /*if categorical must save beforehand to be able to save Categories */
-          if (in_array($measurement->type, [ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
-                $measurement->save();
-                $measurement->setValueActualAttribute($measurements['value']);
+          if (in_array($new_measurement->type, [ODBTrait::CATEGORICAL, ODBTrait::CATEGORICAL_MULTIPLE, ODBTrait::ORDINAL])) {
+                $new_measurement->save();
+                $new_measurement->setValueActualAttribute($measurement['value']);
           } else {
-              if (ODBTrait::LINK == $measurement->type) {
-                $measurement->value = ($measurement['value'] != null) ? $measurements['value'] : null;
-                $measurement->value_i = $measurements['link_id'];
-                $measurement->save();
+              if (ODBTrait::LINK == $new_measurement->type) {
+                $new_measurement->value = ($measurement['value'] != null) ? $measurement['value'] : null;
+                $new_measurement->value_i = $measurement['link_id'];
+                $new_measurement->save();
               } else {
-                //$this->appendLog('GOT HERE WITH'.$measurements['value']);
-                $measurement->setValueActualAttribute($measurements['value']);
-                $measurement->save();
+                //$this->appendLog('GOT HERE WITH'.$measurement['value']);
+                $new_measurement->setValueActualAttribute($measurement['value']);
+                $new_measurement->save();
               }
           }
-        $this->affectedId($measurement->id);
+        $this->affectedId($new_measurement->id);
 
-        /* SUMMARY COUNT UPDATE */
+        /* SUMMARY COUNT UPDATE
         $taxon_id = null;
         $dataset_id = null;
         $location_id = null;
-        if ($measurement->measured_type == Individual::class) {
-          $individual = Individual::findOrFail($measurement->measured_id);
-          $taxon_id = $individual->identification->taxon_id;
-          $location_id = $individual->location_id;
+        if ($new_measurement->measured_type == Individual::class) {
+          $individual = Individual::findOrFail($new_measurement->measured_id);
+          $taxon_id = null;
+          if ($individual->identification) {
+            $taxon_id = $individual->identification->taxon_id;
+          }
+          $location_id = $individual->location;
           $dataset_id = $individual->dataset_id;
         }
-        if ($measurement->measured_type == Voucher::class) {
-            $voucher = Voucher::findOrFail($measurement->measured_id);
+        if ($new_measurement->measured_type == Voucher::class) {
+            $voucher = Voucher::findOrFail($new_measurement->measured_id);
             $dataset_id = $voucher->dataset_id;
             $taxon_id =  $voucher->identification->taxon_id;
             $location_id = $voucher->locations->last()->location_id;
         }
-        if ($measurement->measured_type == Taxon::class) {
-            $taxon_id = $measurement->measured_id;
+        if ($new_measurement->measured_type == Taxon::class) {
+            $taxon_id = $new_measurement->measured_id;
         }
-        if ($measurement->measured_type == Location::class) {
-            $location_id = $measurement->measured_id;
+        if ($new_measurement->measured_type == Location::class) {
+            $location_id = $new_measurement->measured_id;
         }
         $newvalues = [
           'taxon_id' => $taxon_id,
           'location_id' => $location_id,
           'dataset_id' => $dataset_id,
-          'dataset_id' => $measurement->dataset_id
+          'dataset_id' => $new_measurement->dataset_id
         ];
         $target = 'measurements';
         Summary::updateSummaryMeasurementsCounts($newvalues,$value="value + 1");
-        /* END SUMMARY COUNT UPDATE */
+
+        END SUMMARY COUNT UPDATE */
 
 
 

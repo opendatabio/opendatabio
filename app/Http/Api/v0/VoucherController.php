@@ -55,7 +55,14 @@ class VoucherController extends Controller
         if ($request->number) {
             //cleans request and build query
             //multiple number may be provided separated by comma
-            ODBFunctions::advancedWhereIn($vouchers, 'number', $request->number);
+            $numbers = explode(',',$request->number);
+            $vouchers = $vouchers->where(function($q) use($numbers) {
+              $q->whereIn('number',$numbers);
+              $q->orWhereHas('individual',function($i) use($numbers) {
+                $i->whereIn('tag',$numbers);
+              });
+            });
+            //ODBFunctions::advancedWhereIn($vouchers, 'number', $request->number);
         }
         //location may have two options, root means all descentants
         if ($request->location or $request->location_root) {

@@ -112,9 +112,11 @@ class ODBTrait extends Model
       $export_name = str_replace(" ","",$request->export_name);
       $export_name = StripAccents::strip( (string) $export_name);
       preg_match('/^([a-zA-Z0-9]{1}?[a-z0-9|-|_|.]+)*$/', $export_name, $output_array);
-      if ($output_array[0]== $export_name) {
-        $request->export_name = $export_name;
-        return true;
+      if ($output_array) {
+        if ($output_array[0]== $export_name) {
+          $request->export_name = $export_name;
+          return true;
+        }
       }
       return false;
     }
