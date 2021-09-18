@@ -39,7 +39,7 @@ class VouchersDataTable extends DataTable
                 $q->whereIn('taxon_id',$taxon_list);
               });
             }
-            $query->whereRaw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number) like ?', ["%".$keyword."%"]);
+            $query->whereRaw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number,vouchers.date) like ?', ["%".$keyword."%"]);
         })
         ->editColumn('biocollection_id', function ($voucher) {
             return $voucher->biocollection->rawLink();
@@ -52,17 +52,17 @@ class VouchersDataTable extends DataTable
                    $voucher->scientificName : '<em>'.htmlspecialchars($voucher->scientificName).'</em>';
         })
         ->addColumn('collectors', function ($voucher) {
-            return $voucher->all_collectors;
+            return $voucher->recordedBy;
         })
         ->addColumn('individual', function ($voucher) {
-            //return $voucher->individual()->first()->rawLink();
+            return $voucher->individual->rawLink();
         })
         ->addColumn('location',function($voucher) {
             //return $voucher->location_first()->first()->location()->first()->rawLink();
             return $voucher->LocationDisplay;
         })
         ->editColumn('date', function ($voucher) {
-            return $voucher->collection_date;
+            return $voucher->recordedDate;
         })
         ->addColumn('measurements', function ($voucher) {
             return '<a href="'.url('vouchers/'.$voucher->id.'/measurements').'">'.$voucher->measurements()->withoutGlobalScopes()->count().'</a>';
@@ -93,7 +93,7 @@ class VouchersDataTable extends DataTable
           'vouchers.biocollection_id',
           'vouchers.biocollection_type',
           'vouchers.biocollection_number',
-          DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number) as fullname')
+          DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number,vouchers.date) as fullname')
         ]);
         // customizes the datatable query
         if ($this->location) {

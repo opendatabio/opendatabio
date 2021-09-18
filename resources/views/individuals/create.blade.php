@@ -444,6 +444,11 @@ Can only exists if individual has no vouchers, otherwise must have own id
 
 <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
+                @if($individual)
+                  <input type="hidden" id='editing' value="1">
+                @else
+                  <input type="hidden" id='editing' value="0">
+                @endif
                 <button type="submit" class="btn btn-success" name="submit" value="submit">
 				    <i class="fa fa-btn fa-plus"></i>
 @lang('messages.add')
@@ -672,7 +677,8 @@ function setLocationDate() {
   day = String(day).padStart(2, '0');
   var date = year + "-" + month + "-" + day;
   var hasdate = $('input[name=modal_date]').val();
-  if (day>0 & month>0 & hasdate === "") {
+  var editing = $('#editing').val();
+  if (day>0 & month>0 & hasdate === "" & editing==0) {
     //alert(hasdate + 'will be here' + date );
     $('input[name=modal_date]').val(date);
   }

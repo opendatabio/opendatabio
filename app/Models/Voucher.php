@@ -166,7 +166,7 @@ class Voucher extends Model
             'vouchers.biocollection_id',
             'vouchers.biocollection_type',
             'vouchers.biocollection_number',
-            DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number) as fullname')
+            DB::raw('odb_voucher_fullname(vouchers.id,vouchers.number,vouchers.individual_id,vouchers.biocollection_id,vouchers.biocollection_number,vouchers.date) as fullname')
         );
     }
 

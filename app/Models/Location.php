@@ -630,7 +630,7 @@ class Location extends Node implements HasMedia
     public function scopeWithoutGeom($query)
     {
         return $query->addSelect(
-            DB::raw('id,name,parent_id,lft,rgt,depth,altitude,adm_level,datum,uc_id,notes,x,y,startx,starty,created_at,updated_at'),
+            DB::raw('locations.id,locations.name,locations.parent_id,locations.lft,locations.rgt,locations.depth,locations.altitude,locations.adm_level,locations.datum,locations.notes,locations.x,locations.y,locations.startx,locations.starty,locations.created_at,locations.updated_at'),
             DB::raw("ST_AsText(ST_Centroid(geom)) as centroid_raw")
         );
     }
@@ -638,7 +638,7 @@ class Location extends Node implements HasMedia
     public function scopeWithGeom($query)
     {
         return $query->addSelect(
-            DB::raw('id,name, adm_level, parent_id, x, y,lft,rgt,depth,startx,starty,altitude,notes,created_at,updated_at'),
+            DB::raw('locations.id,locations.name, locations.adm_level, locations.parent_id, locations.x, locations.y,locations.lft,locations.rgt,locations.depth,locations.startx,locations.starty,locations.altitude,locations.notes,locations.created_at,locations.updated_at'),
             DB::raw('ST_AsText(geom) as geom'),
             DB::raw("IF(ST_GeometryType(geom) like '%Polygon%',ST_Area(geom), null) as area_raw"),
             DB::raw("ST_AsText(ST_Centroid(geom)) as centroid_raw"),

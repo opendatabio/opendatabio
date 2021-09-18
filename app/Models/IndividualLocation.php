@@ -215,7 +215,8 @@ class IndividualLocation extends Model
     }
     public function getOccurrenceIDAttribute()
     {
-      return $this->individual->tag.":".$this->individual->normalizedAbbreviation.":".strtotime($this->date_time);
+      #return $this->individual->tag.":".$this->individual->normalizedAbbreviation.":".strtotime($this->date_time);
+      return $this->individual->fullname."-".strtotime($this->date_time);
     }
     public function getLicenseAttribute()
     {
