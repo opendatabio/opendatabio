@@ -31,7 +31,7 @@ class TraitController extends Controller
 
     public function index(Request $request)
     {
-        $traits = ODBTrait::select('*',DB::raw('odb_traittypename(type) as typename'));
+        $traits = ODBTrait::select("*");
         if ($request->id) {
             $traits->whereIn('id', explode(',', $request->id));
         }

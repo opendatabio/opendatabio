@@ -88,6 +88,42 @@ class ODBTrait extends Model
         ];
     }
 
+    public function getTypenameAttribute()
+    {
+       switch ($this->type) {
+          case self::QUANT_INTEGER:
+           return "QUANT_INTEGER";
+           break;
+          case self::QUANT_REAL:
+           return "QUANT_REAL";
+           break;
+          case self::CATEGORICAL:
+           return "CATEGORICAL";
+           break;
+          case self::CATEGORICAL_MULTIPLE:
+           return "CATEGORICAL_MULTIPLE";
+           break;
+          case self::ORDINAL:
+           return "ORDINAL";
+           break;
+         case self::TEXT:
+           return "TEXT";
+           break;
+         case self::COLOR:
+           return "COLOR";
+           break;
+         case self::LINK:
+           return "LINK";
+           break;
+         case self::SPECTRAL:
+           return "SPECTRAL";
+           break;
+         default:
+           return null;
+           break;
+       }
+    }
+
     public static function getLinkTypeBaseName()
     {
        return collect(self::LINK_TYPES)->map(function($link){ return class_basename($link);})->toArray();

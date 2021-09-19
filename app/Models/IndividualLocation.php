@@ -34,7 +34,7 @@ class IndividualLocation extends Model
 
     public function all_locations_ids()
     {
-      $related = $this->location()->map(function($l) {
+      $related = $this->location()->cursor()->map(function($l) {
         $ids = [$l->id];
         $rids = $l->relatedLocations->pluck('related_id')->toArray();
         return array_merge($ids,$rids);

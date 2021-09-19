@@ -229,7 +229,7 @@ class ImportLocations extends AppJob
         if ($infomedParent->count()!=1) {
           $locationLog = $location;
           $locationLog['geom'] = substr($locationLog['geom'],0,20);
-          $this->skipEntry($locationLog,"Informed Parent ".$parent." for location ".$location['name']." was not found in the database or location adm_level is not greater than parent adm_level");
+          $this->skipEntry($locationLog,"Informed Parent ".$parent." for location ".$location['name']." was not found in the database or location adm_level is not greater than parent adm_level. Or there are multiple parents with the same name. Try without parent specification.");
           return false;
         }
         $location['parent'] = $infomedParent->first()->id;

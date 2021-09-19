@@ -67,7 +67,7 @@ class DownloadDataset extends AppJob
           'taxons' => $taxons_ids,
           'locations' => $locations_ids,
           'media' => $media_ids,
-          'odbtraits' => $odbtrait_ids,
+          'traits' => $odbtrait_ids,
         ];
         $export_set = array_filter($export_set,function($set) { return count($set)>0;});
 
@@ -311,7 +311,7 @@ class DownloadDataset extends AppJob
             case 'measurements':
               return "MeasurementsOrFacts";
               break;
-            case 'odbtraits':
+            case 'traits':
               return "MeasurementTypes";
               break;
             case 'media':
@@ -343,7 +343,7 @@ class DownloadDataset extends AppJob
             break;
           }
           $fields = "all";
-          if ($endpoint=='odbtraits') {
+          if ($endpoint=='traits') {
             $fields = "exceptcategories";
           }
           $params = array('fields' => $fields, 'id' => implode(',',$ids));

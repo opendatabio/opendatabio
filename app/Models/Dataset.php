@@ -197,6 +197,7 @@ class Dataset extends Model
         $locs = IndividualLocation::whereIn('individual_id',$ids_i)->cursor()->map(function($il) {
           return $il->all_locations_ids();
         })->toArray();
+        $locs = Arr::flatten($locs);
       }
       $locs_m = $this->measurements()->withoutGlobalScopes()->where('measured_type','like','%location%')->pluck("measured_id")->toArray();
       $locs_me = $this->media()->withoutGlobalScopes()->where('model_type','like','%location%')->pluck("model_id")->toArray();
