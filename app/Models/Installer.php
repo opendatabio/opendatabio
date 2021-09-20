@@ -115,7 +115,7 @@ class Installer
                 isset($item['unsupported']) ? $item['unsupported'] : null
             );
         }
-        $trouble = $trouble + $this->checkMysqlVersion('MySQL database', 'mysql --version', '5.7', '5.7.6', '10.1.2', '10.1.23');
+        $trouble = $trouble + $this->checkMysqlVersion('MySQL database', 'mysql --version', '5.7', '8.0','10.1.2', '15.1');
         if (0 == $trouble) {
             echo $this->c('All versions compatible!', 'success');
         } else {
@@ -468,7 +468,7 @@ class Installer
 
     protected function maxVersion($array)
     {
-        $config = require dirname(__DIR__).'/config/app.php';
+        $config = require dirname(__DIR__).'/../config/app.php';
         $myversion = $config['version'];
         //which version to use?
         foreach (array_keys($array) as $key => $val) {
@@ -485,7 +485,7 @@ class Installer
 
     protected function processSeed($file, $client)
     {
-        $DIR = dirname(__DIR__).'/storage/';
+        $DIR = dirname(__DIR__).'/../storage/';
         // downloads file to storage
         $client->request('GET', $this->rawpath.$file.'.tar.gz', ['sink' => $DIR.$file.'.tar.gz']);
         exec('tar xzf '.$DIR.$file.'.tar.gz -C '.$DIR);
