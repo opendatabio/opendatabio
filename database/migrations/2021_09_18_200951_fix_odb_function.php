@@ -23,8 +23,8 @@ class FixOdbFunction extends Migration
           IF (admlevel=999) THEN
             SET location=parent_location;
           END IF;
-          SET location = REGEXP_REPLACE(location, ' |-|_', '', 1, 0, 'i');
-          SET tag = REGEXP_REPLACE(tag, ' |-|_', '', 1, 0, 'i');
+          SET location = REGEXP_REPLACE(location, ' |-|_', '');
+          SET tag = REGEXP_REPLACE(tag, ' |-|_', '');
 
           SELECT SUBSTRING_INDEX(persons.abbreviation, IF(LOCATE(',', persons.abbreviation), ',', ' '), 1) into person FROM collectors JOIN persons ON collectors.person_id=persons.id WHERE collectors.object_id=id AND collectors.object_type LIKE \"%Individual\" AND collectors.main=1;
           SET result = CONCAT(tag,'-',person,'-',location);
@@ -49,9 +49,9 @@ class FixOdbFunction extends Migration
             SELECT tag,YEAR(date) into tagnum,year FROM individuals WHERE individuals.id=individual_id;
           END IF;
           SELECT `acronym` into biocol FROM biocollections WHERE biocollections.id=biocollection_id;
-          SET tagnum = REGEXP_REPLACE(tagnum, ' |-|_', '', 1, 0, 'i');
+          SET tagnum = REGEXP_REPLACE(tagnum, ' |-|_', '');
           IF (biocollection_number<>'') THEN
-            SET biocollection_number = REGEXP_REPLACE(biocollection_number, ' |-|_', '', 1, 0, 'i');
+            SET biocollection_number = REGEXP_REPLACE(biocollection_number, ' |-|_', '');
             SET result = CONCAT(tagnum,'-',person,'-',year,'-',biocol,'-',biocollection_number);
           ELSE
             SET result = CONCAT(tagnum,'-',person,'-',year,'-',biocol);

@@ -444,7 +444,7 @@ Can only exists if individual has no vouchers, otherwise must have own id
 
 <div class="form-group">
 			    <div class="col-sm-offset-3 col-sm-6">
-                @if($individual)
+                @if(isset($individual))
                   <input type="hidden" id='editing' value="1">
                 @else
                   <input type="hidden" id='editing' value="0">
