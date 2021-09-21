@@ -1,5 +1,11 @@
 #!/usr/bin/env php
 <?php
 require "./app/Models/Installer.php";
+require "./vendor/autoload.php";
+
 $installer = new App\Models\Installer;
+$installer->getOrCreateEnv();
+$installer->dotenv = Dotenv\Dotenv::createUnsafeMutable(__DIR__);
+$installer->dotenv->load();
+$installer->processEnvFile();
 $installer->migrate();

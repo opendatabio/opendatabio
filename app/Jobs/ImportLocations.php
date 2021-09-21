@@ -384,14 +384,14 @@ class ImportLocations extends AppJob
           /* area */
           $area  = DB::select("SELECT ST_Area(ST_GeomFromText('".$geom."')) as area");
           $area = count($area) ? $area[0]->area : null;
-          if ($area) {
+          if ($area===null) {
             $this->skipEntry($locationLog,"Could not calculate ST_Area of the informed polygon");
             return false;
           }
           /*centroid */
           $centroid  = DB::select("SELECT ST_AsText(ST_Centroid(ST_GeomFromText('".$geom."'))) as centroid");
           $centroid = count($centroid) ? $centroid[0]->centroid : null;
-          if ($centroid) {
+          if ($centroid===null) {
             $this->skipEntry($locationLog,"Could not calculate the ST_Centroid for the informed geometry");
             return false;
           }
