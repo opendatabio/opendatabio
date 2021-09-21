@@ -1,0 +1,5 @@
+#!/usr/bin/env php
+<?php
+require "./app/Models/Installer.php";
+$installer = new App\Models\Installer;
+$installer->migrate();
