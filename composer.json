@@ -6,7 +6,7 @@
     "require": {
         "php": "^7.4",
         "andrechalom/laravel-multiselect": "1.0.x-dev",
-        "barryvdh/laravel-translation-manager": "^0.5.9",
+        "barryvdh/laravel-translation-manager": "^0.6.2",
         "baum/baum": "2.x-dev",
         "binarytorch/larecipe": "^2.4.4",
         "binarytorch/larecipe-swagger": "^0.2",
